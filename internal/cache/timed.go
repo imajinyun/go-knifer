@@ -11,7 +11,6 @@ type TimedCache[K comparable, V any] struct {
 	abstractCache[K, V]
 
 	pruneStop chan struct{}
-	pruneOnce sync.Once
 	pruneWG   sync.WaitGroup
 }
 

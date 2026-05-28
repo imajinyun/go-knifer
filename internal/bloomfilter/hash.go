@@ -14,8 +14,8 @@ func RsHash(str string) int32 {
 	var a int32 = 63689
 	var hash int32 = 0
 	for _, c := range charsOf(str) {
-		hash = hash*a + int32(c)
-		a = a * b
+		hash = hash*a + c
+		a *= b
 	}
 	return hash & 0x7FFFFFFF
 }
@@ -24,7 +24,7 @@ func RsHash(str string) int32 {
 func JsHash(str string) int32 {
 	var hash int32 = 1315423911
 	for _, c := range charsOf(str) {
-		hash ^= (hash << 5) + int32(c) + (hash >> 2)
+		hash ^= (hash << 5) + c + (hash >> 2)
 	}
 	if hash < 0 {
 		hash = -hash
@@ -42,7 +42,7 @@ func PjwHash(str string) int32 {
 	var hash int32
 	var test int32
 	for _, c := range charsOf(str) {
-		hash = (hash << oneEighth) + int32(c)
+		hash = (hash << oneEighth) + c
 		if test = hash & highBits; test != 0 {
 			hash = (hash ^ (test >> threeQuarters)) & (^highBits)
 		}
@@ -57,7 +57,7 @@ func ElfHash(str string) int32 {
 	var maskU uint32 = 0xF0000000
 	mask := int32(maskU)
 	for _, c := range charsOf(str) {
-		hash = (hash << 4) + int32(c)
+		hash = (hash << 4) + c
 		if x = hash & mask; x != 0 {
 			hash ^= x >> 24
 			hash &= ^x
@@ -71,7 +71,7 @@ func BkdrHash(str string) int32 {
 	const seed int32 = 131
 	var hash int32
 	for _, c := range charsOf(str) {
-		hash = hash*seed + int32(c)
+		hash = hash*seed + c
 	}
 	return hash & 0x7FFFFFFF
 }
@@ -80,7 +80,7 @@ func BkdrHash(str string) int32 {
 func SdbmHash(str string) int32 {
 	var hash int32
 	for _, c := range charsOf(str) {
-		hash = int32(c) + (hash << 6) + (hash << 16) - hash
+		hash = c + (hash << 6) + (hash << 16) - hash
 	}
 	return hash & 0x7FFFFFFF
 }
@@ -89,7 +89,7 @@ func SdbmHash(str string) int32 {
 func DjbHash(str string) int32 {
 	var hash int32 = 5381
 	for _, c := range charsOf(str) {
-		hash = ((hash << 5) + hash) + int32(c)
+		hash = ((hash << 5) + hash) + c
 	}
 	return hash & 0x7FFFFFFF
 }
@@ -99,9 +99,9 @@ func ApHash(str string) int32 {
 	var hash int32
 	for i, c := range charsOf(str) {
 		if i&1 == 0 {
-			hash ^= (hash << 7) ^ int32(c) ^ (hash >> 3)
+			hash ^= (hash << 7) ^ c ^ (hash >> 3)
 		} else {
-			hash ^= ^((hash << 11) ^ int32(c) ^ (hash >> 5))
+			hash ^= ^((hash << 11) ^ c ^ (hash >> 5))
 		}
 	}
 	return hash
@@ -113,7 +113,7 @@ func FnvHashString(data string) int32 {
 	var seed uint32 = 2166136261
 	hash := int32(seed)
 	for _, c := range charsOf(data) {
-		hash = (hash ^ int32(c)) * p
+		hash = (hash ^ c) * p
 	}
 	hash += hash << 13
 	hash ^= int32(uint32(hash) >> 7)
@@ -188,7 +188,7 @@ func TianlHash(str string) int64 {
 func JavaDefaultHash(str string) int32 {
 	var h int32
 	for _, c := range charsOf(str) {
-		h = 31*h + int32(c)
+		h = 31*h + c
 	}
 	return h
 }

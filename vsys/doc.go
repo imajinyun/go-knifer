@@ -1,4 +1,5 @@
-// Package vsys 提供系统信息工具的对外 API。
+// Package vsys provides public APIs for system information utilities.
 //
-// 本包仅作为 Facade，具体实现位于 internal 对应子包中。
+// This package only acts as a facade. Concrete implementations live in the
+// corresponding internal subpackage.
 package vsys

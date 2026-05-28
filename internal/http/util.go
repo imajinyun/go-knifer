@@ -2,10 +2,8 @@ package http
 
 import (
 	"encoding/base64"
-	"fmt"
 	"io"
 	"net/url"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -225,7 +223,3 @@ var mimeTypes = map[string]string{
 	".mp3":  "audio/mpeg",
 	".wav":  "audio/wav",
 }
-
-// 确保 fmt / os 等被使用，保持纯净 import
-var _ = fmt.Sprintf
-var _ = os.Getenv

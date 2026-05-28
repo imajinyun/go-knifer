@@ -56,8 +56,8 @@ func (c *GifCaptcha) CreateCode() {
 		for i := 0; i < c.InterfereCount; i++ {
 			cx := baseutil.RandomInt(c.Width)
 			cy := baseutil.RandomInt(c.Height)
-			rx := baseutil.RandomInt(maxInt(half, 1))
-			ry := baseutil.RandomInt(maxInt(half, 1))
+			rx := baseutil.RandomInt(atLeastOne(half))
+			ry := baseutil.RandomInt(atLeastOne(half))
 			drawOval(rgba, cx, cy, rx, ry, randomColor())
 		}
 		// 字符：高亮当前 hi 位置

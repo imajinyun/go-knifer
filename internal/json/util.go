@@ -57,19 +57,19 @@ func ParseArrayWithConfig(src any, cfg *Config) (*JSONArray, error) {
 // ToJSONStr 紧凑序列化。
 func ToJSONStr(v any) (string, error) {
 	w := wrap(v, NewConfig())
-	return writeValue(w, 0, 0)
+	return writeValue(w, 0)
 }
 
 // ToJSONPrettyStr 4 空格缩进序列化。
 func ToJSONPrettyStr(v any) (string, error) {
 	w := wrap(v, NewConfig())
-	return writeValue(w, 4, 0)
+	return writeValue(w, 4)
 }
 
 // ToJSONStrIndent 自定义缩进序列化。
 func ToJSONStrIndent(v any, indent int) (string, error) {
 	w := wrap(v, NewConfig())
-	return writeValue(w, indent, 0)
+	return writeValue(w, indent)
 }
 
 // IsJSON 检查字符串是否合法 JSON。

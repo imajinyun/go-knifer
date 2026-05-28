@@ -15,11 +15,10 @@ import (
 
 // HTTPResponse 包装 http.Response 提供便捷读取（对应 hutool-http HttpResponse）。
 type HTTPResponse struct {
-	resp     *http.Response
-	bodyRead bool
-	body     []byte
-	once     sync.Once
-	err      error
+	resp *http.Response
+	body []byte
+	once sync.Once
+	err  error
 }
 
 func wrapResponse(r *http.Response) *HTTPResponse { return &HTTPResponse{resp: r} }
@@ -89,14 +88,18 @@ func (r *HTTPResponse) Bytes() []byte {
 		if r.resp == nil || r.resp.Body == nil {
 			return
 		}
-		defer r.resp.Body.Close()
+		defer func() {
+			if err := r.resp.Body.Close(); err != nil && r.err == nil {
+				r.err = NewHTTPError("close response body failed", err)
+			}
+		}()
 		reader, err := decodedBody(r.resp)
 		if err != nil {
 			r.err = err
 			return
 		}
 		data, err := io.ReadAll(reader)
-		if err != nil && !(IsIgnoreEOFError() && err == io.ErrUnexpectedEOF) {
+		if err != nil && (!IsIgnoreEOFError() || err != io.ErrUnexpectedEOF) {
 			r.err = NewHTTPError("read response body failed", err)
 			return
 		}
@@ -121,7 +124,7 @@ func (r *HTTPResponse) WriteTo(w io.Writer) (int64, error) {
 // SaveAs 将响应体保存到文件，返回写入字节数。
 //
 // 当 dest 是目录时，自动从 URL 或 Content-Disposition 中提取文件名。
-func (r *HTTPResponse) SaveAs(dest string) (int64, error) {
+func (r *HTTPResponse) SaveAs(dest string) (n int64, err error) {
 	if r.resp == nil {
 		return 0, HTTPErrorf("no response")
 	}
@@ -137,7 +140,11 @@ func (r *HTTPResponse) SaveAs(dest string) (int64, error) {
 	if err != nil {
 		return 0, NewHTTPError("create file failed", err)
 	}
-	defer f.Close()
+	defer func() {
+		if closeErr := f.Close(); err == nil {
+			err = closeErr
+		}
+	}()
 	return r.WriteTo(f)
 }
 

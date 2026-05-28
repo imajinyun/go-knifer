@@ -38,7 +38,7 @@ func Gunzip(data []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer r.Close()
+	defer func() { _ = r.Close() }()
 	return io.ReadAll(r)
 }
 
@@ -62,19 +62,27 @@ func Unzlib(data []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer r.Close()
+	defer func() { _ = r.Close() }()
 	return io.ReadAll(r)
 }
 
 // ZipFiles 将文件或目录打包为 zip 归档。ZipFiles creates a zip archive from files.
-func ZipFiles(dest string, files ...string) error {
+func ZipFiles(dest string, files ...string) (err error) {
 	out, err := os.Create(dest)
 	if err != nil {
 		return err
 	}
-	defer out.Close()
+	defer func() {
+		if closeErr := out.Close(); err == nil {
+			err = closeErr
+		}
+	}()
 	zw := zip.NewWriter(out)
-	defer zw.Close()
+	defer func() {
+		if closeErr := zw.Close(); err == nil {
+			err = closeErr
+		}
+	}()
 	for _, file := range files {
 		if err := addFileToZip(zw, file, filepath.Base(file)); err != nil {
 			return err
@@ -89,7 +97,7 @@ func Unzip(src, destDir string) error {
 	if err != nil {
 		return err
 	}
-	defer zr.Close()
+	defer func() { _ = zr.Close() }()
 	for _, f := range zr.File {
 		if err := extractZipFile(f, destDir); err != nil {
 			return err
@@ -159,7 +167,7 @@ func addFileToZip(zw *zip.Writer, path, name string) error {
 	if err != nil {
 		return err
 	}
-	defer r.Close()
+	defer func() { _ = r.Close() }()
 	w, err := zw.Create(filepath.ToSlash(name))
 	if err != nil {
 		return err
@@ -185,12 +193,14 @@ func extractZipFile(f *zip.File, destDir string) error {
 	if err != nil {
 		return err
 	}
-	defer r.Close()
+	defer func() { _ = r.Close() }()
 	w, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, f.Mode())
 	if err != nil {
 		return err
 	}
-	defer w.Close()
-	_, err = io.Copy(w, r)
-	return err
+	if _, err := io.Copy(w, r); err != nil {
+		_ = w.Close()
+		return err
+	}
+	return w.Close()
 }

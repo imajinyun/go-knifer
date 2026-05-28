@@ -231,7 +231,7 @@ func (o *JSONObject) GetJSONArray(key string) *JSONArray {
 
 // String 输出紧凑 JSON 字符串。
 func (o *JSONObject) String() string {
-	s, _ := writeValue(o, 0, 0)
+	s, _ := writeValue(o, 0)
 	return s
 }
 
@@ -240,13 +240,13 @@ func (o *JSONObject) ToString() string { return o.String() }
 
 // ToStringPretty 4 空格缩进输出。
 func (o *JSONObject) ToStringPretty() string {
-	s, _ := writeValue(o, defaultIndent(o.cfg), 0)
+	s, _ := writeValue(o, defaultIndent(o.cfg))
 	return s
 }
 
 // MarshalJSON 实现 encoding/json.Marshaler。
 func (o *JSONObject) MarshalJSON() ([]byte, error) {
-	s, err := writeValue(o, 0, 0)
+	s, err := writeValue(o, 0)
 	if err != nil {
 		return nil, err
 	}

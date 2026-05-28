@@ -2,6 +2,8 @@
 
 > 🍬 A set of Go tools that keep development sharp.
 
+![go-knifer](./go-knifer.jpeg)
+
 [![Go Reference](https://pkg.go.dev/badge/github.com/imajinyun/go-knifer.svg)](https://pkg.go.dev/github.com/imajinyun/go-knifer)
 [![Go Version](https://img.shields.io/badge/go-%3E%3D1.20-00ADD8?logo=go)](https://go.dev/)
 

@@ -1,4 +1,6 @@
-// Package vsetting 提供配置文件读取与分组配置工具。
+// Package vsetting provides configuration file reading and grouped
+// configuration utilities.
 //
-// 本包对应 Hutool 的 hutool-setting 模块，具体实现位于 internal/setting。
+// This package corresponds to Hutool's hutool-setting module. Concrete
+// implementations live in internal/setting.
 package vsetting

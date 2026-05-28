@@ -70,13 +70,13 @@ func NewConsoleColorLog(name string) *ConsoleColorLog {
 	base := NewConsoleLog(name)
 	c := &ConsoleColorLog{ConsoleLog: base}
 	// 替换 Core 为彩色实现。
-	base.AbstractLog.Core = c.write
+	base.Core = c.write
 	return c
 }
 
 // write 带颜色的写入实现。
 func (c *ConsoleColorLog) write(level Level, err error, format string, args ...any) {
-	msg := formatTemplate(format, args...)
+	msg := renderLogMessage(format, args...)
 	color := getColorFactory()(level)
 	line := fmt.Sprintf("%s[%s]%s %s[%-5s]%s %s%s%s: %s",
 		ansiWhite, time.Now().Format(consoleLogTimeLayout), ansiReset,
@@ -87,6 +87,6 @@ func (c *ConsoleColorLog) write(level Level, err error, format string, args ...a
 	if err != nil {
 		line = line + " | error: " + err.Error()
 	}
-	w := c.ConsoleLog.targetWriter(level)
-	fmt.Fprintln(w, line)
+	w := c.targetWriter(level)
+	_, _ = fmt.Fprintln(w, line)
 }

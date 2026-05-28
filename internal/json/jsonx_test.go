@@ -46,6 +46,12 @@ func TestParseAndStringify(t *testing.T) {
 	}
 }
 
+func TestParseRejectsTrailingContent(t *testing.T) {
+	if _, err := Parse(`{"a":1} {"b":2}`); err == nil {
+		t.Fatal("expected trailing content error")
+	}
+}
+
 func TestPretty(t *testing.T) {
 	obj := NewJSONObject().Set("a", 1).Set("b", NewJSONArray().Add(1).Add(2))
 	out := obj.ToStringPretty()

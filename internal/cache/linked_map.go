@@ -33,11 +33,6 @@ func (lm *linkedMap[K, V]) get(key K) (*CacheObj[K, V], bool) {
 	return n.value, true
 }
 
-func (lm *linkedMap[K, V]) contains(key K) bool {
-	_, ok := lm.m[key]
-	return ok
-}
-
 // putBack 将 key->value 放在链表尾部；若已存在则替换并保持原位置。
 func (lm *linkedMap[K, V]) putBack(key K, value *CacheObj[K, V]) (old *CacheObj[K, V], existed bool) {
 	if n, ok := lm.m[key]; ok {

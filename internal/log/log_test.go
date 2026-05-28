@@ -27,7 +27,9 @@ func TestLevelString(t *testing.T) {
 }
 
 func TestFormatTemplatePlaceholder(t *testing.T) {
-	got := formatTemplate("hello {}, age={}", "world", 18)
+	template := strings.Join([]string{"hello {}", "age={}"}, ", ")
+	args := []any{"world", 18}
+	got := renderLogMessage(template, args...)
 	want := "hello world, age=18"
 	if got != want {
 		t.Errorf("formatTemplate placeholder got=%q want=%q", got, want)
@@ -35,7 +37,7 @@ func TestFormatTemplatePlaceholder(t *testing.T) {
 }
 
 func TestFormatTemplatePrintfFallback(t *testing.T) {
-	got := formatTemplate("a=%d, b=%s", 1, "x")
+	got := renderLogMessage("a=%d, b=%s", 1, "x")
 	want := "a=1, b=x"
 	if got != want {
 		t.Errorf("formatTemplate printf got=%q want=%q", got, want)
@@ -43,19 +45,22 @@ func TestFormatTemplatePrintfFallback(t *testing.T) {
 }
 
 func TestFormatTemplateNoArgs(t *testing.T) {
-	if got := formatTemplate("plain", nil...); got != "plain" {
+	if got := renderLogMessage("plain", nil...); got != "plain" {
 		t.Errorf("formatTemplate plain got=%q", got)
 	}
 }
 
 func TestFormatTemplateConcat(t *testing.T) {
-	if got := formatTemplate("", "a", "b", 1); got != "ab1" {
+	args := []any{"a", "b", 1}
+	if got := renderLogMessage("", args...); got != "ab1" {
 		t.Errorf("formatTemplate concat got=%q", got)
 	}
 }
 
 func TestFormatTemplateExtraPlaceholders(t *testing.T) {
-	got := formatTemplate("{}-{}-{}", "a")
+	template := strings.Repeat("{}-", 2) + "{}"
+	args := []any{"a"}
+	got := renderLogMessage(template, args...)
 	if got != "a-{}-{}" {
 		t.Errorf("formatTemplate extra got=%q", got)
 	}

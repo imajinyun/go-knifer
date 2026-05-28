@@ -1,4 +1,6 @@
-// Package vextra 提供压缩、Emoji、模板与校验等扩展工具。
+// Package vextra provides extension utilities such as compression, emoji
+// helpers, templates, and validation helpers.
 //
-// 本包对应 Hutool 的 hutool-extra 模块，具体实现位于 internal/extra。
+// This package corresponds to Hutool's hutool-extra module. Concrete
+// implementations live in internal/extra.
 package vextra

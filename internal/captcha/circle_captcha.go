@@ -37,8 +37,8 @@ func (c *CircleCaptcha) CreateCode() {
 	for i := 0; i < c.InterfereCount; i++ {
 		cx := baseutil.RandomInt(c.Width)
 		cy := baseutil.RandomInt(c.Height)
-		rx := baseutil.RandomInt(maxInt(half, 1))
-		ry := baseutil.RandomInt(maxInt(half, 1))
+		rx := baseutil.RandomInt(atLeastOne(half))
+		ry := baseutil.RandomInt(atLeastOne(half))
 		drawOval(img, cx, cy, rx, ry, randomColor())
 	}
 	drawString(img, c.code, c.Width, c.Height, computeScale(c.Height))

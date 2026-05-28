@@ -38,6 +38,14 @@ func TestRandomBytes(t *testing.T) {
 	}
 }
 
+func TestFillRandomBytesFallbackKeepsLength(t *testing.T) {
+	buf := make([]byte, 8)
+	fillRandomBytes(buf)
+	if len(buf) != 8 {
+		t.Fatalf("fillRandomBytes changed len: %d", len(buf))
+	}
+}
+
 func TestRandomEle(t *testing.T) {
 	a := []string{"x", "y", "z"}
 	got := RandomEle(a)

@@ -1,0 +1,72 @@
+version: "2"
+
+linters:
+  default: standard
+  enable:
+    - cyclop
+    - errcheck
+    - gocritic
+    - gosec
+    - ineffassign
+    - misspell
+    - prealloc
+    - unconvert
+    - unparam
+    - unused
+    - whitespace
+  settings:
+    cyclop:
+      max-complexity: 40
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - cyclop
+          - errcheck
+          - gosec
+      - path: internal/(base|crypto)/.*\.go
+        linters:
+          - gosec
+        text: "weak cryptographic primitive"
+      - path: internal/(base|bloomfilter|captcha|crypto|json)/.*\.go
+        linters:
+          - gosec
+        text: "integer overflow conversion"
+      - path: internal/base/randomutil\.go
+        linters:
+          - gosec
+        text: "weak random number generator"
+      - path: internal/(base/ioutil|bloomfilter/bitset_bloomfilter|extra/extra)\.go
+        linters:
+          - gosec
+        text: "Potential file inclusion via variable"
+      - path: internal/(http/response|setting/setting)\.go
+        linters:
+          - gosec
+        text: "Potential file inclusion via variable"
+      - path: internal/jwt/signer_async\.go
+        linters:
+          - gosec
+        text: "weak cryptographic primitive"
+      - path: internal/http/request\.go
+        linters:
+          - gosec
+        text: "InsecureSkipVerify"
+      - path: internal/(base/ioutil|captcha/captcha|extra/extra)\.go
+        linters:
+          - gosec
+        text: "Expect .* permissions"
+      - path: internal/extra/extra\.go
+        linters:
+          - gosec
+        text: "File traversal when extracting zip/tar archive"
+      - path: internal/extra/extra\.go
+        linters:
+          - gosec
+        text: "Potential DoS vulnerability via decompression bomb"
+
+formatters:
+  enable:
+    - gofmt
+    - gofumpt
+    - goimports

@@ -213,7 +213,7 @@ func (a *JSONArray) GetJSONArray(i int) *JSONArray {
 
 // String 紧凑输出。
 func (a *JSONArray) String() string {
-	s, _ := writeValue(a, 0, 0)
+	s, _ := writeValue(a, 0)
 	return s
 }
 
@@ -222,13 +222,13 @@ func (a *JSONArray) ToString() string { return a.String() }
 
 // ToStringPretty 4 空格缩进输出。
 func (a *JSONArray) ToStringPretty() string {
-	s, _ := writeValue(a, defaultIndent(a.cfg), 0)
+	s, _ := writeValue(a, defaultIndent(a.cfg))
 	return s
 }
 
 // MarshalJSON 实现 encoding/json.Marshaler。
 func (a *JSONArray) MarshalJSON() ([]byte, error) {
-	s, err := writeValue(a, 0, 0)
+	s, err := writeValue(a, 0)
 	if err != nil {
 		return nil, err
 	}
