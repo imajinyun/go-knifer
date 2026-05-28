@@ -95,7 +95,7 @@ func (m *dayOfMonthMatcher) IsLast() bool {
 
 // MatchDay 判断 day 是否匹配（含 L 处理）。
 func (m *dayOfMonthMatcher) MatchDay(day, month int, leap bool) bool {
-	if m.boolArrayMatcher.Match(day) {
+	if m.Match(day) {
 		return true
 	}
 	if m.IsLast() && day == lastDayOfMonth(month, leap) {

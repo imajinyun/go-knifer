@@ -131,15 +131,15 @@ func DumpSystemInfo() {
 // DumpSystemInfoTo 将系统信息输出到指定 Writer。
 func DumpSystemInfoTo(w io.Writer) {
 	const sep = "--------------\n"
-	fmt.Fprint(w, sep)
-	fmt.Fprint(w, GetGoInfo())
-	fmt.Fprint(w, sep)
-	fmt.Fprint(w, GetOsInfo())
-	fmt.Fprint(w, sep)
-	fmt.Fprint(w, GetUserInfo())
-	fmt.Fprint(w, sep)
-	fmt.Fprint(w, GetHostInfo())
-	fmt.Fprint(w, sep)
-	fmt.Fprint(w, GetRuntimeInfo())
-	fmt.Fprint(w, sep)
+	_, _ = fmt.Fprint(w, sep)
+	_, _ = fmt.Fprint(w, GetGoInfo())
+	_, _ = fmt.Fprint(w, sep)
+	_, _ = fmt.Fprint(w, GetOsInfo())
+	_, _ = fmt.Fprint(w, sep)
+	_, _ = fmt.Fprint(w, GetUserInfo())
+	_, _ = fmt.Fprint(w, sep)
+	_, _ = fmt.Fprint(w, GetHostInfo())
+	_, _ = fmt.Fprint(w, sep)
+	_, _ = fmt.Fprint(w, GetRuntimeInfo())
+	_, _ = fmt.Fprint(w, sep)
 }

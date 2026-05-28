@@ -7,9 +7,9 @@ import (
 )
 
 // writeValue 将值写为 JSON 字符串；indent>0 时进行 pretty 格式化。
-func writeValue(v any, indent, depth int) (string, error) {
+func writeValue(v any, indent int) (string, error) {
 	var sb strings.Builder
-	if err := writeAny(&sb, v, indent, depth); err != nil {
+	if err := writeAny(&sb, v, indent, 0); err != nil {
 		return "", err
 	}
 	return sb.String(), nil

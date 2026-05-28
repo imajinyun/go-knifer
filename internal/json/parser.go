@@ -3,6 +3,7 @@ package json
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 )
 
 // parseBytes 把 JSON 字节解析为 *JSONObject 或 *JSONArray 或基础值。
@@ -25,16 +26,13 @@ func parseBytesWithConfig(b []byte, cfg *Config) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	// 检查是否还有多余 token
-	if dec.More() {
+	// Check whether there is any non-whitespace token after the root value.
+	if _, err := dec.Token(); err == nil {
 		return nil, NewJSONError("json: unexpected trailing content")
+	} else if err != io.EOF {
+		return nil, WrapJSONError(err, "json: read trailing content failed")
 	}
 	return v, nil
-}
-
-// parseString 解析字符串形式 JSON。
-func parseString(s string) (any, error) {
-	return parseBytes([]byte(s))
 }
 
 // parseValue 根据当前 token 递归解析。

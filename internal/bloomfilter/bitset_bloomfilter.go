@@ -52,7 +52,7 @@ func (b *BitSetBloomFilter) InitFromFile(path string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	r := bufio.NewReader(f)
 	for {
 		line, err := r.ReadString('\n')

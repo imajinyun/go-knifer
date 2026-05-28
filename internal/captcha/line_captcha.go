@@ -42,8 +42,8 @@ func (c *LineCaptcha) renderPNG(code string) []byte {
 	for i := 0; i < c.InterfereCount; i++ {
 		xs := baseutil.RandomInt(c.Width)
 		ys := baseutil.RandomInt(c.Height)
-		xe := xs + baseutil.RandomInt(maxInt(c.Width/8, 1))
-		ye := ys + baseutil.RandomInt(maxInt(c.Height/8, 1))
+		xe := xs + baseutil.RandomInt(atLeastOne(c.Width/8))
+		ye := ys + baseutil.RandomInt(atLeastOne(c.Height/8))
 		drawLine(img, xs, ys, xe, ye, randomColor())
 	}
 	// 字符
@@ -74,11 +74,11 @@ func (c *LineCaptcha) Code() string {
 // 让 ICaptcha 接口可用：通过组合自动获得 Verify/Write/WriteToFile 等方法。
 var _ ICaptcha = (*LineCaptcha)(nil)
 
-func maxInt(a, b int) int {
-	if a > b {
-		return a
+func atLeastOne(v int) int {
+	if v > 1 {
+		return v
 	}
-	return b
+	return 1
 }
 
 // computeScale 根据图像高度计算字体放大倍数（5x7 字体）。

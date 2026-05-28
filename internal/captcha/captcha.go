@@ -1,7 +1,6 @@
 package captcha
 
 import (
-	"bytes"
 	"encoding/base64"
 	"fmt"
 	"image/color"
@@ -106,15 +105,6 @@ func (a *AbstractCaptcha) getImageBytes() []byte {
 	return a.imgBytes
 }
 
-// fontSizePixels 返回字体像素高度。
-func (a *AbstractCaptcha) fontSizePixels() int {
-	ratio := a.FontSize
-	if ratio <= 0 {
-		ratio = 0.75
-	}
-	return int(float64(a.Height) * ratio)
-}
-
 func (a *AbstractCaptcha) ensureGenerator() CodeGenerator {
 	if a.generator == nil {
 		a.generator = NewRandomGenerator(5)
@@ -136,9 +126,6 @@ func (a *AbstractCaptcha) bg() color.Color {
 	}
 	return a.Background
 }
-
-// readerOf 返回底层图片字节的 reader。
-func (a *AbstractCaptcha) readerOf() io.Reader { return bytes.NewReader(a.imgBytes) }
 
 // VerifyIgnoreCase 忽略大小写比较（兼容工具函数）。
 func VerifyIgnoreCase(code, input string) bool {

@@ -1,4 +1,5 @@
-// Package vbase 提供基础工具的对外 API。
+// Package vbase provides public APIs for core utilities.
 //
-// 本包仅作为 Facade，具体实现位于 internal 对应子包中。
+// This package only acts as a facade. Concrete implementations live in the
+// corresponding internal subpackage.
 package vbase

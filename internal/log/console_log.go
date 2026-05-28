@@ -62,13 +62,13 @@ func (c *ConsoleLog) SetOutput(out, errOut io.Writer) {
 
 // write 是底层写入逻辑，由 AbstractLog.Core 调用。
 func (c *ConsoleLog) write(level Level, err error, format string, args ...any) {
-	msg := formatTemplate(format, args...)
+	msg := renderLogMessage(format, args...)
 	line := fmt.Sprintf("[%s] [%-5s] %s: %s", time.Now().Format(consoleLogTimeLayout), level.String(), c.name, msg)
 	if err != nil {
 		line = line + " | error: " + err.Error()
 	}
 	w := c.targetWriter(level)
-	fmt.Fprintln(w, line)
+	_, _ = fmt.Fprintln(w, line)
 }
 
 func (c *ConsoleLog) targetWriter(level Level) io.Writer {

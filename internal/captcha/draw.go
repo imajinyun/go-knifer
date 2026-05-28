@@ -55,28 +55,6 @@ func drawLine(img *image.RGBA, x0, y0, x1, y1 int, c color.Color) {
 	}
 }
 
-// drawCircle 在 img 上绘制空心圆（Midpoint Circle）。
-func drawCircle(img *image.RGBA, cx, cy, r int, c color.Color) {
-	x, y, d := 0, r, 1-r
-	for x <= y {
-		img.Set(cx+x, cy+y, c)
-		img.Set(cx-x, cy+y, c)
-		img.Set(cx+x, cy-y, c)
-		img.Set(cx-x, cy-y, c)
-		img.Set(cx+y, cy+x, c)
-		img.Set(cx-y, cy+x, c)
-		img.Set(cx+y, cy-x, c)
-		img.Set(cx-y, cy-x, c)
-		if d < 0 {
-			d += 2*x + 3
-		} else {
-			d += 2*(x-y) + 5
-			y--
-		}
-		x++
-	}
-}
-
 // drawOval 在 img 上绘制椭圆轮廓（中心 cx,cy；半轴 rx,ry）。
 func drawOval(img *image.RGBA, cx, cy, rx, ry int, c color.Color) {
 	if rx <= 0 || ry <= 0 {
@@ -92,8 +70,7 @@ func drawOval(img *image.RGBA, cx, cy, rx, ry int, c color.Color) {
 }
 
 // drawChar 在 img 上绘制单个 ASCII 字符（使用内置 5x7 位图字体，按 scale 放大）。
-// 返回实际绘制宽度（含间距）。
-func drawChar(img *image.RGBA, ch byte, x, y int, scale int, c color.Color) int {
+func drawChar(img *image.RGBA, ch byte, x, y int, scale int, c color.Color) {
 	glyph := getGlyph(ch)
 	for row := 0; row < fontHeight; row++ {
 		for col := 0; col < fontWidth; col++ {
@@ -111,7 +88,6 @@ func drawChar(img *image.RGBA, ch byte, x, y int, scale int, c color.Color) int 
 			}
 		}
 	}
-	return fontWidth*scale + scale // 字宽 + 1*scale 间距
 }
 
 // drawString 在 img 上等间距绘制一串字符（每个字符随机颜色），水平居中 + 垂直居中。

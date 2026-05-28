@@ -117,9 +117,7 @@ func JSONToXML(root any, rootTag string) (string, error) {
 		buf.WriteString(rootTag)
 		buf.WriteString(">")
 	}
-	if err := writeXMLValue(&buf, root); err != nil {
-		return "", err
-	}
+	writeXMLValue(&buf, root)
 	if rootTag != "" {
 		buf.WriteString("</")
 		buf.WriteString(rootTag)
@@ -132,7 +130,7 @@ func JSONToXML(root any, rootTag string) (string, error) {
 // - JSONObject：每个 key 作为标签包裹。
 // - JSONArray：每个元素重复同一标签（由调用方传入）。
 // 这里对顶层数组用 <element> 作为默认标签。
-func writeXMLValue(buf *bytes.Buffer, v any) error {
+func writeXMLValue(buf *bytes.Buffer, v any) {
 	switch x := v.(type) {
 	case *JSONObject:
 		x.ForEach(func(key string, val any) bool {
@@ -147,7 +145,6 @@ func writeXMLValue(buf *bytes.Buffer, v any) error {
 		// 基础值：转字符串
 		writeXMLText(buf, toString(wrap(v, NewConfig()), ""))
 	}
-	return nil
 }
 
 // writeXMLEntry 写一个 <key>...</key>。若 val 是 JSONArray，则以 key 作为标签重复。
@@ -163,7 +160,7 @@ func writeXMLEntry(buf *bytes.Buffer, key string, val any) {
 	buf.WriteString(">")
 	switch x := val.(type) {
 	case *JSONObject:
-		_ = writeXMLValue(buf, x)
+		writeXMLValue(buf, x)
 	case jsonNull:
 		// 空标签
 	default:
@@ -181,6 +178,6 @@ func writeXMLText(buf *bytes.Buffer, s string) {
 	}
 	if err := xml.EscapeText(buf, []byte(s)); err != nil {
 		// 极少触发，回退原文
-		buf.WriteString(fmt.Sprint(s))
+		fmt.Fprint(buf, s)
 	}
 }

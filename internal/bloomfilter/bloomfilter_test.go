@@ -138,9 +138,6 @@ func TestHashAlgorithms(t *testing.T) {
 			t.Fatalf("%s 不稳定", name)
 		}
 	}
-	if HfHash(s) == 0 && HfHash("") == 0 && HfIpHash(s) == 0 && TianlHash(s) == 0 {
-		// 这里只是兜底说明，不一定为 0
-	}
 	if JavaDefaultHash("a") != 97 {
 		t.Fatal("javaDefault hash 'a' should be 97")
 	}

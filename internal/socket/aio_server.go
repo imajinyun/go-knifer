@@ -119,7 +119,7 @@ func (s *AioServer) handleAccept(conn net.Conn) {
 	s.wg.Add(1)
 	go func() {
 		defer s.wg.Done()
-		defer session.Close()
+		defer func() { _ = session.Close() }()
 		// 持续读取，模拟 AIO 链式回调
 		for session.IsOpen() && !s.closed.Load() {
 			if !session.doRead() {

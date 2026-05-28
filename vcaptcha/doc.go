@@ -1,4 +1,5 @@
-// Package vcaptcha 提供验证码工具的对外 API。
+// Package vcaptcha provides public APIs for captcha utilities.
 //
-// 本包仅作为 Facade，具体实现位于 internal 对应子包中。
+// This package only acts as a facade. Concrete implementations live in the
+// corresponding internal subpackage.
 package vcaptcha

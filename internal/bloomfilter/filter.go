@@ -68,7 +68,7 @@ func (f *FuncFilter) Add(str string) bool {
 	return true
 }
 
-//============= 基于具体哈希算法的便捷过滤器 =============
+// ============= 基于具体哈希算法的便捷过滤器 =============
 
 // NewDefaultFilter 默认布隆过滤器（Java String.hashCode）。
 func NewDefaultFilter(maxValue int64) *FuncFilter {

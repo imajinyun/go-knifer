@@ -20,7 +20,7 @@ func ToBean(src any, dst any) error {
 		data = []byte(x)
 	default:
 		w := wrap(src, NewConfig())
-		s, err := writeValue(w, 0, 0)
+		s, err := writeValue(w, 0)
 		if err != nil {
 			return err
 		}

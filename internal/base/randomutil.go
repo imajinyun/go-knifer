@@ -51,13 +51,17 @@ func RandomBytes(n int) []byte {
 		return []byte{}
 	}
 	buf := make([]byte, n)
+	fillRandomBytes(buf)
+	return buf
+}
+
+func fillRandomBytes(buf []byte) {
 	if _, err := cryptorand.Read(buf); err != nil {
 		// 退回到 math/rand
 		for i := range buf {
 			buf[i] = byte(defaultRand.Intn(256))
 		}
 	}
-	return buf
 }
 
 // RandomString 从 BaseCharNumber 中随机产生指定长度字符串（小写字母+数字）。
@@ -119,7 +123,7 @@ var objectIdCounter uint32
 func ObjectId() string {
 	now := uint32(time.Now().Unix())
 	rnd := make([]byte, 5)
-	_, _ = cryptorand.Read(rnd)
+	fillRandomBytes(rnd)
 	c := nextCounter()
 	b := make([]byte, 12)
 	binary.BigEndian.PutUint32(b[0:4], now)
@@ -149,7 +153,7 @@ func NanoIdN(n int) string {
 	out := make([]byte, 0, n)
 	buf := make([]byte, step)
 	for {
-		_, _ = cryptorand.Read(buf)
+		fillRandomBytes(buf)
 		for i := 0; i < step && len(out) < n; i++ {
 			out = append(out, alphabet[buf[i]&byte(mask)])
 		}
