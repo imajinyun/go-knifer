@@ -2,11 +2,12 @@ package http
 
 import (
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 )
 
-// 对应 hutool-http HttpGlobalConfigTest
+// Mirrors hutool-http HttpGlobalConfigTest.
 
 func TestGlobalTimeout(t *testing.T) {
 	old := GetGlobalTimeout()
@@ -76,6 +77,9 @@ func TestGlobalHeadersDefault(t *testing.T) {
 	if headers.Get("Accept") == "" {
 		t.Fatal("default Accept missing")
 	}
+	if got := headers.Get("Accept-Encoding"); strings.Contains(got, "br") {
+		t.Fatalf("default Accept-Encoding = %q should not advertise br without brotli decoding support", got)
+	}
 }
 
 func TestGlobalHeadersSetAndRemove(t *testing.T) {
@@ -102,13 +106,13 @@ func TestGlobalCookieJar(t *testing.T) {
 	if GetCookieJar() != nil {
 		t.Fatal("after close should be nil")
 	}
-	// 还原
+	// Restore the default jar.
 	SetCookieJar(jar)
 	if GetCookieJar() == nil {
 		t.Fatal("restored jar nil")
 	}
 
-	// 自定义 jar
+	// Customize the jar.
 	var custom http.CookieJar
 	SetCookieJar(custom)
 	if GetCookieJar() != nil {

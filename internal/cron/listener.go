@@ -1,20 +1,20 @@
 package cron
 
-// TaskListener 对应 hutool 的 cn.hutool.cron.listener.TaskListener。
+// TaskListener is aligned with hutool cn.hutool.cron.listener.TaskListener.
 type TaskListener interface {
 	OnStart(executor *TaskExecutor)
 	OnSucceeded(executor *TaskExecutor)
 	OnFailed(executor *TaskExecutor, err any)
 }
 
-// SimpleTaskListener 对应 hutool 的 SimpleTaskListener，提供空实现。
+// SimpleTaskListener is aligned with hutool SimpleTaskListener and provides no-op implementations.
 type SimpleTaskListener struct{}
 
-// OnStart 默认空实现。
+// OnStart is a no-op default implementation.
 func (SimpleTaskListener) OnStart(*TaskExecutor) {}
 
-// OnSucceeded 默认空实现。
+// OnSucceeded is a no-op default implementation.
 func (SimpleTaskListener) OnSucceeded(*TaskExecutor) {}
 
-// OnFailed 默认空实现。
+// OnFailed is a no-op default implementation.
 func (SimpleTaskListener) OnFailed(*TaskExecutor, any) {}

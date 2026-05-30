@@ -134,8 +134,8 @@ func (s *Semaphore) Release(n int) {
 	s.notifyLocked()
 }
 
-// InUse returns the number of currently acquired permits.
-func (s *Semaphore) InUse() int { return int(s.cur.Load()) }
+// Use returns the number of currently acquired permits.
+func (s *Semaphore) Use() int { return int(s.cur.Load()) }
 
 // Cap returns the total capacity.
 func (s *Semaphore) Cap() int { return int(s.cap) }

@@ -5,15 +5,15 @@ import (
 	"unicode"
 )
 
-// 对应 hutool-core NamingCase。
+// This file provides naming-case conversion helpers aligned with hutool-core NamingCase.
 
-// ToCamelCase 转驼峰：hello_world -> helloWorld。
+// ToCamelCase converts separators to lower camel case, for example hello_world -> helloWorld.
 func ToCamelCase(s string) string {
 	if s == "" {
 		return s
 	}
 	if !strings.ContainsAny(s, "_- ") {
-		// 已是 camel/Pascal，首字母小写
+		// Already camel/Pascal-like; only lower-case the first rune.
 		r := []rune(s)
 		r[0] = unicode.ToLower(r[0])
 		return string(r)
@@ -42,7 +42,7 @@ func ToCamelCase(s string) string {
 	return b.String()
 }
 
-// ToPascalCase 转大驼峰：hello_world -> HelloWorld。
+// ToPascalCase converts separators to upper camel case, for example hello_world -> HelloWorld.
 func ToPascalCase(s string) string {
 	if s == "" {
 		return s
@@ -53,10 +53,10 @@ func ToPascalCase(s string) string {
 	return string(r)
 }
 
-// ToUnderlineCase 转下划线：HelloWorld -> hello_world。
+// ToUnderlineCase converts camel case or separators to snake case, for example HelloWorld -> hello_world.
 func ToUnderlineCase(s string) string { return toSeparated(s, '_') }
 
-// ToKebabCase 转短横线：HelloWorld -> hello-world。
+// ToKebabCase converts camel case or separators to kebab case, for example HelloWorld -> hello-world.
 func ToKebabCase(s string) string { return toSeparated(s, '-') }
 
 func toSeparated(s string, sep rune) string {
@@ -74,7 +74,7 @@ func toSeparated(s string, sep rune) string {
 		if unicode.IsUpper(r) {
 			if i > 0 {
 				prev := rs[i-1]
-				// 大写后接小写、或前一个字符为小写，都需要分隔
+				// Add a separator before acronym boundaries or after lower-case/digit runs.
 				prevIsLower := unicode.IsLower(prev) || unicode.IsDigit(prev)
 				nextIsLower := i+1 < len(rs) && unicode.IsLower(rs[i+1])
 				if prevIsLower || (unicode.IsUpper(prev) && nextIsLower) {

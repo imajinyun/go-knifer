@@ -2,7 +2,7 @@ package base
 
 import "testing"
 
-// 对应 hutool-core ConvertTest。
+// Tests aligned with hutool-core ConvertTest.
 
 func TestToString(t *testing.T) {
 	if ToString(nil) != "" {

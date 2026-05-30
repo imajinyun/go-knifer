@@ -6,15 +6,15 @@ import (
 	"unicode"
 )
 
-// 对应 hutool-core StrUtil / CharSequenceUtil。
+// This file provides string helpers aligned with hutool-core StrUtil and CharSequenceUtil.
 
-// IsEmpty 字符串是否为空（长度为 0）。
+// IsEmpty reports whether s has zero length.
 func IsEmpty(s string) bool { return len(s) == 0 }
 
-// IsNotEmpty 字符串是否非空。
+// IsNotEmpty reports whether s is not empty.
 func IsNotEmpty(s string) bool { return !IsEmpty(s) }
 
-// IsBlank 字符串是否为空白（空字符串或仅含空白字符）。
+// IsBlank reports whether s is empty or contains only Unicode white space.
 func IsBlank(s string) bool {
 	for _, r := range s {
 		if !unicode.IsSpace(r) {
@@ -24,10 +24,10 @@ func IsBlank(s string) bool {
 	return true
 }
 
-// IsNotBlank 字符串是否非空白。
+// IsNotBlank reports whether s is not blank.
 func IsNotBlank(s string) bool { return !IsBlank(s) }
 
-// HasEmpty 多个字符串中是否有空字符串。
+// HasEmpty reports whether any string is empty.
 func HasEmpty(strs ...string) bool {
 	for _, s := range strs {
 		if IsEmpty(s) {
@@ -37,7 +37,7 @@ func HasEmpty(strs ...string) bool {
 	return false
 }
 
-// HasBlank 多个字符串中是否有空白字符串。
+// HasBlank reports whether any string is blank.
 func HasBlank(strs ...string) bool {
 	for _, s := range strs {
 		if IsBlank(s) {
@@ -47,7 +47,7 @@ func HasBlank(strs ...string) bool {
 	return false
 }
 
-// IsAllEmpty 多个字符串是否都为空。
+// IsAllEmpty reports whether all strings are empty.
 func IsAllEmpty(strs ...string) bool {
 	for _, s := range strs {
 		if IsNotEmpty(s) {
@@ -57,7 +57,7 @@ func IsAllEmpty(strs ...string) bool {
 	return true
 }
 
-// IsAllBlank 多个字符串是否都为空白。
+// IsAllBlank reports whether all strings are blank.
 func IsAllBlank(strs ...string) bool {
 	for _, s := range strs {
 		if IsNotBlank(s) {
@@ -67,20 +67,20 @@ func IsAllBlank(strs ...string) bool {
 	return true
 }
 
-// Trim 去除首尾空白。
+// Trim removes leading and trailing white space.
 func Trim(s string) string { return strings.TrimSpace(s) }
 
-// TrimToEmpty 去除首尾空白，nil 视作空串。
+// TrimToEmpty removes leading and trailing white space.
 func TrimToEmpty(s string) string { return strings.TrimSpace(s) }
 
-// TrimStart 去除开头空白。
+// TrimStart removes leading white space.
 func TrimStart(s string) string { return strings.TrimLeftFunc(s, unicode.IsSpace) }
 
-// TrimEnd 去除末尾空白。
+// TrimEnd removes trailing white space.
 func TrimEnd(s string) string { return strings.TrimRightFunc(s, unicode.IsSpace) }
 
-// Sub 截取字符串，按 rune 计数，支持负数索引（从尾部开始）。
-// fromIndex 包含，toIndex 不包含。
+// Sub returns a substring by rune indexes and supports negative indexes from the end.
+// fromIndex is inclusive and toIndex is exclusive; reversed ranges are normalized.
 func Sub(s string, fromIndex, toIndex int) string {
 	rs := []rune(s)
 	n := len(rs)
@@ -108,7 +108,7 @@ func Sub(s string, fromIndex, toIndex int) string {
 	return string(rs[fromIndex:toIndex])
 }
 
-// SubBefore 截取分隔符 before 之前的字符串；若 isLastSeparator=true，按最后一次出现位置截取。
+// SubBefore returns the text before sep. When isLastSeparator is true, the last sep is used.
 func SubBefore(s, sep string, isLastSeparator bool) string {
 	if s == "" || sep == "" {
 		return s
@@ -125,7 +125,7 @@ func SubBefore(s, sep string, isLastSeparator bool) string {
 	return s[:idx]
 }
 
-// SubAfter 截取分隔符 after 之后的字符串。
+// SubAfter returns the text after sep. When isLastSeparator is true, the last sep is used.
 func SubAfter(s, sep string, isLastSeparator bool) string {
 	if s == "" {
 		return s
@@ -145,7 +145,7 @@ func SubAfter(s, sep string, isLastSeparator bool) string {
 	return s[idx+len(sep):]
 }
 
-// Split 切分字符串。
+// Split splits s by sep and returns an empty slice for an empty input string.
 func Split(s, sep string) []string {
 	if s == "" {
 		return []string{}
@@ -153,7 +153,7 @@ func Split(s, sep string) []string {
 	return strings.Split(s, sep)
 }
 
-// SplitTrim 切分后修剪每段并丢弃空白段。
+// SplitTrim splits s, trims each part, and drops blank parts.
 func SplitTrim(s, sep string) []string {
 	parts := strings.Split(s, sep)
 	out := make([]string, 0, len(parts))
@@ -166,7 +166,7 @@ func SplitTrim(s, sep string) []string {
 	return out
 }
 
-// Repeat 重复字符串 n 次。
+// Repeat repeats s n times. Non-positive n returns an empty string.
 func Repeat(s string, n int) string {
 	if n <= 0 {
 		return ""
@@ -174,7 +174,7 @@ func Repeat(s string, n int) string {
 	return strings.Repeat(s, n)
 }
 
-// PadLeft 左侧填充至指定长度（按 rune 计算）。
+// PadLeft pads s on the left to the requested rune length.
 func PadLeft(s string, length int, pad rune) string {
 	rs := []rune(s)
 	if len(rs) >= length {
@@ -187,7 +187,7 @@ func PadLeft(s string, length int, pad rune) string {
 	return string(padding) + s
 }
 
-// PadRight 右侧填充至指定长度。
+// PadRight pads s on the right to the requested rune length.
 func PadRight(s string, length int, pad rune) string {
 	rs := []rune(s)
 	if len(rs) >= length {
@@ -200,10 +200,10 @@ func PadRight(s string, length int, pad rune) string {
 	return s + string(padding)
 }
 
-// Contains 是否包含子串。
+// Contains reports whether s contains sub.
 func Contains(s, sub string) bool { return strings.Contains(s, sub) }
 
-// ContainsAny 是否包含任意一个子串。
+// ContainsAny reports whether s contains any candidate substring.
 func ContainsAny(s string, subs ...string) bool {
 	for _, sub := range subs {
 		if strings.Contains(s, sub) {
@@ -213,7 +213,7 @@ func ContainsAny(s string, subs ...string) bool {
 	return false
 }
 
-// ContainsAll 是否包含全部子串。
+// ContainsAll reports whether s contains all candidate substrings.
 func ContainsAll(s string, subs ...string) bool {
 	for _, sub := range subs {
 		if !strings.Contains(s, sub) {
@@ -223,21 +223,21 @@ func ContainsAll(s string, subs ...string) bool {
 	return true
 }
 
-// ContainsIgnoreCase 忽略大小写包含。
+// ContainsIgnoreCase reports whether s contains sub case-insensitively.
 func ContainsIgnoreCase(s, sub string) bool {
 	return strings.Contains(strings.ToLower(s), strings.ToLower(sub))
 }
 
-// StartsWith 是否以 prefix 开始。
+// StartsWith reports whether s starts with prefix.
 func StartsWith(s, prefix string) bool { return strings.HasPrefix(s, prefix) }
 
-// EndsWith 是否以 suffix 结束。
+// EndsWith reports whether s ends with suffix.
 func EndsWith(s, suffix string) bool { return strings.HasSuffix(s, suffix) }
 
-// EqualsIgnoreCase 忽略大小写比较。
+// EqualsIgnoreCase compares strings case-insensitively.
 func EqualsIgnoreCase(a, b string) bool { return strings.EqualFold(a, b) }
 
-// Reverse 字符串反转（按 rune）。
+// Reverse reverses a string by rune, preserving multi-byte characters.
 func Reverse(s string) string {
 	rs := []rune(s)
 	for i, j := 0, len(rs)-1; i < j; i, j = i+1, j-1 {
@@ -246,11 +246,11 @@ func Reverse(s string) string {
 	return string(rs)
 }
 
-// Format 仿 hutool StrUtil.format：使用 {} 占位符，按顺序替换。
+// Format mimics hutool StrUtil.format by replacing {} placeholders in order.
 //
 //	Format("name={}, age={}", "tom", 12) -> "name=tom, age=12"
 //
-// 使用 \\{ 转义。
+// Use \\{ to escape a literal opening brace.
 func Format(template string, args ...any) string {
 	if template == "" || len(args) == 0 {
 		return template
@@ -280,7 +280,7 @@ func Format(template string, args ...any) string {
 	return b.String()
 }
 
-// RemovePrefix 移除前缀。
+// RemovePrefix removes prefix when present.
 func RemovePrefix(s, prefix string) string {
 	if strings.HasPrefix(s, prefix) {
 		return s[len(prefix):]
@@ -288,7 +288,7 @@ func RemovePrefix(s, prefix string) string {
 	return s
 }
 
-// RemoveSuffix 移除后缀。
+// RemoveSuffix removes suffix when present.
 func RemoveSuffix(s, suffix string) string {
 	if strings.HasSuffix(s, suffix) {
 		return s[:len(s)-len(suffix)]
@@ -296,7 +296,7 @@ func RemoveSuffix(s, suffix string) string {
 	return s
 }
 
-// AddPrefixIfNot 不存在前缀则添加。
+// AddPrefixIfNot adds prefix when it is not already present.
 func AddPrefixIfNot(s, prefix string) string {
 	if strings.HasPrefix(s, prefix) {
 		return s
@@ -304,7 +304,7 @@ func AddPrefixIfNot(s, prefix string) string {
 	return prefix + s
 }
 
-// AddSuffixIfNot 不存在后缀则添加。
+// AddSuffixIfNot adds suffix when it is not already present.
 func AddSuffixIfNot(s, suffix string) string {
 	if strings.HasSuffix(s, suffix) {
 		return s
@@ -312,5 +312,5 @@ func AddSuffixIfNot(s, suffix string) string {
 	return s + suffix
 }
 
-// Length 按 rune 计算字符串长度。
+// Length returns the number of runes in s.
 func Length(s string) int { return len([]rune(s)) }

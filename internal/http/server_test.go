@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// 对应 hutool-http server/SimpleServerTest 中的 action 路由示例
+// Mirrors the action routing example from hutool-http server/SimpleServerTest.
 
 func TestSimpleServerStartAndStop(t *testing.T) {
 	port := pickFreePort(t)
@@ -63,7 +63,7 @@ func TestCreateServerHelper(t *testing.T) {
 	}
 }
 
-// pickFreePort 抢占一个空闲端口后立即释放，返回端口号。
+// pickFreePort reserves a free port, releases it immediately, and returns the port number.
 func pickFreePort(t *testing.T) int {
 	t.Helper()
 	l, err := net.Listen("tcp", "127.0.0.1:0")
@@ -75,7 +75,7 @@ func pickFreePort(t *testing.T) int {
 	return port
 }
 
-// waitServerReady 轮询等待端口可连接。
+// waitServerReady polls until the port is connectable.
 func waitServerReady(t *testing.T, port int) {
 	t.Helper()
 	deadline := time.Now().Add(2 * time.Second)

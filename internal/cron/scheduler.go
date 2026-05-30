@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// Scheduler 对应 hutool 的 Scheduler，是 gkcron 的核心调度器。
+// Scheduler is aligned with hutool Scheduler and is the core scheduler of gkcron.
 type Scheduler struct {
 	mu          sync.Mutex
 	config      *Config
@@ -17,11 +17,11 @@ type Scheduler struct {
 	executorMgr *taskExecutorManager
 	listenerMgr *listenerManager
 
-	// executor 控制任务执行使用的 goroutine。允许外部替换为带有限并发的执行器。
+	// executor controls goroutine usage for task execution and may be replaced with a concurrency-limited executor.
 	executor func(func())
 }
 
-// NewScheduler 创建 Scheduler。
+// NewScheduler creates a Scheduler.
 func NewScheduler() *Scheduler {
 	s := &Scheduler{
 		config:    NewConfig(),
@@ -34,19 +34,19 @@ func NewScheduler() *Scheduler {
 	return s
 }
 
-// Config 返回配置。
+// Config returns the scheduler config.
 func (s *Scheduler) Config() *Config { return s.config }
 
-// SetMatchSecond 设置是否匹配到秒（启动后修改无效）。
+// SetMatchSecond sets whether expressions match seconds; changes after start do not take effect.
 func (s *Scheduler) SetMatchSecond(b bool) *Scheduler {
 	s.config.MatchSecond = b
 	return s
 }
 
-// IsMatchSecond 是否匹配秒。
+// IsMatchSecond reports whether expressions match seconds.
 func (s *Scheduler) IsMatchSecond() bool { return s.config.MatchSecond }
 
-// SetTimeZone 设置时区。
+// SetTimeZone sets the scheduler time zone.
 func (s *Scheduler) SetTimeZone(loc *time.Location) *Scheduler {
 	if loc == nil {
 		loc = time.Local
@@ -55,7 +55,7 @@ func (s *Scheduler) SetTimeZone(loc *time.Location) *Scheduler {
 	return s
 }
 
-// SetExecutor 设置自定义执行函数。
+// SetExecutor sets a custom execution function.
 func (s *Scheduler) SetExecutor(exec func(func())) *Scheduler {
 	if exec != nil {
 		s.executor = exec
@@ -63,19 +63,19 @@ func (s *Scheduler) SetExecutor(exec func(func())) *Scheduler {
 	return s
 }
 
-// AddListener 添加监听器。
+// AddListener adds a listener.
 func (s *Scheduler) AddListener(l TaskListener) *Scheduler {
 	s.listenerMgr.add(l)
 	return s
 }
 
-// RemoveListener 移除监听器。
+// RemoveListener removes a listener.
 func (s *Scheduler) RemoveListener(l TaskListener) *Scheduler {
 	s.listenerMgr.remove(l)
 	return s
 }
 
-// Schedule 通过表达式注册任务，自动生成 id。返回任务 id。
+// Schedule registers a task with an expression, generates an id automatically, and returns it.
 func (s *Scheduler) Schedule(pattern string, task Task) (string, error) {
 	id := generateID()
 	if err := s.ScheduleWithID(id, pattern, task); err != nil {
@@ -84,12 +84,12 @@ func (s *Scheduler) Schedule(pattern string, task Task) (string, error) {
 	return id, nil
 }
 
-// ScheduleFunc 注册函数式任务。
+// ScheduleFunc registers a function task.
 func (s *Scheduler) ScheduleFunc(pattern string, fn func()) (string, error) {
 	return s.Schedule(pattern, TaskFunc(fn))
 }
 
-// ScheduleWithID 使用指定 id 注册任务。
+// ScheduleWithID registers a task with the specified id.
 func (s *Scheduler) ScheduleWithID(id, pattern string, task Task) error {
 	p, err := NewPattern(pattern)
 	if err != nil {
@@ -98,17 +98,17 @@ func (s *Scheduler) ScheduleWithID(id, pattern string, task Task) error {
 	return s.SchedulePattern(id, p, task)
 }
 
-// SchedulePattern 使用已解析的 Pattern 注册任务。
+// SchedulePattern registers a task with an already parsed Pattern.
 func (s *Scheduler) SchedulePattern(id string, p *Pattern, task Task) error {
 	return s.taskTable.Add(id, p, task)
 }
 
-// Deschedule 删除任务。
+// Deschedule deletes a task.
 func (s *Scheduler) Deschedule(id string) bool {
 	return s.taskTable.Remove(id)
 }
 
-// UpdatePattern 更新任务表达式。
+// UpdatePattern updates a task expression.
 func (s *Scheduler) UpdatePattern(id, pattern string) error {
 	p, err := NewPattern(pattern)
 	if err != nil {
@@ -120,32 +120,32 @@ func (s *Scheduler) UpdatePattern(id, pattern string) error {
 	return nil
 }
 
-// TaskTable 返回任务表。
+// TaskTable returns the task table.
 func (s *Scheduler) TaskTable() *TaskTable { return s.taskTable }
 
-// GetPattern 按 id 返回 Pattern。
+// GetPattern returns a Pattern by id.
 func (s *Scheduler) GetPattern(id string) *Pattern { return s.taskTable.GetPattern(id) }
 
-// GetTask 按 id 返回 Task。
+// GetTask returns a Task by id.
 func (s *Scheduler) GetTask(id string) Task { return s.taskTable.GetTask(id) }
 
-// IsEmpty 任务表是否为空。
+// IsEmpty reports whether the task table is empty.
 func (s *Scheduler) IsEmpty() bool { return s.taskTable.IsEmpty() }
 
-// Size 任务数量。
+// Size returns the task count.
 func (s *Scheduler) Size() int { return s.taskTable.Size() }
 
-// Clear 清空任务。
+// Clear removes all tasks.
 func (s *Scheduler) Clear() {
 	for _, id := range s.taskTable.IDs() {
 		s.taskTable.Remove(id)
 	}
 }
 
-// IsStarted 是否已启动。
+// IsStarted reports whether the scheduler is started.
 func (s *Scheduler) IsStarted() bool { return s.started.Load() }
 
-// Start 启动调度器。
+// Start starts the scheduler.
 func (s *Scheduler) Start() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -157,7 +157,7 @@ func (s *Scheduler) Start() error {
 	return nil
 }
 
-// Stop 停止调度器。clearTasks 为 true 时同时清空任务表。
+// Stop stops the scheduler and clears the task table when clearTasks is true.
 func (s *Scheduler) Stop(clearTasks ...bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -173,7 +173,7 @@ func (s *Scheduler) Stop(clearTasks ...bool) {
 	}
 }
 
-// submit 通过当前 executor 异步执行 fn。
+// submit executes fn asynchronously through the current executor.
 func (s *Scheduler) submit(fn func()) {
 	s.executor(fn)
 }

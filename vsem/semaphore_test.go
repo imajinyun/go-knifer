@@ -17,8 +17,8 @@ func TestVSemFacade(t *testing.T) {
 	if err := sem.Acquire(context.Background(), 1); err != nil {
 		t.Fatal(err)
 	}
-	if sem.InUse() != 1 {
-		t.Fatalf("InUse() = %d, want 1", sem.InUse())
+	if sem.Use() != 1 {
+		t.Fatalf("Use() = %d, want 1", sem.Use())
 	}
 	if sem.TryAcquire(1) {
 		t.Fatal("TryAcquire() should fail when capacity is full")

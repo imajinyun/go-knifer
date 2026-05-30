@@ -38,6 +38,18 @@ func TestVSetFacadeConstructorsAndMethods(t *testing.T) {
 	}
 }
 
+func TestVSetGenericFacade(t *testing.T) {
+	s := vset.New("a", "b")
+	s.Add("c")
+
+	if !s.Equal(vset.New("a", "b", "c")) {
+		t.Fatalf("generic set = %v, want a/b/c", s.Members())
+	}
+	if got := s.Sub(vset.New("a")); !got.Equal(vset.New("b", "c")) {
+		t.Fatalf("generic Sub() = %v, want b/c", got.Members())
+	}
+}
+
 func TestVSetFacadeJSONRoundTrip(t *testing.T) {
 	original := vset.NewString("go", "knifer")
 	b, err := json.Marshal(original)
@@ -46,6 +58,22 @@ func TestVSetFacadeJSONRoundTrip(t *testing.T) {
 	}
 
 	var decoded vset.String
+	if err := json.Unmarshal(b, &decoded); err != nil {
+		t.Fatal(err)
+	}
+	if !decoded.Equal(original) {
+		t.Fatalf("decoded = %v, want %v", decoded.Members(), original.Members())
+	}
+}
+
+func TestVSetGenericJSONRoundTrip(t *testing.T) {
+	original := vset.New(1, 2, 3)
+	b, err := json.Marshal(original)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var decoded vset.Set[int]
 	if err := json.Unmarshal(b, &decoded); err != nil {
 		t.Fatal(err)
 	}

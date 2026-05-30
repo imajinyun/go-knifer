@@ -11,31 +11,31 @@ import (
 	"unicode"
 )
 
-// 对应 hutool-core CharUtil。
+// This section provides character helpers aligned with hutool-core CharUtil.
 
-// IsBlankChar 是否为空白字符（包括 \u00A0 等）。
+// IsBlankChar reports whether r is a blank character, including non-breaking spaces.
 func IsBlankChar(r rune) bool {
 	return unicode.IsSpace(r) || r == '\u00A0' || r == '\u2007' || r == '\u202F' || r == '\uFEFF'
 }
 
-// IsLetter 是否为字母。
+// IsLetter reports whether r is a Unicode letter.
 func IsLetter(r rune) bool { return unicode.IsLetter(r) }
 
-// IsDigit 是否为数字。
+// IsDigit reports whether r is a Unicode digit.
 func IsDigit(r rune) bool { return unicode.IsDigit(r) }
 
-// IsAscii 是否为 ASCII。
+// IsAscii reports whether r is an ASCII character.
 func IsAscii(r rune) bool { return r < 128 }
 
-// IsLetterOrDigit 是否为字母或数字。
+// IsLetterOrDigit reports whether r is a Unicode letter or digit.
 func IsLetterOrDigit(r rune) bool { return unicode.IsLetter(r) || unicode.IsDigit(r) }
 
-// 对应 hutool-core BooleanUtil。
+// This section provides boolean helpers aligned with hutool-core BooleanUtil.
 
-// BoolNegate 取反。
+// BoolNegate returns the logical negation of b.
 func BoolNegate(b bool) bool { return !b }
 
-// BoolToInt true=1, false=0。
+// BoolToInt returns 1 for true and 0 for false.
 func BoolToInt(b bool) int {
 	if b {
 		return 1
@@ -43,7 +43,7 @@ func BoolToInt(b bool) int {
 	return 0
 }
 
-// BoolAnd 全真为真。
+// BoolAnd returns true only when all inputs are true.
 func BoolAnd(bs ...bool) bool {
 	for _, b := range bs {
 		if !b {
@@ -53,7 +53,7 @@ func BoolAnd(bs ...bool) bool {
 	return true
 }
 
-// BoolOr 任一为真即真。
+// BoolOr returns true when any input is true.
 func BoolOr(bs ...bool) bool {
 	for _, b := range bs {
 		if b {
@@ -63,9 +63,9 @@ func BoolOr(bs ...bool) bool {
 	return false
 }
 
-// 对应 hutool-core HashUtil（轻量子集）。
+// This section provides a lightweight subset of hutool-core HashUtil.
 
-// AdditiveHash 累加 hash。
+// AdditiveHash calculates an additive hash modulo prime. Non-positive prime falls back to 31.
 func AdditiveHash(s string, prime int) int {
 	if prime <= 0 {
 		prime = 31
@@ -77,34 +77,34 @@ func AdditiveHash(s string, prime int) int {
 	return h % prime
 }
 
-// FnvHash FNV-1 32 位哈希。
+// FnvHash calculates a 32-bit FNV-1 hash.
 func FnvHash(s string) uint32 {
 	h := fnv.New32()
 	_, _ = h.Write([]byte(s))
 	return h.Sum32()
 }
 
-// MD5Hex 计算 MD5（hex）。
+// MD5Hex calculates the MD5 digest and returns lowercase hex text.
 func MD5Hex(s string) string {
 	h := md5.Sum([]byte(s))
 	return hex.EncodeToString(h[:])
 }
 
-// SHA1Hex 计算 SHA1（hex）。
+// SHA1Hex calculates the SHA-1 digest and returns lowercase hex text.
 func SHA1Hex(s string) string {
 	h := sha1.Sum([]byte(s))
 	return hex.EncodeToString(h[:])
 }
 
-// SHA256Hex 计算 SHA256（hex）。
+// SHA256Hex calculates the SHA-256 digest and returns lowercase hex text.
 func SHA256Hex(s string) string {
 	h := sha256.Sum256([]byte(s))
 	return hex.EncodeToString(h[:])
 }
 
-// 对应 hutool-core ReUtil / Validator。
+// This section provides regular-expression and validation helpers aligned with hutool-core ReUtil and Validator.
 
-// 常用正则。
+// Common regular expressions used by validators.
 var (
 	rxEmail   = regexp.MustCompile(`^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$`)
 	rxMobile  = regexp.MustCompile(`^1[3-9]\d{9}$`)
@@ -114,25 +114,25 @@ var (
 	rxNumber  = regexp.MustCompile(`^-?\d+(\.\d+)?$`)
 )
 
-// IsEmail 是否为邮箱。
+// IsEmail reports whether s is an email address.
 func IsEmail(s string) bool { return rxEmail.MatchString(s) }
 
-// IsMobile 是否为中国大陆手机号。
+// IsMobile reports whether s is a mainland China mobile phone number.
 func IsMobile(s string) bool { return rxMobile.MatchString(s) }
 
-// IsURL 是否为 http/https URL。
+// IsURL reports whether s is an http or https URL.
 func IsURL(s string) bool { return rxURL.MatchString(s) }
 
-// IsIPv4 是否为 IPv4 地址。
+// IsIPv4 reports whether s is an IPv4 address.
 func IsIPv4(s string) bool { return rxIPv4.MatchString(s) }
 
-// IsChinese 是否全为中文字符。
+// IsChinese reports whether s consists only of Chinese Han characters.
 func IsChinese(s string) bool { return s != "" && rxChinese.MatchString(s) }
 
-// IsNumberStr 是否为数字字符串（支持小数和负号）。
+// IsNumberStr reports whether s is a number string, including decimals and a leading minus sign.
 func IsNumberStr(s string) bool { return rxNumber.MatchString(s) }
 
-// ReMatch 是否匹配正则。
+// ReMatch reports whether s matches pattern. Invalid patterns return false.
 func ReMatch(pattern, s string) bool {
 	re, err := regexp.Compile(pattern)
 	if err != nil {
@@ -141,7 +141,7 @@ func ReMatch(pattern, s string) bool {
 	return re.MatchString(s)
 }
 
-// ReFind 返回首个匹配，未命中返回空。
+// ReFind returns the first match, or an empty string when there is no match or the pattern is invalid.
 func ReFind(pattern, s string) string {
 	re, err := regexp.Compile(pattern)
 	if err != nil {
@@ -150,7 +150,7 @@ func ReFind(pattern, s string) string {
 	return re.FindString(s)
 }
 
-// ReFindAll 返回全部匹配。
+// ReFindAll returns all matches, or nil when the pattern is invalid.
 func ReFindAll(pattern, s string) []string {
 	re, err := regexp.Compile(pattern)
 	if err != nil {
@@ -159,7 +159,7 @@ func ReFindAll(pattern, s string) []string {
 	return re.FindAllString(s, -1)
 }
 
-// ReReplace 正则替换。
+// ReReplace replaces matches of pattern with replacement. Invalid patterns return the original string.
 func ReReplace(pattern, s, replacement string) string {
 	re, err := regexp.Compile(pattern)
 	if err != nil {
@@ -168,9 +168,9 @@ func ReReplace(pattern, s, replacement string) string {
 	return re.ReplaceAllString(s, replacement)
 }
 
-// 对应 hutool-core ObjUtil 部分常用方法。
+// This section provides common object helpers aligned with hutool-core ObjUtil.
 
-// DefaultIfNil 为 nil 时返回默认值。
+// DefaultIfNil returns def when v is nil; otherwise it returns *v.
 func DefaultIfNil[T any](v *T, def T) T {
 	if v == nil {
 		return def
@@ -178,7 +178,7 @@ func DefaultIfNil[T any](v *T, def T) T {
 	return *v
 }
 
-// DefaultIfEmpty 字符串为空时返回默认值。
+// DefaultIfEmpty returns def when s is empty.
 func DefaultIfEmpty(s, def string) string {
 	if IsEmpty(s) {
 		return def
@@ -186,7 +186,7 @@ func DefaultIfEmpty(s, def string) string {
 	return s
 }
 
-// DefaultIfBlank 字符串为空白时返回默认值。
+// DefaultIfBlank returns def when s is blank.
 func DefaultIfBlank(s, def string) string {
 	if IsBlank(s) {
 		return def
@@ -194,9 +194,9 @@ func DefaultIfBlank(s, def string) string {
 	return s
 }
 
-// 对应 hutool-core EscapeUtil 简化版。
+// This section provides a simplified subset of hutool-core EscapeUtil.
 
-// HtmlEscape 等价 httpx.HTMLEscape，但 base 不依赖 httpx，提供独立简版。
+// EscapeHTML escapes common HTML-sensitive characters without depending on the HTTP package.
 func EscapeHTML(s string) string {
 	r := strings.NewReplacer(
 		"&", "&amp;",
@@ -208,7 +208,7 @@ func EscapeHTML(s string) string {
 	return r.Replace(s)
 }
 
-// UnescapeHTML 解 HTML 实体（仅常用）。
+// UnescapeHTML unescapes common HTML entities.
 func UnescapeHTML(s string) string {
 	r := strings.NewReplacer(
 		"&amp;", "&",

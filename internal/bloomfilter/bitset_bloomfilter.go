@@ -7,20 +7,20 @@ import (
 	"os"
 )
 
-// BitSetBloomFilter 使用大小固定的位集合实现的布隆过滤器，对应 hutool BitSetBloomFilter。
-// 算法使用固定顺序，只需指定个数即可。
+// BitSetBloomFilter is a fixed-size bitset based Bloom filter, mirroring hutool BitSetBloomFilter.
+// Hash algorithms are used in a fixed order; only the algorithm count is configurable.
 type BitSetBloomFilter struct {
-	bits               []uint64 // 模拟 BitSet
+	bits               []uint64 // Simulates BitSet.
 	bitSetSize         int
 	addedElements      int
 	hashFunctionNumber int
 }
 
-// NewBitSetBloomFilter 构造布隆过滤器，过滤器容量为 c*k 个 bit。
+// NewBitSetBloomFilter creates a Bloom filter with c*k bits.
 //
-// c: 当前过滤器预先开辟的最大包含记录数（通常要比预计存入的记录多一倍）。
-// n: 当前过滤器预计所要包含的记录。
-// k: 哈希函数的个数（取值 1~8）。
+// c is the preallocated maximum record count, typically twice the expected inserted count.
+// n is the expected record count.
+// k is the number of hash functions, in range [1, 8].
 func NewBitSetBloomFilter(c, n, k int) *BitSetBloomFilter {
 	if c <= 0 {
 		panic("Parameter c must be positive")
@@ -46,7 +46,7 @@ func (b *BitSetBloomFilter) getBit(pos int) bool {
 	return (b.bits[pos>>6]>>uint(pos&63))&1 == 1
 }
 
-// InitFromFile 通过文件初始化过滤器，逐行 add。
+// InitFromFile initializes the filter from a file by adding each line.
 func (b *BitSetBloomFilter) InitFromFile(path string) error {
 	f, err := os.Open(path)
 	if err != nil {
@@ -57,7 +57,7 @@ func (b *BitSetBloomFilter) InitFromFile(path string) error {
 	for {
 		line, err := r.ReadString('\n')
 		if len(line) > 0 {
-			// 去除尾部换行
+			// Trim trailing line endings.
 			for len(line) > 0 && (line[len(line)-1] == '\n' || line[len(line)-1] == '\r') {
 				line = line[:len(line)-1]
 			}
@@ -72,7 +72,7 @@ func (b *BitSetBloomFilter) InitFromFile(path string) error {
 	}
 }
 
-// Add 加入字符串，若已存在返回 false。
+// Add inserts a string and returns false if it likely already exists.
 func (b *BitSetBloomFilter) Add(str string) bool {
 	if b.Contains(str) {
 		return false
@@ -85,7 +85,7 @@ func (b *BitSetBloomFilter) Add(str string) bool {
 	return true
 }
 
-// Contains 判断是否包含。
+// Contains reports whether the string may exist.
 func (b *BitSetBloomFilter) Contains(str string) bool {
 	positions := b.createHashes(str, b.hashFunctionNumber)
 	for _, v := range positions {
@@ -97,13 +97,13 @@ func (b *BitSetBloomFilter) Contains(str string) bool {
 	return true
 }
 
-// FalsePositiveProbability 当前过滤器误判率：(1 - e^(-k * n / m)) ^ k。
+// FalsePositiveProbability returns the current false positive probability: (1 - e^(-k * n / m)) ^ k.
 func (b *BitSetBloomFilter) FalsePositiveProbability() float64 {
 	return math.Pow(1-math.Exp(-float64(b.hashFunctionNumber)*float64(b.addedElements)/float64(b.bitSetSize)),
 		float64(b.hashFunctionNumber))
 }
 
-// createHashes 多哈希。
+// createHashes returns multiple hash values.
 func (b *BitSetBloomFilter) createHashes(str string, hashNumber int) []int32 {
 	out := make([]int32, hashNumber)
 	for i := 0; i < hashNumber; i++ {
@@ -112,7 +112,7 @@ func (b *BitSetBloomFilter) createHashes(str string, hashNumber int) []int32 {
 	return out
 }
 
-// bitSetHash 与 hutool BitSetBloomFilter.hash 一致。
+// bitSetHash matches hutool BitSetBloomFilter.hash.
 func bitSetHash(str string, k int) int32 {
 	switch k {
 	case 0:

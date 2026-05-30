@@ -6,7 +6,7 @@ import (
 	"mime/multipart"
 )
 
-// buildMultipartBody 根据表单字段和文件构造 multipart 请求体。
+// buildMultipartBody builds a multipart request body from form fields and files.
 func buildMultipartBody(form map[string]any, files []*formFile) (io.Reader, string, error) {
 	buf := &bytes.Buffer{}
 	w := multipart.NewWriter(buf)

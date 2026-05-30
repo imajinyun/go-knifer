@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 )
 
-// generateID 生成一个随机十六进制 id（16 个字符）。
+// generateID creates a random hexadecimal id with 16 characters.
 func generateID() string {
 	var b [8]byte
 	_, _ = rand.Read(b[:])

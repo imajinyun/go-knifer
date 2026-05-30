@@ -10,12 +10,12 @@ import (
 	"strings"
 )
 
-// 对应 hutool-core IoUtil。
+// This section provides IO helpers aligned with hutool-core IoUtil.
 
-// ReadAll 读取 Reader 全部内容。
+// ReadAll reads all data from r.
 func ReadAll(r io.Reader) ([]byte, error) { return io.ReadAll(r) }
 
-// ReadString 读取 Reader 全部内容为字符串。
+// ReadString reads all data from r and returns it as a string.
 func ReadString(r io.Reader) (string, error) {
 	b, err := ReadAll(r)
 	if err != nil {
@@ -24,7 +24,7 @@ func ReadString(r io.Reader) (string, error) {
 	return string(b), nil
 }
 
-// ReadLines 按行读取 Reader 所有行。
+// ReadLines reads all lines from r. The scanner buffer is enlarged to support lines up to 1 MiB.
 func ReadLines(r io.Reader) ([]string, error) {
 	scanner := bufio.NewScanner(r)
 	scanner.Buffer(make([]byte, 64*1024), 1024*1024)
@@ -38,10 +38,10 @@ func ReadLines(r io.Reader) ([]string, error) {
 	return lines, nil
 }
 
-// IoCopy 拷贝 Reader 到 Writer，返回已写入字节数。
+// IoCopy copies from src to dst and returns the number of bytes written.
 func IoCopy(dst io.Writer, src io.Reader) (int64, error) { return io.Copy(dst, src) }
 
-// CloseQuietly 安静关闭。
+// CloseQuietly closes c and ignores the returned error.
 func CloseQuietly(c io.Closer) {
 	if c == nil {
 		return
@@ -49,27 +49,27 @@ func CloseQuietly(c io.Closer) {
 	_ = c.Close()
 }
 
-// 对应 hutool-core FileUtil / FileNameUtil。
+// This section provides file and filename helpers aligned with hutool-core FileUtil and FileNameUtil.
 
-// FileExists 文件或目录是否存在。
+// FileExists reports whether a file or directory exists.
 func FileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
 }
 
-// IsFile 是否为文件。
+// IsFile reports whether path exists and is a regular file.
 func IsFile(path string) bool {
 	st, err := os.Stat(path)
 	return err == nil && !st.IsDir()
 }
 
-// IsDirectory 是否为目录。
+// IsDirectory reports whether path exists and is a directory.
 func IsDirectory(path string) bool {
 	st, err := os.Stat(path)
 	return err == nil && st.IsDir()
 }
 
-// FileReadString 读取文件全部内容为字符串。
+// FileReadString reads the whole file as a string.
 func FileReadString(path string) (string, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
@@ -78,10 +78,10 @@ func FileReadString(path string) (string, error) {
 	return string(b), nil
 }
 
-// FileReadBytes 读取文件全部字节。
+// FileReadBytes reads all bytes from a file.
 func FileReadBytes(path string) ([]byte, error) { return os.ReadFile(path) }
 
-// FileReadLines 按行读取文件。
+// FileReadLines reads all lines from a file.
 func FileReadLines(path string) ([]string, error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -91,7 +91,7 @@ func FileReadLines(path string) ([]string, error) {
 	return ReadLines(f)
 }
 
-// FileWriteString 将字符串写入文件（覆盖，自动创建目录）。
+// FileWriteString writes content to a file, overwriting existing data and creating parent directories.
 func FileWriteString(path, content string) error {
 	if err := Mkdir(filepath.Dir(path)); err != nil {
 		return err
@@ -99,7 +99,7 @@ func FileWriteString(path, content string) error {
 	return os.WriteFile(path, []byte(content), 0o644)
 }
 
-// FileWriteBytes 写入字节（覆盖）。
+// FileWriteBytes writes bytes to a file, overwriting existing data and creating parent directories.
 func FileWriteBytes(path string, data []byte) error {
 	if err := Mkdir(filepath.Dir(path)); err != nil {
 		return err
@@ -107,7 +107,7 @@ func FileWriteBytes(path string, data []byte) error {
 	return os.WriteFile(path, data, 0o644)
 }
 
-// FileAppendString 追加字符串。
+// FileAppendString appends content to a file and creates parent directories when needed.
 func FileAppendString(path, content string) error {
 	if err := Mkdir(filepath.Dir(path)); err != nil {
 		return err
@@ -121,7 +121,7 @@ func FileAppendString(path, content string) error {
 	return err
 }
 
-// Mkdir 递归创建目录。
+// Mkdir creates a directory tree. Empty and current-directory paths are treated as no-ops.
 func Mkdir(dir string) error {
 	if dir == "" || dir == "." {
 		return nil
@@ -129,7 +129,7 @@ func Mkdir(dir string) error {
 	return os.MkdirAll(dir, 0o755)
 }
 
-// Touch 不存在则创建空文件。
+// Touch creates an empty file when it does not exist.
 func Touch(path string) error {
 	if FileExists(path) {
 		return nil
@@ -144,7 +144,7 @@ func Touch(path string) error {
 	return f.Close()
 }
 
-// Del 删除文件或目录（递归）。
+// Del removes a file or directory recursively. Missing paths are treated as success.
 func Del(path string) error {
 	if !FileExists(path) {
 		return nil
@@ -152,7 +152,7 @@ func Del(path string) error {
 	return os.RemoveAll(path)
 }
 
-// FileCopy 复制文件；目标存在时覆盖。
+// FileCopy copies a file and overwrites the destination when it already exists.
 func FileCopy(src, dst string) error {
 	if !IsFile(src) {
 		return errors.New("source is not a file: " + src)
@@ -174,7 +174,7 @@ func FileCopy(src, dst string) error {
 	return err
 }
 
-// MainName 不含扩展名的文件名（含路径中的目录会被忽略）。
+// MainName returns the file name without its extension; parent directories are ignored.
 func MainName(path string) string {
 	name := filepath.Base(path)
 	ext := filepath.Ext(name)
@@ -184,7 +184,7 @@ func MainName(path string) string {
 	return strings.TrimSuffix(name, ext)
 }
 
-// Extension 文件扩展名（不含 '.'，无扩展时返回空）。
+// Extension returns the file extension without the leading dot, or an empty string when absent.
 func Extension(path string) string {
 	ext := filepath.Ext(path)
 	if ext == "" {
@@ -193,7 +193,7 @@ func Extension(path string) string {
 	return ext[1:]
 }
 
-// FileSize 文件大小（字节），不存在或非文件返回 -1。
+// FileSize returns the file size in bytes, or -1 when the path is missing or not a file.
 func FileSize(path string) int64 {
 	st, err := os.Stat(path)
 	if err != nil || st.IsDir() {
@@ -202,5 +202,5 @@ func FileSize(path string) int64 {
 	return st.Size()
 }
 
-// ReaderFromString 字符串转 Reader。
+// ReaderFromString converts a string to an io.Reader.
 func ReaderFromString(s string) io.Reader { return bytes.NewBufferString(s) }

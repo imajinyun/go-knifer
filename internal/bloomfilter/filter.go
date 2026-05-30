@@ -2,33 +2,33 @@ package bloomfilter
 
 import "fmt"
 
-// BloomFilter 布隆过滤器接口，对应 hutool BloomFilter。
+// BloomFilter is the Bloom filter interface corresponding to hutool BloomFilter.
 type BloomFilter interface {
-	// Contains 判断字符串是否在过滤器中存在（存在误差）。
+	// Contains reports whether the string may exist in the filter.
 	Contains(str string) bool
-	// Add 添加字符串到过滤器，若已存在返回 false，否则添加并返回 true。
+	// Add inserts a string into the filter. It returns false if the value may already exist.
 	Add(str string) bool
 }
 
-// HashFunc 用于 FuncFilter 的字符串哈希函数。
+// HashFunc calculates a hash value for FuncFilter.
 type HashFunc func(str string) int64
 
-// FuncFilter 基于自定义哈希函数的布隆过滤器，对应 hutool FuncFilter / AbstractFilter。
+// FuncFilter is a Bloom filter backed by a custom hash function, corresponding to hutool FuncFilter / AbstractFilter.
 type FuncFilter struct {
 	bm       BitMap
 	size     int64
 	hashFunc HashFunc
 }
 
-// DefaultMachineNum FuncFilter 默认机器位（与 hutool 一致使用 32 位）。
+// DefaultMachineNum is the default machine word size for FuncFilter, matching hutool's 32-bit default.
 var DefaultMachineNum = Machine32
 
-// NewFuncFilter 使用默认机器位构造 FuncFilter。
+// NewFuncFilter creates a FuncFilter with the default machine word size.
 func NewFuncFilter(maxValue int64, hashFunc HashFunc) *FuncFilter {
 	return NewFuncFilterWithMachineNum(maxValue, DefaultMachineNum, hashFunc)
 }
 
-// NewFuncFilterWithMachineNum 使用指定机器位构造 FuncFilter。
+// NewFuncFilterWithMachineNum creates a FuncFilter with the specified machine word size.
 func NewFuncFilterWithMachineNum(maxValue int64, machineNum int, hashFunc HashFunc) *FuncFilter {
 	if maxValue < 1 || maxValue > 0x7FFFFFFF {
 		panic(fmt.Sprintf("maxValue must be between 1 and %d", int64(0x7FFFFFFF)))
@@ -46,7 +46,7 @@ func NewFuncFilterWithMachineNum(maxValue int64, machineNum int, hashFunc HashFu
 	return &FuncFilter{bm: bm, size: maxValue, hashFunc: hashFunc}
 }
 
-// hash 调用底层哈希函数并对 size 取模、取绝对值。
+// hash calls the underlying hash function, applies modulo size, and returns an absolute value.
 func (f *FuncFilter) hash(str string) int64 {
 	v := f.hashFunc(str) % f.size
 	if v < 0 {
@@ -55,10 +55,10 @@ func (f *FuncFilter) hash(str string) int64 {
 	return v
 }
 
-// Contains 实现 BloomFilter.Contains。
+// Contains implements BloomFilter.Contains.
 func (f *FuncFilter) Contains(str string) bool { return f.bm.Contains(f.hash(str)) }
 
-// Add 实现 BloomFilter.Add。
+// Add implements BloomFilter.Add.
 func (f *FuncFilter) Add(str string) bool {
 	h := f.hash(str)
 	if f.bm.Contains(h) {
@@ -68,54 +68,54 @@ func (f *FuncFilter) Add(str string) bool {
 	return true
 }
 
-// ============= 基于具体哈希算法的便捷过滤器 =============
+// ============= Convenient filters based on specific hash algorithms =============
 
-// NewDefaultFilter 默认布隆过滤器（Java String.hashCode）。
+// NewDefaultFilter creates a default Bloom filter using Java String.hashCode.
 func NewDefaultFilter(maxValue int64) *FuncFilter {
 	return NewFuncFilter(maxValue, func(s string) int64 { return int64(JavaDefaultHash(s)) })
 }
 
-// NewELFFilter ELF 哈希过滤器。
+// NewELFFilter creates an ELF hash filter.
 func NewELFFilter(maxValue int64) *FuncFilter {
 	return NewFuncFilter(maxValue, func(s string) int64 { return int64(ElfHash(s)) })
 }
 
-// NewFNVFilter FNV 哈希过滤器。
+// NewFNVFilter creates an FNV hash filter.
 func NewFNVFilter(maxValue int64) *FuncFilter {
 	return NewFuncFilter(maxValue, func(s string) int64 { return int64(FnvHashString(s)) })
 }
 
-// NewHfFilter HF 哈希过滤器。
+// NewHfFilter creates an HF hash filter.
 func NewHfFilter(maxValue int64) *FuncFilter {
 	return NewFuncFilter(maxValue, HfHash)
 }
 
-// NewHfIpFilter HFIP 哈希过滤器。
+// NewHfIpFilter creates an HFIP hash filter.
 func NewHfIpFilter(maxValue int64) *FuncFilter {
 	return NewFuncFilter(maxValue, HfIpHash)
 }
 
-// NewJSFilter JS 哈希过滤器。
+// NewJSFilter creates a JS hash filter.
 func NewJSFilter(maxValue int64) *FuncFilter {
 	return NewFuncFilter(maxValue, func(s string) int64 { return int64(JsHash(s)) })
 }
 
-// NewPJWFilter PJW 哈希过滤器。
+// NewPJWFilter creates a PJW hash filter.
 func NewPJWFilter(maxValue int64) *FuncFilter {
 	return NewFuncFilter(maxValue, func(s string) int64 { return int64(PjwHash(s)) })
 }
 
-// NewRSFilter RS 哈希过滤器。
+// NewRSFilter creates an RS hash filter.
 func NewRSFilter(maxValue int64) *FuncFilter {
 	return NewFuncFilter(maxValue, func(s string) int64 { return int64(RsHash(s)) })
 }
 
-// NewSDBMFilter SDBM 哈希过滤器。
+// NewSDBMFilter creates an SDBM hash filter.
 func NewSDBMFilter(maxValue int64) *FuncFilter {
 	return NewFuncFilter(maxValue, func(s string) int64 { return int64(SdbmHash(s)) })
 }
 
-// NewTianlFilter TianL 哈希过滤器。
+// NewTianlFilter creates a TianL hash filter.
 func NewTianlFilter(maxValue int64) *FuncFilter {
 	return NewFuncFilter(maxValue, TianlHash)
 }

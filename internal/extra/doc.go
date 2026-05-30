@@ -1,2 +1,3 @@
-// Package extra 对应 hutool-extra，提供压缩、Emoji、模板与校验等扩展工具。
+// Package extra provides extension utilities such as compression, emoji helpers,
+// templates, validation helpers, and zip archive operations.
 package extra

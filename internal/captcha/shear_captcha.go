@@ -8,17 +8,17 @@ import (
 	baseutil "github.com/imajinyun/go-knifer/internal/base"
 )
 
-// ShearCaptcha 对应 hutool ShearCaptcha：扭曲干扰验证码。
+// ShearCaptcha mirrors hutool ShearCaptcha and applies distortion.
 type ShearCaptcha struct {
 	AbstractCaptcha
 }
 
-// NewShearCaptcha 默认 5 位字符，干扰线宽 4。
+// NewShearCaptcha creates a captcha with 5 characters and line width 4 by default.
 func NewShearCaptcha(width, height int) *ShearCaptcha {
 	return NewShearCaptchaWith(width, height, 5, 4)
 }
 
-// NewShearCaptchaWith 自定义字符数与干扰线宽度。
+// NewShearCaptchaWith creates a captcha with custom character count and line width.
 func NewShearCaptchaWith(width, height, codeCount, thickness int) *ShearCaptcha {
 	c := &ShearCaptcha{}
 	c.Width = width
@@ -28,20 +28,20 @@ func NewShearCaptchaWith(width, height, codeCount, thickness int) *ShearCaptcha 
 	return c
 }
 
-// CreateCode 生成验证码字符串与图片。
+// CreateCode generates a captcha text and image.
 func (c *ShearCaptcha) CreateCode() {
 	c.generateCode()
 	img := image.NewRGBA(image.Rect(0, 0, c.Width, c.Height))
 	fillBackground(img, c.bg())
 
-	// 1) 字符
+	// 1) Characters.
 	drawString(img, c.code, c.Width, c.Height, computeScale(c.Height))
 
-	// 2) 扭曲
+	// 2) Distortion.
 	shearX(img, c.bg())
 	shearY(img, c.bg())
 
-	// 3) 干扰线（粗线）
+	// 3) Thick interference line.
 	thickness := c.InterfereCount
 	if thickness <= 0 {
 		thickness = 4
@@ -57,7 +57,7 @@ func (c *ShearCaptcha) CreateCode() {
 	c.setImageBytes(buf.Bytes())
 }
 
-// ImageBytes 惰性渲染。
+// ImageBytes renders the image lazily.
 func (c *ShearCaptcha) ImageBytes() []byte {
 	if c.imgBytes == nil {
 		c.CreateCode()
@@ -65,7 +65,7 @@ func (c *ShearCaptcha) ImageBytes() []byte {
 	return c.imgBytes
 }
 
-// Code 惰性生成。
+// Code generates the captcha lazily.
 func (c *ShearCaptcha) Code() string {
 	if c.code == "" {
 		c.CreateCode()

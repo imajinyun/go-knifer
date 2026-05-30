@@ -15,7 +15,7 @@ func mustPattern(t *testing.T, expr string) *Pattern {
 }
 
 func TestPatternBasic(t *testing.T) {
-	// 5 字段：每分钟
+	// 5 fields: every minute.
 	p := mustPattern(t, "* * * * *")
 	now := time.Date(2024, 1, 1, 12, 30, 45, 0, time.UTC)
 	if !p.Match(now, false) {
@@ -36,7 +36,7 @@ func TestPatternMinute(t *testing.T) {
 }
 
 func TestPatternStepRange(t *testing.T) {
-	// 每 15 分钟
+	// Every 15 minutes.
 	p := mustPattern(t, "*/15 * * * *")
 	for _, m := range []int{0, 15, 30, 45} {
 		ts := time.Date(2024, 1, 1, 0, m, 0, 0, time.UTC)
@@ -53,9 +53,9 @@ func TestPatternStepRange(t *testing.T) {
 }
 
 func TestPatternDayOfWeekAlias(t *testing.T) {
-	// 每周一 9:00
+	// Every Monday at 9:00.
 	p := mustPattern(t, "0 9 * * mon")
-	mon := time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC) // 2024-01-01 是周一
+	mon := time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC) // 2024-01-01 is Monday.
 	tue := time.Date(2024, 1, 2, 9, 0, 0, 0, time.UTC)
 	if !p.Match(mon, false) {
 		t.Fatalf("expect match on monday")
@@ -102,7 +102,7 @@ func TestPatternRange(t *testing.T) {
 
 func TestPatternLastDay(t *testing.T) {
 	p := mustPattern(t, "0 0 L * *")
-	// 2024-02 是闰年，最后一天为 29
+	// 2024-02 is a leap-year month, so the last day is 29.
 	yes := time.Date(2024, 2, 29, 0, 0, 0, 0, time.UTC)
 	no := time.Date(2024, 2, 28, 0, 0, 0, 0, time.UTC)
 	if !p.Match(yes, false) {
@@ -111,7 +111,7 @@ func TestPatternLastDay(t *testing.T) {
 	if p.Match(no, false) {
 		t.Fatalf("28 is not last day of feb 2024")
 	}
-	// 非闰年 2 月最后一天
+	// Last day of February in a non-leap year.
 	yes2 := time.Date(2023, 2, 28, 0, 0, 0, 0, time.UTC)
 	if !p.Match(yes2, false) {
 		t.Fatalf("expect last day of feb 2023 = 28")
@@ -132,8 +132,8 @@ func TestPatternWithSecondField(t *testing.T) {
 
 func TestPatternOrExpression(t *testing.T) {
 	p := mustPattern(t, "0 9 * * mon | 0 17 * * fri")
-	mon9 := time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC)   // 周一
-	fri17 := time.Date(2024, 1, 5, 17, 0, 0, 0, time.UTC) // 周五
+	mon9 := time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC)   // Monday.
+	fri17 := time.Date(2024, 1, 5, 17, 0, 0, 0, time.UTC) // Friday.
 	tue := time.Date(2024, 1, 2, 9, 0, 0, 0, time.UTC)
 	if !p.Match(mon9, false) || !p.Match(fri17, false) {
 		t.Fatalf("OR expression should match both")
@@ -144,7 +144,7 @@ func TestPatternOrExpression(t *testing.T) {
 }
 
 func TestPatternYear(t *testing.T) {
-	// 7 字段：second minute hour dom month dow year
+	// 7 fields: second minute hour dom month dow year.
 	p := mustPattern(t, "0 0 0 1 1 * 2024")
 	yes := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	no := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)

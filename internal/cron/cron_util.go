@@ -2,62 +2,62 @@ package cron
 
 import "sync"
 
-// 全局调度器，对应 hutool 的 CronUtil.scheduler。
+// defaultScheduler is the package-level scheduler aligned with hutool CronUtil.scheduler.
 var (
 	defaultMu        sync.Mutex
 	defaultScheduler = NewScheduler()
 )
 
-// DefaultScheduler 获取全局调度器。
+// DefaultScheduler returns the package-level scheduler.
 func DefaultScheduler() *Scheduler {
 	return defaultScheduler
 }
 
-// SetMatchSecond 设置全局调度器是否匹配到秒。
+// SetMatchSecond sets whether the package-level scheduler matches seconds.
 func SetMatchSecond(b bool) {
 	defaultScheduler.SetMatchSecond(b)
 }
 
-// Schedule 在全局调度器上注册任务，返回任务 id。
+// Schedule registers a task on the package-level scheduler and returns its id.
 func Schedule(pattern string, task Task) (string, error) {
 	return defaultScheduler.Schedule(pattern, task)
 }
 
-// ScheduleFunc 在全局调度器上注册函数任务。
+// ScheduleFunc registers a function task on the package-level scheduler.
 func ScheduleFunc(pattern string, fn func()) (string, error) {
 	return defaultScheduler.ScheduleFunc(pattern, fn)
 }
 
-// ScheduleWithID 在全局调度器上注册指定 id 的任务。
+// ScheduleWithID registers a task with the specified id on the package-level scheduler.
 func ScheduleWithID(id, pattern string, task Task) error {
 	return defaultScheduler.ScheduleWithID(id, pattern, task)
 }
 
-// Remove 在全局调度器上删除任务。
+// Remove deletes a task from the package-level scheduler.
 func Remove(id string) bool {
 	return defaultScheduler.Deschedule(id)
 }
 
-// UpdatePattern 在全局调度器上更新任务表达式。
+// UpdatePattern updates a task expression on the package-level scheduler.
 func UpdatePattern(id, pattern string) error {
 	return defaultScheduler.UpdatePattern(id, pattern)
 }
 
-// Start 启动全局调度器。
+// Start starts the package-level scheduler.
 func Start() error {
 	defaultMu.Lock()
 	defer defaultMu.Unlock()
 	return defaultScheduler.Start()
 }
 
-// Stop 停止全局调度器。
+// Stop stops the package-level scheduler.
 func Stop() {
 	defaultMu.Lock()
 	defer defaultMu.Unlock()
 	defaultScheduler.Stop()
 }
 
-// Restart 重启全局调度器。
+// Restart restarts the package-level scheduler.
 func Restart() error {
 	defaultMu.Lock()
 	defer defaultMu.Unlock()

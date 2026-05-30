@@ -16,23 +16,23 @@ func TestAcquireTryAcquireRelease(t *testing.T) {
 	if err := sem.Acquire(context.Background(), 2); err != nil {
 		t.Fatalf("Acquire() error = %v", err)
 	}
-	if sem.InUse() != 2 {
-		t.Fatalf("InUse() = %d, want 2", sem.InUse())
+	if sem.Use() != 2 {
+		t.Fatalf("Use() = %d, want 2", sem.Use())
 	}
 	if sem.TryAcquire(1) {
 		t.Fatal("TryAcquire() should fail when capacity is full")
 	}
 
 	sem.Release(1)
-	if sem.InUse() != 1 {
-		t.Fatalf("InUse() after Release() = %d, want 1", sem.InUse())
+	if sem.Use() != 1 {
+		t.Fatalf("Use() after Release() = %d, want 1", sem.Use())
 	}
 	if !sem.TryAcquire(1) {
 		t.Fatal("TryAcquire() should succeed after one permit is released")
 	}
 	sem.Release(2)
-	if sem.InUse() != 0 {
-		t.Fatalf("InUse() after final Release() = %d, want 0", sem.InUse())
+	if sem.Use() != 0 {
+		t.Fatalf("Use() after final Release() = %d, want 0", sem.Use())
 	}
 }
 

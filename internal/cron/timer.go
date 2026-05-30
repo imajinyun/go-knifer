@@ -10,7 +10,7 @@ const (
 	timerUnitMinute = int64(time.Minute / time.Millisecond)
 )
 
-// cronTimer 对应 hutool 的 CronTimer，按时间步长触发 launcher。
+// cronTimer is aligned with hutool CronTimer and triggers launchers by time unit.
 type cronTimer struct {
 	scheduler *Scheduler
 	stop      atomic.Bool
@@ -21,7 +21,7 @@ func newCronTimer(s *Scheduler) *cronTimer {
 	return &cronTimer{scheduler: s, stopCh: make(chan struct{})}
 }
 
-// run 启动循环，按 unit 触发任务，并自动校准时钟漂移。
+// run starts the loop, triggers tasks by unit, and automatically corrects clock drift.
 func (t *cronTimer) run() {
 	unit := timerUnitMinute
 	if t.scheduler.config.MatchSecond {
@@ -37,7 +37,7 @@ func (t *cronTimer) run() {
 				return
 			}
 		}
-		// 时间倒退或大幅跳跃：重置基准
+		// Reset the baseline when time moves backward or jumps significantly.
 		now = nowMillis()
 		if now-thisTime > 2*unit || thisTime-now > 2*unit {
 			thisTime = now
@@ -49,7 +49,7 @@ func (t *cronTimer) run() {
 	}
 }
 
-// sleep 在被停止时立即返回 false。
+// sleep returns false immediately when stopped.
 func (t *cronTimer) sleep(d time.Duration) bool {
 	if d <= 0 {
 		return true
@@ -70,12 +70,12 @@ func (t *cronTimer) stopTimer() {
 	}
 }
 
-// nowMillis 返回当前 Unix 毫秒。
+// nowMillis returns the current Unix milliseconds.
 func nowMillis() int64 {
 	return time.Now().UnixMilli()
 }
 
-// timeFromMillisInLocation 将毫秒转为指定时区的 time.Time。
+// timeFromMillisInLocation converts milliseconds to time.Time in the specified time zone.
 func timeFromMillisInLocation(ms int64, loc *time.Location) time.Time {
 	if loc == nil {
 		loc = time.Local

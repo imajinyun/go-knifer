@@ -8,17 +8,17 @@ import (
 	baseutil "github.com/imajinyun/go-knifer/internal/base"
 )
 
-// CircleCaptcha 对应 hutool CircleCaptcha：使用干扰圆圈生成的图形验证码。
+// CircleCaptcha mirrors hutool CircleCaptcha and uses interference circles.
 type CircleCaptcha struct {
 	AbstractCaptcha
 }
 
-// NewCircleCaptcha 默认 5 位字符，15 个圆圈。
+// NewCircleCaptcha creates a captcha with 5 characters and 15 circles by default.
 func NewCircleCaptcha(width, height int) *CircleCaptcha {
 	return NewCircleCaptchaWith(width, height, 5, 15)
 }
 
-// NewCircleCaptchaWith 自定义字符数与干扰圆圈数。
+// NewCircleCaptchaWith creates a captcha with custom character and circle counts.
 func NewCircleCaptchaWith(width, height, codeCount, circleCount int) *CircleCaptcha {
 	c := &CircleCaptcha{}
 	c.Width = width
@@ -28,7 +28,7 @@ func NewCircleCaptchaWith(width, height, codeCount, circleCount int) *CircleCapt
 	return c
 }
 
-// CreateCode 生成新的验证码字符串与图片。
+// CreateCode generates a new captcha text and image.
 func (c *CircleCaptcha) CreateCode() {
 	c.generateCode()
 	img := image.NewRGBA(image.Rect(0, 0, c.Width, c.Height))
@@ -48,7 +48,7 @@ func (c *CircleCaptcha) CreateCode() {
 	c.setImageBytes(buf.Bytes())
 }
 
-// ImageBytes 惰性渲染。
+// ImageBytes renders the image lazily.
 func (c *CircleCaptcha) ImageBytes() []byte {
 	if c.imgBytes == nil {
 		c.CreateCode()
@@ -56,7 +56,7 @@ func (c *CircleCaptcha) ImageBytes() []byte {
 	return c.imgBytes
 }
 
-// Code 惰性生成。
+// Code generates the captcha lazily.
 func (c *CircleCaptcha) Code() string {
 	if c.code == "" {
 		c.CreateCode()

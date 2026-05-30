@@ -2,7 +2,7 @@ package http
 
 import "testing"
 
-// 对应 hutool-http ContentTypeTest
+// Mirrors hutool-http ContentTypeTest.
 func TestContentTypeBuild(t *testing.T) {
 	got := ContentTypeJSON.WithCharset("UTF-8")
 	want := "application/json;charset=UTF-8"

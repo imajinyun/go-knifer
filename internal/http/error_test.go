@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// 对应 hutool-http HttpException 相关用例
+// Mirrors hutool-http HttpException related cases.
 
 func TestHTTPErrorMessage(t *testing.T) {
 	e := NewHTTPError("read failed", errors.New("conn closed"))

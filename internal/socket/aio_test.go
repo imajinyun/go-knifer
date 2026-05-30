@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// echoIoAction 实现 IoAction，将收到的数据原样写回。
+// echoIoAction implements IoAction and writes received data back as-is.
 type echoIoAction struct {
 	accepted atomic.Int32
 	failed   atomic.Int32
@@ -66,7 +66,7 @@ func TestAioServerEcho(t *testing.T) {
 	}
 }
 
-// 客户端用：收到一条消息后通知 done。
+// clientIoAction notifies done after receiving one message.
 type clientIoAction struct {
 	mu      sync.Mutex
 	message []byte

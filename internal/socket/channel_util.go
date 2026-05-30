@@ -5,8 +5,8 @@ import (
 	"time"
 )
 
-// ChannelUtilDial 对应 hutool ChannelUtil.connect，
-// 在 Go 中使用同步 Dial 即可，poolSize 用于上层并发限制。
+// ChannelUtilDial is aligned with hutool ChannelUtil.connect.
+// In Go a synchronous Dial is enough; pool size should be handled by upper layers.
 func ChannelUtilDial(addr *net.TCPAddr, timeout time.Duration) (net.Conn, error) {
 	if addr == nil {
 		return nil, NewSocketErrorMsg("address must not be nil")

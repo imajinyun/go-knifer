@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"compress/zlib"
+	"fmt"
 	"html/template"
 	"io"
 	"net/mail"
@@ -16,9 +17,9 @@ import (
 	"unicode/utf8"
 )
 
-var emojiPattern = regexp.MustCompile(`[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}]`)
+var emojiPattern = regexp.MustCompile(`(?:[\x{1F1E6}-\x{1F1FF}]{2}|[#*0-9]\x{FE0F}?\x{20E3}|[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}])(?:\x{FE0F}|\x{200D}[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}]\x{FE0F}?)*`)
 
-// Gzip 使用 gzip 压缩数据，对应 Hutool CompressUtil 的 gzip 能力。Gzip compresses data using gzip.
+// Gzip compresses data using gzip.
 func Gzip(data []byte) ([]byte, error) {
 	var buf bytes.Buffer
 	w := gzip.NewWriter(&buf)
@@ -32,7 +33,7 @@ func Gzip(data []byte) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// Gunzip 解压 gzip 数据。Gunzip decompresses gzip data.
+// Gunzip decompresses gzip data.
 func Gunzip(data []byte) ([]byte, error) {
 	r, err := gzip.NewReader(bytes.NewReader(data))
 	if err != nil {
@@ -42,7 +43,7 @@ func Gunzip(data []byte) ([]byte, error) {
 	return io.ReadAll(r)
 }
 
-// Zlib 使用 zlib 压缩数据。Zlib compresses data using zlib.
+// Zlib compresses data using zlib.
 func Zlib(data []byte) ([]byte, error) {
 	var buf bytes.Buffer
 	w := zlib.NewWriter(&buf)
@@ -56,7 +57,7 @@ func Zlib(data []byte) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// Unzlib 解压 zlib 数据。Unzlib decompresses zlib data.
+// Unzlib decompresses zlib data.
 func Unzlib(data []byte) ([]byte, error) {
 	r, err := zlib.NewReader(bytes.NewReader(data))
 	if err != nil {
@@ -66,8 +67,16 @@ func Unzlib(data []byte) ([]byte, error) {
 	return io.ReadAll(r)
 }
 
-// ZipFiles 将文件或目录打包为 zip 归档。ZipFiles creates a zip archive from files.
+// ZipFiles creates a zip archive from files and directories.
+//
+// Directory entries are preserved so empty directories survive a round trip, and
+// file metadata such as permissions is copied into the zip headers.
 func ZipFiles(dest string, files ...string) (err error) {
+	if dir := filepath.Dir(dest); dir != "." {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return err
+		}
+	}
 	out, err := os.Create(dest)
 	if err != nil {
 		return err
@@ -91,13 +100,18 @@ func ZipFiles(dest string, files ...string) (err error) {
 	return nil
 }
 
-// Unzip 将 zip 归档解压到目标目录。Unzip extracts a zip archive into destDir.
+// Unzip extracts a zip archive into destDir.
+//
+// Archive paths are validated before writing to prevent zip-slip path traversal.
 func Unzip(src, destDir string) error {
 	zr, err := zip.OpenReader(src)
 	if err != nil {
 		return err
 	}
 	defer func() { _ = zr.Close() }()
+	if err := os.MkdirAll(destDir, 0o755); err != nil {
+		return err
+	}
 	for _, f := range zr.File {
 		if err := extractZipFile(f, destDir); err != nil {
 			return err
@@ -106,13 +120,14 @@ func Unzip(src, destDir string) error {
 	return nil
 }
 
-// ContainsEmoji 判断字符串是否包含 Emoji 字符，对应 Hutool EmojiUtil.containsEmoji。ContainsEmoji reports whether s contains emoji-like runes.
+// ContainsEmoji reports whether s contains emoji-like runes.
 func ContainsEmoji(s string) bool { return emojiPattern.MatchString(s) }
 
-// RemoveEmoji 移除字符串中的 Emoji 字符。RemoveEmoji removes emoji-like runes from s.
+// RemoveEmoji removes emoji-like runes from s, including variation-selector and
+// zero-width-joiner based emoji sequences.
 func RemoveEmoji(s string) string { return emojiPattern.ReplaceAllString(s, "") }
 
-// RenderTemplate 使用 Go html/template 渲染模板字符串，对应 Hutool TemplateUtil 的基础模板能力。RenderTemplate renders a Go html/template string with data.
+// RenderTemplate renders a Go html/template string with data.
 func RenderTemplate(tpl string, data any) (string, error) {
 	t, err := template.New("hutool-extra").Parse(tpl)
 	if err != nil {
@@ -125,33 +140,57 @@ func RenderTemplate(tpl string, data any) (string, error) {
 	return buf.String(), nil
 }
 
-// IsEmail 判断字符串是否为合法邮箱地址，对应 Hutool ValidationUtil 的常见校验。IsEmail reports whether s is a syntactically valid email address.
+// IsEmail reports whether s is a syntactically valid email address.
+//
+// Display-name forms such as "Alice <alice@example.com>" are rejected because
+// this helper validates an address string rather than a mail header value.
 func IsEmail(s string) bool {
-	_, err := mail.ParseAddress(s)
-	return err == nil
+	s = strings.TrimSpace(s)
+	addr, err := mail.ParseAddress(s)
+	return err == nil && addr.Name == "" && addr.Address == s
 }
 
-// IsURL 判断字符串是否为包含 scheme 和 host 的绝对 URL。IsURL reports whether s is an absolute URL with scheme and host.
+// IsURL reports whether s is an absolute URL with scheme and host.
 func IsURL(s string) bool {
-	u, err := url.ParseRequestURI(s)
+	if s == "" || strings.TrimSpace(s) != s {
+		return false
+	}
+	u, err := url.Parse(s)
 	if err != nil {
 		return false
 	}
-	return u.Scheme != "" && u.Host != ""
+	return u.IsAbs() && u.Host != ""
 }
 
-// IsBlank 判断字符串是否为空白。IsBlank reports whether s is empty or whitespace.
+// IsBlank reports whether s is empty or whitespace.
 func IsBlank(s string) bool { return strings.TrimSpace(s) == "" }
 
-// RuneLen 返回 UTF-8 字符数量。RuneLen returns UTF-8 rune count.
+// RuneLen returns the UTF-8 rune count.
 func RuneLen(s string) int { return utf8.RuneCountInString(s) }
 
 func addFileToZip(zw *zip.Writer, path, name string) error {
-	info, err := os.Stat(path)
+	info, err := os.Lstat(path)
 	if err != nil {
 		return err
 	}
+	zipName := filepath.ToSlash(filepath.Clean(name))
+	if zipName == "." || strings.HasPrefix(zipName, "../") || strings.HasPrefix(zipName, "/") {
+		return fmt.Errorf("invalid zip entry name %q", name)
+	}
+
+	header, err := zip.FileInfoHeader(info)
+	if err != nil {
+		return err
+	}
+	header.Name = zipName
+	header.Method = zip.Deflate
+	header.SetMode(info.Mode())
+
 	if info.IsDir() {
+		header.Name += "/"
+		if _, err := zw.CreateHeader(header); err != nil {
+			return err
+		}
 		entries, err := os.ReadDir(path)
 		if err != nil {
 			return err
@@ -163,25 +202,33 @@ func addFileToZip(zw *zip.Writer, path, name string) error {
 		}
 		return nil
 	}
+
+	w, err := zw.CreateHeader(header)
+	if err != nil {
+		return err
+	}
+	if info.Mode()&os.ModeSymlink != 0 {
+		linkTarget, err := os.Readlink(path)
+		if err != nil {
+			return err
+		}
+		_, err = io.WriteString(w, linkTarget)
+		return err
+	}
+
 	r, err := os.Open(path)
 	if err != nil {
 		return err
 	}
 	defer func() { _ = r.Close() }()
-	w, err := zw.Create(filepath.ToSlash(name))
-	if err != nil {
-		return err
-	}
 	_, err = io.Copy(w, r)
 	return err
 }
 
 func extractZipFile(f *zip.File, destDir string) error {
-	target := filepath.Join(destDir, f.Name)
-	cleanDest := filepath.Clean(destDir) + string(os.PathSeparator)
-	cleanTarget := filepath.Clean(target)
-	if !strings.HasPrefix(cleanTarget, cleanDest) && cleanTarget != filepath.Clean(destDir) {
-		return os.ErrPermission
+	target, err := safeZipTarget(destDir, f.Name)
+	if err != nil {
+		return err
 	}
 	if f.FileInfo().IsDir() {
 		return os.MkdirAll(target, f.Mode())
@@ -203,4 +250,27 @@ func extractZipFile(f *zip.File, destDir string) error {
 		return err
 	}
 	return w.Close()
+}
+
+func safeZipTarget(destDir, name string) (string, error) {
+	if name == "" || filepath.IsAbs(name) {
+		return "", fmt.Errorf("illegal file path in zip: %q", name)
+	}
+	target := filepath.Join(destDir, filepath.FromSlash(name))
+	destAbs, err := filepath.Abs(destDir)
+	if err != nil {
+		return "", err
+	}
+	targetAbs, err := filepath.Abs(target)
+	if err != nil {
+		return "", err
+	}
+	rel, err := filepath.Rel(destAbs, targetAbs)
+	if err != nil {
+		return "", err
+	}
+	if rel == ".." || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
+		return "", fmt.Errorf("illegal file path in zip: %q", name)
+	}
+	return target, nil
 }

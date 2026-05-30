@@ -48,11 +48,14 @@ The project follows an “internal implementation + public facade” layout: `in
 | `vcrypto` | `github.com/imajinyun/go-knifer/vcrypto` | Cryptography and digests: MD5/SHA, HMAC, random bytes, AES-CBC/AES-GCM, RSA-OAEP, and RSA PEM encoding/decoding. |
 | `vextra` | `github.com/imajinyun/go-knifer/vextra` | Extra utilities: gzip/zlib, zip/unzip, emoji helpers, Go template rendering, and common validation helpers. |
 | `vhttp` | `github.com/imajinyun/go-knifer/vhttp` | Chainable HTTP client, downloads, global headers/timeouts, BasicAuth, User-Agent parsing, and a simple server helper. |
+| `vresty` | `github.com/imajinyun/go-knifer/vresty` | Resty v3 based HTTP facade: chainable requests, JSON/form/multipart bodies, global headers/timeouts, downloads, and lightweight response helpers. |
 | `vjson` | `github.com/imajinyun/go-knifer/vjson` | Ordered JSON objects/arrays, JSON parsing and formatting, path-based get/put, bean/list conversion, and XML/JSON conversion. |
 | `vjwt` | `github.com/imajinyun/go-knifer/vjwt` | JWT creation, parsing, signing, verification, and time-claim validation; supports HMAC, RSA, ECDSA, and none signers. |
 | `vlog` | `github.com/imajinyun/go-knifer/vlog` | Logging facade: console/color console loggers, log levels, global logger, and static logging functions. |
+| `verr` | `github.com/imajinyun/go-knifer/verr` | Error helpers: panic recovery, error aggregation, multierror matching, stack capture/formatting, and optional logrus/Sentry integration. |
 | `vconf` | `github.com/imajinyun/go-knifer/vconf` | Grouped configuration reader for setting/properties-style text and a simple YAML subset, with typed getters. |
 | `vset` | `github.com/imajinyun/go-knifer/vset` | Set utilities for string, int, int32, int64, uint, uint32, and uint64 values, with add/remove/contains and set operations. |
+| `vjob` | `github.com/imajinyun/go-knifer/vjob` | Sliceable job execution: separate job data from scheduling options, typed slice/map adapters, context cancellation, and serialized merge callbacks. |
 | `vsem` | `github.com/imajinyun/go-knifer/vsem` | Weighted, context-aware counting semaphore with FIFO fairness, try-acquire, close notifications, and in-use metrics. |
 | `vskt` | `github.com/imajinyun/go-knifer/vskt` | TCP socket utilities: plain connections, NIO/AIO server/client helpers, and protocol encoder/decoder interfaces. |
 | `vsys` | `github.com/imajinyun/go-knifer/vsys` | System and runtime information: host, OS, user, Go runtime, process memory, goroutines, environment variables, and more. |
@@ -158,6 +161,57 @@ func main() {
 }
 ```
 
+### Resty v3 HTTP facade
+
+`vresty` provides a thin, chainable facade over `resty.dev/v3`. It keeps the
+public API lightweight while supporting common HTTP operations such as query
+parameters, headers, cookies, Basic/Bearer auth, JSON/form bodies, multipart
+uploads, per-request timeout, TLS skip verification, redirect control, and
+downloads.
+
+```go
+package main
+
+import (
+ "fmt"
+ "time"
+
+ "github.com/imajinyun/go-knifer/vresty"
+)
+
+func main() {
+ vresty.SetGlobalTimeout(5 * time.Second)
+ vresty.SetGlobalHeader("X-App", "go-knifer")
+
+ resp := vresty.Post("https://api.example.com/users").
+  Query("source", "demo").
+  BearerAuth("token").
+  BodyJSON(`{"name":"go-knifer"}`).
+  Timeout(3 * time.Second).
+  Execute()
+
+ if resp.Err() != nil {
+  panic(resp.Err())
+ }
+ if !resp.IsOK() {
+  panic(fmt.Sprintf("unexpected status: %d", resp.Status()))
+ }
+
+ fmt.Println(resp.ContentType())
+ fmt.Println(resp.Body())
+}
+```
+
+Shortcuts are available for simple cases and downloads:
+
+```go
+body := vresty.GetString("https://example.com")
+jsonBody := vresty.PostJSON("https://api.example.com/events", `{"event":"created"}`)
+n, err := vresty.DownloadFile("https://example.com/report.csv", "./downloads")
+_, _, _ = body, jsonBody, n
+_ = err
+```
+
 ### Digest and JWT
 
 ```go
@@ -191,6 +245,102 @@ func main() {
  }
 
  fmt.Println(jwt.SetKey(key).Verify())
+}
+```
+
+### Sliceable job execution
+
+`vjob` separates the job contract from scheduling options. A job only needs to
+implement `Len` and range-based `Run`; `Options` controls batch size and maximum
+concurrency. The zero value is valid: `Run` processes the whole job as one serial
+shard, while `RunWith` accepts explicit scheduling options. Returned `Merge`
+callbacks are replayed serially after shards succeed, which lets each worker
+build local results concurrently and merge them safely afterwards.
+
+```go
+package main
+
+import (
+ "context"
+ "fmt"
+ "sync"
+
+ "github.com/imajinyun/go-knifer/vjob"
+)
+
+func main() {
+ values := []int{1, 2, 3, 4}
+ var (
+  mu  sync.Mutex
+  sum int
+ )
+
+ job := vjob.NewBatch(func(ctx context.Context, batch []int) (vjob.Merge, error) {
+  local := 0
+  for _, v := range batch {
+   local += v
+  }
+  return func() error {
+   mu.Lock()
+   defer mu.Unlock()
+   sum += local
+   return nil
+  }, nil
+ }, values)
+
+ if err := vjob.RunWith(context.Background(), job, vjob.Options{BatchSize: 2, MaxConcurrency: 2}); err != nil {
+  panic(err)
+ }
+ fmt.Println(sum)
+}
+```
+
+Reusable jobs can embed `vjob.Options` and pass their own configuration to
+`RunWith`:
+
+```go
+type UserImportJob struct {
+ vjob.Options
+ users []User
+}
+
+func (j *UserImportJob) Len() int { return len(j.users) }
+
+func (j *UserImportJob) Run(ctx context.Context, start, end int) (vjob.Merge, error) {
+ batch := j.users[start:end]
+ return func() error {
+  return saveUsers(batch)
+ }, nil
+}
+
+err := vjob.RunWith(ctx, job, job.Options)
+```
+
+### Error recovery and stack helpers
+
+```go
+package main
+
+import (
+ "fmt"
+
+ "github.com/imajinyun/go-knifer/verr"
+)
+
+func main() {
+ err := verr.Recover(func() error {
+  panic("boom")
+ }, "run risky job")
+ if err != nil {
+  fmt.Println(err)
+  fmt.Println(verr.GetStack(err))
+ }
+
+ collector := verr.NewCollector()
+ collector.GoRun(func() error { return fmt.Errorf("task failed") }, "async task")
+ if err := collector.Error(); err != nil {
+  fmt.Println(err)
+ }
 }
 ```
 

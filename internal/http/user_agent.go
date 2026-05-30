@@ -2,7 +2,7 @@ package http
 
 import "strings"
 
-// UserAgent 表示解析后的 User-Agent 信息（对应 hutool-http UserAgent）。
+// UserAgent represents parsed User-Agent information, aligned with hutool-http UserAgent.
 type UserAgent struct {
 	IsMobile bool
 	Browser  string
@@ -13,17 +13,17 @@ type UserAgent struct {
 	Raw      string
 }
 
-// ParseUserAgent 解析 UA 字符串。这里采用轻量规则匹配，覆盖常见浏览器/系统。
+// ParseUserAgent parses a UA string with lightweight rules covering common browsers and systems.
 func ParseUserAgent(ua string) *UserAgent {
 	u := &UserAgent{Raw: ua}
 	low := strings.ToLower(ua)
 
-	// 移动端
+	// Mobile devices.
 	if strings.Contains(low, "mobile") || strings.Contains(low, "android") || strings.Contains(low, "iphone") || strings.Contains(low, "ipad") {
 		u.IsMobile = true
 	}
 
-	// 浏览器
+	// Browsers.
 	switch {
 	case strings.Contains(low, "edg/"):
 		u.Browser = "Edge"
@@ -46,7 +46,7 @@ func ParseUserAgent(ua string) *UserAgent {
 		u.Browser = "Unknown"
 	}
 
-	// 引擎
+	// Engines.
 	switch {
 	case strings.Contains(low, "webkit"):
 		u.Engine = "WebKit"
@@ -84,7 +84,7 @@ func ParseUserAgent(ua string) *UserAgent {
 		u.OS = "Unknown"
 	}
 
-	// 平台
+	// Platforms.
 	switch {
 	case strings.Contains(low, "windows"):
 		u.Platform = "Windows"

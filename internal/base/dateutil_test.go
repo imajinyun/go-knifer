@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// 对应 hutool-core DateUtilTest。
+// Tests aligned with hutool-core DateUtilTest.
 
 func TestFormatAndParse(t *testing.T) {
 	tt := time.Date(2024, 7, 15, 10, 20, 30, 0, time.Local)

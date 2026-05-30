@@ -8,14 +8,14 @@ import (
 	"time"
 )
 
-// AioSession 对应 hutool aio.AioSession，每个客户端连接对应一个会话对象。
-// 会话内部维护读/写缓冲，并以异步回调的方式触发 IoAction.DoAction。
+// AioSession represents one client connection, aligned with hutool aio.AioSession.
+// It owns read/write buffers and triggers IoAction.DoAction via asynchronous callbacks.
 type AioSession struct {
 	conn        net.Conn
 	ioAction    IoAction[*bytes.Buffer]
 	readBuffer  *bytes.Buffer
 	writeBuffer *bytes.Buffer
-	scratch     []byte // 用于一次 Read 的临时空间
+	scratch     []byte // Temporary space for one Read call.
 
 	readTimeout  time.Duration
 	writeTimeout time.Duration
@@ -24,7 +24,7 @@ type AioSession struct {
 	mu     sync.Mutex
 }
 
-// NewAioSession 构造 AioSession。
+// NewAioSession creates an AioSession.
 func NewAioSession(conn net.Conn, ioAction IoAction[*bytes.Buffer], cfg *SocketConfig) *AioSession {
 	if cfg == nil {
 		cfg = NewSocketConfig()
@@ -48,25 +48,25 @@ func NewAioSession(conn net.Conn, ioAction IoAction[*bytes.Buffer], cfg *SocketC
 	}
 }
 
-// Conn 返回底层连接。
+// Conn returns the underlying connection.
 func (s *AioSession) Conn() net.Conn { return s.conn }
 
-// ReadBuffer 返回读缓冲。
+// ReadBuffer returns the read buffer.
 func (s *AioSession) ReadBuffer() *bytes.Buffer { return s.readBuffer }
 
-// WriteBuffer 返回写缓冲。
+// WriteBuffer returns the write buffer.
 func (s *AioSession) WriteBuffer() *bytes.Buffer { return s.writeBuffer }
 
-// IoAction 返回 IO 处理器。
+// IoAction returns the IO action.
 func (s *AioSession) IoAction() IoAction[*bytes.Buffer] { return s.ioAction }
 
-// RemoteAddress 返回远端地址。
+// RemoteAddress returns the remote address.
 func (s *AioSession) RemoteAddress() net.Addr {
 	return GetRemoteAddress(s.conn)
 }
 
-// Read 异步读取一次数据，等价于 hutool 的 read()。
-// 在 Go 中通过 goroutine 实现"异步" + 完成后回调 IoAction。
+// Read asynchronously reads once, equivalent to hutool's read().
+// In Go this is implemented with a goroutine and a completion callback to IoAction.
 func (s *AioSession) Read() *AioSession {
 	if !s.IsOpen() {
 		return s
@@ -75,7 +75,7 @@ func (s *AioSession) Read() *AioSession {
 	return s
 }
 
-// doRead 执行一次读取并回调，返回 false 表示读取失败/连接已关闭。
+// doRead reads once and invokes callbacks; false means read failed or the connection closed.
 func (s *AioSession) doRead() bool {
 	if !s.IsOpen() {
 		return false
@@ -99,14 +99,14 @@ func (s *AioSession) doRead() bool {
 	return true
 }
 
-// callbackRead 执行 IoAction 的 DoAction 回调。
+// callbackRead invokes the IoAction.DoAction callback.
 func (s *AioSession) callbackRead() {
 	if s.ioAction != nil {
 		s.ioAction.DoAction(s, s.readBuffer)
 	}
 }
 
-// Write 写出数据。
+// Write writes data.
 func (s *AioSession) Write(data []byte) (int, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -125,7 +125,7 @@ func (s *AioSession) Write(data []byte) (int, error) {
 	return n, nil
 }
 
-// WriteAndClose 写出数据并关闭写方向。
+// WriteAndClose writes data and closes the write side.
 func (s *AioSession) WriteAndClose(data []byte) error {
 	if _, err := s.Write(data); err != nil {
 		return err
@@ -133,12 +133,12 @@ func (s *AioSession) WriteAndClose(data []byte) error {
 	return s.CloseOut()
 }
 
-// IsOpen 会话是否仍然打开。
+// IsOpen reports whether the session is still open.
 func (s *AioSession) IsOpen() bool {
 	return s.conn != nil && !s.closed.Load()
 }
 
-// CloseIn 关闭读方向。
+// CloseIn closes the read side.
 func (s *AioSession) CloseIn() error {
 	if tc, ok := s.conn.(*net.TCPConn); ok {
 		if err := tc.CloseRead(); err != nil {
@@ -148,7 +148,7 @@ func (s *AioSession) CloseIn() error {
 	return nil
 }
 
-// CloseOut 关闭写方向。
+// CloseOut closes the write side.
 func (s *AioSession) CloseOut() error {
 	if tc, ok := s.conn.(*net.TCPConn); ok {
 		if err := tc.CloseWrite(); err != nil {
@@ -158,7 +158,7 @@ func (s *AioSession) CloseOut() error {
 	return nil
 }
 
-// Close 关闭会话。
+// Close closes the session.
 func (s *AioSession) Close() error {
 	if s.closed.Swap(true) {
 		return nil

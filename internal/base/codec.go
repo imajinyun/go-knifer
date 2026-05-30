@@ -6,18 +6,19 @@ import (
 	"net/url"
 )
 
-// 对应 hutool-core Base64 / HexUtil / URLUtil 编解码部分。
+// This file provides encoding and decoding helpers aligned with hutool-core
+// Base64, HexUtil, and URLUtil.
 
-// Base64Encode 标准 Base64 编码。
+// Base64Encode encodes bytes with standard Base64 encoding.
 func Base64Encode(data []byte) string { return base64.StdEncoding.EncodeToString(data) }
 
-// Base64EncodeStr 字符串的 Base64 编码。
+// Base64EncodeStr encodes a string with standard Base64 encoding.
 func Base64EncodeStr(s string) string { return Base64Encode([]byte(s)) }
 
-// Base64Decode 标准 Base64 解码。
+// Base64Decode decodes a standard Base64 string.
 func Base64Decode(s string) ([]byte, error) { return base64.StdEncoding.DecodeString(s) }
 
-// Base64DecodeStr 解码并返回字符串。
+// Base64DecodeStr decodes a standard Base64 string and returns text.
 func Base64DecodeStr(s string) (string, error) {
 	b, err := Base64Decode(s)
 	if err != nil {
@@ -26,22 +27,22 @@ func Base64DecodeStr(s string) (string, error) {
 	return string(b), nil
 }
 
-// Base64URLEncode URL 安全 Base64 编码。
+// Base64URLEncode encodes bytes with URL-safe Base64 encoding.
 func Base64URLEncode(data []byte) string { return base64.URLEncoding.EncodeToString(data) }
 
-// Base64URLDecode URL 安全 Base64 解码。
+// Base64URLDecode decodes a URL-safe Base64 string.
 func Base64URLDecode(s string) ([]byte, error) { return base64.URLEncoding.DecodeString(s) }
 
-// HexEncode 十六进制编码。
+// HexEncode encodes bytes as a lowercase hexadecimal string.
 func HexEncode(data []byte) string { return hex.EncodeToString(data) }
 
-// HexEncodeStr 字符串的 Hex 编码。
+// HexEncodeStr encodes a string as lowercase hexadecimal text.
 func HexEncodeStr(s string) string { return HexEncode([]byte(s)) }
 
-// HexDecode 十六进制解码。
+// HexDecode decodes a hexadecimal string.
 func HexDecode(s string) ([]byte, error) { return hex.DecodeString(s) }
 
-// HexDecodeStr 解码并返回字符串。
+// HexDecodeStr decodes a hexadecimal string and returns text.
 func HexDecodeStr(s string) (string, error) {
 	b, err := HexDecode(s)
 	if err != nil {
@@ -50,8 +51,8 @@ func HexDecodeStr(s string) (string, error) {
 	return string(b), nil
 }
 
-// URLEncode URL 编码。
+// URLEncode escapes a string for use in URL query components.
 func URLEncode(s string) string { return url.QueryEscape(s) }
 
-// URLDecode URL 解码。
+// URLDecode unescapes a URL query component string.
 func URLDecode(s string) (string, error) { return url.QueryUnescape(s) }

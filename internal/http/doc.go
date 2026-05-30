@@ -1,6 +1,7 @@
-// Package gkhttp 对应 hutool-http，提供 HTTP 客户端、下载、Cookie、UserAgent、SimpleServer 等工具。
+// Package gkhttp is aligned with hutool-http and provides HTTP client,
+// download, Cookie, UserAgent, SimpleServer, and related utilities.
 //
-// 与 hutool-http 不同，本包基于 Go 标准库 net/http 进行二次封装，提供链式 API：
+// Unlike hutool-http, this package wraps Go's standard net/http library and provides a chainable API:
 //
 //	body := gkhttp.Get("https://example.com").Execute().Body()
 //	resp := gkhttp.NewRequest(gkhttp.MethodPost, url).

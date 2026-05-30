@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// 对应 hutool-core IoUtilTest / FileUtilTest / FileNameUtilTest。
+// Tests aligned with hutool-core IoUtilTest, FileUtilTest, and FileNameUtilTest.
 
 func TestReadString(t *testing.T) {
 	r := ReaderFromString("hello world")

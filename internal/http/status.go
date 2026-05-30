@@ -1,6 +1,6 @@
 package http
 
-// 常见 HTTP 状态码（对应 hutool-http HttpStatus）。
+// Common HTTP status codes, aligned with hutool-http HttpStatus.
 const (
 	StatusContinue           = 100
 	StatusSwitchingProtocols = 101
@@ -49,7 +49,7 @@ const (
 	StatusHTTPVersionNotSupported = 505
 )
 
-// IsRedirected 判断状态码是否为重定向（3xx）。
+// IsRedirected reports whether the status code is a redirect (3xx).
 func IsRedirected(status int) bool {
 	return status >= 300 && status < 400
 }

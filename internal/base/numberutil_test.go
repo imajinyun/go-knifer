@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// 对应 hutool-core NumberUtilTest。
+// Tests aligned with hutool-core NumberUtilTest.
 
 func TestNumberArith(t *testing.T) {
 	if !Equals(NumberAdd(0.1, 0.2), 0.3) {
