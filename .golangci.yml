@@ -24,19 +24,19 @@ linters:
           - cyclop
           - errcheck
           - gosec
-      - path: internal/(base|crypto)/.*\.go
+      - path: internal/(hash|crypto)/.*\.go
         linters:
           - gosec
         text: "weak cryptographic primitive"
-      - path: internal/(base|bloomfilter|captcha|crypto|json)/.*\.go
+      - path: internal/(bloomfilter|captcha|conv|crypto|id|json|rand)/.*\.go
         linters:
           - gosec
         text: "integer overflow conversion"
-      - path: internal/base/randomutil\.go
+      - path: internal/(rand/rand|id/id)\.go
         linters:
           - gosec
         text: "weak random number generator"
-      - path: internal/(base/ioutil|bloomfilter/bitset_bloomfilter|extra/extra)\.go
+      - path: internal/(file/file|bloomfilter/bitset_bloomfilter|extra/extra)\.go
         linters:
           - gosec
         text: "Potential file inclusion via variable"
@@ -52,7 +52,7 @@ linters:
         linters:
           - gosec
         text: "InsecureSkipVerify"
-      - path: internal/(base/ioutil|captcha/captcha|extra/extra)\.go
+      - path: internal/(file/file|captcha/captcha|extra/extra)\.go
         linters:
           - gosec
         text: "Expect .* permissions"

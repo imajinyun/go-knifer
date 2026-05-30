@@ -5,7 +5,7 @@ import (
 	"image"
 	"image/png"
 
-	baseutil "github.com/imajinyun/go-knifer/internal/base"
+	randutil "github.com/imajinyun/go-knifer/internal/rand"
 )
 
 // LineCaptcha mirrors hutool LineCaptcha and uses interference lines.
@@ -40,10 +40,10 @@ func (c *LineCaptcha) renderPNG(code string) []byte {
 	fillBackground(img, c.bg())
 	// Interference lines.
 	for i := 0; i < c.InterfereCount; i++ {
-		xs := baseutil.RandomInt(c.Width)
-		ys := baseutil.RandomInt(c.Height)
-		xe := xs + baseutil.RandomInt(atLeastOne(c.Width/8))
-		ye := ys + baseutil.RandomInt(atLeastOne(c.Height/8))
+		xs := randutil.RandomInt(c.Width)
+		ys := randutil.RandomInt(c.Height)
+		xe := xs + randutil.RandomInt(atLeastOne(c.Width/8))
+		ye := ys + randutil.RandomInt(atLeastOne(c.Height/8))
 		drawLine(img, xs, ys, xe, ye, randomColor())
 	}
 	// Characters.

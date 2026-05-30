@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	baseutil "github.com/imajinyun/go-knifer/internal/base"
+	randutil "github.com/imajinyun/go-knifer/internal/rand"
 )
 
 // CodeGenerator mirrors the CodeGenerator interface from hutool-captcha.
@@ -33,7 +33,7 @@ type RandomGenerator struct {
 
 // NewRandomGenerator creates a generator with the default character set.
 func NewRandomGenerator(length int) *RandomGenerator {
-	return &RandomGenerator{BaseStr: baseutil.BaseCharNumberUC, Length: length}
+	return &RandomGenerator{BaseStr: randutil.BaseCharNumberUC, Length: length}
 }
 
 // NewRandomGeneratorWithBase creates a generator with a custom base string and length.
@@ -45,7 +45,7 @@ func NewRandomGeneratorWithBase(base string, length int) *RandomGenerator {
 func (g *RandomGenerator) Generate() string {
 	base := g.BaseStr
 	if base == "" {
-		base = baseutil.BaseCharNumberUC
+		base = randutil.BaseCharNumberUC
 	}
 	n := g.Length
 	if n <= 0 {
@@ -54,7 +54,7 @@ func (g *RandomGenerator) Generate() string {
 	runes := []rune(base)
 	out := make([]rune, n)
 	for i := 0; i < n; i++ {
-		out[i] = runes[baseutil.RandomInt(len(runes))]
+		out[i] = runes[randutil.RandomInt(len(runes))]
 	}
 	return string(out)
 }
@@ -101,17 +101,17 @@ func (g *MathGenerator) Length() int { return g.NumberLength*2 + 2 }
 // Generate returns an "a op b=" expression padded with spaces on the right.
 func (g *MathGenerator) Generate() string {
 	limit := g.limit()
-	op := mathOperators[baseutil.RandomInt(len(mathOperators))]
-	a := baseutil.RandomInt(limit)
+	op := mathOperators[randutil.RandomInt(len(mathOperators))]
+	a := randutil.RandomInt(limit)
 	var b int
 	if !g.ResultHasNegativeNumber && op == '-' {
 		if a == 0 {
 			b = 0
 		} else {
-			b = baseutil.RandomInt(a)
+			b = randutil.RandomInt(a)
 		}
 	} else {
-		b = baseutil.RandomInt(limit)
+		b = randutil.RandomInt(limit)
 	}
 	n1 := padRight(strconv.Itoa(a), g.NumberLength, ' ')
 	n2 := padRight(strconv.Itoa(b), g.NumberLength, ' ')

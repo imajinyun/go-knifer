@@ -29,7 +29,7 @@ text := hex.EncodeToString(sum[:])
 现在，使用 `go-knifer` 可以直接调用工具方法：
 
 ```go
-text := vbase.MD5Hex("hello")
+text := vhash.MD5Hex("hello")
 ```
 
 这类封装能减少重复代码、降低复制粘贴带来的隐患，也让团队内相同场景使用一致的 API。
@@ -40,7 +40,21 @@ text := vbase.MD5Hex("hello")
 
 | 模块 | 导入路径 | 功能说明 |
 | --- | --- | --- |
-| `vbase` | `github.com/imajinyun/go-knifer/vbase` | 基础工具：字符串、随机 ID、编解码、日期时间、数字、集合、Map、类型转换、文件 IO、正则、命名转换等。 |
+| `vstr` | `github.com/imajinyun/go-knifer/vstr` | 字符串工具：空白判断、裁剪、切分、截取、格式化、命名转换、默认值和 HTML 转义。 |
+| `vslice` | `github.com/imajinyun/go-knifer/vslice` | Slice 工具：包含/索引、反转、去重、拼接、过滤/映射、截取、合并、集合操作和分页。 |
+| `vmap` | `github.com/imajinyun/go-knifer/vmap` | Map 工具：空判断、keys、values、反转和合并。 |
+| `vconv` | `github.com/imajinyun/go-knifer/vconv` | 宽松类型转换：string、int、int64、float64、bool、bytes 及默认值版本。 |
+| `vdate` | `github.com/imajinyun/go-knifer/vdate` | 日期时间工具：常用布局、解析/格式化、日/月/年起止、偏移和比较。 |
+| `vfile` | `github.com/imajinyun/go-knifer/vfile` | 文件与 IO 工具：读写复制、按行读取、mkdir/touch/delete、文件名处理和静默关闭。 |
+| `vcodec` | `github.com/imajinyun/go-knifer/vcodec` | 编解码工具：Base64、URL-safe Base64、Hex 和 URL query 转义。 |
+| `vnum` | `github.com/imajinyun/go-knifer/vnum` | 数字工具：加减乘除、舍入、min/max/sum/avg、range、格式化和数字判断。 |
+| `vrand` | `github.com/imajinyun/go-knifer/vrand` | 随机工具：整数、浮点、布尔、字节、字符串、数字字符串和随机元素。 |
+| `vid` | `github.com/imajinyun/go-knifer/vid` | ID 工具：UUID、ObjectId 和 NanoId。 |
+| `vhash` | `github.com/imajinyun/go-knifer/vhash` | Hash 工具：Additive、FNV、MD5、SHA-1、SHA-256 Hex。 |
+| `vvalidator` | `github.com/imajinyun/go-knifer/vvalidator` | 校验工具：邮箱、手机号、URL、IPv4、中文和数字字符串。 |
+| `vregex` | `github.com/imajinyun/go-knifer/vregex` | 正则工具：匹配、查找、查找全部和替换，并安全处理非法 pattern。 |
+| `vchar` | `github.com/imajinyun/go-knifer/vchar` | 字符工具：空白、字母、数字、ASCII、字母或数字判断。 |
+| `vbool` | `github.com/imajinyun/go-knifer/vbool` | 布尔工具：取反、转 int、全真/任一为真判断。 |
 | `vbf` | `github.com/imajinyun/go-knifer/vbf` | 布隆过滤器：bitmap/bitset/filter 抽象，以及多种字符串哈希算法。 |
 | `vcache` | `github.com/imajinyun/go-knifer/vcache` | 泛型缓存：FIFO、LFU、LRU、Timed、Weak、NoCache，支持 TTL、淘汰监听与懒加载。 |
 | `vcaptcha` | `github.com/imajinyun/go-knifer/vcaptcha` | 图片验证码：线条、圆圈、扭曲、GIF 验证码，支持随机/数学表达式生成器。 |
@@ -72,7 +86,7 @@ Go 会按实际导入的子包拉取模块，例如：
 
 ```go
 import (
- "github.com/imajinyun/go-knifer/vbase"
+ "github.com/imajinyun/go-knifer/vstr"
  "github.com/imajinyun/go-knifer/vhttp"
 )
 ```
@@ -87,15 +101,16 @@ package main
 import (
  "fmt"
 
- "github.com/imajinyun/go-knifer/vbase"
+ "github.com/imajinyun/go-knifer/vid"
  "github.com/imajinyun/go-knifer/vjson"
+ "github.com/imajinyun/go-knifer/vstr"
 )
 
 func main() {
- name := vbase.DefaultIfBlank("", "go-knifer")
+ name := vstr.DefaultIfBlank("", "go-knifer")
 
  obj := vjson.NewObject().
-  Set("id", vbase.FastUUID()).
+  Set("id", vid.FastUUID()).
   Set("name", name).
   Set("tags", []string{"go", "tool"})
 

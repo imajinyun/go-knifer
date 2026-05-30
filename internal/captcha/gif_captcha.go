@@ -7,7 +7,7 @@ import (
 	"image/color/palette"
 	"image/gif"
 
-	baseutil "github.com/imajinyun/go-knifer/internal/base"
+	randutil "github.com/imajinyun/go-knifer/internal/rand"
 )
 
 // GifCaptcha mirrors hutool GifCaptcha and renders animated GIF captchas.
@@ -55,10 +55,10 @@ func (c *GifCaptcha) CreateCode() {
 		// Interference circles.
 		half := c.Height >> 1
 		for i := 0; i < c.InterfereCount; i++ {
-			cx := baseutil.RandomInt(c.Width)
-			cy := baseutil.RandomInt(c.Height)
-			rx := baseutil.RandomInt(atLeastOne(half))
-			ry := baseutil.RandomInt(atLeastOne(half))
+			cx := randutil.RandomInt(c.Width)
+			cy := randutil.RandomInt(c.Height)
+			rx := randutil.RandomInt(atLeastOne(half))
+			ry := randutil.RandomInt(atLeastOne(half))
 			drawOval(rgba, cx, cy, rx, ry, randomColor())
 		}
 		// Characters: highlight the current hi position.
@@ -126,9 +126,9 @@ func drawCodeFrame(img *image.RGBA, code string, highlight, w, h int) {
 		if i == highlight {
 			c = randomColor()
 		} else {
-			r := uint8(160 + baseutil.RandomInt(80))
-			g := uint8(160 + baseutil.RandomInt(80))
-			b := uint8(160 + baseutil.RandomInt(80))
+			r := uint8(160 + randutil.RandomInt(80))
+			g := uint8(160 + randutil.RandomInt(80))
+			b := uint8(160 + randutil.RandomInt(80))
 			c = color.RGBA{R: r, G: g, B: b, A: 255}
 		}
 		drawChar(img, code[i], startX+i*charW, startY, scale, c)

@@ -29,7 +29,7 @@ text := hex.EncodeToString(sum[:])
 Now, with `go-knifer`, you can call a utility function directly:
 
 ```go
-text := vbase.MD5Hex("hello")
+text := vhash.MD5Hex("hello")
 ```
 
 This style of utility wrapping reduces repeated code, avoids hidden risks from copy-paste snippets, and keeps the same scenarios represented by consistent APIs across a team.
@@ -40,7 +40,21 @@ The project follows an “internal implementation + public facade” layout: `in
 
 | Module | Import path | Description |
 | --- | --- | --- |
-| `vbase` | `github.com/imajinyun/go-knifer/vbase` | Core utilities: strings, random IDs, encoding/decoding, date/time, numbers, slices, maps, type conversion, file IO, regex, naming conversion, and more. |
+| `vstr` | `github.com/imajinyun/go-knifer/vstr` | String helpers: blank/empty checks, trimming, splitting, substring helpers, formatting, naming conversion, defaults, and HTML escaping. |
+| `vslice` | `github.com/imajinyun/go-knifer/vslice` | Slice helpers: contains/index, reverse, distinct, join, filter/map, sub-slice, concat, set-like operations, and paging. |
+| `vmap` | `github.com/imajinyun/go-knifer/vmap` | Map helpers: empty checks, keys, values, inverse, and merge. |
+| `vconv` | `github.com/imajinyun/go-knifer/vconv` | Permissive type conversion: string, int, int64, float64, bool, bytes, and default-value variants. |
+| `vdate` | `github.com/imajinyun/go-knifer/vdate` | Date/time helpers: common layouts, parse/format, begin/end of day/month/year, offsets, and comparisons. |
+| `vfile` | `github.com/imajinyun/go-knifer/vfile` | File and IO helpers: read/write/copy, lines, mkdir/touch/delete, filename helpers, and quiet close. |
+| `vcodec` | `github.com/imajinyun/go-knifer/vcodec` | Encoding helpers: Base64, URL-safe Base64, Hex, and URL query escaping. |
+| `vnum` | `github.com/imajinyun/go-knifer/vnum` | Numeric helpers: add/sub/mul/div, round, min/max/sum/avg, range, decimal formatting, and number checks. |
+| `vrand` | `github.com/imajinyun/go-knifer/vrand` | Random helpers: integers, floats, booleans, bytes, strings, numeric strings, and random element selection. |
+| `vid` | `github.com/imajinyun/go-knifer/vid` | ID helpers: UUID, ObjectId, and NanoId generation. |
+| `vhash` | `github.com/imajinyun/go-knifer/vhash` | Hash helpers: additive hash, FNV, MD5, SHA-1, and SHA-256 hex helpers. |
+| `vvalidator` | `github.com/imajinyun/go-knifer/vvalidator` | Validation helpers: email, mobile, URL, IPv4, Chinese text, and number string checks. |
+| `vregex` | `github.com/imajinyun/go-knifer/vregex` | Regular-expression helpers: match, find, find all, and replace with safe invalid-pattern handling. |
+| `vchar` | `github.com/imajinyun/go-knifer/vchar` | Character helpers: blank, letter, digit, ASCII, and letter-or-digit checks. |
+| `vbool` | `github.com/imajinyun/go-knifer/vbool` | Boolean helpers: negate, bool-to-int, all/any checks. |
 | `vbf` | `github.com/imajinyun/go-knifer/vbf` | Bloom filters: bitmap/bitset/filter abstractions and multiple string hash algorithms. |
 | `vcache` | `github.com/imajinyun/go-knifer/vcache` | Generic caches: FIFO, LFU, LRU, Timed, Weak, and NoCache; supports TTL, removal listeners, and lazy loading. |
 | `vcaptcha` | `github.com/imajinyun/go-knifer/vcaptcha` | Image captcha generation: line, circle, shear, and GIF captchas, with random and math-expression generators. |
@@ -72,14 +86,14 @@ Go will resolve the module according to the subpackages you actually import, for
 
 ```go
 import (
- "github.com/imajinyun/go-knifer/vbase"
+ "github.com/imajinyun/go-knifer/vstr"
  "github.com/imajinyun/go-knifer/vhttp"
 )
 ```
 
 ## 📝 Quick start
 
-### Base utilities and JSON
+### Domain utilities and JSON
 
 ```go
 package main
@@ -87,15 +101,16 @@ package main
 import (
  "fmt"
 
- "github.com/imajinyun/go-knifer/vbase"
+ "github.com/imajinyun/go-knifer/vid"
  "github.com/imajinyun/go-knifer/vjson"
+ "github.com/imajinyun/go-knifer/vstr"
 )
 
 func main() {
- name := vbase.DefaultIfBlank("", "go-knifer")
+ name := vstr.DefaultIfBlank("", "go-knifer")
 
  obj := vjson.NewObject().
-  Set("id", vbase.FastUUID()).
+  Set("id", vid.FastUUID()).
   Set("name", name).
   Set("tags", []string{"go", "tool"})
 
