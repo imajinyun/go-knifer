@@ -5,7 +5,7 @@ import (
 	"image"
 	"image/png"
 
-	baseutil "github.com/imajinyun/go-knifer/internal/base"
+	randutil "github.com/imajinyun/go-knifer/internal/rand"
 )
 
 // ShearCaptcha mirrors hutool ShearCaptcha and applies distortion.
@@ -47,9 +47,9 @@ func (c *ShearCaptcha) CreateCode() {
 		thickness = 4
 	}
 	x1 := 0
-	y1 := baseutil.RandomInt(c.Height) + 1
+	y1 := randutil.RandomInt(c.Height) + 1
 	x2 := c.Width
-	y2 := baseutil.RandomInt(c.Height) + 1
+	y2 := randutil.RandomInt(c.Height) + 1
 	drawThickLine(img, x1, y1, x2, y2, thickness, randomColor())
 
 	var buf bytes.Buffer

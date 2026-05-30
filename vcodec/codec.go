@@ -1,0 +1,16 @@
+package vcodec
+
+import codecimpl "github.com/imajinyun/go-knifer/internal/codec"
+
+func Base64Encode(data []byte) string          { return codecimpl.Base64Encode(data) }
+func Base64EncodeStr(s string) string          { return codecimpl.Base64EncodeStr(s) }
+func Base64Decode(s string) ([]byte, error)    { return codecimpl.Base64Decode(s) }
+func Base64DecodeStr(s string) (string, error) { return codecimpl.Base64DecodeStr(s) }
+func Base64URLEncode(data []byte) string       { return codecimpl.Base64URLEncode(data) }
+func Base64URLDecode(s string) ([]byte, error) { return codecimpl.Base64URLDecode(s) }
+func HexEncode(data []byte) string             { return codecimpl.HexEncode(data) }
+func HexEncodeStr(s string) string             { return codecimpl.HexEncodeStr(s) }
+func HexDecode(s string) ([]byte, error)       { return codecimpl.HexDecode(s) }
+func HexDecodeStr(s string) (string, error)    { return codecimpl.HexDecodeStr(s) }
+func URLEncode(s string) string                { return codecimpl.URLEncode(s) }
+func URLDecode(s string) (string, error)       { return codecimpl.URLDecode(s) }

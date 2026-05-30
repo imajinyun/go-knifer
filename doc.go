@@ -3,7 +3,8 @@
 // This module is split into multiple public subpackages by domain.
 // Import only the packages you need:
 //
-//	import "github.com/imajinyun/go-knifer/vbase"
+//	import "github.com/imajinyun/go-knifer/vstr"
+//	import "github.com/imajinyun/go-knifer/vslice"
 //	import "github.com/imajinyun/go-knifer/vcache"
 //	import "github.com/imajinyun/go-knifer/vcrypto"
 //	import "github.com/imajinyun/go-knifer/vextra"

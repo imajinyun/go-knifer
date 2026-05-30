@@ -6,15 +6,15 @@ import (
 	"image/draw"
 	"math"
 
-	baseutil "github.com/imajinyun/go-knifer/internal/base"
+	randutil "github.com/imajinyun/go-knifer/internal/rand"
 )
 
 // randomColor returns a random RGBA color, similar to hutool ImgUtil.randomColor.
 func randomColor() color.RGBA {
 	return color.RGBA{
-		R: uint8(baseutil.RandomInt(256)),
-		G: uint8(baseutil.RandomInt(256)),
-		B: uint8(baseutil.RandomInt(256)),
+		R: uint8(randutil.RandomInt(256)),
+		G: uint8(randutil.RandomInt(256)),
+		B: uint8(randutil.RandomInt(256)),
 		A: 255,
 	}
 }
@@ -107,11 +107,11 @@ func drawString(img *image.RGBA, code string, w, h int, scale int) {
 func shearX(img *image.RGBA, bg color.Color) {
 	w := img.Bounds().Dx()
 	h := img.Bounds().Dy()
-	period := baseutil.RandomIntRange(w/4, w)
+	period := randutil.RandomIntRange(w/4, w)
 	if period == 0 {
 		period = w
 	}
-	phase := float64(baseutil.RandomInt(2))
+	phase := float64(randutil.RandomInt(2))
 	for y := 0; y < h; y++ {
 		d := int(float64(period>>1) * math.Sin(float64(y)/float64(period)+2*math.Pi*phase))
 		for x := w - 1; x >= 0; x-- {
@@ -130,7 +130,7 @@ func shearX(img *image.RGBA, bg color.Color) {
 func shearY(img *image.RGBA, bg color.Color) {
 	w := img.Bounds().Dx()
 	h := img.Bounds().Dy()
-	period := baseutil.RandomIntRange(h/4, h)
+	period := randutil.RandomIntRange(h/4, h)
 	if period == 0 {
 		period = h
 	}

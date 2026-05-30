@@ -5,7 +5,7 @@ import (
 	"image"
 	"image/png"
 
-	baseutil "github.com/imajinyun/go-knifer/internal/base"
+	randutil "github.com/imajinyun/go-knifer/internal/rand"
 )
 
 // CircleCaptcha mirrors hutool CircleCaptcha and uses interference circles.
@@ -35,10 +35,10 @@ func (c *CircleCaptcha) CreateCode() {
 	fillBackground(img, c.bg())
 	half := c.Height >> 1
 	for i := 0; i < c.InterfereCount; i++ {
-		cx := baseutil.RandomInt(c.Width)
-		cy := baseutil.RandomInt(c.Height)
-		rx := baseutil.RandomInt(atLeastOne(half))
-		ry := baseutil.RandomInt(atLeastOne(half))
+		cx := randutil.RandomInt(c.Width)
+		cy := randutil.RandomInt(c.Height)
+		rx := randutil.RandomInt(atLeastOne(half))
+		ry := randutil.RandomInt(atLeastOne(half))
 		drawOval(img, cx, cy, rx, ry, randomColor())
 	}
 	drawString(img, c.code, c.Width, c.Height, computeScale(c.Height))
