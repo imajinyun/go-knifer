@@ -2,7 +2,7 @@ package cron
 
 import "sync"
 
-// TaskTable 对应 hutool 的 TaskTable，按插入顺序保存任务。
+// TaskTable is aligned with hutool TaskTable and stores tasks in insertion order.
 type TaskTable struct {
 	mu       sync.RWMutex
 	ids      []string
@@ -10,10 +10,10 @@ type TaskTable struct {
 	tasks    []Task
 }
 
-// NewTaskTable 创建任务表。
+// NewTaskTable creates a task table.
 func NewTaskTable() *TaskTable { return &TaskTable{} }
 
-// Add 添加任务，id 重复返回错误。
+// Add adds a task and returns an error for duplicate ids.
 func (t *TaskTable) Add(id string, p *Pattern, task Task) error {
 	t.mu.Lock()
 	defer t.mu.Unlock()
@@ -28,7 +28,7 @@ func (t *TaskTable) Add(id string, p *Pattern, task Task) error {
 	return nil
 }
 
-// Remove 删除任务，返回是否删除成功。
+// Remove deletes a task and reports whether it was removed.
 func (t *TaskTable) Remove(id string) bool {
 	t.mu.Lock()
 	defer t.mu.Unlock()
@@ -43,7 +43,7 @@ func (t *TaskTable) Remove(id string) bool {
 	return false
 }
 
-// UpdatePattern 更新指定任务的 Cron 表达式。
+// UpdatePattern updates the cron expression of the specified task.
 func (t *TaskTable) UpdatePattern(id string, p *Pattern) bool {
 	t.mu.Lock()
 	defer t.mu.Unlock()
@@ -56,7 +56,7 @@ func (t *TaskTable) UpdatePattern(id string, p *Pattern) bool {
 	return false
 }
 
-// GetTask 按 id 返回任务。
+// GetTask returns a task by id.
 func (t *TaskTable) GetTask(id string) Task {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
@@ -68,7 +68,7 @@ func (t *TaskTable) GetTask(id string) Task {
 	return nil
 }
 
-// GetPattern 按 id 返回 Pattern。
+// GetPattern returns a Pattern by id.
 func (t *TaskTable) GetPattern(id string) *Pattern {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
@@ -80,17 +80,17 @@ func (t *TaskTable) GetPattern(id string) *Pattern {
 	return nil
 }
 
-// Size 返回任务数量。
+// Size returns the task count.
 func (t *TaskTable) Size() int {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
 	return len(t.ids)
 }
 
-// IsEmpty 判断是否为空。
+// IsEmpty reports whether the table is empty.
 func (t *TaskTable) IsEmpty() bool { return t.Size() == 0 }
 
-// IDs 返回所有任务 id 的拷贝。
+// IDs returns a copy of all task ids.
 func (t *TaskTable) IDs() []string {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
@@ -99,7 +99,7 @@ func (t *TaskTable) IDs() []string {
 	return out
 }
 
-// executeIfMatch 按当前时间触发匹配任务。
+// executeIfMatch triggers matched tasks at the current fire time.
 func (t *TaskTable) executeIfMatch(s *Scheduler, fireTime int64) {
 	t.mu.RLock()
 	ids := append([]string(nil), t.ids...)

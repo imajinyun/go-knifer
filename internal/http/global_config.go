@@ -5,10 +5,10 @@ import (
 	"time"
 )
 
-// 全局默认配置（对应 hutool-http HttpGlobalConfig）。
+// Global default configuration, aligned with hutool-http HttpGlobalConfig.
 var (
 	globalMu               sync.RWMutex
-	globalTimeout          = 0 * time.Second // 0 表示使用 HTTP 客户端默认值
+	globalTimeout          = 0 * time.Second // 0 means using the HTTP client's default timeout.
 	globalMaxRedirects     = 10
 	globalIgnoreEOFError   = true
 	globalDecodeURL        = false
@@ -18,112 +18,112 @@ var (
 	globalBoundary         = "--------------------gokitFormBoundary"
 )
 
-// SetGlobalTimeout 设置全局默认超时。
+// SetGlobalTimeout sets the global default timeout.
 func SetGlobalTimeout(d time.Duration) {
 	globalMu.Lock()
 	defer globalMu.Unlock()
 	globalTimeout = d
 }
 
-// GetGlobalTimeout 获取全局默认超时。
+// GetGlobalTimeout returns the global default timeout.
 func GetGlobalTimeout() time.Duration {
 	globalMu.RLock()
 	defer globalMu.RUnlock()
 	return globalTimeout
 }
 
-// SetGlobalMaxRedirects 设置全局最大重定向次数。
+// SetGlobalMaxRedirects sets the global maximum redirect count.
 func SetGlobalMaxRedirects(n int) {
 	globalMu.Lock()
 	defer globalMu.Unlock()
 	globalMaxRedirects = n
 }
 
-// GetGlobalMaxRedirects 获取全局最大重定向次数。
+// GetGlobalMaxRedirects returns the global maximum redirect count.
 func GetGlobalMaxRedirects() int {
 	globalMu.RLock()
 	defer globalMu.RUnlock()
 	return globalMaxRedirects
 }
 
-// SetGlobalFollowRedirects 设置是否跟随重定向。
+// SetGlobalFollowRedirects sets whether redirects are followed.
 func SetGlobalFollowRedirects(b bool) {
 	globalMu.Lock()
 	defer globalMu.Unlock()
 	globalFollowRedirects = b
 }
 
-// GetGlobalFollowRedirects 获取是否跟随重定向。
+// GetGlobalFollowRedirects reports whether redirects are followed.
 func GetGlobalFollowRedirects() bool {
 	globalMu.RLock()
 	defer globalMu.RUnlock()
 	return globalFollowRedirects
 }
 
-// SetGlobalUserAgent 设置全局默认 User-Agent。
+// SetGlobalUserAgent sets the global default User-Agent.
 func SetGlobalUserAgent(ua string) {
 	globalMu.Lock()
 	defer globalMu.Unlock()
 	globalDefaultUserAgent = ua
 }
 
-// GetGlobalUserAgent 获取全局默认 User-Agent。
+// GetGlobalUserAgent returns the global default User-Agent.
 func GetGlobalUserAgent() string {
 	globalMu.RLock()
 	defer globalMu.RUnlock()
 	return globalDefaultUserAgent
 }
 
-// SetIgnoreEOFError 设置是否忽略 EOF 错误。
+// SetIgnoreEOFError sets whether EOF errors are ignored.
 func SetIgnoreEOFError(b bool) {
 	globalMu.Lock()
 	defer globalMu.Unlock()
 	globalIgnoreEOFError = b
 }
 
-// IsIgnoreEOFError 是否忽略 EOF 错误。
+// IsIgnoreEOFError reports whether EOF errors are ignored.
 func IsIgnoreEOFError() bool {
 	globalMu.RLock()
 	defer globalMu.RUnlock()
 	return globalIgnoreEOFError
 }
 
-// SetTrustAnyHost 设置是否信任所有主机（HTTPS 跳过证书校验）。
+// SetTrustAnyHost sets whether all hosts are trusted, skipping HTTPS certificate verification.
 func SetTrustAnyHost(b bool) {
 	globalMu.Lock()
 	defer globalMu.Unlock()
 	globalTrustAnyHost = b
 }
 
-// IsTrustAnyHost 是否信任所有主机。
+// IsTrustAnyHost reports whether all hosts are trusted.
 func IsTrustAnyHost() bool {
 	globalMu.RLock()
 	defer globalMu.RUnlock()
 	return globalTrustAnyHost
 }
 
-// SetGlobalBoundary 设置 multipart 默认 boundary。
+// SetGlobalBoundary sets the default multipart boundary.
 func SetGlobalBoundary(b string) {
 	globalMu.Lock()
 	defer globalMu.Unlock()
 	globalBoundary = b
 }
 
-// GetGlobalBoundary 获取 multipart 默认 boundary。
+// GetGlobalBoundary returns the default multipart boundary.
 func GetGlobalBoundary() string {
 	globalMu.RLock()
 	defer globalMu.RUnlock()
 	return globalBoundary
 }
 
-// SetGlobalDecodeURL 设置是否对 URL 自动解码。
+// SetGlobalDecodeURL sets whether URLs are decoded automatically.
 func SetGlobalDecodeURL(b bool) {
 	globalMu.Lock()
 	defer globalMu.Unlock()
 	globalDecodeURL = b
 }
 
-// IsGlobalDecodeURL 是否对 URL 自动解码。
+// IsGlobalDecodeURL reports whether URLs are decoded automatically.
 func IsGlobalDecodeURL() bool {
 	globalMu.RLock()
 	defer globalMu.RUnlock()

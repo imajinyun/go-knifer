@@ -2,15 +2,15 @@ package cron
 
 import "time"
 
-// Config 对应 hutool 的 CronConfig，调度器配置。
+// Config is aligned with hutool CronConfig and configures the scheduler.
 type Config struct {
-	// Location 时区。
+	// Location is the scheduler time zone.
 	Location *time.Location
-	// MatchSecond 是否匹配到秒；为 false 时按分钟触发。
+	// MatchSecond reports whether expressions match seconds; when false, tasks fire by minute.
 	MatchSecond bool
 }
 
-// NewConfig 创建默认配置（本地时区，按分钟触发）。
+// NewConfig creates the default config using the local time zone and minute-level matching.
 func NewConfig() *Config {
 	return &Config{Location: time.Local, MatchSecond: false}
 }

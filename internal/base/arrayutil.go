@@ -5,15 +5,17 @@ import (
 	"strings"
 )
 
-// 对应 hutool-core ArrayUtil（基于 Go 泛型）。
+// This file provides generic slice helpers aligned with hutool-core ArrayUtil.
+// Functions return new slices where mutation would be surprising, while
+// SliceReverse intentionally reverses the input slice in place for efficiency.
 
-// SliceIsEmpty 切片是否为空。
+// SliceIsEmpty reports whether the slice is empty.
 func SliceIsEmpty[T any](a []T) bool { return len(a) == 0 }
 
-// SliceIsNotEmpty 切片是否非空。
+// SliceIsNotEmpty reports whether the slice is not empty.
 func SliceIsNotEmpty[T any](a []T) bool { return len(a) > 0 }
 
-// SliceContains 是否包含元素（要求 comparable）。
+// SliceContains reports whether the slice contains v. T must be comparable.
 func SliceContains[T comparable](a []T, v T) bool {
 	for _, x := range a {
 		if x == v {
@@ -23,7 +25,7 @@ func SliceContains[T comparable](a []T, v T) bool {
 	return false
 }
 
-// SliceIndexOf 元素首次出现位置；不存在返回 -1。
+// SliceIndexOf returns the first index of v, or -1 when v is absent.
 func SliceIndexOf[T comparable](a []T, v T) int {
 	for i, x := range a {
 		if x == v {
@@ -33,7 +35,7 @@ func SliceIndexOf[T comparable](a []T, v T) int {
 	return -1
 }
 
-// SliceLastIndexOf 元素最后出现位置；不存在返回 -1。
+// SliceLastIndexOf returns the last index of v, or -1 when v is absent.
 func SliceLastIndexOf[T comparable](a []T, v T) int {
 	for i := len(a) - 1; i >= 0; i-- {
 		if a[i] == v {
@@ -43,7 +45,7 @@ func SliceLastIndexOf[T comparable](a []T, v T) int {
 	return -1
 }
 
-// SliceReverse 原地反转。
+// SliceReverse reverses the input slice in place and returns the same slice.
 func SliceReverse[T any](a []T) []T {
 	for i, j := 0, len(a)-1; i < j; i, j = i+1, j-1 {
 		a[i], a[j] = a[j], a[i]
@@ -51,7 +53,7 @@ func SliceReverse[T any](a []T) []T {
 	return a
 }
 
-// SliceDistinct 去重，保持顺序。
+// SliceDistinct removes duplicates while preserving the first occurrence order.
 func SliceDistinct[T comparable](a []T) []T {
 	seen := make(map[T]struct{}, len(a))
 	out := make([]T, 0, len(a))
@@ -65,7 +67,7 @@ func SliceDistinct[T comparable](a []T) []T {
 	return out
 }
 
-// SliceJoin 字符串拼接。
+// SliceJoin converts elements with fmt.Sprint and joins them with sep.
 func SliceJoin[T any](a []T, sep string) string {
 	parts := make([]string, len(a))
 	for i, v := range a {
@@ -74,7 +76,7 @@ func SliceJoin[T any](a []T, sep string) string {
 	return strings.Join(parts, sep)
 }
 
-// SliceFilter 过滤。
+// SliceFilter returns elements for which pred returns true.
 func SliceFilter[T any](a []T, pred func(T) bool) []T {
 	out := make([]T, 0, len(a))
 	for _, v := range a {
@@ -85,7 +87,7 @@ func SliceFilter[T any](a []T, pred func(T) bool) []T {
 	return out
 }
 
-// SliceMap 映射。
+// SliceMap maps each element to another value while preserving order.
 func SliceMap[T, R any](a []T, fn func(T) R) []R {
 	out := make([]R, len(a))
 	for i, v := range a {
@@ -94,7 +96,9 @@ func SliceMap[T, R any](a []T, fn func(T) R) []R {
 	return out
 }
 
-// SliceSub 截取子切片，支持负数索引。
+// SliceSub returns a copied sub-slice and supports negative indexes.
+// Negative indexes are resolved from the end of the slice, and reversed ranges
+// are normalized by swapping fromIndex and toIndex, following hutool behavior.
 func SliceSub[T any](a []T, fromIndex, toIndex int) []T {
 	n := len(a)
 	if n == 0 {
@@ -123,7 +127,7 @@ func SliceSub[T any](a []T, fromIndex, toIndex int) []T {
 	return out
 }
 
-// SliceConcat 连接多个切片。
+// SliceConcat concatenates multiple slices into a new slice.
 func SliceConcat[T any](slices ...[]T) []T {
 	total := 0
 	for _, s := range slices {

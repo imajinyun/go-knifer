@@ -10,7 +10,7 @@ import (
 )
 
 // ---------------------------------------------------------------------------
-// generator 测试
+// Generator tests.
 // ---------------------------------------------------------------------------
 
 func TestRandomGenerator_GenerateLength(t *testing.T) {
@@ -68,7 +68,7 @@ func TestMathGenerator_NoNegative(t *testing.T) {
 		if !ok {
 			t.Fatalf("eval fail: %q", code)
 		}
-		// 仅当运算符为 - 时检查
+		// Check only when the operator is '-'.
 		if strings.Contains(code, "-") && v < 0 {
 			t.Fatalf("expected non-negative, got %d for %q", v, code)
 		}
@@ -76,7 +76,7 @@ func TestMathGenerator_NoNegative(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// 各 captcha 实现测试
+// Captcha implementation tests.
 // ---------------------------------------------------------------------------
 
 func TestLineCaptcha(t *testing.T) {

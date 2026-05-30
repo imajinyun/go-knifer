@@ -7,9 +7,9 @@ import (
 	"strings"
 )
 
-// 对应 hutool-core NumberUtil。
+// This file provides numeric helpers aligned with hutool-core NumberUtil.
 
-// NumberAdd 高精度加法（避免浮点误差）。
+// NumberAdd performs high-precision addition to reduce floating-point rounding surprises.
 func NumberAdd(a, b float64) float64 {
 	x := big.NewFloat(a)
 	y := big.NewFloat(b)
@@ -17,7 +17,7 @@ func NumberAdd(a, b float64) float64 {
 	return r
 }
 
-// NumberSub 高精度减法。
+// NumberSub performs high-precision subtraction.
 func NumberSub(a, b float64) float64 {
 	x := big.NewFloat(a)
 	y := big.NewFloat(b)
@@ -25,7 +25,7 @@ func NumberSub(a, b float64) float64 {
 	return r
 }
 
-// NumberMul 高精度乘法。
+// NumberMul performs high-precision multiplication.
 func NumberMul(a, b float64) float64 {
 	x := big.NewFloat(a)
 	y := big.NewFloat(b)
@@ -33,7 +33,8 @@ func NumberMul(a, b float64) float64 {
 	return r
 }
 
-// NumberDiv 除法保留 scale 位小数（HALF_UP 模式）。scale<0 不舍入。
+// NumberDiv divides a by b and rounds to scale decimal places with HALF_UP semantics.
+// A negative scale disables rounding; division by zero returns 0 for compatibility.
 func NumberDiv(a, b float64, scale int) float64 {
 	if b == 0 {
 		return 0
@@ -45,7 +46,7 @@ func NumberDiv(a, b float64, scale int) float64 {
 	return Round(r, scale)
 }
 
-// Round HALF_UP 四舍五入到指定小数位。
+// Round rounds v to scale decimal places with HALF_UP semantics.
 func Round(v float64, scale int) float64 {
 	if scale < 0 {
 		scale = 0
@@ -57,7 +58,7 @@ func Round(v float64, scale int) float64 {
 	return -math.Floor(-v*pow+0.5) / pow
 }
 
-// IsNumber 是否为合法数字（支持整数、小数、负号）。
+// IsNumber reports whether s is a valid number accepted by strconv.ParseFloat.
 func IsNumber(s string) bool {
 	if s == "" {
 		return false
@@ -66,7 +67,7 @@ func IsNumber(s string) bool {
 	return err == nil
 }
 
-// IsInteger 是否为整数（仅含可选负号 + 数字）。
+// IsInteger reports whether s is a valid base-10 integer.
 func IsInteger(s string) bool {
 	if s == "" {
 		return false
@@ -75,7 +76,7 @@ func IsInteger(s string) bool {
 	return err == nil
 }
 
-// IsDigits 是否全是数字字符（无符号）。
+// IsDigits reports whether s contains only unsigned ASCII digits.
 func IsDigits(s string) bool {
 	if s == "" {
 		return false
@@ -88,7 +89,7 @@ func IsDigits(s string) bool {
 	return true
 }
 
-// Min 最小值。
+// Min returns the minimum value, or the zero value when no values are provided.
 func Min[T Ordered](nums ...T) T {
 	if len(nums) == 0 {
 		var zero T
@@ -103,7 +104,7 @@ func Min[T Ordered](nums ...T) T {
 	return m
 }
 
-// Max 最大值。
+// Max returns the maximum value, or the zero value when no values are provided.
 func Max[T Ordered](nums ...T) T {
 	if len(nums) == 0 {
 		var zero T
@@ -118,7 +119,7 @@ func Max[T Ordered](nums ...T) T {
 	return m
 }
 
-// Sum 求和。
+// Sum returns the sum of all values.
 func Sum[T Number](nums ...T) T {
 	var s T
 	for _, v := range nums {
@@ -127,7 +128,7 @@ func Sum[T Number](nums ...T) T {
 	return s
 }
 
-// Avg 平均值（float64）。
+// Avg returns the arithmetic mean as float64, or 0 for empty input.
 func Avg[T Number](nums ...T) float64 {
 	if len(nums) == 0 {
 		return 0
@@ -139,7 +140,8 @@ func Avg[T Number](nums ...T) float64 {
 	return s / float64(len(nums))
 }
 
-// Range 生成 [start, end) 步长 step 的序列；step 为 0 时视作 1（或 -1）。
+// Range returns a half-open integer sequence [start, end) using step.
+// A zero step is normalized to 1 or -1 based on the direction.
 func Range(start, end, step int) []int {
 	if step == 0 {
 		if end >= start {
@@ -161,13 +163,13 @@ func Range(start, end, step int) []int {
 	return out
 }
 
-// Equals 浮点数是否相等（精度 1e-9）。
+// Equals compares two floats using a fixed 1e-9 tolerance.
 func Equals(a, b float64) bool { return math.Abs(a-b) < 1e-9 }
 
-// DecimalFormat 按 fmt 风格格式化（如 "%.2f"）。
+// DecimalFormat formats v with simple decimal patterns such as "0.00".
 func DecimalFormat(format string, v float64) string {
 	if format == "" || !strings.Contains(format, "%") {
-		// 类似 "0.00" 这种格式，统一转 fmt
+		// Convert simple patterns like "0.00" to fixed decimal precision.
 		dot := strings.Index(format, ".")
 		if dot >= 0 {
 			n := len(format) - dot - 1
@@ -178,16 +180,16 @@ func DecimalFormat(format string, v float64) string {
 	return ""
 }
 
-// 类型约束。
+// Generic numeric constraints.
 
-// Number 数值类型集合。
+// Number is the set of supported numeric types.
 type Number interface {
 	~int | ~int8 | ~int16 | ~int32 | ~int64 |
 		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 |
 		~float32 | ~float64
 }
 
-// Ordered 有序类型集合。
+// Ordered is the set of supported ordered types.
 type Ordered interface {
 	~int | ~int8 | ~int16 | ~int32 | ~int64 |
 		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 |

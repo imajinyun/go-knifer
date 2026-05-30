@@ -2,7 +2,7 @@ package base
 
 import "testing"
 
-// 对应 hutool-core Base64Test / HexUtilTest / URLUtilTest。
+// Tests aligned with hutool-core Base64Test, HexUtilTest, and URLUtilTest.
 
 func TestBase64(t *testing.T) {
 	src := "Hello, 世界"

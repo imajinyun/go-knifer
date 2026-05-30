@@ -25,7 +25,7 @@ func TestSchedulerLifecycle(t *testing.T) {
 		t.Fatalf("start: %v", err)
 	}
 	defer s.Stop()
-	// 等待至少 2 次执行
+	// Wait for at least two executions.
 	time.Sleep(2500 * time.Millisecond)
 	if counter.Load() < 1 {
 		t.Fatalf("expect counter >= 1, got %d", counter.Load())

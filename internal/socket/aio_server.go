@@ -8,8 +8,8 @@ import (
 	"sync/atomic"
 )
 
-// AioServer 对应 hutool aio.AioServer，基于异步 IO 风格的 Socket 服务端。
-// Go 中通过 goroutine + 阻塞 Read 模拟 AIO 的回调语义。
+// AioServer is an AIO-style socket server aligned with hutool aio.AioServer.
+// In Go, goroutines plus blocking reads are used to simulate AIO callback semantics.
 type AioServer struct {
 	listener net.Listener
 	ioAction IoAction[*bytes.Buffer]
@@ -20,12 +20,12 @@ type AioServer struct {
 	mu     sync.Mutex
 }
 
-// NewAioServer 通过端口构造服务端。
+// NewAioServer creates a server on the given port.
 func NewAioServer(port int) (*AioServer, error) {
 	return NewAioServerAddr(&net.TCPAddr{Port: port}, NewSocketConfig())
 }
 
-// NewAioServerAddr 通过具体地址和配置构造服务端。
+// NewAioServerAddr creates a server from an address and configuration.
 func NewAioServerAddr(addr *net.TCPAddr, cfg *SocketConfig) (*AioServer, error) {
 	if addr == nil {
 		return nil, NewSocketErrorMsg("address must not be nil")
@@ -40,7 +40,7 @@ func NewAioServerAddr(addr *net.TCPAddr, cfg *SocketConfig) (*AioServer, error) 
 	return s, nil
 }
 
-// init 初始化监听器。
+// init initializes the listener.
 func (s *AioServer) init(addr *net.TCPAddr) error {
 	ln, err := net.ListenTCP("tcp", addr)
 	if err != nil {
@@ -50,23 +50,23 @@ func (s *AioServer) init(addr *net.TCPAddr) error {
 	return nil
 }
 
-// SetIoAction 设置 IO 处理器。
+// SetIoAction sets the IO action.
 func (s *AioServer) SetIoAction(action IoAction[*bytes.Buffer]) *AioServer {
 	s.ioAction = action
 	return s
 }
 
-// IoAction 返回 IO 处理器。
+// IoAction returns the IO action.
 func (s *AioServer) IoAction() IoAction[*bytes.Buffer] {
 	return s.ioAction
 }
 
-// Listener 返回底层监听器。
+// Listener returns the underlying listener.
 func (s *AioServer) Listener() net.Listener {
 	return s.listener
 }
 
-// LocalAddr 返回本地监听地址。
+// LocalAddr returns the local listen address.
 func (s *AioServer) LocalAddr() net.Addr {
 	if s.listener == nil {
 		return nil
@@ -74,13 +74,13 @@ func (s *AioServer) LocalAddr() net.Addr {
 	return s.listener.Addr()
 }
 
-// Config 返回配置。
+// Config returns the configuration.
 func (s *AioServer) Config() *SocketConfig { return s.config }
 
-// IsOpen 服务端是否仍在运行。
+// IsOpen reports whether the server is still running.
 func (s *AioServer) IsOpen() bool { return !s.closed.Load() }
 
-// Start 启动服务端，sync 表示是否阻塞当前 goroutine。
+// Start starts the server; sync controls whether it blocks the current goroutine.
 func (s *AioServer) Start(sync bool) {
 	if sync {
 		s.acceptLoop()
@@ -89,7 +89,7 @@ func (s *AioServer) Start(sync bool) {
 	go s.acceptLoop()
 }
 
-// acceptLoop 持续接收新连接。
+// acceptLoop keeps accepting new connections.
 func (s *AioServer) acceptLoop() {
 	for {
 		conn, err := s.listener.Accept()
@@ -106,21 +106,21 @@ func (s *AioServer) acceptLoop() {
 	}
 }
 
-// handleAccept 为每个连接创建 AioSession 并触发回调。
+// handleAccept creates an AioSession for each connection and triggers callbacks.
 func (s *AioServer) handleAccept(conn net.Conn) {
 	if s.ioAction == nil {
 		_ = conn.Close()
 		return
 	}
 	session := NewAioSession(conn, s.ioAction, s.config)
-	// 同步触发 Accept
+	// Trigger Accept synchronously.
 	s.ioAction.Accept(session)
 
 	s.wg.Add(1)
 	go func() {
 		defer s.wg.Done()
 		defer func() { _ = session.Close() }()
-		// 持续读取，模拟 AIO 链式回调
+		// Keep reading to simulate chained AIO callbacks.
 		for session.IsOpen() && !s.closed.Load() {
 			if !session.doRead() {
 				return
@@ -129,7 +129,7 @@ func (s *AioServer) handleAccept(conn net.Conn) {
 	}()
 }
 
-// Close 关闭服务端。
+// Close closes the server.
 func (s *AioServer) Close() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()

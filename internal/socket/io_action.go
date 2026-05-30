@@ -2,41 +2,41 @@ package socket
 
 import "bytes"
 
-// IoAction 对应 hutool aio.IoAction。
-// 用户实现该接口以处理 Socket 会话的各类事件。
-// T 表示经过解码后的业务数据类型；如果不需要解码可直接使用 []byte 或 *bytes.Buffer。
+// IoAction is aligned with hutool aio.IoAction.
+// Implement this interface to handle socket session events.
+// T is the decoded business data type; use []byte or *bytes.Buffer directly when no decoding is needed.
 type IoAction[T any] interface {
-	// Accept 接收客户端连接（会话建立）事件。
+	// Accept handles a client connection event when the session is established.
 	Accept(session *AioSession)
-	// DoAction 执行数据处理（消息读取）。
+	// DoAction handles data after a message is read.
 	DoAction(session *AioSession, data T)
-	// Failed 数据读取失败的回调。
+	// Failed handles read failures.
 	Failed(err error, session *AioSession)
 }
 
-// SimpleIoAction 对应 hutool SimpleIoAction，
-// 提供 Accept 与 Failed 的默认实现，业务方仅需实现 DoAction。
+// SimpleIoAction is aligned with hutool SimpleIoAction.
+// It provides default Accept and Failed behavior, so callers only need to implement DoAction.
 type SimpleIoAction struct {
 	OnAccept   func(session *AioSession)
 	OnDoAction func(session *AioSession, data *bytes.Buffer)
 	OnFailed   func(err error, session *AioSession)
 }
 
-// Accept 默认空实现。
+// Accept invokes the configured accept callback when present.
 func (s *SimpleIoAction) Accept(session *AioSession) {
 	if s.OnAccept != nil {
 		s.OnAccept(session)
 	}
 }
 
-// DoAction 调用注册的回调。
+// DoAction invokes the configured action callback.
 func (s *SimpleIoAction) DoAction(session *AioSession, data *bytes.Buffer) {
 	if s.OnDoAction != nil {
 		s.OnDoAction(session, data)
 	}
 }
 
-// Failed 默认仅记录错误，可通过回调覆盖。
+// Failed invokes the configured failure callback when present.
 func (s *SimpleIoAction) Failed(err error, session *AioSession) {
 	if s.OnFailed != nil {
 		s.OnFailed(err, session)

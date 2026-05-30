@@ -1,10 +1,10 @@
 package http
 
-// Header 常见 HTTP 头域名称（对应 hutool-http Header 枚举）。
+// Header defines common HTTP header names, aligned with hutool-http Header.
 type Header string
 
 const (
-	// 通用头域
+	// General headers.
 	HeaderAuthorization      Header = "Authorization"
 	HeaderProxyAuthorization Header = "Proxy-Authorization"
 	HeaderDate               Header = "Date"
@@ -18,7 +18,7 @@ const (
 	HeaderPragma             Header = "Pragma"
 	HeaderContentType        Header = "Content-Type"
 
-	// 请求头域
+	// Request headers.
 	HeaderHost           Header = "Host"
 	HeaderReferer        Header = "Referer"
 	HeaderOrigin         Header = "Origin"
@@ -30,7 +30,7 @@ const (
 	HeaderCookie         Header = "Cookie"
 	HeaderContentLength  Header = "Content-Length"
 
-	// 响应头域
+	// Response headers.
 	HeaderWWWAuthenticate    Header = "WWW-Authenticate"
 	HeaderSetCookie          Header = "Set-Cookie"
 	HeaderContentEncoding    Header = "Content-Encoding"
@@ -39,5 +39,5 @@ const (
 	HeaderLocation           Header = "Location"
 )
 
-// String 返回头域字符串。
+// String returns the header name.
 func (h Header) String() string { return string(h) }

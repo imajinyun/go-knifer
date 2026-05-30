@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// 对应 hutool-http HttpRequestTest
+// Mirrors hutool-http HttpRequestTest.
 
 func TestRequestGet(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -270,6 +270,35 @@ func TestRequestCustomTransport(t *testing.T) {
 	body := Get("http://will-not-call/").Transport(rt).Execute().Body()
 	if body != "intercepted" {
 		t.Fatalf("body: %q", body)
+	}
+}
+
+func TestDefaultTransportIsReused(t *testing.T) {
+	clientA := Get("https://example.com").buildClient()
+	clientB := Post("https://example.com").Timeout(time.Second).buildClient()
+
+	if clientA.Transport != defaultTransport {
+		t.Fatalf("default request transport = %p, want shared default transport %p", clientA.Transport, defaultTransport)
+	}
+	if clientB.Transport != defaultTransport {
+		t.Fatalf("request with timeout transport = %p, want shared default transport %p", clientB.Transport, defaultTransport)
+	}
+}
+
+func TestSkipTLSVerifyUsesClonedTransport(t *testing.T) {
+	client := Get("https://example.com").SkipTLSVerify(true).buildClient()
+	transport, ok := client.Transport.(*http.Transport)
+	if !ok {
+		t.Fatalf("transport type = %T, want *http.Transport", client.Transport)
+	}
+	if transport == defaultTransport {
+		t.Fatal("SkipTLSVerify should clone the default transport instead of mutating it")
+	}
+	if transport.TLSClientConfig == nil || !transport.TLSClientConfig.InsecureSkipVerify {
+		t.Fatal("SkipTLSVerify should enable InsecureSkipVerify on the cloned transport")
+	}
+	if defaultTransport.TLSClientConfig != nil && defaultTransport.TLSClientConfig.InsecureSkipVerify {
+		t.Fatal("default transport must not be mutated by SkipTLSVerify")
 	}
 }
 

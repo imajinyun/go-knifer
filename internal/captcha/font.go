@@ -1,12 +1,13 @@
 package captcha
 
-// 内置 5x7 像素位图字体。
+// Built-in 5x7 bitmap font.
 //
-// 每个字符用 7 个 byte（每行一行扫描线）；每个 byte 的低 5 位
-// 表示该行 5 个像素是否点亮（最高位代表最左侧）。
+// Each character uses 7 bytes, one scanline per row. The low 5 bits of each
+// byte indicate whether the 5 pixels in that row are enabled, with the highest
+// bit representing the leftmost pixel.
 //
-// 选择内置字体以避免对 freetype/x/image 等外部库的依赖，
-// 与 hutool 渲染细节有差异，但能完整满足 ICaptcha 接口的语义。
+// A built-in font avoids dependencies such as freetype or x/image. Rendering
+// differs from hutool details but fully satisfies the ICaptcha semantics.
 const (
 	fontWidth  = 5
 	fontHeight = 7
@@ -60,8 +61,8 @@ var glyphs = map[byte][7]byte{
 	'Z': {0x1F, 0x01, 0x02, 0x04, 0x08, 0x10, 0x1F},
 }
 
-// getGlyph 返回字符的位图；小写字母转为大写处理；
-// 未识别字符回退为 '?'。
+// getGlyph returns the bitmap for ch; lowercase letters are normalized to
+// uppercase, and unknown characters fall back to '?'.
 func getGlyph(ch byte) [7]byte {
 	if ch >= 'a' && ch <= 'z' {
 		ch = ch - 'a' + 'A'

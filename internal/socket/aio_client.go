@@ -6,17 +6,17 @@ import (
 	"time"
 )
 
-// AioClient 对应 hutool aio.AioClient，是基于 AIO 的 Socket 客户端。
+// AioClient is an AIO-style socket client aligned with hutool aio.AioClient.
 type AioClient struct {
 	session *AioSession
 }
 
-// NewAioClient 通过地址创建 AioClient，使用默认配置。
+// NewAioClient creates an AioClient with the default configuration.
 func NewAioClient(addr *net.TCPAddr, action IoAction[*bytes.Buffer]) (*AioClient, error) {
 	return NewAioClientWithConfig(addr, action, NewSocketConfig())
 }
 
-// NewAioClientWithConfig 通过地址、IO 处理器、配置构造客户端。
+// NewAioClientWithConfig creates a client from an address, IO action, and configuration.
 func NewAioClientWithConfig(addr *net.TCPAddr, action IoAction[*bytes.Buffer], cfg *SocketConfig) (*AioClient, error) {
 	if addr == nil {
 		return nil, NewSocketErrorMsg("address must not be nil")
@@ -35,7 +35,7 @@ func NewAioClientWithConfig(addr *net.TCPAddr, action IoAction[*bytes.Buffer], c
 	return c, nil
 }
 
-// NewAioClientWithConn 直接基于已建立的连接构造客户端。
+// NewAioClientWithConn creates a client from an established connection.
 func NewAioClientWithConn(conn net.Conn, action IoAction[*bytes.Buffer], cfg *SocketConfig) *AioClient {
 	if cfg == nil {
 		cfg = NewSocketConfig()
@@ -46,10 +46,10 @@ func NewAioClientWithConn(conn net.Conn, action IoAction[*bytes.Buffer], cfg *So
 	return c
 }
 
-// Session 返回底层会话。
+// Session returns the underlying session.
 func (c *AioClient) Session() *AioSession { return c.session }
 
-// IoAction 返回当前 IO 处理器。
+// IoAction returns the current IO action.
 func (c *AioClient) IoAction() IoAction[*bytes.Buffer] {
 	if c.session == nil {
 		return nil
@@ -57,7 +57,7 @@ func (c *AioClient) IoAction() IoAction[*bytes.Buffer] {
 	return c.session.IoAction()
 }
 
-// Read 触发一次异步读，读取结果会回调到 IoAction.DoAction。
+// Read triggers one asynchronous read and passes the result to IoAction.DoAction.
 func (c *AioClient) Read() *AioClient {
 	if c.session != nil {
 		c.session.Read()
@@ -65,7 +65,7 @@ func (c *AioClient) Read() *AioClient {
 	return c
 }
 
-// Write 写出数据。
+// Write writes data.
 func (c *AioClient) Write(data []byte) (*AioClient, error) {
 	if c.session == nil {
 		return c, NewSocketErrorMsg("session is nil")
@@ -76,7 +76,7 @@ func (c *AioClient) Write(data []byte) (*AioClient, error) {
 	return c, nil
 }
 
-// Close 关闭客户端。
+// Close closes the client.
 func (c *AioClient) Close() error {
 	if c.session == nil {
 		return nil
@@ -84,7 +84,7 @@ func (c *AioClient) Close() error {
 	return c.session.Close()
 }
 
-// dialAio 内部建立连接，遵循配置中的写超时。
+// dialAio creates the connection using the write timeout from the configuration.
 func dialAio(addr *net.TCPAddr, cfg *SocketConfig) (net.Conn, error) {
 	timeout := time.Duration(cfg.WriteTimeout) * time.Millisecond
 	return ChannelUtilDial(addr, timeout)

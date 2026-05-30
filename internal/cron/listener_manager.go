@@ -2,7 +2,7 @@ package cron
 
 import "sync"
 
-// listenerManager 对应 hutool 的 TaskListenerManager。
+// listenerManager is aligned with hutool TaskListenerManager.
 type listenerManager struct {
 	mu        sync.RWMutex
 	listeners []TaskListener
@@ -52,8 +52,8 @@ func (m *listenerManager) notifySucceeded(e *TaskExecutor) {
 func (m *listenerManager) notifyFailed(e *TaskExecutor, err any) {
 	listeners := m.snapshot()
 	if len(listeners) == 0 {
-		// 兜底：没有任何监听器时，向标准错误流出错信息，避免静默失败。
-		// 这里不强依赖 log 包，仅在错误发生时打印一次提示。
+		// Fallback path: when no listener exists, keep the failure from being silently ignored.
+		// This package does not depend on log here; callers can observe failures through listeners.
 		return
 	}
 	for _, l := range listeners {

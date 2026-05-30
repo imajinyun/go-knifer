@@ -2,7 +2,7 @@ package base
 
 import "testing"
 
-// 对应 hutool-core CharUtilTest / BooleanUtilTest / HashUtilTest / ReUtilTest / ValidatorTest / EscapeUtilTest。
+// Tests aligned with hutool-core CharUtilTest, BooleanUtilTest, HashUtilTest, ReUtilTest, ValidatorTest, and EscapeUtilTest.
 
 func TestCharUtil(t *testing.T) {
 	if !IsBlankChar(' ') || !IsBlankChar('\u00A0') || IsBlankChar('a') {

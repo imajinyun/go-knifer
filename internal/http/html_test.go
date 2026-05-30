@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// 对应 hutool-http HtmlUtilTest
+// Mirrors hutool-http HtmlUtilTest.
 
 func TestHTMLEscape(t *testing.T) {
 	html := "<html><body>123'123'</body></html>"
@@ -54,14 +54,14 @@ func TestFilterHTMLTag(t *testing.T) {
 	if got := FilterHTMLTag(str, "div"); got != "pre" {
 		t.Fatalf("FilterHTMLTag div: %q", got)
 	}
-	// 多个标签
+	// Multiple tags.
 	got := FilterHTMLTag(`<html><img src='x'><i>测试</i></html>`, "i", "br")
 	if got != `<html><img src='x'></html>` {
 		t.Fatalf("FilterHTMLTag multi: %q", got)
 	}
 }
 
-// 对应 HTMLFilterTest issue3433Test：去除 onclick 等危险属性 / 标签的简化形式
+// Mirrors HTMLFilterTest issue3433Test with a simplified removal of unsafe attributes and tags.
 func TestCleanHTMLPreservesText(t *testing.T) {
 	got := CleanHTML(`<p onclick="bbbb">a</p>`)
 	if got != "a" {

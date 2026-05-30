@@ -133,9 +133,9 @@ func TestHashAlgorithms(t *testing.T) {
 		"fnv":  FnvHashString(s),
 	}
 	for name, v := range checks {
-		// 仅校验稳定性（同一字符串 -> 相同结果），且不为奇异零除
+		// Only verify stability: the same string should produce the same result.
 		if v != checkAgain(name, s) {
-			t.Fatalf("%s 不稳定", name)
+			t.Fatalf("%s is unstable", name)
 		}
 	}
 	if JavaDefaultHash("a") != 97 {
@@ -146,7 +146,7 @@ func TestHashAlgorithms(t *testing.T) {
 	}
 }
 
-// checkAgain 二次执行相同算法，用于稳定性测试。
+// checkAgain runs the same algorithm again for stability tests.
 func checkAgain(name, s string) int32 {
 	switch name {
 	case "rs":

@@ -7,8 +7,8 @@ import (
 	"sync/atomic"
 )
 
-// NioServer 对应 hutool nio.NioServer，是基于事件驱动的 TCP 服务端。
-// Go 中以 goroutine + 阻塞 Accept/Read 实现等效语义。
+// NioServer is an event-driven TCP server aligned with hutool nio.NioServer.
+// In Go, goroutines plus blocking Accept/Read calls provide equivalent semantics.
 type NioServer struct {
 	listener net.Listener
 	handler  ChannelHandler
@@ -19,12 +19,12 @@ type NioServer struct {
 	mu     sync.Mutex
 }
 
-// NewNioServer 通过端口创建 NioServer 并完成初始化。
+// NewNioServer creates and initializes a server on the given port.
 func NewNioServer(port int) (*NioServer, error) {
 	return NewNioServerAddr(&net.TCPAddr{Port: port})
 }
 
-// NewNioServerAddr 通过具体地址创建 NioServer。
+// NewNioServerAddr creates a server from the specified address.
 func NewNioServerAddr(addr *net.TCPAddr) (*NioServer, error) {
 	if addr == nil {
 		return nil, NewSocketErrorMsg("address must not be nil")
@@ -36,7 +36,7 @@ func NewNioServerAddr(addr *net.TCPAddr) (*NioServer, error) {
 	return s, nil
 }
 
-// init 初始化监听器。
+// init initializes the listener.
 func (s *NioServer) init(addr *net.TCPAddr) error {
 	ln, err := net.ListenTCP("tcp", addr)
 	if err != nil {
@@ -46,18 +46,18 @@ func (s *NioServer) init(addr *net.TCPAddr) error {
 	return nil
 }
 
-// SetChannelHandler 设置数据处理器。
+// SetChannelHandler sets the data handler.
 func (s *NioServer) SetChannelHandler(handler ChannelHandler) *NioServer {
 	s.handler = handler
 	return s
 }
 
-// Listener 暴露底层 net.Listener。
+// Listener returns the underlying net.Listener.
 func (s *NioServer) Listener() net.Listener {
 	return s.listener
 }
 
-// LocalAddr 返回本地监听地址，便于动态端口测试。
+// LocalAddr returns the local listen address, useful for dynamic port tests.
 func (s *NioServer) LocalAddr() net.Addr {
 	if s.listener == nil {
 		return nil
@@ -65,12 +65,12 @@ func (s *NioServer) LocalAddr() net.Addr {
 	return s.listener.Addr()
 }
 
-// Start 等价于 hutool 中的 start()，开始监听并阻塞当前 goroutine。
+// Start begins listening and blocks the current goroutine.
 func (s *NioServer) Start() {
 	s.Listen()
 }
 
-// Listen 同步阻塞监听，等同于 hutool 的 listen()。
+// Listen starts synchronous blocking listening.
 func (s *NioServer) Listen() {
 	for {
 		conn, err := s.listener.Accept()
@@ -87,7 +87,7 @@ func (s *NioServer) Listen() {
 	}
 }
 
-// ListenAsync 异步启动监听，返回的 channel 在监听结束时关闭。
+// ListenAsync starts listening asynchronously and closes the returned channel when done.
 func (s *NioServer) ListenAsync() <-chan struct{} {
 	done := make(chan struct{})
 	go func() {
@@ -97,7 +97,7 @@ func (s *NioServer) ListenAsync() <-chan struct{} {
 	return done
 }
 
-// handleAccept 在新 goroutine 中持续处理来自该连接的"读事件"。
+// handleAccept handles read events from a connection in a new goroutine.
 func (s *NioServer) handleAccept(conn net.Conn) {
 	s.wg.Add(1)
 	go func() {
@@ -110,8 +110,8 @@ func (s *NioServer) handleAccept(conn net.Conn) {
 			if s.closed.Load() {
 				return
 			}
-			// 模拟 NIO 读事件：每当连接可读时回调 handler。
-			// handler 内部通常会使用一次 conn.Read 来消费数据。
+			// Simulate NIO read events by invoking the handler when the connection is readable.
+			// The handler usually calls conn.Read once to consume data.
 			if err := s.handler.Handle(conn); err != nil {
 				return
 			}
@@ -119,7 +119,7 @@ func (s *NioServer) handleAccept(conn net.Conn) {
 	}()
 }
 
-// Close 关闭服务端。
+// Close closes the server.
 func (s *NioServer) Close() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -133,7 +133,7 @@ func (s *NioServer) Close() error {
 	return nil
 }
 
-// IsOpen 服务端是否仍在运行。
+// IsOpen reports whether the server is still running.
 func (s *NioServer) IsOpen() bool {
 	return !s.closed.Load()
 }

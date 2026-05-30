@@ -8,9 +8,9 @@ import (
 	"time"
 )
 
-// 对应 hutool-core RandomUtil。
+// This file provides random-value helpers aligned with hutool-core RandomUtil.
 
-// 字符集合常量。
+// Character set constants used by random string helpers.
 const (
 	BaseNumber       = "0123456789"
 	BaseChar         = "abcdefghijklmnopqrstuvwxyz"
@@ -20,7 +20,7 @@ const (
 
 var defaultRand = mathrand.New(mathrand.NewSource(time.Now().UnixNano()))
 
-// RandomInt 返回 [0, max) 的随机整数；max<=0 返回 0。
+// RandomInt returns a random integer in [0, max). Non-positive max returns 0.
 func RandomInt(max int) int {
 	if max <= 0 {
 		return 0
@@ -28,7 +28,7 @@ func RandomInt(max int) int {
 	return defaultRand.Intn(max)
 }
 
-// RandomIntRange 返回 [min, max) 的随机整数。
+// RandomIntRange returns a random integer in [min, max). If max <= min, min is returned.
 func RandomIntRange(min, max int) int {
 	if max <= min {
 		return min
@@ -36,16 +36,16 @@ func RandomIntRange(min, max int) int {
 	return min + defaultRand.Intn(max-min)
 }
 
-// RandomLong 返回非负随机 int64。
+// RandomLong returns a non-negative random int64.
 func RandomLong() int64 { return defaultRand.Int63() }
 
-// RandomFloat 返回 [0.0, 1.0) 的随机浮点数。
+// RandomFloat returns a random float64 in [0.0, 1.0).
 func RandomFloat() float64 { return defaultRand.Float64() }
 
-// RandomBool 返回随机布尔。
+// RandomBool returns a random boolean.
 func RandomBool() bool { return defaultRand.Intn(2) == 0 }
 
-// RandomBytes 返回指定长度的加密安全随机字节。
+// RandomBytes returns n cryptographically secure random bytes when possible.
 func RandomBytes(n int) []byte {
 	if n <= 0 {
 		return []byte{}
@@ -57,23 +57,23 @@ func RandomBytes(n int) []byte {
 
 func fillRandomBytes(buf []byte) {
 	if _, err := cryptorand.Read(buf); err != nil {
-		// 退回到 math/rand
+		// Fall back to math/rand when crypto/rand is unavailable.
 		for i := range buf {
 			buf[i] = byte(defaultRand.Intn(256))
 		}
 	}
 }
 
-// RandomString 从 BaseCharNumber 中随机产生指定长度字符串（小写字母+数字）。
+// RandomString returns a random string from BaseCharNumber, using lowercase letters and digits.
 func RandomString(n int) string { return RandomStringFrom(BaseCharNumber, n) }
 
-// RandomNumbers 仅使用数字的随机字符串。
+// RandomNumbers returns a random numeric string.
 func RandomNumbers(n int) string { return RandomStringFrom(BaseNumber, n) }
 
-// RandomStringUpper 大小写字母+数字。
+// RandomStringUpper returns a random string with lowercase letters, uppercase letters, and digits.
 func RandomStringUpper(n int) string { return RandomStringFrom(BaseCharNumberUC, n) }
 
-// RandomStringFrom 在指定字符集合中随机抽取构建字符串。
+// RandomStringFrom builds a random string by sampling runes from charset.
 func RandomStringFrom(charset string, n int) string {
 	if n <= 0 || len(charset) == 0 {
 		return ""
@@ -86,7 +86,7 @@ func RandomStringFrom(charset string, n int) string {
 	return string(out)
 }
 
-// RandomEle 随机选取一个元素。
+// RandomEle returns a random element, or the zero value for an empty slice.
 func RandomEle[T any](a []T) T {
 	if len(a) == 0 {
 		var zero T
@@ -95,13 +95,13 @@ func RandomEle[T any](a []T) T {
 	return a[defaultRand.Intn(len(a))]
 }
 
-// 对应 hutool-core IdUtil。
+// This section provides ID helpers aligned with hutool-core IdUtil.
 
-// SimpleUUID 32 位 UUID（无连字符）。
+// SimpleUUID returns a 32-character UUID without hyphens.
 func SimpleUUID() string {
 	b := make([]byte, 16)
 	if _, err := cryptorand.Read(b); err != nil {
-		// 退化方案
+		// Fallback path when crypto/rand is unavailable.
 		binary.BigEndian.PutUint64(b[:8], uint64(time.Now().UnixNano()))
 		binary.BigEndian.PutUint64(b[8:], defaultRand.Uint64())
 	}
@@ -111,13 +111,14 @@ func SimpleUUID() string {
 	return hex.EncodeToString(b)
 }
 
-// FastUUID 标准 8-4-4-4-12 UUID。
+// FastUUID returns a standard 8-4-4-4-12 UUID string.
 func FastUUID() string {
 	s := SimpleUUID()
 	return s[0:8] + "-" + s[8:12] + "-" + s[12:16] + "-" + s[16:20] + "-" + s[20:]
 }
 
-// ObjectId 12 字节 MongoDB 风格的 ObjectId（24 hex 字符）：4 字节秒级时间戳 + 5 字节随机 + 3 字节计数。
+// ObjectId returns a MongoDB-style 12-byte object id encoded as 24 hex characters.
+// Layout: 4-byte Unix timestamp in seconds, 5 random bytes, and a 3-byte counter.
 var objectIdCounter uint32
 
 func ObjectId() string {
@@ -139,16 +140,16 @@ func nextCounter() uint32 {
 	return objectIdCounter & 0x00ffffff
 }
 
-// NanoId 生成默认 21 位 NanoId（URL 安全字符集）。
+// NanoId returns a default 21-character NanoId using a URL-safe alphabet.
 func NanoId() string { return NanoIdN(21) }
 
-// NanoIdN 生成指定长度 NanoId。
+// NanoIdN returns a NanoId with the specified length.
 func NanoIdN(n int) string {
 	const alphabet = "_-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 	if n <= 0 {
 		return ""
 	}
-	mask := 63 // alphabet 长度 64
+	mask := 63 // alphabet length is 64.
 	step := (n*8 + 7) / 8
 	out := make([]byte, 0, n)
 	buf := make([]byte, step)

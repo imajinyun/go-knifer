@@ -1,14 +1,14 @@
 package bloomfilter
 
-// 本文件实现 hutool HashUtil 中布隆过滤器所需的哈希函数子集。
-// 为保持与 Java 端实现行为一致，所有运算均使用与 Java int(32 位有符号) 等价的 int32 截断语义。
+// This file implements the subset of hutool HashUtil hash functions required by Bloom filters.
+// To keep behavior aligned with Java, all operations use int32 truncation semantics equivalent to Java int.
 
-// charsOf 将字符串按 Java char 视角拆解：ASCII 直接取字节，非 ASCII 取 UTF-16 code unit。
-// 由于 hutool 在常见 ASCII 字符串场景下与 Java 行为一致，这里同样按 rune（即 Unicode 码点）展开，
-// 对 BMP 内字符与 Java charAt 等价；对辅助平面字符仅做近似处理（与 hutool 行为足以等价用于布隆过滤器）。
+// charsOf splits a string from a Java char perspective: ASCII maps directly to bytes,
+// while non-ASCII characters map approximately to Unicode code points.
+// This matches Java charAt for BMP characters and is sufficiently equivalent to hutool for Bloom filter usage.
 func charsOf(s string) []rune { return []rune(s) }
 
-// RsHash RS 算法。
+// RsHash implements the RS algorithm.
 func RsHash(str string) int32 {
 	var b int32 = 378551
 	var a int32 = 63689
@@ -20,7 +20,7 @@ func RsHash(str string) int32 {
 	return hash & 0x7FFFFFFF
 }
 
-// JsHash JS 算法。
+// JsHash implements the JS algorithm.
 func JsHash(str string) int32 {
 	var hash int32 = 1315423911
 	for _, c := range charsOf(str) {
@@ -32,7 +32,7 @@ func JsHash(str string) int32 {
 	return hash & 0x7FFFFFFF
 }
 
-// PjwHash PJW 算法。
+// PjwHash implements the PJW algorithm.
 func PjwHash(str string) int32 {
 	const bitsInUnsignedInt = 32
 	const threeQuarters = (bitsInUnsignedInt * 3) / 4
@@ -50,7 +50,7 @@ func PjwHash(str string) int32 {
 	return hash & 0x7FFFFFFF
 }
 
-// ElfHash ELF 算法。
+// ElfHash implements the ELF algorithm.
 func ElfHash(str string) int32 {
 	var hash int32
 	var x int32
@@ -66,7 +66,7 @@ func ElfHash(str string) int32 {
 	return hash & 0x7FFFFFFF
 }
 
-// BkdrHash BKDR 算法。
+// BkdrHash implements the BKDR algorithm.
 func BkdrHash(str string) int32 {
 	const seed int32 = 131
 	var hash int32
@@ -76,7 +76,7 @@ func BkdrHash(str string) int32 {
 	return hash & 0x7FFFFFFF
 }
 
-// SdbmHash SDBM 算法。
+// SdbmHash implements the SDBM algorithm.
 func SdbmHash(str string) int32 {
 	var hash int32
 	for _, c := range charsOf(str) {
@@ -85,7 +85,7 @@ func SdbmHash(str string) int32 {
 	return hash & 0x7FFFFFFF
 }
 
-// DjbHash DJB 算法。
+// DjbHash implements the DJB algorithm.
 func DjbHash(str string) int32 {
 	var hash int32 = 5381
 	for _, c := range charsOf(str) {
@@ -94,7 +94,7 @@ func DjbHash(str string) int32 {
 	return hash & 0x7FFFFFFF
 }
 
-// ApHash AP 算法。
+// ApHash implements the AP algorithm.
 func ApHash(str string) int32 {
 	var hash int32
 	for i, c := range charsOf(str) {
@@ -107,7 +107,7 @@ func ApHash(str string) int32 {
 	return hash
 }
 
-// FnvHashString 改进的 32 位 FNV-1 算法（字符串）。
+// FnvHashString implements the improved 32-bit FNV-1 algorithm for strings.
 func FnvHashString(data string) int32 {
 	const p int32 = 16777619
 	var seed uint32 = 2166136261
@@ -126,7 +126,7 @@ func FnvHashString(data string) int32 {
 	return hash
 }
 
-// HfHash HF Hash 算法。
+// HfHash implements the HF hash algorithm.
 func HfHash(data string) int64 {
 	var hash int64
 	for i, c := range charsOf(data) {
@@ -138,7 +138,7 @@ func HfHash(data string) int64 {
 	return hash
 }
 
-// HfIpHash HFIP Hash 算法。
+// HfIpHash implements the HFIP hash algorithm.
 func HfIpHash(data string) int64 {
 	chars := charsOf(data)
 	length := len(chars)
@@ -149,7 +149,7 @@ func HfIpHash(data string) int64 {
 	return hash
 }
 
-// TianlHash TianL Hash 算法。
+// TianlHash implements the TianL hash algorithm.
 func TianlHash(str string) int64 {
 	chars := charsOf(str)
 	iLength := len(chars)
@@ -184,7 +184,7 @@ func TianlHash(str string) int64 {
 	return hash
 }
 
-// JavaDefaultHash 模拟 Java String.hashCode 的算法。
+// JavaDefaultHash simulates Java String.hashCode.
 func JavaDefaultHash(str string) int32 {
 	var h int32
 	for _, c := range charsOf(str) {

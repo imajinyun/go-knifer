@@ -1,47 +1,47 @@
 package cron
 
-// Task 对应 hutool 的 cn.hutool.cron.task.Task，定时任务接口。
+// Task is the cron task interface aligned with hutool cn.hutool.cron.task.Task.
 type Task interface {
 	Execute()
 }
 
-// TaskFunc 函数式 Task 适配器，对应 RunnableTask。
+// TaskFunc adapts a function into Task and is aligned with RunnableTask.
 type TaskFunc func()
 
-// Execute 实现 Task 接口。
+// Execute implements Task.
 func (f TaskFunc) Execute() {
 	if f != nil {
 		f()
 	}
 }
 
-// CronTask 对应 hutool 的 CronTask，封装 id、Pattern 与原始 Task。
+// CronTask is aligned with hutool CronTask and wraps an id, Pattern, and raw Task.
 type CronTask struct {
 	id      string
 	pattern *Pattern
 	raw     Task
 }
 
-// NewCronTask 创建 CronTask。
+// NewCronTask creates a CronTask.
 func NewCronTask(id string, pattern *Pattern, task Task) *CronTask {
 	return &CronTask{id: id, pattern: pattern, raw: task}
 }
 
-// Execute 委托给原始 Task。
+// Execute delegates to the raw Task.
 func (t *CronTask) Execute() {
 	if t.raw != nil {
 		t.raw.Execute()
 	}
 }
 
-// ID 返回任务 ID。
+// ID returns the task ID.
 func (t *CronTask) ID() string { return t.id }
 
-// Pattern 返回 Cron 表达式对象。
+// Pattern returns the cron expression object.
 func (t *CronTask) Pattern() *Pattern { return t.pattern }
 
-// SetPattern 更新表达式。
+// SetPattern updates the expression.
 func (t *CronTask) SetPattern(p *Pattern) { t.pattern = p }
 
-// Raw 返回包装的原始 Task。
+// Raw returns the wrapped raw Task.
 func (t *CronTask) Raw() Task { return t.raw }

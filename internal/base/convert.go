@@ -7,9 +7,10 @@ import (
 	"strings"
 )
 
-// 对应 hutool-core Convert。
+// This file provides permissive conversion helpers aligned with hutool-core Convert.
+// Failed conversions return zero values or caller-provided defaults instead of panicking.
 
-// ToString 任意值转字符串，nil 返回 ""。
+// ToString converts any value to a string; nil becomes an empty string.
 func ToString(v any) string {
 	if v == nil {
 		return ""
@@ -33,7 +34,7 @@ func ToString(v any) string {
 	return fmt.Sprint(v)
 }
 
-// ToStringDefault 转字符串，失败/为 nil 返回默认值。
+// ToStringDefault converts a value to a string and returns def when the value is nil.
 func ToStringDefault(v any, def string) string {
 	if v == nil {
 		return def
@@ -41,10 +42,10 @@ func ToStringDefault(v any, def string) string {
 	return ToString(v)
 }
 
-// ToInt 转 int，失败返回 0。
+// ToInt converts a value to int and returns 0 on failure.
 func ToInt(v any) int { return ToIntDefault(v, 0) }
 
-// ToIntDefault 转 int，失败返回 def。
+// ToIntDefault converts a value to int and returns def on failure.
 func ToIntDefault(v any, def int) int {
 	i, ok := toInt64(v)
 	if !ok {
@@ -53,10 +54,10 @@ func ToIntDefault(v any, def int) int {
 	return int(i)
 }
 
-// ToInt64 转 int64，失败返回 0。
+// ToInt64 converts a value to int64 and returns 0 on failure.
 func ToInt64(v any) int64 { return ToInt64Default(v, 0) }
 
-// ToInt64Default 转 int64，失败返回 def。
+// ToInt64Default converts a value to int64 and returns def on failure.
 func ToInt64Default(v any, def int64) int64 {
 	i, ok := toInt64(v)
 	if !ok {
@@ -65,10 +66,10 @@ func ToInt64Default(v any, def int64) int64 {
 	return i
 }
 
-// ToFloat64 转 float64，失败返回 0。
+// ToFloat64 converts a value to float64 and returns 0 on failure.
 func ToFloat64(v any) float64 { return ToFloat64Default(v, 0) }
 
-// ToFloat64Default 转 float64，失败返回 def。
+// ToFloat64Default converts a value to float64 and returns def on failure.
 func ToFloat64Default(v any, def float64) float64 {
 	f, ok := toFloat64(v)
 	if !ok {
@@ -77,10 +78,10 @@ func ToFloat64Default(v any, def float64) float64 {
 	return f
 }
 
-// ToBool 转布尔，失败返回 false。
+// ToBool converts a value to bool and returns false on failure.
 func ToBool(v any) bool { return ToBoolDefault(v, false) }
 
-// ToBoolDefault 转布尔，失败返回 def。
+// ToBoolDefault converts a value to bool and returns def on failure.
 func ToBoolDefault(v any, def bool) bool {
 	if v == nil {
 		return def
@@ -104,7 +105,7 @@ func ToBoolDefault(v any, def bool) bool {
 	return def
 }
 
-// ToBytes 转字节数组。
+// ToBytes converts a value to bytes; strings are converted directly and other values use ToString.
 func ToBytes(v any) []byte {
 	switch x := v.(type) {
 	case nil:

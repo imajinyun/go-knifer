@@ -1,6 +1,7 @@
 package http
 
 import (
+	"bytes"
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
@@ -12,7 +13,9 @@ import (
 	"time"
 )
 
-// HTTPRequest 链式 HTTP 请求构建器（对应 hutool-http HttpRequest）。
+var defaultTransport = http.DefaultTransport.(*http.Transport).Clone()
+
+// HTTPRequest is a chainable HTTP request builder, aligned with hutool-http HttpRequest.
 type HTTPRequest struct {
 	method       Method
 	rawURL       string
@@ -44,7 +47,7 @@ type formFile struct {
 	reader   io.Reader
 }
 
-// NewRequest 使用指定方法和 URL 创建请求。
+// NewRequest creates a request with the specified method and URL.
 func NewRequest(method Method, rawURL string) *HTTPRequest {
 	return &HTTPRequest{
 		method:       method,
@@ -56,46 +59,46 @@ func NewRequest(method Method, rawURL string) *HTTPRequest {
 	}
 }
 
-// Get 创建 GET 请求。
+// Get creates a GET request.
 func Get(rawURL string) *HTTPRequest { return NewRequest(MethodGet, rawURL) }
 
-// Post 创建 POST 请求。
+// Post creates a POST request.
 func Post(rawURL string) *HTTPRequest { return NewRequest(MethodPost, rawURL) }
 
-// Put 创建 PUT 请求。
+// Put creates a PUT request.
 func Put(rawURL string) *HTTPRequest { return NewRequest(MethodPut, rawURL) }
 
-// Delete 创建 DELETE 请求。
+// Delete creates a DELETE request.
 func Delete(rawURL string) *HTTPRequest { return NewRequest(MethodDelete, rawURL) }
 
-// Patch 创建 PATCH 请求。
+// Patch creates a PATCH request.
 func Patch(rawURL string) *HTTPRequest { return NewRequest(MethodPatch, rawURL) }
 
-// Head 创建 HEAD 请求。
+// Head creates a HEAD request.
 func Head(rawURL string) *HTTPRequest { return NewRequest(MethodHead, rawURL) }
 
-// Options 创建 OPTIONS 请求。
+// Options creates an OPTIONS request.
 func Options(rawURL string) *HTTPRequest { return NewRequest(MethodOptions, rawURL) }
 
-// Method 设置 HTTP 方法。
+// Method sets the HTTP method.
 func (r *HTTPRequest) Method(m Method) *HTTPRequest { r.method = m; return r }
 
-// URL 设置请求地址。
+// URL sets the request URL.
 func (r *HTTPRequest) URL(u string) *HTTPRequest { r.rawURL = u; return r }
 
-// Header 添加单个请求头（覆盖）。
+// Header sets a single request header, replacing existing values.
 func (r *HTTPRequest) Header(name, value string) *HTTPRequest {
 	r.headers.Set(name, value)
 	return r
 }
 
-// AddHeader 添加单个请求头（追加）。
+// AddHeader appends a single request header value.
 func (r *HTTPRequest) AddHeader(name, value string) *HTTPRequest {
 	r.headers.Add(name, value)
 	return r
 }
 
-// Headers 批量设置请求头。
+// Headers sets request headers in batch.
 func (r *HTTPRequest) Headers(h map[string]string) *HTTPRequest {
 	for k, v := range h {
 		r.headers.Set(k, v)
@@ -103,49 +106,49 @@ func (r *HTTPRequest) Headers(h map[string]string) *HTTPRequest {
 	return r
 }
 
-// Cookie 添加 Cookie。
+// Cookie adds a Cookie.
 func (r *HTTPRequest) Cookie(c *http.Cookie) *HTTPRequest {
 	r.cookies = append(r.cookies, c)
 	return r
 }
 
-// CookieString 通过原始字符串添加 Cookie。
+// CookieString adds a Cookie header from a raw string.
 func (r *HTTPRequest) CookieString(s string) *HTTPRequest {
 	r.headers.Set(string(HeaderCookie), s)
 	return r
 }
 
-// ContentType 设置 Content-Type。
+// ContentType sets Content-Type.
 func (r *HTTPRequest) ContentType(ct string) *HTTPRequest {
 	r.contentType = ct
 	return r
 }
 
-// Charset 设置请求字符集。
+// Charset sets the request charset.
 func (r *HTTPRequest) Charset(c string) *HTTPRequest { r.charset = c; return r }
 
-// Timeout 设置请求超时。
+// Timeout sets the request timeout.
 func (r *HTTPRequest) Timeout(d time.Duration) *HTTPRequest { r.timeout = d; return r }
 
-// FollowRedirects 设置是否跟随重定向。
+// FollowRedirects sets whether redirects are followed.
 func (r *HTTPRequest) FollowRedirects(b bool) *HTTPRequest {
 	r.followRedir = &b
 	return r
 }
 
-// MaxRedirects 设置最大重定向次数。
+// MaxRedirects sets the maximum redirect count.
 func (r *HTTPRequest) MaxRedirects(n int) *HTTPRequest { r.maxRedirects = n; return r }
 
-// SkipTLSVerify 跳过 TLS 证书校验。
+// SkipTLSVerify skips TLS certificate verification.
 func (r *HTTPRequest) SkipTLSVerify(b bool) *HTTPRequest { r.tlsSkip = b; return r }
 
-// Transport 自定义 RoundTripper。
+// Transport sets a custom RoundTripper.
 func (r *HTTPRequest) Transport(t http.RoundTripper) *HTTPRequest { r.transport = t; return r }
 
-// Client 自定义 *http.Client（设置后会覆盖 Transport / Timeout 等组合）。
+// Client sets a custom *http.Client, overriding Transport, Timeout, and related options.
 func (r *HTTPRequest) Client(c *http.Client) *HTTPRequest { r.httpClient = c; return r }
 
-// BasicAuth 设置 Basic Auth。
+// BasicAuth sets Basic Auth.
 func (r *HTTPRequest) BasicAuth(user, pass string) *HTTPRequest {
 	r.basicUser = user
 	r.basicPass = pass
@@ -153,19 +156,19 @@ func (r *HTTPRequest) BasicAuth(user, pass string) *HTTPRequest {
 	return r
 }
 
-// BearerAuth 设置 Bearer Token。
+// BearerAuth sets the Bearer Token.
 func (r *HTTPRequest) BearerAuth(token string) *HTTPRequest {
 	r.headers.Set(string(HeaderAuthorization), "Bearer "+token)
 	return r
 }
 
-// Query 添加单个 URL Query 参数。
+// Query adds a single URL query parameter.
 func (r *HTTPRequest) Query(key string, value any) *HTTPRequest {
 	r.queryParams.Add(key, toString(value))
 	return r
 }
 
-// QueryMap 批量设置 URL Query 参数。
+// QueryMap sets URL query parameters in batch.
 func (r *HTTPRequest) QueryMap(m map[string]any) *HTTPRequest {
 	for k, v := range m {
 		r.queryParams.Set(k, toString(v))
@@ -173,7 +176,7 @@ func (r *HTTPRequest) QueryMap(m map[string]any) *HTTPRequest {
 	return r
 }
 
-// Body 设置原始请求体。
+// Body sets the raw request body.
 func (r *HTTPRequest) Body(body []byte) *HTTPRequest {
 	r.body = body
 	r.bodyReader = nil
@@ -185,23 +188,23 @@ func (r *HTTPRequest) Body(body []byte) *HTTPRequest {
 	return r
 }
 
-// BodyString 设置字符串请求体。
+// BodyString sets a string request body.
 func (r *HTTPRequest) BodyString(s string) *HTTPRequest { return r.Body([]byte(s)) }
 
-// BodyJSON 设置 JSON 请求体（调用方需自行序列化或传入 string）。
+// BodyJSON sets a JSON request body; callers should serialize values or pass a string.
 func (r *HTTPRequest) BodyJSON(s string) *HTTPRequest {
 	r.contentType = ContentTypeJSON.WithCharset(r.charset)
 	return r.Body([]byte(s))
 }
 
-// BodyReader 通过 io.Reader 设置请求体。
+// BodyReader sets the request body from an io.Reader.
 func (r *HTTPRequest) BodyReader(reader io.Reader) *HTTPRequest {
 	r.bodyReader = reader
 	r.body = nil
 	return r
 }
 
-// Form 设置表单参数（默认 form-urlencoded，存在文件时自动切换为 multipart）。
+// Form sets form parameters; it defaults to form-urlencoded and switches to multipart when files exist.
 func (r *HTTPRequest) Form(m map[string]any) *HTTPRequest {
 	if r.form == nil {
 		r.form = make(map[string]any)
@@ -212,7 +215,7 @@ func (r *HTTPRequest) Form(m map[string]any) *HTTPRequest {
 	return r
 }
 
-// FormFile 添加文件上传字段（自动启用 multipart）。
+// FormFile adds a file upload field and enables multipart automatically.
 func (r *HTTPRequest) FormFile(field, fileName string, data []byte) *HTTPRequest {
 	r.multipart = true
 	r.multipartFs = append(r.multipartFs, &formFile{
@@ -221,7 +224,7 @@ func (r *HTTPRequest) FormFile(field, fileName string, data []byte) *HTTPRequest
 	return r
 }
 
-// FormFileReader 通过 Reader 添加文件上传字段。
+// FormFileReader adds a file upload field from a reader.
 func (r *HTTPRequest) FormFileReader(field, fileName string, reader io.Reader) *HTTPRequest {
 	r.multipart = true
 	r.multipartFs = append(r.multipartFs, &formFile{
@@ -230,7 +233,7 @@ func (r *HTTPRequest) FormFileReader(field, fileName string, reader io.Reader) *
 	return r
 }
 
-// Execute 执行请求并返回响应。
+// Execute sends the request and returns the response.
 func (r *HTTPRequest) Execute() *HTTPResponse {
 	resp, err := r.doExecute()
 	if err != nil {
@@ -239,7 +242,7 @@ func (r *HTTPRequest) Execute() *HTTPResponse {
 	return resp
 }
 
-// MustExecute 执行请求，失败 panic。
+// MustExecute sends the request and panics on failure.
 func (r *HTTPRequest) MustExecute() *HTTPResponse {
 	resp := r.Execute()
 	if resp.err != nil {
@@ -255,7 +258,7 @@ func (r *HTTPRequest) buildURL() (string, error) {
 	}
 	if len(r.queryParams) > 0 {
 		q := u.Query()
-		// 保持稳定输出顺序
+		// Keep a stable output order.
 		keys := make([]string, 0, len(r.queryParams))
 		for k := range r.queryParams {
 			keys = append(keys, k)
@@ -276,7 +279,7 @@ func (r *HTTPRequest) prepareBody() (io.Reader, string, error) {
 	case r.bodyReader != nil:
 		return r.bodyReader, r.contentType, nil
 	case len(r.body) > 0:
-		return strings.NewReader(string(r.body)), r.contentType, nil
+		return bytes.NewReader(r.body), r.contentType, nil
 	case r.multipart || len(r.multipartFs) > 0:
 		reader, ct, err := buildMultipartBody(r.form, r.multipartFs)
 		if err != nil {
@@ -294,7 +297,7 @@ func (r *HTTPRequest) prepareBody() (io.Reader, string, error) {
 		}
 		return strings.NewReader(values.Encode()), ct, nil
 	case len(r.form) > 0:
-		// GET 等：合并到 query
+		// GET and similar methods: merge form values into query.
 		for k, v := range r.form {
 			r.queryParams.Add(k, toString(v))
 		}
@@ -310,11 +313,13 @@ func (r *HTTPRequest) buildClient() *http.Client {
 	}
 	transport := r.transport
 	if transport == nil {
-		t := &http.Transport{}
 		if r.tlsSkip || IsTrustAnyHost() {
+			t := defaultTransport.Clone()
 			t.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+			transport = t
+		} else {
+			transport = defaultTransport
 		}
-		transport = t
 	}
 	timeout := r.timeout
 	if timeout == 0 {
@@ -351,7 +356,7 @@ func (r *HTTPRequest) doExecute() (*HTTPResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	// prepareBody 可能修改 query，需要再构造一次
+	// prepareBody may modify query values, so build the URL again.
 	if r.form != nil {
 		finalURL, err = r.buildURL()
 		if err != nil {

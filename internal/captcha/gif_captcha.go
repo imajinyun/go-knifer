@@ -10,24 +10,25 @@ import (
 	baseutil "github.com/imajinyun/go-knifer/internal/base"
 )
 
-// GifCaptcha 对应 hutool GifCaptcha：GIF 动图验证码。
+// GifCaptcha mirrors hutool GifCaptcha and renders animated GIF captchas.
 //
-// 每帧仅高亮一位字符，其它字符以浅色绘制，制造闪烁效果。
+// Each frame highlights one character and draws the others in pale colors to
+// create a blinking effect.
 type GifCaptcha struct {
 	AbstractCaptcha
 
-	// Repeat 帧循环次数；0 表示无限循环（与 hutool 一致）。
+	// Repeat is the frame loop count; 0 means infinite looping.
 	Repeat int
-	// Delay 单帧延迟，单位：1/100 秒（GIF 标准），默认 10。
+	// Delay is the frame delay in 1/100 second units; default is 10.
 	Delay int
 }
 
-// NewGifCaptcha 默认 5 位验证码，10 个干扰元素。
+// NewGifCaptcha creates a captcha with 5 characters and 10 interference elements by default.
 func NewGifCaptcha(width, height int) *GifCaptcha {
 	return NewGifCaptchaWith(width, height, 5)
 }
 
-// NewGifCaptchaWith 自定义字符数。
+// NewGifCaptchaWith creates a captcha with a custom character count.
 func NewGifCaptchaWith(width, height, codeCount int) *GifCaptcha {
 	c := &GifCaptcha{}
 	c.Width = width
@@ -39,7 +40,7 @@ func NewGifCaptchaWith(width, height, codeCount int) *GifCaptcha {
 	return c
 }
 
-// CreateCode 生成新的验证码字符串与 GIF 图片。
+// CreateCode generates a new captcha text and GIF image.
 func (c *GifCaptcha) CreateCode() {
 	c.generateCode()
 
@@ -51,7 +52,7 @@ func (c *GifCaptcha) CreateCode() {
 	for hi := 0; hi < len(c.code); hi++ {
 		rgba := image.NewRGBA(image.Rect(0, 0, c.Width, c.Height))
 		fillBackground(rgba, c.bg())
-		// 干扰圆圈
+		// Interference circles.
 		half := c.Height >> 1
 		for i := 0; i < c.InterfereCount; i++ {
 			cx := baseutil.RandomInt(c.Width)
@@ -60,10 +61,10 @@ func (c *GifCaptcha) CreateCode() {
 			ry := baseutil.RandomInt(atLeastOne(half))
 			drawOval(rgba, cx, cy, rx, ry, randomColor())
 		}
-		// 字符：高亮当前 hi 位置
+		// Characters: highlight the current hi position.
 		drawCodeFrame(rgba, c.code, hi, c.Width, c.Height)
 
-		// 转换为 paletted
+		// Convert to a paletted frame.
 		p := image.NewPaletted(rgba.Bounds(), pal)
 		for y := 0; y < c.Height; y++ {
 			for x := 0; x < c.Width; x++ {
@@ -85,7 +86,7 @@ func (c *GifCaptcha) CreateCode() {
 	c.setImageBytes(buf.Bytes())
 }
 
-// ImageBytes 惰性渲染。
+// ImageBytes renders the image lazily.
 func (c *GifCaptcha) ImageBytes() []byte {
 	if c.imgBytes == nil {
 		c.CreateCode()
@@ -93,7 +94,7 @@ func (c *GifCaptcha) ImageBytes() []byte {
 	return c.imgBytes
 }
 
-// Code 惰性生成。
+// Code generates the captcha lazily.
 func (c *GifCaptcha) Code() string {
 	if c.code == "" {
 		c.CreateCode()
@@ -101,7 +102,7 @@ func (c *GifCaptcha) Code() string {
 	return c.code
 }
 
-// ImageBase64Data 重写 GIF 类型。
+// ImageBase64Data overrides the data URI MIME type for GIF.
 func (c *GifCaptcha) ImageBase64Data() string {
 	if c.imgBytes == nil {
 		c.CreateCode()
@@ -111,8 +112,8 @@ func (c *GifCaptcha) ImageBase64Data() string {
 
 var _ ICaptcha = (*GifCaptcha)(nil)
 
-// drawCodeFrame 绘制 GIF 单帧文本：highlight 索引位置使用鲜亮颜色，
-// 其它位置使用偏浅的颜色。
+// drawCodeFrame draws one GIF frame; the highlighted index uses a vivid color,
+// while other positions use pale colors.
 func drawCodeFrame(img *image.RGBA, code string, highlight, w, h int) {
 	scale := computeScale(h)
 	charW := fontWidth*scale + scale

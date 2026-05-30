@@ -8,17 +8,17 @@ import (
 	baseutil "github.com/imajinyun/go-knifer/internal/base"
 )
 
-// LineCaptcha 对应 hutool LineCaptcha：使用干扰线方式生成的图形验证码。
+// LineCaptcha mirrors hutool LineCaptcha and uses interference lines.
 type LineCaptcha struct {
 	AbstractCaptcha
 }
 
-// NewLineCaptcha 默认 5 位字符，150 条干扰线。
+// NewLineCaptcha creates a captcha with 5 characters and 150 lines by default.
 func NewLineCaptcha(width, height int) *LineCaptcha {
 	return NewLineCaptchaWith(width, height, 5, 150)
 }
 
-// NewLineCaptchaWith 自定义字符数与干扰线条数。
+// NewLineCaptchaWith creates a captcha with custom character and line counts.
 func NewLineCaptchaWith(width, height, codeCount, lineCount int) *LineCaptcha {
 	c := &LineCaptcha{}
 	c.Width = width
@@ -28,17 +28,17 @@ func NewLineCaptchaWith(width, height, codeCount, lineCount int) *LineCaptcha {
 	return c
 }
 
-// CreateCode 生成新的验证码字符串与图片。
+// CreateCode generates a new captcha text and image.
 func (c *LineCaptcha) CreateCode() {
 	c.generateCode()
 	c.setImageBytes(c.renderPNG(c.code))
 }
 
-// renderPNG 根据 code 渲染 PNG 字节。
+// renderPNG renders PNG bytes from code.
 func (c *LineCaptcha) renderPNG(code string) []byte {
 	img := image.NewRGBA(image.Rect(0, 0, c.Width, c.Height))
 	fillBackground(img, c.bg())
-	// 干扰线
+	// Interference lines.
 	for i := 0; i < c.InterfereCount; i++ {
 		xs := baseutil.RandomInt(c.Width)
 		ys := baseutil.RandomInt(c.Height)
@@ -46,7 +46,7 @@ func (c *LineCaptcha) renderPNG(code string) []byte {
 		ye := ys + baseutil.RandomInt(atLeastOne(c.Height/8))
 		drawLine(img, xs, ys, xe, ye, randomColor())
 	}
-	// 字符
+	// Characters.
 	scale := computeScale(c.Height)
 	drawString(img, code, c.Width, c.Height, scale)
 
@@ -55,7 +55,7 @@ func (c *LineCaptcha) renderPNG(code string) []byte {
 	return buf.Bytes()
 }
 
-// ImageBytes 重写以惰性生成。
+// ImageBytes overrides the embedded method to render lazily.
 func (c *LineCaptcha) ImageBytes() []byte {
 	if c.imgBytes == nil {
 		c.CreateCode()
@@ -63,7 +63,7 @@ func (c *LineCaptcha) ImageBytes() []byte {
 	return c.imgBytes
 }
 
-// Code 重写以惰性生成。
+// Code overrides the embedded method to generate lazily.
 func (c *LineCaptcha) Code() string {
 	if c.code == "" {
 		c.CreateCode()
@@ -71,7 +71,7 @@ func (c *LineCaptcha) Code() string {
 	return c.code
 }
 
-// 让 ICaptcha 接口可用：通过组合自动获得 Verify/Write/WriteToFile 等方法。
+// Embedding provides Verify, Write, and WriteToFile for ICaptcha.
 var _ ICaptcha = (*LineCaptcha)(nil)
 
 func atLeastOne(v int) int {
@@ -81,7 +81,7 @@ func atLeastOne(v int) int {
 	return 1
 }
 
-// computeScale 根据图像高度计算字体放大倍数（5x7 字体）。
+// computeScale calculates the 5x7 bitmap font scale from image height.
 func computeScale(height int) int {
 	scale := height / (fontHeight + 4)
 	if scale < 1 {

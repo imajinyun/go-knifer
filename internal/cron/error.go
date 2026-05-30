@@ -2,18 +2,18 @@ package cron
 
 import "fmt"
 
-// CronError 对应 hutool 中的 CronException，表示定时任务相关错误。
+// CronError is aligned with hutool CronException and represents cron-related errors.
 type CronError struct {
 	Msg   string
 	Cause error
 }
 
-// NewCronError 使用消息构造错误。
+// NewCronError creates an error with a formatted message.
 func NewCronError(format string, args ...any) *CronError {
 	return &CronError{Msg: fmt.Sprintf(format, args...)}
 }
 
-// WrapCronError 包装一个底层错误。
+// WrapCronError wraps an underlying error with a formatted message.
 func WrapCronError(cause error, format string, args ...any) *CronError {
 	return &CronError{Msg: fmt.Sprintf(format, args...), Cause: cause}
 }
@@ -25,5 +25,5 @@ func (e *CronError) Error() string {
 	return e.Msg
 }
 
-// Unwrap 支持 errors.Is/As。
+// Unwrap supports errors.Is and errors.As.
 func (e *CronError) Unwrap() error { return e.Cause }

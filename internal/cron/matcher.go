@@ -1,30 +1,30 @@
 package cron
 
-// PartMatcher 字段匹配器接口，对应 hutool 的 PartMatcher。
+// PartMatcher is the field matcher interface aligned with hutool PartMatcher.
 type PartMatcher interface {
-	// Match 判断给定值是否匹配。
+	// Match reports whether the given value matches.
 	Match(v int) bool
-	// NextAfter 返回不小于 v 的下一个匹配值，超过最大值时回绕到最小值。
+	// NextAfter returns the next matched value not less than v, wrapping to the minimum after the maximum.
 	NextAfter(v int) int
 }
 
-// alwaysTrueMatcher 对应 AlwaysTrueMatcher，匹配一切。
+// alwaysTrueMatcher is aligned with AlwaysTrueMatcher and matches everything.
 type alwaysTrueMatcher struct{}
 
-// AlwaysTrueMatcher 单例。
+// AlwaysTrueMatcher is the singleton matcher that matches everything.
 var AlwaysTrueMatcher PartMatcher = alwaysTrueMatcher{}
 
 func (alwaysTrueMatcher) Match(int) bool      { return true }
 func (alwaysTrueMatcher) NextAfter(v int) int { return v }
 
-// boolArrayMatcher 对应 BoolArrayMatcher，使用布尔数组保存可匹配值。
+// boolArrayMatcher is aligned with BoolArrayMatcher and stores matched values in a bool array.
 type boolArrayMatcher struct {
 	values   []bool
 	minValue int
 	maxValue int
 }
 
-// newBoolArrayMatcher 根据值集合创建 matcher。values 中的值会被拷贝。
+// newBoolArrayMatcher creates a matcher from a value set; values are copied.
 func newBoolArrayMatcher(values []int) *boolArrayMatcher {
 	if len(values) == 0 {
 		return &boolArrayMatcher{}
@@ -71,13 +71,13 @@ func (m *boolArrayMatcher) NextAfter(v int) int {
 	return m.minValue
 }
 
-// MinValue 返回最小匹配值。
+// MinValue returns the minimum matched value.
 func (m *boolArrayMatcher) MinValue() int { return m.minValue }
 
-// MaxValue 返回最大匹配值。
+// MaxValue returns the maximum matched value.
 func (m *boolArrayMatcher) MaxValue() int { return m.maxValue }
 
-// dayOfMonthMatcher 对应 DayOfMonthMatcher，支持 L（最后一天）。
+// dayOfMonthMatcher is aligned with DayOfMonthMatcher and supports L for the last day.
 type dayOfMonthMatcher struct {
 	*boolArrayMatcher
 }
@@ -88,12 +88,12 @@ func newDayOfMonthMatcher(values []int) *dayOfMonthMatcher {
 	return &dayOfMonthMatcher{boolArrayMatcher: newBoolArrayMatcher(values)}
 }
 
-// IsLast 判断表达式是否包含 L。
+// IsLast reports whether the expression contains L.
 func (m *dayOfMonthMatcher) IsLast() bool {
 	return lastDayOfMonthSentinel < len(m.values) && m.values[lastDayOfMonthSentinel]
 }
 
-// MatchDay 判断 day 是否匹配（含 L 处理）。
+// MatchDay reports whether day matches, including L handling.
 func (m *dayOfMonthMatcher) MatchDay(day, month int, leap bool) bool {
 	if m.Match(day) {
 		return true
@@ -104,13 +104,13 @@ func (m *dayOfMonthMatcher) MatchDay(day, month int, leap bool) bool {
 	return false
 }
 
-// yearValueMatcher 对应 YearValueMatcher。
+// yearValueMatcher is aligned with YearValueMatcher.
 type yearValueMatcher struct {
-	values []int // 已排序去重
+	values []int // sorted and deduplicated
 }
 
 func newYearValueMatcher(values []int) *yearValueMatcher {
-	// 排序去重
+	// Deduplicate values.
 	seen := make(map[int]struct{}, len(values))
 	out := make([]int, 0, len(values))
 	for _, v := range values {
@@ -120,7 +120,7 @@ func newYearValueMatcher(values []int) *yearValueMatcher {
 		seen[v] = struct{}{}
 		out = append(out, v)
 	}
-	// 简单插入排序
+	// Simple insertion sort.
 	for i := 1; i < len(out); i++ {
 		for j := i; j > 0 && out[j-1] > out[j]; j-- {
 			out[j-1], out[j] = out[j], out[j-1]
@@ -138,7 +138,7 @@ func (m *yearValueMatcher) Match(v int) bool {
 	return false
 }
 
-// NextAfter 返回不小于 v 的最小年份，若全部小于 v 返回 -1。
+// NextAfter returns the smallest year not less than v, or -1 when all years are smaller.
 func (m *yearValueMatcher) NextAfter(v int) int {
 	for _, x := range m.values {
 		if x >= v {
@@ -148,7 +148,7 @@ func (m *yearValueMatcher) NextAfter(v int) int {
 	return -1
 }
 
-// lastDayOfMonth 返回某月最后一天。
+// lastDayOfMonth returns the last day of a month.
 func lastDayOfMonth(month int, leap bool) int {
 	switch month {
 	case 1, 3, 5, 7, 8, 10, 12:
@@ -164,7 +164,7 @@ func lastDayOfMonth(month int, leap bool) int {
 	return 31
 }
 
-// isLeapYear 判断是否闰年。
+// isLeapYear reports whether year is a leap year.
 func isLeapYear(year int) bool {
 	return year%4 == 0 && (year%100 != 0 || year%400 == 0)
 }

@@ -48,11 +48,14 @@ text := vbase.MD5Hex("hello")
 | `vcrypto` | `github.com/imajinyun/go-knifer/vcrypto` | 加密与摘要：MD5/SHA、HMAC、随机字节、AES-CBC/AES-GCM、RSA-OAEP、RSA PEM 编解码。 |
 | `vextra` | `github.com/imajinyun/go-knifer/vextra` | 额外工具：gzip/zlib、zip/unzip、emoji、Go template 渲染、常用校验。 |
 | `vhttp` | `github.com/imajinyun/go-knifer/vhttp` | 链式 HTTP 客户端、下载、全局 Header/Timeout、BasicAuth、User-Agent 解析、简易服务端。 |
+| `vresty` | `github.com/imajinyun/go-knifer/vresty` | 基于 Resty v3 的 HTTP facade：链式请求、JSON/form/multipart 请求体、全局 Header/Timeout、下载与轻量响应工具。 |
 | `vjson` | `github.com/imajinyun/go-knifer/vjson` | 有序 JSON 对象/数组、JSON 解析与格式化、路径表达式读写、Bean/List 转换、XML/JSON 转换。 |
 | `vjwt` | `github.com/imajinyun/go-knifer/vjwt` | JWT 创建、解析、签名、验签与时间字段校验，支持 HMAC、RSA、ECDSA、none 等 signer。 |
 | `vlog` | `github.com/imajinyun/go-knifer/vlog` | 日志 facade：console/color console logger、日志级别、全局 logger 与静态日志函数。 |
+| `verr` | `github.com/imajinyun/go-knifer/verr` | 错误工具：panic recover、错误聚合、multierror 匹配、堆栈捕获/格式化，以及可选 logrus/Sentry 集成。 |
 | `vconf` | `github.com/imajinyun/go-knifer/vconf` | 分组配置读取：setting/properties 风格文本和简单 YAML 子集，支持类型化读取。 |
 | `vset` | `github.com/imajinyun/go-knifer/vset` | 集合工具：支持 string、int、int32、int64、uint、uint32、uint64 类型，提供添加、删除、包含判断与集合运算。 |
+| `vjob` | `github.com/imajinyun/go-knifer/vjob` | 可切分任务执行：职责分离任务数据与调度配置，支持泛型 Slice/Map 适配、context 取消和串行合并回调。 |
 | `vsem` | `github.com/imajinyun/go-knifer/vsem` | 加权计数信号量：支持 context 取消、FIFO 公平等待、非阻塞获取、关闭通知与占用数查询。 |
 | `vskt` | `github.com/imajinyun/go-knifer/vskt` | TCP socket 工具：普通连接、NIO/AIO server/client、协议编解码接口。 |
 | `vsys` | `github.com/imajinyun/go-knifer/vsys` | 系统与运行时信息：主机、OS、用户、Go runtime、进程内存、goroutine、环境变量等。 |
@@ -158,6 +161,56 @@ func main() {
 }
 ```
 
+### Resty v3 HTTP facade
+
+`vresty` 是基于 `resty.dev/v3` 的轻量链式 facade，适合直接发起常见 HTTP
+请求。它支持 query 参数、Header、Cookie、Basic/Bearer Auth、JSON/form 请求体、
+multipart 文件上传、单请求超时、跳过 TLS 校验、重定向控制以及下载等能力；响应侧
+提供状态码、Header、Cookie、Content-Type、字符串/字节正文、保存到文件等便捷方法。
+
+```go
+package main
+
+import (
+ "fmt"
+ "time"
+
+ "github.com/imajinyun/go-knifer/vresty"
+)
+
+func main() {
+ vresty.SetGlobalTimeout(5 * time.Second)
+ vresty.SetGlobalHeader("X-App", "go-knifer")
+
+ resp := vresty.Post("https://api.example.com/users").
+  Query("source", "demo").
+  BearerAuth("token").
+  BodyJSON(`{"name":"go-knifer"}`).
+  Timeout(3 * time.Second).
+  Execute()
+
+ if resp.Err() != nil {
+  panic(resp.Err())
+ }
+ if !resp.IsOK() {
+  panic(fmt.Sprintf("unexpected status: %d", resp.Status()))
+ }
+
+ fmt.Println(resp.ContentType())
+ fmt.Println(resp.Body())
+}
+```
+
+简单请求和下载也可以使用快捷函数：
+
+```go
+body := vresty.GetString("https://example.com")
+jsonBody := vresty.PostJSON("https://api.example.com/events", `{"event":"created"}`)
+n, err := vresty.DownloadFile("https://example.com/report.csv", "./downloads")
+_, _, _ = body, jsonBody, n
+_ = err
+```
+
 ### 摘要与 JWT
 
 ```go
@@ -191,6 +244,100 @@ func main() {
  }
 
  fmt.Println(jwt.SetKey(key).Verify())
+}
+```
+
+### 可切分任务执行
+
+`vjob` 将任务接口和调度配置拆开：任务只需要实现 `Len` 和按区间执行的
+`Run`，`Options` 负责控制分片大小和最大并发数。`Options` 零值合法：
+`Run` 默认把整个任务作为一个分片串行执行；需要指定批大小或并发度时使用
+`RunWith`。每个分片返回的 `Merge` 会在分片执行成功后按顺序串行回放，适合
+worker 并发构造局部结果，再安全地合并到共享结果中。
+
+```go
+package main
+
+import (
+ "context"
+ "fmt"
+ "sync"
+
+ "github.com/imajinyun/go-knifer/vjob"
+)
+
+func main() {
+ values := []int{1, 2, 3, 4}
+ var (
+  mu  sync.Mutex
+  sum int
+ )
+
+ job := vjob.NewBatch(func(ctx context.Context, batch []int) (vjob.Merge, error) {
+  local := 0
+  for _, v := range batch {
+   local += v
+  }
+  return func() error {
+   mu.Lock()
+   defer mu.Unlock()
+   sum += local
+   return nil
+  }, nil
+ }, values)
+
+ if err := vjob.RunWith(context.Background(), job, vjob.Options{BatchSize: 2, MaxConcurrency: 2}); err != nil {
+  panic(err)
+ }
+ fmt.Println(sum)
+}
+```
+
+长期复用的业务任务也可以直接内嵌 `vjob.Options`，由任务自身携带默认调度配置：
+
+```go
+type UserImportJob struct {
+ vjob.Options
+ users []User
+}
+
+func (j *UserImportJob) Len() int { return len(j.users) }
+
+func (j *UserImportJob) Run(ctx context.Context, start, end int) (vjob.Merge, error) {
+ batch := j.users[start:end]
+ return func() error {
+  return saveUsers(batch)
+ }, nil
+}
+
+err := vjob.RunWith(ctx, job, job.Options)
+```
+
+### 错误恢复与堆栈工具
+
+```go
+package main
+
+import (
+ "fmt"
+
+ "github.com/imajinyun/go-knifer/verr"
+)
+
+func main() {
+ err := verr.Recover(func() error {
+  panic("boom")
+ }, "run risky job")
+ if err != nil {
+  fmt.Println(err)
+  fmt.Println(verr.GetStack(err))
+ }
+
+ collector := verr.NewCollector()
+ collector.GoRun(func() error { return fmt.Errorf("task failed") }, "async task")
+ if err := collector.Error(); err != nil {
+  fmt.Println(err)
+ }
 }
 ```
 

@@ -9,7 +9,7 @@ import (
 	baseutil "github.com/imajinyun/go-knifer/internal/base"
 )
 
-// randomColor 生成随机 RGBA 颜色（hutool ImgUtil.randomColor）。
+// randomColor returns a random RGBA color, similar to hutool ImgUtil.randomColor.
 func randomColor() color.RGBA {
 	return color.RGBA{
 		R: uint8(baseutil.RandomInt(256)),
@@ -19,12 +19,12 @@ func randomColor() color.RGBA {
 	}
 }
 
-// fillBackground 用指定背景色填充图片。
+// fillBackground fills the image with the specified background color.
 func fillBackground(img *image.RGBA, bg color.Color) {
 	draw.Draw(img, img.Bounds(), &image.Uniform{bg}, image.Point{}, draw.Src)
 }
 
-// drawLine 在 img 上绘制从 (x0,y0) 到 (x1,y1) 的线段（Bresenham）。
+// drawLine draws a line from (x0,y0) to (x1,y1) using Bresenham's algorithm.
 func drawLine(img *image.RGBA, x0, y0, x1, y1 int, c color.Color) {
 	dx := abs(x1 - x0)
 	dy := abs(y1 - y0)
@@ -55,7 +55,7 @@ func drawLine(img *image.RGBA, x0, y0, x1, y1 int, c color.Color) {
 	}
 }
 
-// drawOval 在 img 上绘制椭圆轮廓（中心 cx,cy；半轴 rx,ry）。
+// drawOval draws an ellipse outline with center (cx,cy) and radii (rx,ry).
 func drawOval(img *image.RGBA, cx, cy, rx, ry int, c color.Color) {
 	if rx <= 0 || ry <= 0 {
 		return
@@ -69,13 +69,13 @@ func drawOval(img *image.RGBA, cx, cy, rx, ry int, c color.Color) {
 	}
 }
 
-// drawChar 在 img 上绘制单个 ASCII 字符（使用内置 5x7 位图字体，按 scale 放大）。
+// drawChar draws one ASCII character using the built-in 5x7 bitmap font.
 func drawChar(img *image.RGBA, ch byte, x, y int, scale int, c color.Color) {
 	glyph := getGlyph(ch)
 	for row := 0; row < fontHeight; row++ {
 		for col := 0; col < fontWidth; col++ {
 			if glyph[row]&(1<<(fontWidth-1-col)) != 0 {
-				// 按 scale 放大
+				// Scale each glyph pixel.
 				for sy := 0; sy < scale; sy++ {
 					for sx := 0; sx < scale; sx++ {
 						px := x + col*scale + sx
@@ -90,7 +90,7 @@ func drawChar(img *image.RGBA, ch byte, x, y int, scale int, c color.Color) {
 	}
 }
 
-// drawString 在 img 上等间距绘制一串字符（每个字符随机颜色），水平居中 + 垂直居中。
+// drawString draws evenly spaced characters with random colors, centered in the image.
 func drawString(img *image.RGBA, code string, w, h int, scale int) {
 	charW := fontWidth*scale + scale
 	totalW := charW * len(code)
@@ -103,7 +103,7 @@ func drawString(img *image.RGBA, code string, w, h int, scale int) {
 	}
 }
 
-// shearX 对图片进行 X 方向正弦扭曲。
+// shearX applies a sinusoidal distortion along the X direction.
 func shearX(img *image.RGBA, bg color.Color) {
 	w := img.Bounds().Dx()
 	h := img.Bounds().Dy()
@@ -126,7 +126,7 @@ func shearX(img *image.RGBA, bg color.Color) {
 	}
 }
 
-// shearY 对图片进行 Y 方向正弦扭曲。
+// shearY applies a sinusoidal distortion along the Y direction.
 func shearY(img *image.RGBA, bg color.Color) {
 	w := img.Bounds().Dx()
 	h := img.Bounds().Dy()
@@ -148,7 +148,7 @@ func shearY(img *image.RGBA, bg color.Color) {
 	}
 }
 
-// drawThickLine 绘制粗线（填充四边形，对应 hutool ShearCaptcha.drawInterfere）。
+// drawThickLine draws a thick line by filling a quadrilateral.
 func drawThickLine(img *image.RGBA, x1, y1, x2, y2, thickness int, c color.Color) {
 	dx := float64(x2 - x1)
 	dy := float64(y2 - y1)
@@ -159,13 +159,13 @@ func drawThickLine(img *image.RGBA, x1, y1, x2, y2, thickness int, c color.Color
 	scale := float64(thickness) / (2 * length)
 	ddx := -scale * dy
 	ddy := scale * dx
-	// 四个角
+	// Four corners of the thick line polygon.
 	xp := [4]int{x1 + int(ddx), x1 - int(ddx), x2 - int(ddx), x2 + int(ddx)}
 	yp := [4]int{y1 + int(ddy), y1 - int(ddy), y2 - int(ddy), y2 + int(ddy)}
 	fillPolygon(img, xp[:], yp[:], c)
 }
 
-// fillPolygon 简易多边形扫描线填充。
+// fillPolygon fills a polygon using a simple scanline algorithm.
 func fillPolygon(img *image.RGBA, xp, yp []int, c color.Color) {
 	if len(xp) < 3 {
 		return
@@ -190,7 +190,7 @@ func fillPolygon(img *image.RGBA, xp, yp []int, c color.Color) {
 			}
 			j = i
 		}
-		// 冒泡排序 nodeX
+		// Sort nodeX with bubble sort.
 		for i := 0; i < len(nodeX)-1; i++ {
 			for j := 0; j < len(nodeX)-i-1; j++ {
 				if nodeX[j] > nodeX[j+1] {

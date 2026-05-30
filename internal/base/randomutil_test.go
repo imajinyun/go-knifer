@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// 对应 hutool-core RandomUtilTest / IdUtilTest。
+// Tests aligned with hutool-core RandomUtilTest and IdUtilTest.
 
 func TestRandomIntRange(t *testing.T) {
 	for i := 0; i < 100; i++ {
@@ -70,7 +70,7 @@ func TestSimpleUUID(t *testing.T) {
 	if u1 == u2 {
 		t.Fatalf("UUID collision")
 	}
-	// version 4 标志：第 13 位是 '4'
+	// Version 4 marker: the 13th character is '4'.
 	if u1[12] != '4' {
 		t.Fatalf("UUID version: %s", u1)
 	}

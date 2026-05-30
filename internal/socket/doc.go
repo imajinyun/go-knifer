@@ -1,11 +1,11 @@
-// Package gksocket 对应 hutool-socket，提供基于 NIO/AIO 风格的 Socket 通信封装。
+// Package gksocket provides NIO/AIO-style socket communication helpers.
 //
-// 本包包含以下主要类型：
-//   - SocketConfig：通讯配置（线程池大小、超时、缓冲区等）。
-//   - SocketRuntimeError：Socket 运行时错误。
-//   - SocketUtil（Connect / GetRemoteAddress / IsConnected）：Socket 通用工具。
-//   - ChannelUtilDial：建立连接的工具方法。
-//   - Protocol/MsgEncoder/MsgDecoder：消息编解码协议接口。
-//   - NioServer / NioClient / ChannelHandler：NIO 风格的服务端/客户端。
-//   - AioServer / AioClient / AioSession / IoAction / SimpleIoAction：AIO 风格的服务端/客户端。
+// Main types in this package:
+//   - SocketConfig: communication options such as pool size, timeout, and buffers.
+//   - SocketRuntimeError: socket runtime errors.
+//   - SocketUtil (Connect / GetRemoteAddress / IsConnected): common socket helpers.
+//   - ChannelUtilDial: helper for establishing connections.
+//   - Protocol/MsgEncoder/MsgDecoder: message encoding and decoding interfaces.
+//   - NioServer / NioClient / ChannelHandler: NIO-style server/client helpers.
+//   - AioServer / AioClient / AioSession / IoAction / SimpleIoAction: AIO-style server/client helpers.
 package socket

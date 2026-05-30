@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// 对应 hutool-core CollUtilTest / MapUtilTest。
+// Tests aligned with hutool-core CollUtilTest and MapUtilTest.
 
 func TestMapUtil(t *testing.T) {
 	m := map[string]int{"a": 1, "b": 2}

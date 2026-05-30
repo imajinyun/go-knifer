@@ -2,7 +2,7 @@ package base
 
 import "testing"
 
-// 对应 hutool-core NamingCaseTest。
+// Tests aligned with hutool-core NamingCaseTest.
 
 func TestNamingCase(t *testing.T) {
 	cases := []struct {

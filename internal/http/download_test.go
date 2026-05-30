@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-// 对应 hutool-http DownloadTest
+// Mirrors hutool-http DownloadTest.
 
 func TestDownloadString(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -76,6 +76,49 @@ func TestDownloadFileToFile(t *testing.T) {
 	}
 }
 
+func TestSaveAsStreamsWithoutCachingBody(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(strings.Repeat("x", 64*1024)))
+	}))
+	defer srv.Close()
+
+	resp := Get(srv.URL).Execute()
+	target := filepath.Join(t.TempDir(), "stream.bin")
+	n, err := resp.SaveAs(target)
+	if err != nil {
+		t.Fatalf("SaveAs() error = %v", err)
+	}
+	if n != 64*1024 {
+		t.Fatalf("SaveAs() wrote %d bytes, want %d", n, 64*1024)
+	}
+	if resp.body != nil {
+		t.Fatalf("SaveAs() should stream to file without caching response body, cached %d bytes", len(resp.body))
+	}
+}
+
+func TestSaveAsUsesCachedBodyAfterBodyRead(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("cached"))
+	}))
+	defer srv.Close()
+
+	resp := Get(srv.URL).Execute()
+	if got := resp.Body(); got != "cached" {
+		t.Fatalf("Body() = %q, want cached", got)
+	}
+	target := filepath.Join(t.TempDir(), "cached.txt")
+	if _, err := resp.SaveAs(target); err != nil {
+		t.Fatalf("SaveAs() after Body() error = %v", err)
+	}
+	data, err := os.ReadFile(target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != "cached" {
+		t.Fatalf("saved content = %q, want cached", data)
+	}
+}
+
 func TestDownloadFileToDirectory(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("D"))
@@ -83,7 +126,7 @@ func TestDownloadFileToDirectory(t *testing.T) {
 	defer srv.Close()
 
 	dir := t.TempDir()
-	// dest 是目录，文件名应来自 URL path
+	// dest is a directory, so the file name should come from the URL path.
 	url := srv.URL + "/foo.bin"
 	if _, err := DownloadFile(url, dir); err != nil {
 		t.Fatalf("err: %v", err)

@@ -5,8 +5,8 @@ import (
 	"time"
 )
 
-// Connect 创建 Socket 并连接到指定地址，对应 hutool SocketUtil.connect。
-// 当 timeout<=0 时，使用默认（无超时）连接。
+// Connect creates a socket and connects to the specified address.
+// When timeout <= 0, the default connection behavior without timeout is used.
 func Connect(hostname string, port int, timeout time.Duration) (net.Conn, error) {
 	address := net.JoinHostPort(hostname, itoa(port))
 	if timeout <= 0 {
@@ -23,7 +23,7 @@ func Connect(hostname string, port int, timeout time.Duration) (net.Conn, error)
 	return conn, nil
 }
 
-// ConnectAddr 通过 net.TCPAddr 创建连接。
+// ConnectAddr creates a connection from net.TCPAddr.
 func ConnectAddr(addr *net.TCPAddr, timeout time.Duration) (net.Conn, error) {
 	if addr == nil {
 		return nil, NewSocketErrorMsg("address must not be nil")
@@ -31,7 +31,7 @@ func ConnectAddr(addr *net.TCPAddr, timeout time.Duration) (net.Conn, error) {
 	return Connect(addr.IP.String(), addr.Port, timeout)
 }
 
-// GetRemoteAddress 获取远端地址，channel 为 nil 或未连接时返回 nil。
+// GetRemoteAddress returns the remote address, or nil when conn is nil or disconnected.
 func GetRemoteAddress(conn net.Conn) net.Addr {
 	if conn == nil {
 		return nil
@@ -39,12 +39,12 @@ func GetRemoteAddress(conn net.Conn) net.Addr {
 	return conn.RemoteAddr()
 }
 
-// IsConnected 判断当前连接是否已建立（远端地址可获取）。
+// IsConnected reports whether the connection is established and has a remote address.
 func IsConnected(conn net.Conn) bool {
 	return GetRemoteAddress(conn) != nil
 }
 
-// itoa 简易整数转字符串，避免引入额外依赖。
+// itoa converts an integer to a string without extra dependencies.
 func itoa(n int) string {
 	if n == 0 {
 		return "0"

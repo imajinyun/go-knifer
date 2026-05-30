@@ -2,29 +2,29 @@ package socket
 
 import "net"
 
-// ChannelHandler 对应 hutool nio.ChannelHandler，
-// 用户实现该接口即可处理对应的 Conn（读、写）。
+// ChannelHandler is aligned with hutool nio.ChannelHandler.
+// Implement this interface to handle reads and writes for a Conn.
 type ChannelHandler interface {
 	Handle(conn net.Conn) error
 }
 
-// ChannelHandlerFunc 函数式 ChannelHandler。
+// ChannelHandlerFunc is a function adapter for ChannelHandler.
 type ChannelHandlerFunc func(conn net.Conn) error
 
-// Handle 实现 ChannelHandler。
+// Handle implements ChannelHandler.
 func (f ChannelHandlerFunc) Handle(conn net.Conn) error { return f(conn) }
 
-// Operation 对应 hutool nio.Operation，
-// 在 Go 中以常量形式标识感兴趣的事件类型，主要用于语义对齐。
+// Operation is aligned with hutool nio.Operation.
+// Constants identify interesting event types and are mainly kept for semantic alignment.
 type Operation int
 
 const (
-	// OpRead 读操作
+	// OpRead is a read operation.
 	OpRead Operation = 1 << iota
-	// OpWrite 写操作
+	// OpWrite is a write operation.
 	OpWrite
-	// OpConnect 连接操作
+	// OpConnect is a connect operation.
 	OpConnect
-	// OpAccept 接受连接操作
+	// OpAccept is an accept operation.
 	OpAccept
 )

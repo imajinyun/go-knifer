@@ -5,12 +5,12 @@ import (
 	"time"
 )
 
-// patternMatcher 对应 hutool 的 PatternMatcher，由 7 个字段 matcher 组成。
+// patternMatcher is aligned with hutool PatternMatcher and consists of seven field matchers.
 type patternMatcher struct {
 	matchers [7]PartMatcher
 }
 
-// newPatternMatcher 解析单个（不含 |）cron 表达式为 patternMatcher。
+// newPatternMatcher parses one cron expression without | into a patternMatcher.
 func newPatternMatcher(expr string) (*patternMatcher, error) {
 	parts := strings.Fields(expr)
 	switch len(parts) {
@@ -22,7 +22,7 @@ func newPatternMatcher(expr string) (*patternMatcher, error) {
 		// second minute hour dom month dow
 		parts = append(parts, "*")
 	case 7:
-		// 完整
+		// Full expression.
 	default:
 		return nil, NewCronError("invalid cron expression %q (parts=%d)", expr, len(parts))
 	}
@@ -43,9 +43,9 @@ func newPatternMatcher(expr string) (*patternMatcher, error) {
 	return pm, nil
 }
 
-// match 判断给定的 fields 是否匹配。
-// fields 顺序：[second, minute, hour, dayOfMonth, month, dayOfWeek, year]。
-// 当 second < 0 时跳过秒匹配。
+// match reports whether the given fields match.
+// fields order: [second, minute, hour, dayOfMonth, month, dayOfWeek, year].
+// When second < 0, second matching is skipped.
 func (pm *patternMatcher) match(fields [7]int) bool {
 	if fields[PartSecond] >= 0 {
 		if !pm.matchers[PartSecond].Match(fields[PartSecond]) {
@@ -58,7 +58,7 @@ func (pm *patternMatcher) match(fields [7]int) bool {
 	if !pm.matchers[PartHour].Match(fields[PartHour]) {
 		return false
 	}
-	// 日：DayOfMonth 需结合 month 与闰年判断 L
+	// Day-of-month needs month and leap-year context to evaluate L.
 	if dom, ok := pm.matchers[PartDayOfMonth].(*dayOfMonthMatcher); ok {
 		if !dom.MatchDay(fields[PartDayOfMonth], fields[PartMonth], isLeapYear(fields[PartYear])) {
 			return false
@@ -78,13 +78,13 @@ func (pm *patternMatcher) match(fields [7]int) bool {
 	return true
 }
 
-// Pattern 对应 hutool 的 CronPattern：可以由多个用 | 分隔的子表达式组成，任一匹配即认为匹配。
+// Pattern is aligned with hutool CronPattern and may contain multiple | separated sub-expressions.
 type Pattern struct {
 	raw      string
 	matchers []*patternMatcher
 }
 
-// NewPattern 解析 cron 表达式（支持 | 分隔多组表达式）。
+// NewPattern parses a cron expression and supports multiple | separated groups.
 func NewPattern(expr string) (*Pattern, error) {
 	expr = strings.TrimSpace(expr)
 	if expr == "" {
@@ -106,7 +106,7 @@ func NewPattern(expr string) (*Pattern, error) {
 	return &Pattern{raw: expr, matchers: matchers}, nil
 }
 
-// MustNewPattern 与 NewPattern 类似，解析失败时 panic。
+// MustNewPattern is like NewPattern but panics when parsing fails.
 func MustNewPattern(expr string) *Pattern {
 	p, err := NewPattern(expr)
 	if err != nil {
@@ -115,10 +115,10 @@ func MustNewPattern(expr string) *Pattern {
 	return p
 }
 
-// Raw 返回原始表达式。
+// Raw returns the original expression.
 func (p *Pattern) Raw() string { return p.raw }
 
-// Match 判断给定时间是否匹配。matchSecond 为 false 时忽略秒字段。
+// Match reports whether the given time matches; when matchSecond is false, seconds are ignored.
 func (p *Pattern) Match(t time.Time, matchSecond bool) bool {
 	fields := timeToFields(t, matchSecond)
 	for _, pm := range p.matchers {
@@ -129,8 +129,8 @@ func (p *Pattern) Match(t time.Time, matchSecond bool) bool {
 	return false
 }
 
-// timeToFields 将 time.Time 转为 [second, minute, hour, dayOfMonth, month, dayOfWeek, year]。
-// 周字段：周日 = 0 ~ 周六 = 6；月份从 1 开始；如果不匹配秒，second 设置为 -1。
+// timeToFields converts time.Time to [second, minute, hour, dayOfMonth, month, dayOfWeek, year].
+// Weekday uses Sunday = 0 through Saturday = 6; month starts at 1; second is -1 when ignored.
 func timeToFields(t time.Time, matchSecond bool) [7]int {
 	sec := t.Second()
 	if !matchSecond {

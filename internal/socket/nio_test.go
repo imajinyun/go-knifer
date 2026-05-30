@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// echoChannelHandler 回显从连接读取到的数据。
+// echoChannelHandler echoes data read from the connection.
 type echoChannelHandler struct{}
 
 func (h *echoChannelHandler) Handle(conn net.Conn) error {
@@ -61,7 +61,7 @@ func TestNioClientReceive(t *testing.T) {
 	defer server.Close()
 
 	server.SetChannelHandler(ChannelHandlerFunc(func(conn net.Conn) error {
-		// 服务端主动写一次后断开
+		// The server writes once and then closes the connection.
 		_, err := conn.Write([]byte("server-push"))
 		_ = conn.Close()
 		return err

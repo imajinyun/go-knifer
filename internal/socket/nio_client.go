@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 )
 
-// NioClient 对应 hutool nio.NioClient，是基于事件驱动的 TCP 客户端。
+// NioClient is an event-driven TCP client aligned with hutool nio.NioClient.
 type NioClient struct {
 	conn    net.Conn
 	handler ChannelHandler
@@ -16,12 +16,12 @@ type NioClient struct {
 	wg     sync.WaitGroup
 }
 
-// NewNioClient 创建并连接到指定 host:port。
+// NewNioClient creates a client and connects to the specified host and port.
 func NewNioClient(host string, port int) (*NioClient, error) {
 	return NewNioClientAddr(&net.TCPAddr{IP: net.ParseIP(host), Port: port})
 }
 
-// NewNioClientAddr 通过具体地址创建并连接。
+// NewNioClientAddr creates a client and connects to the specified address.
 func NewNioClientAddr(addr *net.TCPAddr) (*NioClient, error) {
 	if addr == nil {
 		return nil, NewSocketErrorMsg("address must not be nil")
@@ -33,7 +33,7 @@ func NewNioClientAddr(addr *net.TCPAddr) (*NioClient, error) {
 	return c, nil
 }
 
-// init 完成初始化连接。
+// init initializes the connection.
 func (c *NioClient) init(addr *net.TCPAddr) error {
 	conn, err := net.DialTCP("tcp", nil, addr)
 	if err != nil {
@@ -43,18 +43,18 @@ func (c *NioClient) init(addr *net.TCPAddr) error {
 	return nil
 }
 
-// SetChannelHandler 设置数据处理器。
+// SetChannelHandler sets the data handler.
 func (c *NioClient) SetChannelHandler(handler ChannelHandler) *NioClient {
 	c.handler = handler
 	return c
 }
 
-// Channel 返回底层 net.Conn。
+// Channel returns the underlying net.Conn.
 func (c *NioClient) Channel() net.Conn {
 	return c.conn
 }
 
-// Listen 异步监听服务端推送的数据，等价于 hutool 的 listen()。
+// Listen asynchronously listens for data pushed by the server.
 func (c *NioClient) Listen() {
 	c.wg.Add(1)
 	go func() {
@@ -67,14 +67,14 @@ func (c *NioClient) Listen() {
 				return
 			}
 			if err := c.handler.Handle(c.conn); err != nil {
-				// 错误发生时直接退出监听（连接已关闭、读取失败等）
+				// Stop listening on errors such as closed connections or read failures.
 				return
 			}
 		}
 	}()
 }
 
-// Write 写出多个数据片段。
+// Write writes multiple data fragments.
 func (c *NioClient) Write(datas ...[]byte) (*NioClient, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -89,7 +89,7 @@ func (c *NioClient) Write(datas ...[]byte) (*NioClient, error) {
 	return c, nil
 }
 
-// Close 关闭客户端。
+// Close closes the client.
 func (c *NioClient) Close() error {
 	if c.closed.Swap(true) {
 		return nil

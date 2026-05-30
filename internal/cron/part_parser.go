@@ -5,18 +5,18 @@ import (
 	"strings"
 )
 
-// monthAlias 月份别名（1-based）。
+// monthAlias maps month aliases to one-based month values.
 var monthAlias = map[string]int{
 	"jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
 	"jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12,
 }
 
-// weekAlias 星期别名（0=sun ~ 6=sat）。
+// weekAlias maps weekday aliases from 0 for Sunday to 6 for Saturday.
 var weekAlias = map[string]int{
 	"sun": 0, "mon": 1, "tue": 2, "wed": 3, "thu": 4, "fri": 5, "sat": 6,
 }
 
-// parsePart 解析单字段表达式，返回对应的 PartMatcher。
+// parsePart parses a single field expression and returns the corresponding PartMatcher.
 func parsePart(part Part, value string) (PartMatcher, error) {
 	value = strings.TrimSpace(value)
 	if value == "" {
@@ -32,15 +32,15 @@ func parsePart(part Part, value string) (PartMatcher, error) {
 	case PartYear:
 		return newYearValueMatcher(values), nil
 	default:
-		// 当字段为 *（且没有 step 或具体值），可使用 AlwaysTrueMatcher，但 BoolArrayMatcher 也能正常工作。
-		// 这里使用 BoolArrayMatcher 以保持简单一致。
+		// For a plain * field without a step or concrete values, AlwaysTrueMatcher could be used.
+		// BoolArrayMatcher also works correctly here and keeps the implementation simple and consistent.
 		return newBoolArrayMatcher(values), nil
 	}
 }
 
-// parsePartValues 解析字段，返回所有可匹配的值。* 或 ? 视为 AlwaysTrue 但调用方需要先判断。
+// parsePartValues parses a field and returns all matchable values; callers handle plain * or ? first.
 func parsePartValues(part Part, value string) ([]int, error) {
-	// 列表
+	// List.
 	tokens := strings.Split(value, ",")
 	var result []int
 	for _, tok := range tokens {
@@ -57,7 +57,7 @@ func parsePartValues(part Part, value string) ([]int, error) {
 	return result, nil
 }
 
-// parseRangeStep 解析形如 a, a-b, *, a/n, *​/n, a-b/n。
+// parseRangeStep parses forms such as a, a-b, *, a/n, */n, and a-b/n.
 func parseRangeStep(part Part, value string) ([]int, error) {
 	step := 1
 	rangeStr := value
@@ -73,16 +73,16 @@ func parseRangeStep(part Part, value string) ([]int, error) {
 	return parseRange(part, rangeStr, step)
 }
 
-// parseRange 解析 a / a-b / * / ? 等。
+// parseRange parses forms such as a, a-b, *, and ?.
 func parseRange(part Part, value string, step int) ([]int, error) {
 	if value == "*" || value == "?" {
-		// 全部范围按 step 取值
+		// Enumerate the whole range by step.
 		return enumerate(part.Min(), part.Max(), step), nil
 	}
 
-	// 单值（包含 L、月份/星期别名、数字、负数）
+	// Single value, including L, month/weekday aliases, numbers, and negative numbers.
 	if !strings.Contains(value, "-") || (strings.HasPrefix(value, "-") && strings.Count(value, "-") == 1) {
-		// 注意 "-3" 表示从最大值往回数 3
+		// Note that "-3" means counting back 3 from the maximum value.
 		v, err := parseSingle(part, value)
 		if err != nil {
 			return nil, err
@@ -90,13 +90,13 @@ func parseRange(part Part, value string, step int) ([]int, error) {
 		if step == 1 {
 			return []int{v}, nil
 		}
-		// a/step：从 a 到 max
+		// a/step: enumerate from a to max.
 		return enumerate(v, part.Max(), step), nil
 	}
 
-	// 范围 a-b
+	// Range a-b.
 	idx := strings.Index(value, "-")
-	// 处理类似 "-3-5" 这种形态：第一个字符是 '-' 表示负数起点
+	// Handle forms like "-3-5", where the first '-' indicates a negative start value.
 	if value[0] == '-' {
 		idx = strings.Index(value[1:], "-")
 		if idx >= 0 {
@@ -123,19 +123,19 @@ func parseRange(part Part, value string, step int) ([]int, error) {
 	if begin <= end {
 		return enumerate(begin, end, step), nil
 	}
-	// 反向区间 b-a：等价于 [b..max] ∪ [min..a]
+	// Reversed range b-a is equivalent to [b..max] ∪ [min..a].
 	first := enumerate(begin, part.Max(), step)
 	second := enumerate(part.Min(), end, step)
 	return append(first, second...), nil
 }
 
-// parseSingle 解析单个数字 / 别名 / L / 负数。
+// parseSingle parses a single number, alias, L, or negative value.
 func parseSingle(part Part, value string) (int, error) {
 	v := strings.TrimSpace(value)
 	if v == "" {
 		return 0, NewCronError("empty value")
 	}
-	// 别名
+	// Aliases.
 	lower := strings.ToLower(v)
 	if lower == "l" {
 		return part.Max(), nil
@@ -154,11 +154,11 @@ func parseSingle(part Part, value string) (int, error) {
 	if err != nil {
 		return 0, NewCronError("invalid number %q", v)
 	}
-	// 星期 7 视为 0
+	// Weekday 7 is treated as 0.
 	if part == PartDayOfWeek && n == 7 {
 		n = 0
 	}
-	// 负数视为相对最大值的回绕
+	// Negative numbers wrap relative to the maximum value.
 	if n < 0 {
 		n += part.Max()
 	}
@@ -168,7 +168,7 @@ func parseSingle(part Part, value string) (int, error) {
 	return n, nil
 }
 
-// enumerate 在 [begin, end] 内按 step 枚举。
+// enumerate enumerates values in [begin, end] by step.
 func enumerate(begin, end, step int) []int {
 	if step <= 0 {
 		step = 1

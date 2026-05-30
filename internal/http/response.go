@@ -13,20 +13,21 @@ import (
 	"sync"
 )
 
-// HTTPResponse 包装 http.Response 提供便捷读取（对应 hutool-http HttpResponse）。
+// HTTPResponse wraps http.Response and provides convenient readers, aligned with hutool-http HttpResponse.
 type HTTPResponse struct {
-	resp *http.Response
-	body []byte
-	once sync.Once
-	err  error
+	resp     *http.Response
+	body     []byte
+	bodyRead bool
+	once     sync.Once
+	err      error
 }
 
 func wrapResponse(r *http.Response) *HTTPResponse { return &HTTPResponse{resp: r} }
 
-// Err 返回执行过程中的错误。
+// Err returns the error raised during execution.
 func (r *HTTPResponse) Err() error { return r.err }
 
-// Status 返回 HTTP 状态码（出错时为 0）。
+// Status returns the HTTP status code, or 0 on error.
 func (r *HTTPResponse) Status() int {
 	if r.resp == nil {
 		return 0
@@ -34,12 +35,12 @@ func (r *HTTPResponse) Status() int {
 	return r.resp.StatusCode
 }
 
-// IsOK 是否 2xx 成功。
+// IsOK reports whether the status is a 2xx success.
 func (r *HTTPResponse) IsOK() bool {
 	return r.Status() >= 200 && r.Status() < 300
 }
 
-// Header 返回响应头。
+// Header returns a response header value.
 func (r *HTTPResponse) Header(name string) string {
 	if r.resp == nil {
 		return ""
@@ -47,7 +48,7 @@ func (r *HTTPResponse) Header(name string) string {
 	return r.resp.Header.Get(name)
 }
 
-// Headers 返回完整响应头。
+// Headers returns all response headers.
 func (r *HTTPResponse) Headers() http.Header {
 	if r.resp == nil {
 		return nil
@@ -55,7 +56,7 @@ func (r *HTTPResponse) Headers() http.Header {
 	return r.resp.Header
 }
 
-// Cookies 返回响应中的 Cookie。
+// Cookies returns cookies from the response.
 func (r *HTTPResponse) Cookies() []*http.Cookie {
 	if r.resp == nil {
 		return nil
@@ -63,10 +64,10 @@ func (r *HTTPResponse) Cookies() []*http.Cookie {
 	return r.resp.Cookies()
 }
 
-// ContentType 返回响应 Content-Type。
+// ContentType returns the response Content-Type.
 func (r *HTTPResponse) ContentType() string { return r.Header(string(HeaderContentType)) }
 
-// ContentLength 返回响应 Content-Length。
+// ContentLength returns the response Content-Length.
 func (r *HTTPResponse) ContentLength() int64 {
 	if r.resp == nil {
 		return -1
@@ -74,7 +75,7 @@ func (r *HTTPResponse) ContentLength() int64 {
 	return r.resp.ContentLength
 }
 
-// Charset 解析 Content-Type 中的字符集，未指定时返回 UTF-8。
+// Charset parses the charset from Content-Type and returns UTF-8 when unspecified.
 func (r *HTTPResponse) Charset() string {
 	if cs := charsetFromContentType(r.ContentType()); cs != "" {
 		return cs
@@ -82,8 +83,11 @@ func (r *HTTPResponse) Charset() string {
 	return "UTF-8"
 }
 
-// Bytes 读取并返回响应体的字节内容。
+// Bytes reads and returns the response body bytes.
 func (r *HTTPResponse) Bytes() []byte {
+	if r.bodyRead {
+		return r.body
+	}
 	r.once.Do(func() {
 		if r.resp == nil || r.resp.Body == nil {
 			return
@@ -104,14 +108,15 @@ func (r *HTTPResponse) Bytes() []byte {
 			return
 		}
 		r.body = data
+		r.bodyRead = true
 	})
 	return r.body
 }
 
-// Body 读取响应体并以字符串返回。
+// Body reads the response body and returns it as a string.
 func (r *HTTPResponse) Body() string { return string(r.Bytes()) }
 
-// WriteTo 将响应体写入 Writer，返回写入字节数。
+// WriteTo writes the response body to the writer and returns the number of bytes written.
 func (r *HTTPResponse) WriteTo(w io.Writer) (int64, error) {
 	data := r.Bytes()
 	if r.err != nil {
@@ -121,9 +126,9 @@ func (r *HTTPResponse) WriteTo(w io.Writer) (int64, error) {
 	return int64(n), err
 }
 
-// SaveAs 将响应体保存到文件，返回写入字节数。
+// SaveAs saves the response body to a file and returns the number of bytes written.
 //
-// 当 dest 是目录时，自动从 URL 或 Content-Disposition 中提取文件名。
+// When dest is a directory, the file name is extracted from URL or Content-Disposition automatically.
 func (r *HTTPResponse) SaveAs(dest string) (n int64, err error) {
 	if r.resp == nil {
 		return 0, HTTPErrorf("no response")
@@ -145,10 +150,10 @@ func (r *HTTPResponse) SaveAs(dest string) (n int64, err error) {
 			err = closeErr
 		}
 	}()
-	return r.WriteTo(f)
+	return r.writeBodyTo(f)
 }
 
-// Close 关闭底层响应体（仅在未读取时需要）。
+// Close closes the underlying response body; this is only needed when the body has not been read.
 func (r *HTTPResponse) Close() error {
 	if r.resp != nil && r.resp.Body != nil {
 		return r.resp.Body.Close()
@@ -156,8 +161,40 @@ func (r *HTTPResponse) Close() error {
 	return nil
 }
 
-// Raw 返回原始 *http.Response（可用于流式处理，注意手动关闭 Body）。
+// Raw returns the original *http.Response for streaming; remember to close Body manually.
 func (r *HTTPResponse) Raw() *http.Response { return r.resp }
+
+func (r *HTTPResponse) writeBodyTo(w io.Writer) (int64, error) {
+	if r.err != nil {
+		return 0, r.err
+	}
+	if r.bodyRead {
+		return io.Copy(w, bytes.NewReader(r.body))
+	}
+	if r.resp == nil || r.resp.Body == nil {
+		return 0, nil
+	}
+	defer func() {
+		if err := r.resp.Body.Close(); err != nil && r.err == nil {
+			r.err = NewHTTPError("close response body failed", err)
+		}
+	}()
+	reader, err := decodedBody(r.resp)
+	if err != nil {
+		r.err = err
+		return 0, err
+	}
+	if closer, ok := reader.(io.Closer); ok && closer != r.resp.Body {
+		defer closer.Close()
+	}
+	n, err := io.Copy(w, reader)
+	if err != nil && (!IsIgnoreEOFError() || err != io.ErrUnexpectedEOF) {
+		r.err = NewHTTPError("read response body failed", err)
+		return n, r.err
+	}
+	r.bodyRead = true
+	return n, nil
+}
 
 func (r *HTTPResponse) fileName() string {
 	if cd := r.Header(string(HeaderContentDisposition)); cd != "" {
@@ -185,7 +222,7 @@ func decodedBody(resp *http.Response) (io.Reader, error) {
 	case "gzip":
 		gr, err := gzip.NewReader(resp.Body)
 		if err != nil {
-			// 部分服务即便声明 gzip 也可能未压缩，尝试回退
+			// Some servers may declare gzip without compressing; try to fall back.
 			if err == io.EOF {
 				return bytes.NewReader(nil), nil
 			}
@@ -205,7 +242,7 @@ func decodedBody(resp *http.Response) (io.Reader, error) {
 
 var charsetRegex = regexp.MustCompile(`(?i)charset\s*=\s*([a-z0-9-]+)`)
 
-// charsetFromContentType 从 Content-Type 中提取字符集。
+// charsetFromContentType extracts the charset from Content-Type.
 func charsetFromContentType(ct string) string {
 	if ct == "" {
 		return ""

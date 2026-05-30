@@ -4,19 +4,19 @@ import (
 	"sync"
 )
 
-// TaskExecutor 对应 hutool 的 TaskExecutor，负责执行单个 CronTask。
+// TaskExecutor is aligned with hutool TaskExecutor and executes a single CronTask.
 type TaskExecutor struct {
 	scheduler *Scheduler
 	task      *CronTask
 }
 
-// Task 返回包装的 CronTask 内部 Task。
+// Task returns the inner Task wrapped by the CronTask.
 func (e *TaskExecutor) Task() Task { return e.task.Raw() }
 
-// CronTask 返回 CronTask。
+// CronTask returns the wrapped CronTask.
 func (e *TaskExecutor) CronTask() *CronTask { return e.task }
 
-// run 执行任务，触发 listener 回调，并通知 manager。
+// run executes the task, triggers listener callbacks, and notifies the manager.
 func (e *TaskExecutor) run() {
 	defer e.scheduler.executorMgr.completed(e)
 	e.scheduler.listenerMgr.notifyStart(e)
@@ -29,7 +29,7 @@ func (e *TaskExecutor) run() {
 	e.scheduler.listenerMgr.notifySucceeded(e)
 }
 
-// taskExecutorManager 对应 hutool 的 TaskExecutorManager。
+// taskExecutorManager is aligned with hutool TaskExecutorManager.
 type taskExecutorManager struct {
 	scheduler *Scheduler
 	mu        sync.Mutex
@@ -40,7 +40,7 @@ func newTaskExecutorManager(s *Scheduler) *taskExecutorManager {
 	return &taskExecutorManager{scheduler: s}
 }
 
-// spawn 根据 CronTask 创建 TaskExecutor 并提交到调度器线程池执行。
+// spawn creates a TaskExecutor for a CronTask and submits it to the scheduler executor.
 func (m *taskExecutorManager) spawn(task *CronTask) *TaskExecutor {
 	e := &TaskExecutor{scheduler: m.scheduler, task: task}
 	m.mu.Lock()
@@ -50,7 +50,7 @@ func (m *taskExecutorManager) spawn(task *CronTask) *TaskExecutor {
 	return e
 }
 
-// completed 任务执行完毕后从执行列表中移除。
+// completed removes an executor from the running list after task execution completes.
 func (m *taskExecutorManager) completed(e *TaskExecutor) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -62,7 +62,7 @@ func (m *taskExecutorManager) completed(e *TaskExecutor) {
 	}
 }
 
-// taskLauncher 对应 hutool 的 TaskLauncher，每个调度时刻投递一个 launcher。
+// taskLauncher is aligned with hutool TaskLauncher; one launcher is submitted per firing instant.
 type taskLauncher struct {
 	scheduler *Scheduler
 	millis    int64
@@ -73,7 +73,7 @@ func (l *taskLauncher) run() {
 	l.scheduler.taskTable.executeIfMatch(l.scheduler, l.millis)
 }
 
-// taskLauncherManager 对应 hutool 的 TaskLauncherManager。
+// taskLauncherManager is aligned with hutool TaskLauncherManager.
 type taskLauncherManager struct {
 	scheduler *Scheduler
 	mu        sync.Mutex

@@ -2,7 +2,7 @@ package base
 
 import "testing"
 
-// 对应 hutool-core CharSequenceUtilTest / StrUtilTest。
+// Tests aligned with hutool-core CharSequenceUtilTest and StrUtilTest.
 
 func TestIsEmptyAndBlank(t *testing.T) {
 	if !IsEmpty("") || IsEmpty("a") {
@@ -102,11 +102,11 @@ func TestFormat(t *testing.T) {
 	if got := Format("name={}, age={}", "tom", 12); got != "name=tom, age=12" {
 		t.Fatalf("Format: %q", got)
 	}
-	// 转义
+	// Escaping.
 	if got := Format("\\{}={}", "x"); got != "{}=x" {
 		t.Fatalf("Format escape: %q", got)
 	}
-	// 占位符多于参数
+	// More placeholders than arguments.
 	if got := Format("a={},b={}", 1); got != "a=1,b={}" {
 		t.Fatalf("Format extra: %q", got)
 	}

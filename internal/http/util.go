@@ -10,65 +10,65 @@ import (
 	"time"
 )
 
-// IsHTTPS 判断给定 URL 是否为 https。
+// IsHTTPS reports whether the given URL is https.
 func IsHTTPS(u string) bool { return strings.HasPrefix(strings.ToLower(u), "https:") }
 
-// IsHTTP 判断给定 URL 是否为 http。
+// IsHTTP reports whether the given URL is http.
 func IsHTTP(u string) bool { return strings.HasPrefix(strings.ToLower(u), "http:") }
 
-// CreateRequest 创建指定方法的请求（对应 HttpUtil.createRequest）。
+// CreateRequest creates a request with the specified method, aligned with HttpUtil.createRequest.
 func CreateRequest(method Method, rawURL string) *HTTPRequest { return NewRequest(method, rawURL) }
 
-// CreateGet 创建 GET 请求并设置是否跟随重定向。
+// CreateGet creates a GET request and sets whether redirects are followed.
 func CreateGet(rawURL string, followRedirects bool) *HTTPRequest {
 	return Get(rawURL).FollowRedirects(followRedirects)
 }
 
-// CreatePost 创建 POST 请求。
+// CreatePost creates a POST request.
 func CreatePost(rawURL string) *HTTPRequest { return Post(rawURL) }
 
-// GetString 直接 GET 并返回响应字符串。
+// GetString sends a GET request and returns the response body as a string.
 func GetString(rawURL string) string { return Get(rawURL).Execute().Body() }
 
-// GetWithTimeout 带超时的 GET。
+// GetWithTimeout sends a GET request with a timeout.
 func GetWithTimeout(rawURL string, timeout time.Duration) string {
 	return Get(rawURL).Timeout(timeout).Execute().Body()
 }
 
-// GetWithParams 带 form 参数的 GET。
+// GetWithParams sends a GET request with form parameters.
 func GetWithParams(rawURL string, params map[string]any) string {
 	return Get(rawURL).Form(params).Execute().Body()
 }
 
-// PostString 以字符串 body 发起 POST。
+// PostString sends a POST request with a string body.
 func PostString(rawURL, body string) string {
 	return Post(rawURL).BodyString(body).Execute().Body()
 }
 
-// PostForm 以表单方式发起 POST。
+// PostForm sends a POST request with form parameters.
 func PostForm(rawURL string, params map[string]any) string {
 	return Post(rawURL).Form(params).Execute().Body()
 }
 
-// PostJSON 以 JSON 字符串发起 POST。
+// PostJSON sends a POST request with a JSON string body.
 func PostJSON(rawURL, jsonStr string) string {
 	return Post(rawURL).BodyJSON(jsonStr).Execute().Body()
 }
 
-// DownloadString 下载远程文本，customCharset 为空时按响应头识别。
+// DownloadString downloads remote text and detects charset from response headers when customCharset is empty.
 func DownloadString(rawURL, customCharset string) string {
 	resp := Get(rawURL).Execute()
 	if resp.err != nil {
 		return ""
 	}
 	if customCharset != "" {
-		// Go 不内置编码转换，只直接按字节返回；调用方按需转码
+		// Go does not provide built-in charset conversion; return bytes directly and let callers convert if needed.
 		_ = customCharset
 	}
 	return resp.Body()
 }
 
-// DownloadFile 下载到文件，dest 为目录时取 URL 或响应头中的文件名。
+// DownloadFile downloads to a file, using URL or response headers for the file name when dest is a directory.
 func DownloadFile(rawURL, dest string) (int64, error) {
 	resp := Get(rawURL).Execute()
 	if resp.err != nil {
@@ -77,19 +77,19 @@ func DownloadFile(rawURL, dest string) (int64, error) {
 	return resp.SaveAs(dest)
 }
 
-// Download 下载到 Writer。
+// Download downloads to a Writer.
 func Download(rawURL string, w io.Writer) (int64, error) {
 	resp := Get(rawURL).Execute()
 	if resp.err != nil {
 		return 0, resp.err
 	}
-	return resp.WriteTo(w)
+	return resp.writeBodyTo(w)
 }
 
-// DownloadBytes 下载并返回字节数据。
+// DownloadBytes downloads and returns bytes.
 func DownloadBytes(rawURL string) []byte { return Get(rawURL).Execute().Bytes() }
 
-// ToParams 将 map 转为 URL Query 字符串。
+// ToParams converts a map to a URL query string.
 func ToParams(m map[string]any) string {
 	values := url.Values{}
 	for k, v := range m {
@@ -98,7 +98,7 @@ func ToParams(m map[string]any) string {
 	return values.Encode()
 }
 
-// EncodeParams 对包含参数的 URL 进行编码（仅对 ?后的部分）。
+// EncodeParams encodes a URL containing parameters; only the part after ? is encoded.
 func EncodeParams(rawURL string) string {
 	idx := strings.Index(rawURL, "?")
 	if idx < 0 {
@@ -113,7 +113,7 @@ func EncodeParams(rawURL string) string {
 	return pre + "?" + values.Encode()
 }
 
-// DecodeParamMap 将 query 字符串解析为 map。
+// DecodeParamMap parses a query string into a map.
 func DecodeParamMap(paramsStr string) map[string]string {
 	out := map[string]string{}
 	values, err := url.ParseQuery(paramsStr)
@@ -128,7 +128,7 @@ func DecodeParamMap(paramsStr string) map[string]string {
 	return out
 }
 
-// DecodeParams 将 query 字符串解析为多值 map。
+// DecodeParams parses a query string into a multi-value map.
 func DecodeParams(paramsStr string) map[string][]string {
 	values, err := url.ParseQuery(paramsStr)
 	if err != nil {
@@ -141,7 +141,7 @@ func DecodeParams(paramsStr string) map[string][]string {
 	return out
 }
 
-// URLWithForm 将 form 拼接到 URL 中。
+// URLWithForm appends form values to a URL.
 func URLWithForm(rawURL string, form map[string]any) string {
 	encoded := ToParams(form)
 	if encoded == "" {
@@ -156,20 +156,20 @@ func URLWithForm(rawURL string, form map[string]any) string {
 	return rawURL + "?" + encoded
 }
 
-// BuildBasicAuth 构造 Basic Auth 字符串。
+// BuildBasicAuth builds a Basic Auth string.
 func BuildBasicAuth(user, pass string) string {
 	token := base64.StdEncoding.EncodeToString([]byte(user + ":" + pass))
 	return "Basic " + token
 }
 
 var (
-	// CharsetPattern Content-Type 中匹配 charset 的正则。
+	// CharsetPattern matches charset in Content-Type.
 	CharsetPattern = regexp.MustCompile(`(?i)charset\s*=\s*([a-z0-9-]+)`)
-	// MetaCharsetPattern HTML meta 标签中匹配 charset 的正则。
+	// MetaCharsetPattern matches charset in HTML meta tags.
 	MetaCharsetPattern = regexp.MustCompile(`(?i)<meta[^>]*?charset\s*=\s*['"]?([a-z0-9-]+)`)
 )
 
-// GetCharsetFromContentType 从 Content-Type 中提取字符集。
+// GetCharsetFromContentType extracts charset from Content-Type.
 func GetCharsetFromContentType(ct string) string {
 	m := CharsetPattern.FindStringSubmatch(ct)
 	if len(m) < 2 {
@@ -178,7 +178,7 @@ func GetCharsetFromContentType(ct string) string {
 	return m[1]
 }
 
-// GetCharsetFromHTML 从 HTML meta 中提取 charset。
+// GetCharsetFromHTML extracts charset from HTML meta tags.
 func GetCharsetFromHTML(html string) string {
 	m := MetaCharsetPattern.FindStringSubmatch(html)
 	if len(m) < 2 {
@@ -187,7 +187,7 @@ func GetCharsetFromHTML(html string) string {
 	return m[1]
 }
 
-// GetMimeType 根据文件扩展名返回 MIME 类型，未知返回空字符串。
+// GetMimeType returns the MIME type by file extension, or an empty string when unknown.
 func GetMimeType(filename string) string {
 	ext := strings.ToLower(filepath.Ext(filename))
 	if ext == "" {
@@ -199,7 +199,7 @@ func GetMimeType(filename string) string {
 	return ""
 }
 
-// 简化版 MIME 表
+// Simplified MIME table.
 var mimeTypes = map[string]string{
 	".html": "text/html",
 	".htm":  "text/html",

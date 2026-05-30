@@ -2,6 +2,9 @@ package vset
 
 import setimpl "github.com/imajinyun/go-knifer/internal/sets"
 
+// Set is a generic set for comparable values.
+type Set[T comparable] = setimpl.Set[T]
+
 // Int is a set of int values.
 type Int = setimpl.Int
 
@@ -43,3 +46,6 @@ func NewUint64(items ...uint64) Uint64 { return setimpl.NewUint64(items...) }
 
 // NewString creates a string set.
 func NewString(items ...string) String { return setimpl.NewString(items...) }
+
+// New creates a generic set.
+func New[T comparable](items ...T) Set[T] { return setimpl.New(items...) }
