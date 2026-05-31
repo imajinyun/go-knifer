@@ -2,7 +2,7 @@ package slice
 
 // Union returns the deduplicated union of a and b.
 func Union[T comparable](a, b []T) []T {
-	return SliceDistinct(append(append([]T{}, a...), b...))
+	return Distinct(append(append([]T{}, a...), b...))
 }
 
 // Intersection returns the deduplicated intersection of a and b.

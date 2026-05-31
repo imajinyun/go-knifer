@@ -25,15 +25,33 @@ type (
 	Element        = xmlimpl.Element
 	TokenHandler   = xmlimpl.TokenHandler
 	NamespaceCache = xmlimpl.NamespaceCache
+	ParseOption    = xmlimpl.ParseOption
 )
 
-func DisableDefaultDocumentBuilderFactory()             { xmlimpl.DisableDefaultDocumentBuilderFactory() }
-func SetNamespaceAware(isNamespaceAware bool)           { xmlimpl.SetNamespaceAware(isNamespaceAware) }
-func ReadXML(pathOrContent string) (*Document, error)   { return xmlimpl.ReadXML(pathOrContent) }
-func ReadXMLFile(path string) (*Document, error)        { return xmlimpl.ReadXMLFile(path) }
-func ReadXMLBytes(data []byte) (*Document, error)       { return xmlimpl.ReadXMLBytes(data) }
-func ReadXMLReader(r io.Reader) (*Document, error)      { return xmlimpl.ReadXMLReader(r) }
-func ParseXML(xmlStr string) (*Document, error)         { return xmlimpl.ParseXML(xmlStr) }
+func DisableDefaultDocumentBuilderFactory() { xmlimpl.DisableDefaultDocumentBuilderFactory() }
+
+// SetNamespaceAware records whether parsed element names should keep namespace URIs.
+//
+// Deprecated: prefer ReadXMLReaderWithOptions or ParseXMLWithOptions to avoid
+// package-level mutable state in concurrent callers.
+func SetNamespaceAware(isNamespaceAware bool) {
+	xmlimpl.SetNamespaceAwareForCompatibility(isNamespaceAware)
+}
+
+func WithNamespaceAware(isNamespaceAware bool) ParseOption {
+	return xmlimpl.WithNamespaceAware(isNamespaceAware)
+}
+func ReadXML(pathOrContent string) (*Document, error) { return xmlimpl.ReadXML(pathOrContent) }
+func ReadXMLFile(path string) (*Document, error)      { return xmlimpl.ReadXMLFile(path) }
+func ReadXMLBytes(data []byte) (*Document, error)     { return xmlimpl.ReadXMLBytes(data) }
+func ReadXMLReader(r io.Reader) (*Document, error)    { return xmlimpl.ReadXMLReader(r) }
+func ReadXMLReaderWithOptions(r io.Reader, opts ...ParseOption) (*Document, error) {
+	return xmlimpl.ReadXMLReaderWithOptions(r, opts...)
+}
+func ParseXML(xmlStr string) (*Document, error) { return xmlimpl.ParseXML(xmlStr) }
+func ParseXMLWithOptions(xmlStr string, opts ...ParseOption) (*Document, error) {
+	return xmlimpl.ParseXMLWithOptions(xmlStr, opts...)
+}
 func ReadBySAX(r io.Reader, handler TokenHandler) error { return xmlimpl.ReadBySAX(r, handler) }
 func ReadBySAXFile(path string, handler TokenHandler) error {
 	return xmlimpl.ReadBySAXFile(path, handler)

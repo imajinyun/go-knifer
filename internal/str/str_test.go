@@ -131,7 +131,16 @@ func TestPrefixSuffix(t *testing.T) {
 }
 
 func TestLength(t *testing.T) {
-	if Length("中国a") != 3 {
+	if Length("中国a") != 3 || RuneLen("你好") != 2 {
 		t.Fatalf("Length rune count failed")
+	}
+}
+
+func TestEmojiHelpers(t *testing.T) {
+	if !ContainsEmoji("hi😀") || !ContainsEmoji("go❤️") || !ContainsEmoji("1️⃣") {
+		t.Fatal("ContainsEmoji() = false")
+	}
+	if got := RemoveEmoji("hi😀 go❤️ 1️⃣"); got != "hi go " {
+		t.Fatalf("RemoveEmoji() = %q", got)
 	}
 }

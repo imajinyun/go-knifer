@@ -2,11 +2,14 @@ package str
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"unicode"
 )
 
 // This file provides string helpers aligned with hutool-core StrUtil and CharSequenceUtil.
+
+var emojiPattern = regexp.MustCompile(`(?:[\x{1F1E6}-\x{1F1FF}]{2}|[#*0-9]\x{FE0F}?\x{20E3}|[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}])(?:\x{FE0F}|\x{200D}[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}]\x{FE0F}?)*`)
 
 // IsEmpty reports whether s has zero length.
 func IsEmpty(s string) bool { return len(s) == 0 }
@@ -203,6 +206,13 @@ func PadRight(s string, length int, pad rune) string {
 // Contains reports whether s contains sub.
 func Contains(s, sub string) bool { return strings.Contains(s, sub) }
 
+// ContainsEmoji reports whether s contains emoji-like runes.
+func ContainsEmoji(s string) bool { return emojiPattern.MatchString(s) }
+
+// RemoveEmoji removes emoji-like runes from s, including variation-selector and
+// zero-width-joiner based emoji sequences.
+func RemoveEmoji(s string) string { return emojiPattern.ReplaceAllString(s, "") }
+
 // ContainsAny reports whether s contains any candidate substring.
 func ContainsAny(s string, subs ...string) bool {
 	for _, sub := range subs {
@@ -314,3 +324,6 @@ func AddSuffixIfNot(s, suffix string) string {
 
 // Length returns the number of runes in s.
 func Length(s string) int { return len([]rune(s)) }
+
+// RuneLen returns the number of runes in s.
+func RuneLen(s string) int { return Length(s) }

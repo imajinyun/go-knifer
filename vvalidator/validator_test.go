@@ -9,7 +9,7 @@ func TestValidatorFacade(t *testing.T) {
 	if !IsMobile("13812345678") || IsMobile("12812345678") {
 		t.Fatal("IsMobile failed")
 	}
-	if !IsURL("https://example.com") || IsURL("ftp://example.com") {
+	if !IsURL("https://example.com") || !IsURL("ftp://example.com") || IsURL("/relative/path") {
 		t.Fatal("IsURL failed")
 	}
 	if !IsIPv4("127.0.0.1") || IsIPv4("256.0.0.1") {

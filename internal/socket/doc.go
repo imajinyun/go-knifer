@@ -1,4 +1,4 @@
-// Package gksocket provides NIO/AIO-style socket communication helpers.
+// Package socket provides NIO/AIO-style socket communication helpers.
 //
 // Main types in this package:
 //   - SocketConfig: communication options such as pool size, timeout, and buffers.

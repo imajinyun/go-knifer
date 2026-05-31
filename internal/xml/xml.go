@@ -35,6 +35,13 @@ var (
 	commentRe      = regexp.MustCompile(CommentRegex)
 )
 
+// ParseOption customizes XML parsing without changing package-level defaults.
+type ParseOption func(*parseConfig)
+
+type parseConfig struct {
+	namespaceAware bool
+}
+
 // Document is a lightweight XML document tree.
 type Document struct {
 	Root *Element
@@ -62,8 +69,23 @@ type NamespaceCache struct {
 // DisableDefaultDocumentBuilderFactory is a no-op compatibility hook.
 func DisableDefaultDocumentBuilderFactory() {}
 
+// SetNamespaceAwareForCompatibility records whether parsed element names should
+// keep namespace URIs for compatibility facades.
+//
+// New code should prefer ReadXMLReaderWithOptions or ParseXMLWithOptions to
+// avoid package-level mutable state in concurrent callers.
+func SetNamespaceAwareForCompatibility(isNamespaceAware bool) { namespaceAware = isNamespaceAware }
+
 // SetNamespaceAware records whether parsed element names should keep namespace URIs.
-func SetNamespaceAware(isNamespaceAware bool) { namespaceAware = isNamespaceAware }
+//
+// Deprecated: prefer ReadXMLReaderWithOptions or ParseXMLWithOptions to avoid
+// package-level mutable state in concurrent callers.
+func SetNamespaceAware(isNamespaceAware bool) { SetNamespaceAwareForCompatibility(isNamespaceAware) }
+
+// WithNamespaceAware controls whether parsed element names keep namespace URIs.
+func WithNamespaceAware(isNamespaceAware bool) ParseOption {
+	return func(cfg *parseConfig) { cfg.namespaceAware = isNamespaceAware }
+}
 
 // ReadXML parses XML content directly, or treats the input as a file path when it does not start with '<'.
 func ReadXML(pathOrContent string) (*Document, error) {
@@ -88,6 +110,21 @@ func ReadXMLBytes(data []byte) (*Document, error) { return ReadXMLReader(bytes.N
 
 // ReadXMLReader parses XML from reader.
 func ReadXMLReader(r io.Reader) (*Document, error) {
+	return readXMLReader(r, parseConfig{namespaceAware: namespaceAware})
+}
+
+// ReadXMLReaderWithOptions parses XML from reader with per-call options.
+func ReadXMLReaderWithOptions(r io.Reader, opts ...ParseOption) (*Document, error) {
+	cfg := parseConfig{namespaceAware: namespaceAware}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	return readXMLReader(r, cfg)
+}
+
+func readXMLReader(r io.Reader, cfg parseConfig) (*Document, error) {
 	dec := stdxml.NewDecoder(r)
 	var stack []*Element
 	var root *Element
@@ -102,7 +139,7 @@ func ReadXMLReader(r io.Reader) (*Document, error) {
 		switch t := tok.(type) {
 		case stdxml.StartElement:
 			name := t.Name
-			if !namespaceAware {
+			if !cfg.namespaceAware {
 				name.Space = ""
 			}
 			ele := &Element{Name: name, Attr: append([]stdxml.Attr(nil), t.Attr...)}
@@ -133,6 +170,11 @@ func ReadXMLReader(r io.Reader) (*Document, error) {
 
 // ParseXML parses an XML string.
 func ParseXML(xmlStr string) (*Document, error) { return ReadXMLReader(strings.NewReader(xmlStr)) }
+
+// ParseXMLWithOptions parses an XML string with per-call options.
+func ParseXMLWithOptions(xmlStr string, opts ...ParseOption) (*Document, error) {
+	return ReadXMLReaderWithOptions(strings.NewReader(xmlStr), opts...)
+}
 
 // ReadBySAX streams XML tokens from reader to handler.
 func ReadBySAX(r io.Reader, handler TokenHandler) error {

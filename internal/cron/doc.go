@@ -1,2 +1,3 @@
-// Package gkcron provides a cron-expression-based task scheduling framework aligned with hutool-cron.
+// Package cron provides a cron-expression-based task scheduling framework
+// aligned with hutool-cron.
 package cron

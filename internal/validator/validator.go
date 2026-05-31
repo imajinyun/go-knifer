@@ -20,8 +20,8 @@ func IsEmail(s string) bool { return rxEmail.MatchString(s) }
 // IsMobile reports whether s is a mainland China mobile phone number.
 func IsMobile(s string) bool { return rxMobile.MatchString(s) }
 
-// IsURL reports whether s is an http or https URL.
-func IsURL(s string) bool { return urlimpl.IsWebURL(s) }
+// IsURL reports whether s is an absolute URL with scheme and host.
+func IsURL(s string) bool { return urlimpl.IsAbsoluteURL(s) }
 
 // IsIPv4 reports whether s is an IPv4 address.
 func IsIPv4(s string) bool { return rxIPv4.MatchString(s) }

@@ -40,7 +40,7 @@ text := vhash.MD5Hex("hello")
 
 | 模块 | 导入路径 | 功能说明 |
 | --- | --- | --- |
-| `vstr` | `github.com/imajinyun/go-knifer/vstr` | 字符串工具：空白判断、裁剪、切分、截取、格式化、命名转换、默认值和 HTML 转义。 |
+| `vstr` | `github.com/imajinyun/go-knifer/vstr` | 字符串工具：空白判断、裁剪、切分、截取、格式化、emoji、命名转换、默认值和 HTML 转义。 |
 | `vslice` | `github.com/imajinyun/go-knifer/vslice` | Slice 工具：包含/索引、反转、去重、拼接、过滤/映射、截取、合并、集合操作和分页。 |
 | `vmap` | `github.com/imajinyun/go-knifer/vmap` | Map 工具：空判断、keys、values、反转和合并。 |
 | `vconv` | `github.com/imajinyun/go-knifer/vconv` | 宽松类型转换：string、int、int64、float64、bool、bytes 及默认值版本。 |
@@ -50,6 +50,7 @@ text := vhash.MD5Hex("hello")
 | `vurl` | `github.com/imajinyun/go-knifer/vurl` | URL 与 URI 工具：解析、标准化、相对 URL 补全、query 编解码、Data URI 构造、协议判断和文件 URL 转换。 |
 | `vobj` | `github.com/imajinyun/go-knifer/vobj` | 对象工具：nil/空值判断、相等性、默认值、克隆/序列化、比较、类型检查和容器辅助。 |
 | `vser` | `github.com/imajinyun/go-knifer/vser` | 序列化工具：gob 编码/解码、泛型反序列化、深拷贝、类型注册和可选的解码类型校验。 |
+| `vver` | `github.com/imajinyun/go-knifer/vver` | 版本工具：版本号比较、大小关系判断、表达式匹配、闭区间范围和自定义多表达式分隔符。 |
 | `vref` | `github.com/imajinyun/go-knifer/vref` | 反射工具：字段查找与赋值、方法发现与调用、构造函数风格调用、类型/值工具和方法分类判断。 |
 | `vzip` | `github.com/imajinyun/go-knifer/vzip` | ZIP、gzip、zlib 工具：压缩包创建/解压、条目读取、遍历、追加、内存条目和流式压缩。 |
 | `vdes` | `github.com/imajinyun/go-knifer/vdes` | 脱敏工具：姓名、证件号、电话、地址、邮箱、密码、车牌、银行卡、IP、护照号和信用代码遮罩。 |
@@ -58,6 +59,7 @@ text := vhash.MD5Hex("hello")
 | `vid` | `github.com/imajinyun/go-knifer/vid` | ID 工具：random/simple/fast UUID、MongoDB 风格 ObjectId、Snowflake 生成器与单例 next-id、worker/datacenter id 推导和 NanoId。 |
 | `vhash` | `github.com/imajinyun/go-knifer/vhash` | Hash 工具：Additive、FNV、MD5、SHA-1、SHA-256 Hex。 |
 | `vvalidator` | `github.com/imajinyun/go-knifer/vvalidator` | 校验工具：邮箱、手机号、URL、IPv4、中文和数字字符串。 |
+| `vtemplate` | `github.com/imajinyun/go-knifer/vtemplate` | Go html/template 渲染工具。 |
 | `vregex` | `github.com/imajinyun/go-knifer/vregex` | 正则工具：匹配、分组提取、命名分组、删除、计数、索引定位、模板/函数替换和元字符转义。 |
 | `vchar` | `github.com/imajinyun/go-knifer/vchar` | 字符工具：空白、字母、数字、ASCII、字母或数字判断。 |
 | `vbool` | `github.com/imajinyun/go-knifer/vbool` | 布尔工具：取反、转 int、全真/任一为真判断。 |
@@ -66,7 +68,6 @@ text := vhash.MD5Hex("hello")
 | `vcaptcha` | `github.com/imajinyun/go-knifer/vcaptcha` | 图片验证码：线条、圆圈、扭曲、GIF 验证码，支持随机/数学表达式生成器。 |
 | `vcron` | `github.com/imajinyun/go-knifer/vcron` | Cron 表达式解析与任务调度，支持默认调度器和自定义调度器。 |
 | `vcrypto` | `github.com/imajinyun/go-knifer/vcrypto` | 加密与摘要：MD5/SHA、HMAC、随机字节、AES-CBC/AES-GCM、RSA-OAEP、RSA PEM 编解码。 |
-| `vextra` | `github.com/imajinyun/go-knifer/vextra` | 额外工具：gzip/zlib、zip/unzip、emoji、Go template 渲染、常用校验。 |
 | `vhttp` | `github.com/imajinyun/go-knifer/vhttp` | 链式 HTTP 客户端、下载、全局 Header/Timeout、BasicAuth、User-Agent 解析、简易服务端。 |
 | `vresty` | `github.com/imajinyun/go-knifer/vresty` | 基于 Resty v3 的 HTTP facade：链式请求、JSON/form/multipart 请求体、全局 Header/Timeout、下载与轻量响应工具。 |
 | `vjson` | `github.com/imajinyun/go-knifer/vjson` | 有序 JSON 对象/数组、JSON 解析与格式化、路径表达式读写、Bean/List 转换、XML/JSON 转换。 |
@@ -80,6 +81,35 @@ text := vhash.MD5Hex("hello")
 | `vsem` | `github.com/imajinyun/go-knifer/vsem` | 加权计数信号量：支持 context 取消、FIFO 公平等待、非阻塞获取、关闭通知与占用数查询。 |
 | `vskt` | `github.com/imajinyun/go-knifer/vskt` | TCP socket 工具：普通连接、NIO/AIO server/client、协议编解码接口。 |
 | `vsys` | `github.com/imajinyun/go-knifer/vsys` | 系统与运行时信息：主机、OS、用户、Go runtime、进程内存、goroutine、环境变量等。 |
+
+## 🧭 架构与包边界
+
+`go-knifer` 采用 `v*` 对外 facade + `internal/*` 内部实现的结构。业务代码应优先导入
+`v*` 包；`internal/*` 用于沉淀具体实现，便于后续在不暴露所有内部细节的前提下持续重构。
+
+facade 规则：
+
+- `internal/<domain>` 负责领域实现细节和领域内测试。
+- `v<domain>` 负责暴露该领域稳定的公共 API。
+- 简单工具包可以手写轻量转发；较大的模块可以保留生成的 `facade.go`。无论哪种方式，
+  internal 新增导出 API 时，都应先评估是否需要进入 public facade。
+- `vdes`、`vser`、`vsem`、`vskt`、`vblf`、`vver` 等短命名继续保留，通过上方模块表说明含义，
+  不再通过改名破坏已有导入路径。
+
+领域边界规则：
+
+- `vhash` 面向通用 hash 能力，例如 Additive/FNV 和简单摘要快捷方法；`vcrypto` 面向安全相关摘要、
+  HMAC、加解密、密钥和 PEM 编解码。
+- `vhttp` 是基于标准库的轻量 HTTP facade；`vresty` 是基于 Resty 的链式高级 HTTP client facade。
+- `vcodec` 负责 Base64、Hex、URL query escaping 等编码/解码算法；`vurl` 负责 URL/URI 解析、规范化、
+  资源和协议语义。
+- `vjson` 负责 JSON 对象、数组、路径和轻量 XML adapter；`vxml` 负责 XML 解析、树访问、格式化、
+  namespace 和 XML 专属的 map/bean 转换。
+- `vobj` 是对象级便利 facade。新增具体领域逻辑应优先落到 `vstr`、`vslice`、`vmap`、`vser`、`vref`
+  等明确领域包，只有在对象级聚合有价值时再由 `vobj` 做轻量包装。
+
+部分 `internal` 包，例如 `db`、`dfa`、`poi`，是有意保留的领域占位。它们用于说明未来能力归属，
+当前不提供运行时 API。
 
 ## 🚀 Install
 
@@ -321,6 +351,29 @@ func main() {
 
   fmt.Println(decoded.Name)
   fmt.Println(cloned.Tags)
+}
+```
+
+### 版本工具
+
+`vver` 提供版本号比较与表达式匹配能力。表达式支持比较符（`>`、`>=`、
+`<`、`<=`、`≥`、`≤`）、`1.0.0-1.5.0` 这样的闭区间、`1.0.0-` 这样的
+开放区间，以及使用自定义分隔符的多表达式匹配。
+
+```go
+package main
+
+import (
+  "fmt"
+
+  "github.com/imajinyun/go-knifer/vver"
+)
+
+func main() {
+  fmt.Println(vver.CompareVersion("1.0.0", "1.0.2"))
+  fmt.Println(vver.IsGreaterThan("1.13.0", "1.12.1c"))
+  fmt.Println(vver.MatchEl("1.0.2", ">=1.0.0;1.2.0"))
+  fmt.Println(vver.MatchElWithDelimiter("1.0.2", "<1.0.1,1.0.2-1.1.1", ","))
 }
 ```
 
