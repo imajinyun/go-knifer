@@ -1,2 +1,7 @@
-// Package gkdb 对应 hutool-db，提供 SQL 数据库通用工具：连接池、方言、ORM 映射、事务、分页。
+// Package db is reserved for future database utilities.
+//
+// This package intentionally contains no runtime API yet. When implemented, it
+// should own database-specific capabilities such as connection helpers,
+// dialects, transactions, and pagination instead of putting them in generic
+// utility packages.
 package db

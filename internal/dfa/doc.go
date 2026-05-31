@@ -1,2 +1,6 @@
-// Package gkdfa 对应 hutool-dfa，基于 DFA（确定有穷自动机）实现的敏感词过滤工具。
+// Package dfa is reserved for future DFA-based text matching utilities.
+//
+// This package intentionally contains no runtime API yet. When implemented, it
+// should own deterministic-finite-automaton matching and sensitive-word
+// filtering capabilities instead of placing them in generic string helpers.
 package dfa

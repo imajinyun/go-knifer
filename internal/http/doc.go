@@ -1,10 +1,14 @@
-// Package gkhttp is aligned with hutool-http and provides HTTP client,
-// download, Cookie, UserAgent, SimpleServer, and related utilities.
+// Package http is aligned with hutool-http and provides HTTP client, download,
+// Cookie, UserAgent, SimpleServer, and related utilities.
 //
-// Unlike hutool-http, this package wraps Go's standard net/http library and provides a chainable API:
+// This package is the standard-library based HTTP implementation for vhttp. Use
+// internal/resty through vresty when a Resty-based chainable client is desired.
 //
-//	body := gkhttp.Get("https://example.com").Execute().Body()
-//	resp := gkhttp.NewRequest(gkhttp.MethodPost, url).
+// Unlike hutool-http, this package wraps Go's standard net/http library and
+// provides a chainable API:
+//
+//	body := http.Get("https://example.com").Execute().Body()
+//	resp := http.NewRequest(http.MethodPost, url).
 //	            Form(map[string]any{"a": 1}).
 //	            Timeout(5 * time.Second).
 //	            Execute()

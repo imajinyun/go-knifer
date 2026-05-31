@@ -16,6 +16,9 @@ func TestZipFilesUnzipGetAndList(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(src, "nested"), 0o755); err != nil {
 		t.Fatal(err)
 	}
+	if err := os.MkdirAll(filepath.Join(src, "empty"), 0o755); err != nil {
+		t.Fatal(err)
+	}
 	if err := os.WriteFile(filepath.Join(src, "a.txt"), []byte("a"), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -44,6 +47,9 @@ func TestZipFilesUnzipGetAndList(t *testing.T) {
 	}
 	if got, err := os.ReadFile(filepath.Join(dest, "nested", "b.txt")); err != nil || string(got) != "b" {
 		t.Fatalf("unzipped: %q %v", got, err)
+	}
+	if info, err := os.Stat(filepath.Join(dest, "empty")); err != nil || !info.IsDir() {
+		t.Fatalf("empty directory was not restored, info=%v err=%v", info, err)
 	}
 }
 

@@ -40,7 +40,7 @@ The project follows an “internal implementation + public facade” layout: `in
 
 | Module | Import path | Description |
 | --- | --- | --- |
-| `vstr` | `github.com/imajinyun/go-knifer/vstr` | String helpers: blank/empty checks, trimming, splitting, substring helpers, formatting, naming conversion, defaults, and HTML escaping. |
+| `vstr` | `github.com/imajinyun/go-knifer/vstr` | String helpers: blank/empty checks, trimming, splitting, substring helpers, formatting, emoji helpers, naming conversion, defaults, and HTML escaping. |
 | `vslice` | `github.com/imajinyun/go-knifer/vslice` | Slice helpers: contains/index, reverse, distinct, join, filter/map, sub-slice, concat, set-like operations, and paging. |
 | `vmap` | `github.com/imajinyun/go-knifer/vmap` | Map helpers: empty checks, keys, values, inverse, and merge. |
 | `vconv` | `github.com/imajinyun/go-knifer/vconv` | Permissive type conversion: string, int, int64, float64, bool, bytes, and default-value variants. |
@@ -50,6 +50,7 @@ The project follows an “internal implementation + public facade” layout: `in
 | `vurl` | `github.com/imajinyun/go-knifer/vurl` | URL and URI helpers: parse, normalize, resolve relative URLs, query encode/decode, Data URI building, scheme checks, and file URL conversion. |
 | `vobj` | `github.com/imajinyun/go-knifer/vobj` | Object helpers: nil/empty checks, equality, defaults, clone/serialization, comparison, type inspection, and container utilities. |
 | `vser` | `github.com/imajinyun/go-knifer/vser` | Serialization helpers: gob encode/decode, typed deserialization, deep clone, type registration, and optional decoded-type validation. |
+| `vver` | `github.com/imajinyun/go-knifer/vver` | Version helpers: version comparison, greater/less predicates, expression matching, inclusive ranges, and custom expression delimiters. |
 | `vref` | `github.com/imajinyun/go-knifer/vref` | Reflection helpers: field lookup and mutation, method discovery and invocation, constructor-style function calls, type/value utilities, and method classification. |
 | `vzip` | `github.com/imajinyun/go-knifer/vzip` | ZIP, gzip, and zlib helpers: archive creation/extraction, entry lookup, archive traversal, append, in-memory entries, and stream compression. |
 | `vdes` | `github.com/imajinyun/go-knifer/vdes` | Desensitization helpers: mask names, IDs, phones, addresses, email, passwords, license plates, bank cards, IPs, passports, and credit codes. |
@@ -58,6 +59,7 @@ The project follows an “internal implementation + public facade” layout: `in
 | `vid` | `github.com/imajinyun/go-knifer/vid` | ID helpers: random/simple/fast UUIDs, MongoDB-style ObjectId, Snowflake generators and singleton next-id helpers, worker/datacenter id derivation, and NanoId generation. |
 | `vhash` | `github.com/imajinyun/go-knifer/vhash` | Hash helpers: additive hash, FNV, MD5, SHA-1, and SHA-256 hex helpers. |
 | `vvalidator` | `github.com/imajinyun/go-knifer/vvalidator` | Validation helpers: email, mobile, URL, IPv4, Chinese text, and number string checks. |
+| `vtemplate` | `github.com/imajinyun/go-knifer/vtemplate` | Go html/template rendering helpers. |
 | `vregex` | `github.com/imajinyun/go-knifer/vregex` | Regular-expression helpers: matching, group extraction, named groups, deletion, counting, index lookup, template/function replacement, and escaping. |
 | `vchar` | `github.com/imajinyun/go-knifer/vchar` | Character helpers: blank, letter, digit, ASCII, and letter-or-digit checks. |
 | `vbool` | `github.com/imajinyun/go-knifer/vbool` | Boolean helpers: negate, bool-to-int, all/any checks. |
@@ -66,7 +68,6 @@ The project follows an “internal implementation + public facade” layout: `in
 | `vcaptcha` | `github.com/imajinyun/go-knifer/vcaptcha` | Image captcha generation: line, circle, shear, and GIF captchas, with random and math-expression generators. |
 | `vcron` | `github.com/imajinyun/go-knifer/vcron` | Cron expression parsing and task scheduling, including both default and custom schedulers. |
 | `vcrypto` | `github.com/imajinyun/go-knifer/vcrypto` | Cryptography and digests: MD5/SHA, HMAC, random bytes, AES-CBC/AES-GCM, RSA-OAEP, and RSA PEM encoding/decoding. |
-| `vextra` | `github.com/imajinyun/go-knifer/vextra` | Extra utilities: gzip/zlib, zip/unzip, emoji helpers, Go template rendering, and common validation helpers. |
 | `vhttp` | `github.com/imajinyun/go-knifer/vhttp` | Chainable HTTP client, downloads, global headers/timeouts, BasicAuth, User-Agent parsing, and a simple server helper. |
 | `vresty` | `github.com/imajinyun/go-knifer/vresty` | Resty v3 based HTTP facade: chainable requests, JSON/form/multipart bodies, global headers/timeouts, downloads, and lightweight response helpers. |
 | `vjson` | `github.com/imajinyun/go-knifer/vjson` | Ordered JSON objects/arrays, JSON parsing and formatting, path-based get/put, bean/list conversion, and XML/JSON conversion. |
@@ -80,6 +81,44 @@ The project follows an “internal implementation + public facade” layout: `in
 | `vsem` | `github.com/imajinyun/go-knifer/vsem` | Weighted, context-aware counting semaphore with FIFO fairness, try-acquire, close notifications, and in-use metrics. |
 | `vskt` | `github.com/imajinyun/go-knifer/vskt` | TCP socket utilities: plain connections, NIO/AIO server/client helpers, and protocol encoder/decoder interfaces. |
 | `vsys` | `github.com/imajinyun/go-knifer/vsys` | System and runtime information: host, OS, user, Go runtime, process memory, goroutines, environment variables, and more. |
+
+## 🧭 Architecture and package boundaries
+
+`go-knifer` uses public `v*` packages as facade APIs and keeps concrete code in
+`internal/*`. Application code should import the `v*` packages; `internal/*`
+exists so implementations can evolve without exposing every helper as public API.
+
+Facade rules:
+
+- `internal/<domain>` owns implementation details and domain-specific tests.
+- `v<domain>` exposes the stable public surface for that domain.
+- Small utility packages may use hand-written thin facades; larger modules may
+  keep generated `facade.go` files. In either case, newly exported internal APIs
+  should be reviewed before being exposed publicly.
+- Facades may keep short names such as `vdes`, `vser`, `vsem`, `vskt`, `vblf`,
+  and `vver`; their meaning is documented in the module table above instead of
+  changing established import paths.
+
+Domain boundary rules:
+
+- `vhash` is for general hash helpers such as additive/FNV and simple digest
+  shortcuts; `vcrypto` is for security-oriented digest, HMAC, encryption, and
+  key/PEM operations.
+- `vhttp` is the lightweight standard-library HTTP facade; `vresty` is the
+  Resty-based chainable client facade.
+- `vcodec` owns encoding/decoding algorithms such as Base64, Hex, and query
+  escaping; `vurl` owns URL/URI parsing, normalization, resource, and scheme
+  semantics.
+- `vjson` owns JSON objects, arrays, paths, and lightweight XML adapters;
+  `vxml` owns XML parsing, tree navigation, formatting, namespace handling, and
+  XML-specific map/bean conversion.
+- `vobj` is a convenience object-level facade. New domain logic should still be
+  implemented first in clear packages such as `vstr`, `vslice`, `vmap`, `vser`,
+  or `vref`, then wrapped by `vobj` only when a broad object helper is useful.
+
+Some `internal` packages, such as `db`, `dfa`, and `poi`, are intentionally
+reserved placeholders. They document future domain ownership and currently do
+not provide runtime APIs.
 
 ## 🚀 Install
 
@@ -324,6 +363,30 @@ func main() {
 
   fmt.Println(decoded.Name)
   fmt.Println(cloned.Tags)
+}
+```
+
+### Version helpers
+
+`vver` provides version comparison and expression matching. Expressions support
+comparison operators (`>`, `>=`, `<`, `<=`, `≥`, `≤`), inclusive ranges such as
+`1.0.0-1.5.0`, open ranges such as `1.0.0-`, and multiple alternatives with a
+custom delimiter.
+
+```go
+package main
+
+import (
+  "fmt"
+
+  "github.com/imajinyun/go-knifer/vver"
+)
+
+func main() {
+  fmt.Println(vver.CompareVersion("1.0.0", "1.0.2"))
+  fmt.Println(vver.IsGreaterThan("1.13.0", "1.12.1c"))
+  fmt.Println(vver.MatchEl("1.0.2", ">=1.0.0;1.2.0"))
+  fmt.Println(vver.MatchElWithDelimiter("1.0.2", "<1.0.1,1.0.2-1.1.1", ","))
 }
 ```
 

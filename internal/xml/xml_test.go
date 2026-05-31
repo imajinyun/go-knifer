@@ -132,6 +132,27 @@ func TestMapBeanAndNamespaceConversions(t *testing.T) {
 	}
 }
 
+func TestParseXMLWithOptionsDoesNotMutateGlobalNamespaceSetting(t *testing.T) {
+	namespaceAware = true
+	doc, err := ParseXMLWithOptions(`<root xmlns:p="urn:p"><p:a>1</p:a></root>`, WithNamespaceAware(false))
+	if err != nil {
+		t.Fatalf("ParseXMLWithOptions failed: %v", err)
+	}
+	child := GetElement(doc.Root, "a")
+	if child == nil || child.Name.Space != "" {
+		t.Fatalf("per-call namespace option not applied: %#v", child)
+	}
+
+	doc, err = ParseXML(`<root xmlns:p="urn:p"><p:a>1</p:a></root>`)
+	if err != nil {
+		t.Fatalf("ParseXML failed: %v", err)
+	}
+	child = GetElement(doc.Root, "a")
+	if child == nil || child.Name.Space != "urn:p" {
+		t.Fatalf("global namespace setting should remain aware: %#v", child)
+	}
+}
+
 func TestAppendAndGuards(t *testing.T) {
 	if CreateXML().Root != nil || IsElement(nil) || GetRootElement(nil) != nil || GetOwnerDocument(nil) != nil {
 		t.Fatal("guard helpers failed")

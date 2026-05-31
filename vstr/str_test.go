@@ -42,8 +42,11 @@ func TestStringFacade(t *testing.T) {
 	if AddPrefixIfNot("bar", "foo") != "foobar" || AddSuffixIfNot("foo", "bar") != "foobar" {
 		t.Fatal("add prefix/suffix failed")
 	}
-	if Length("你好") != 2 {
+	if Length("你好") != 2 || RuneLen("你好") != 2 {
 		t.Fatal("Length failed")
+	}
+	if !ContainsEmoji("hello😀") || RemoveEmoji("hello😀") != "hello" {
+		t.Fatal("emoji helpers failed")
 	}
 	value := 5
 	if DefaultIfNil(&value, 1) != 5 || DefaultIfEmpty("", "x") != "x" || DefaultIfBlank(" ", "x") != "x" {

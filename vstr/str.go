@@ -28,6 +28,8 @@ func Repeat(s string, n int) string                  { return strimpl.Repeat(s, 
 func PadLeft(s string, length int, pad rune) string  { return strimpl.PadLeft(s, length, pad) }
 func PadRight(s string, length int, pad rune) string { return strimpl.PadRight(s, length, pad) }
 func Contains(s, sub string) bool                    { return strimpl.Contains(s, sub) }
+func ContainsEmoji(s string) bool                    { return strimpl.ContainsEmoji(s) }
+func RemoveEmoji(s string) string                    { return strimpl.RemoveEmoji(s) }
 func ContainsAny(s string, subs ...string) bool      { return strimpl.ContainsAny(s, subs...) }
 func ContainsAll(s string, subs ...string) bool      { return strimpl.ContainsAll(s, subs...) }
 func ContainsIgnoreCase(s, sub string) bool          { return strimpl.ContainsIgnoreCase(s, sub) }
@@ -50,3 +52,4 @@ func ToCamelCase(s string) string                    { return strimpl.ToCamelCas
 func ToPascalCase(s string) string                   { return strimpl.ToPascalCase(s) }
 func ToUnderlineCase(s string) string                { return strimpl.ToUnderlineCase(s) }
 func ToKebabCase(s string) string                    { return strimpl.ToKebabCase(s) }
+func RuneLen(s string) int                           { return strimpl.RuneLen(s) }

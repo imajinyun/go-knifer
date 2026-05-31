@@ -31,3 +31,14 @@ func TestFacadeXMLUtilities(t *testing.T) {
 		t.Fatal("escape facade failed")
 	}
 }
+
+func TestFacadeParseXMLWithOptions(t *testing.T) {
+	doc, err := ParseXMLWithOptions(`<root xmlns:p="urn:p"><p:a>1</p:a></root>`, WithNamespaceAware(false))
+	if err != nil {
+		t.Fatalf("ParseXMLWithOptions facade failed: %v", err)
+	}
+	child := GetElement(GetRootElement(doc), "a")
+	if child == nil || child.Name.Space != "" {
+		t.Fatalf("namespace option facade not applied: %#v", child)
+	}
+}
