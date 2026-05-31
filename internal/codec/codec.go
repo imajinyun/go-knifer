@@ -3,11 +3,11 @@ package codec
 import (
 	"encoding/base64"
 	"encoding/hex"
-	"net/url"
+
+	urlimpl "github.com/imajinyun/go-knifer/internal/url"
 )
 
-// This file provides encoding and decoding helpers aligned with hutool-core
-// Base64, HexUtil, and URLUtil.
+// This file provides encoding and decoding helpers for Base64, Hex, and URL query text.
 
 // Base64Encode encodes bytes with standard Base64 encoding.
 func Base64Encode(data []byte) string { return base64.StdEncoding.EncodeToString(data) }
@@ -52,7 +52,7 @@ func HexDecodeStr(s string) (string, error) {
 }
 
 // URLEncode escapes a string for use in URL query components.
-func URLEncode(s string) string { return url.QueryEscape(s) }
+func URLEncode(s string) string { return urlimpl.Encode(s) }
 
 // URLDecode unescapes a URL query component string.
-func URLDecode(s string) (string, error) { return url.QueryUnescape(s) }
+func URLDecode(s string) (string, error) { return urlimpl.Decode(s) }

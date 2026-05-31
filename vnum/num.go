@@ -30,6 +30,7 @@ func Div(a, b float64, scale ...int) float64 {
 	}
 	return numimpl.NumberDiv(a, b, scale[0])
 }
+
 func DivWithMode(a, b float64, scale int, mode RoundingMode) float64 {
 	return numimpl.DivWithMode(a, b, scale, mode)
 }
@@ -53,6 +54,7 @@ func IsPrimes(n int) bool                             { return numimpl.IsPrimes(
 func GenerateRandomNumber(begin, end, size int) []int {
 	return numimpl.GenerateRandomNumber(begin, end, size)
 }
+
 func GenerateRandomNumberWithSeed(begin, end, size int, seed []int) []int {
 	return numimpl.GenerateRandomNumberWithSeed(begin, end, size, seed)
 }
@@ -95,6 +97,7 @@ func ToStr(number float64) string                  { return numimpl.ToStr(number
 func ToStrDefault(number *float64, defaultValue string) string {
 	return numimpl.ToStrDefault(number, defaultValue)
 }
+
 func ToStrStrip(number float64, stripTrailingZeros bool) string {
 	return numimpl.ToStrStrip(number, stripTrailingZeros)
 }
@@ -125,12 +128,15 @@ func ParseNumber(numberStr string) (float64, error) { return numimpl.ParseNumber
 func ParseIntDefault(numberStr string, defaultValue int) int {
 	return numimpl.ParseIntDefault(numberStr, defaultValue)
 }
+
 func ParseLongDefault(numberStr string, defaultValue int64) int64 {
 	return numimpl.ParseLongDefault(numberStr, defaultValue)
 }
+
 func ParseFloatDefault(numberStr string, defaultValue float32) float32 {
 	return numimpl.ParseFloatDefault(numberStr, defaultValue)
 }
+
 func ParseDoubleDefault(numberStr string, defaultValue float64) float64 {
 	return numimpl.ParseDoubleDefault(numberStr, defaultValue)
 }

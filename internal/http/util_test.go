@@ -5,8 +5,6 @@ import (
 	"testing"
 )
 
-// Mirrors hutool-http HttpUtilTest.
-
 func TestIsHTTP(t *testing.T) {
 	if !IsHTTP("Http://aaa.bbb") {
 		t.Fatal("Http://")
@@ -63,7 +61,7 @@ func TestEncodeParams(t *testing.T) {
 	if !strings.Contains(got, "a=b") || !strings.Contains(got, "c=d") {
 		t.Fatalf("encoded: %q", got)
 	}
-	if EncodeParams("https://www.hutool.cn/") != "https://www.hutool.cn/" {
+	if EncodeParams("https://www.example.com/") != "https://www.example.com/" {
 		t.Fatal("URL without query should be returned unchanged")
 	}
 }
