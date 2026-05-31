@@ -1,11 +1,14 @@
 package validator
 
-import "regexp"
+import (
+	"regexp"
+
+	urlimpl "github.com/imajinyun/go-knifer/internal/url"
+)
 
 var (
 	rxEmail   = regexp.MustCompile(`^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$`)
 	rxMobile  = regexp.MustCompile(`^1[3-9]\d{9}$`)
-	rxURL     = regexp.MustCompile(`(?i)^https?://[^\s]+$`)
 	rxIPv4    = regexp.MustCompile(`^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$`)
 	rxChinese = regexp.MustCompile(`^[\p{Han}]+$`)
 	rxNumber  = regexp.MustCompile(`^-?\d+(\.\d+)?$`)
@@ -18,7 +21,7 @@ func IsEmail(s string) bool { return rxEmail.MatchString(s) }
 func IsMobile(s string) bool { return rxMobile.MatchString(s) }
 
 // IsURL reports whether s is an http or https URL.
-func IsURL(s string) bool { return rxURL.MatchString(s) }
+func IsURL(s string) bool { return urlimpl.IsWebURL(s) }
 
 // IsIPv4 reports whether s is an IPv4 address.
 func IsIPv4(s string) bool { return rxIPv4.MatchString(s) }

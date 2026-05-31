@@ -3,18 +3,19 @@ package http
 import (
 	"encoding/base64"
 	"io"
-	"net/url"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
+
+	urlimpl "github.com/imajinyun/go-knifer/internal/url"
 )
 
 // IsHTTPS reports whether the given URL is https.
-func IsHTTPS(u string) bool { return strings.HasPrefix(strings.ToLower(u), "https:") }
+func IsHTTPS(u string) bool { return urlimpl.IsHTTPS(u) }
 
 // IsHTTP reports whether the given URL is http.
-func IsHTTP(u string) bool { return strings.HasPrefix(strings.ToLower(u), "http:") }
+func IsHTTP(u string) bool { return urlimpl.IsHTTP(u) }
 
 // CreateRequest creates a request with the specified method, aligned with HttpUtil.createRequest.
 func CreateRequest(method Method, rawURL string) *HTTPRequest { return NewRequest(method, rawURL) }
@@ -90,71 +91,19 @@ func Download(rawURL string, w io.Writer) (int64, error) {
 func DownloadBytes(rawURL string) []byte { return Get(rawURL).Execute().Bytes() }
 
 // ToParams converts a map to a URL query string.
-func ToParams(m map[string]any) string {
-	values := url.Values{}
-	for k, v := range m {
-		values.Set(k, toString(v))
-	}
-	return values.Encode()
-}
+func ToParams(m map[string]any) string { return urlimpl.EncodeQueryMap(m) }
 
 // EncodeParams encodes a URL containing parameters; only the part after ? is encoded.
-func EncodeParams(rawURL string) string {
-	idx := strings.Index(rawURL, "?")
-	if idx < 0 {
-		return rawURL
-	}
-	pre := rawURL[:idx]
-	q := rawURL[idx+1:]
-	values, err := url.ParseQuery(q)
-	if err != nil {
-		return rawURL
-	}
-	return pre + "?" + values.Encode()
-}
+func EncodeParams(rawURL string) string { return urlimpl.EncodeParams(rawURL) }
 
 // DecodeParamMap parses a query string into a map.
-func DecodeParamMap(paramsStr string) map[string]string {
-	out := map[string]string{}
-	values, err := url.ParseQuery(paramsStr)
-	if err != nil {
-		return out
-	}
-	for k, vs := range values {
-		if len(vs) > 0 {
-			out[k] = vs[0]
-		}
-	}
-	return out
-}
+func DecodeParamMap(paramsStr string) map[string]string { return urlimpl.DecodeQueryFirst(paramsStr) }
 
 // DecodeParams parses a query string into a multi-value map.
-func DecodeParams(paramsStr string) map[string][]string {
-	values, err := url.ParseQuery(paramsStr)
-	if err != nil {
-		return map[string][]string{}
-	}
-	out := map[string][]string{}
-	for k, v := range values {
-		out[k] = v
-	}
-	return out
-}
+func DecodeParams(paramsStr string) map[string][]string { return urlimpl.DecodeQuery(paramsStr) }
 
 // URLWithForm appends form values to a URL.
-func URLWithForm(rawURL string, form map[string]any) string {
-	encoded := ToParams(form)
-	if encoded == "" {
-		return rawURL
-	}
-	if strings.Contains(rawURL, "?") {
-		if strings.HasSuffix(rawURL, "&") || strings.HasSuffix(rawURL, "?") {
-			return rawURL + encoded
-		}
-		return rawURL + "&" + encoded
-	}
-	return rawURL + "?" + encoded
-}
+func URLWithForm(rawURL string, form map[string]any) string { return urlimpl.AppendQuery(rawURL, form) }
 
 // BuildBasicAuth builds a Basic Auth string.
 func BuildBasicAuth(user, pass string) string {

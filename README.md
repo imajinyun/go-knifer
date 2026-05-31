@@ -47,6 +47,10 @@ The project follows an “internal implementation + public facade” layout: `in
 | `vdate` | `github.com/imajinyun/go-knifer/vdate` | Date/time helpers: common layouts, parse/format, begin/end of day/month/year, offsets, and comparisons. |
 | `vfile` | `github.com/imajinyun/go-knifer/vfile` | File and IO helpers: read/write/copy, lines, mkdir/touch/delete, filename helpers, and quiet close. |
 | `vcodec` | `github.com/imajinyun/go-knifer/vcodec` | Encoding helpers: Base64, URL-safe Base64, Hex, and URL query escaping. |
+| `vurl` | `github.com/imajinyun/go-knifer/vurl` | URL and URI helpers: parse, normalize, resolve relative URLs, query encode/decode, Data URI building, scheme checks, and file URL conversion. |
+| `vobj` | `github.com/imajinyun/go-knifer/vobj` | Object helpers: nil/empty checks, equality, defaults, clone/serialization, comparison, type inspection, and container utilities. |
+| `vref` | `github.com/imajinyun/go-knifer/vref` | Reflection helpers: field lookup and mutation, method discovery and invocation, constructor-style function calls, type/value utilities, and method classification. |
+| `vzip` | `github.com/imajinyun/go-knifer/vzip` | ZIP, gzip, and zlib helpers: archive creation/extraction, entry lookup, archive traversal, append, in-memory entries, and stream compression. |
 | `vnum` | `github.com/imajinyun/go-knifer/vnum` | Numeric helpers: precise arithmetic, rounding modes, formatting, number checks, random unique numbers, ranges, factorial/combinations, gcd/lcm, binary conversion, comparison, parsing, byte conversion, expression calculation, and odd/even checks. |
 | `vrand` | `github.com/imajinyun/go-knifer/vrand` | Random helpers: integers, floats, booleans, bytes, strings, numeric strings, and random element selection. |
 | `vid` | `github.com/imajinyun/go-knifer/vid` | ID helpers: random/simple/fast UUIDs, MongoDB-style ObjectId, Snowflake generators and singleton next-id helpers, worker/datacenter id derivation, and NanoId generation. |
@@ -64,6 +68,7 @@ The project follows an “internal implementation + public facade” layout: `in
 | `vhttp` | `github.com/imajinyun/go-knifer/vhttp` | Chainable HTTP client, downloads, global headers/timeouts, BasicAuth, User-Agent parsing, and a simple server helper. |
 | `vresty` | `github.com/imajinyun/go-knifer/vresty` | Resty v3 based HTTP facade: chainable requests, JSON/form/multipart bodies, global headers/timeouts, downloads, and lightweight response helpers. |
 | `vjson` | `github.com/imajinyun/go-knifer/vjson` | Ordered JSON objects/arrays, JSON parsing and formatting, path-based get/put, bean/list conversion, and XML/JSON conversion. |
+| `vxml` | `github.com/imajinyun/go-knifer/vxml` | XML helpers: parse/read/write/format, tree navigation, simple XPath-style lookup, escaping, map/bean conversion, and namespace utilities. |
 | `vjwt` | `github.com/imajinyun/go-knifer/vjwt` | JWT creation, parsing, signing, verification, and time-claim validation; supports HMAC, RSA, ECDSA, and none signers. |
 | `vlog` | `github.com/imajinyun/go-knifer/vlog` | Logging facade: console/color console loggers, log levels, global logger, and static logging functions. |
 | `verr` | `github.com/imajinyun/go-knifer/verr` | Error helpers: panic recovery, error aggregation, multierror matching, stack capture/formatting, and optional logrus/Sentry integration. |
@@ -225,6 +230,91 @@ jsonBody := vresty.PostJSON("https://api.example.com/events", `{"event":"created
 n, err := vresty.DownloadFile("https://example.com/report.csv", "./downloads")
 _, _, _ = body, jsonBody, n
 _ = err
+```
+
+### URL and URI helpers
+
+`vurl` centralizes URL parsing, normalization, query string handling, scheme
+checks, Data URI building, and file URL conversion.
+
+```go
+package main
+
+import (
+ "fmt"
+
+ "github.com/imajinyun/go-knifer/vurl"
+)
+
+func main() {
+ normalized := vurl.Normalize(`example.com\docs/a b`, true, true)
+ completed, _ := vurl.Complete("https://example.com/base/", "next?id=1")
+ query := vurl.BuildQuery(map[string]any{"lang": "go", "page": 1})
+ dataURI := vurl.DataURIBase64("text/plain", "aGVsbG8=")
+
+ fmt.Println(normalized)
+ fmt.Println(completed)
+ fmt.Println(query)
+ fmt.Println(vurl.IsWebURL(completed))
+ fmt.Println(dataURI)
+}
+```
+
+### Object helpers
+
+`vobj` provides nil-safe object helpers for common data handling: equality,
+emptiness checks, default values, clone/serialization helpers, comparison, and
+type inspection.
+
+```go
+package main
+
+import (
+ "fmt"
+
+ "github.com/imajinyun/go-knifer/vobj"
+)
+
+type Profile struct {
+ Name string
+ Tags []string
+}
+
+func main() {
+ name := "go-knifer"
+ profile := Profile{Name: name, Tags: []string{"go", "tool"}}
+
+ cloned := vobj.CloneIfPossible(profile)
+ fmt.Println(vobj.Equal(1, int64(1)))
+ fmt.Println(vobj.IsEmpty([]string{}))
+ fmt.Println(vobj.DefaultIfNil(&name, "default"))
+ fmt.Println(vobj.Contains(cloned.Tags, "go"))
+fmt.Println(vobj.TypeName(profile))
+}
+```
+
+### ZIP, gzip, and zlib helpers
+
+`vzip` provides archive creation/extraction, entry lookup, archive traversal,
+append operations, in-memory entries, and byte/string compression helpers.
+
+```go
+package main
+
+import (
+ "fmt"
+
+ "github.com/imajinyun/go-knifer/vzip"
+)
+
+func main() {
+ _ = vzip.ZipEntries("demo.zip", vzip.EntryData{Name: "hello.txt", Data: []byte("hello")})
+ data, _ := vzip.GetBytes("demo.zip", "hello.txt")
+ gz, _ := vzip.GzipString(string(data))
+ text, _ := vzip.UnGzipString(gz)
+
+ fmt.Println(text)
+}
 ```
 
 ### Digest and JWT

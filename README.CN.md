@@ -47,6 +47,10 @@ text := vhash.MD5Hex("hello")
 | `vdate` | `github.com/imajinyun/go-knifer/vdate` | 日期时间工具：常用布局、解析/格式化、日/月/年起止、偏移和比较。 |
 | `vfile` | `github.com/imajinyun/go-knifer/vfile` | 文件与 IO 工具：读写复制、按行读取、mkdir/touch/delete、文件名处理和静默关闭。 |
 | `vcodec` | `github.com/imajinyun/go-knifer/vcodec` | 编解码工具：Base64、URL-safe Base64、Hex 和 URL query 转义。 |
+| `vurl` | `github.com/imajinyun/go-knifer/vurl` | URL 与 URI 工具：解析、标准化、相对 URL 补全、query 编解码、Data URI 构造、协议判断和文件 URL 转换。 |
+| `vobj` | `github.com/imajinyun/go-knifer/vobj` | 对象工具：nil/空值判断、相等性、默认值、克隆/序列化、比较、类型检查和容器辅助。 |
+| `vref` | `github.com/imajinyun/go-knifer/vref` | 反射工具：字段查找与赋值、方法发现与调用、构造函数风格调用、类型/值工具和方法分类判断。 |
+| `vzip` | `github.com/imajinyun/go-knifer/vzip` | ZIP、gzip、zlib 工具：压缩包创建/解压、条目读取、遍历、追加、内存条目和流式压缩。 |
 | `vnum` | `github.com/imajinyun/go-knifer/vnum` | 数字工具：精确加减乘除、舍入模式、格式化、数字判断、不重复随机数、range、阶乘/组合数、最大公约数/最小公倍数、二进制转换、比较、解析、字节转换、表达式计算和奇偶判断。 |
 | `vrand` | `github.com/imajinyun/go-knifer/vrand` | 随机工具：整数、浮点、布尔、字节、字符串、数字字符串和随机元素。 |
 | `vid` | `github.com/imajinyun/go-knifer/vid` | ID 工具：random/simple/fast UUID、MongoDB 风格 ObjectId、Snowflake 生成器与单例 next-id、worker/datacenter id 推导和 NanoId。 |
@@ -64,6 +68,7 @@ text := vhash.MD5Hex("hello")
 | `vhttp` | `github.com/imajinyun/go-knifer/vhttp` | 链式 HTTP 客户端、下载、全局 Header/Timeout、BasicAuth、User-Agent 解析、简易服务端。 |
 | `vresty` | `github.com/imajinyun/go-knifer/vresty` | 基于 Resty v3 的 HTTP facade：链式请求、JSON/form/multipart 请求体、全局 Header/Timeout、下载与轻量响应工具。 |
 | `vjson` | `github.com/imajinyun/go-knifer/vjson` | 有序 JSON 对象/数组、JSON 解析与格式化、路径表达式读写、Bean/List 转换、XML/JSON 转换。 |
+| `vxml` | `github.com/imajinyun/go-knifer/vxml` | XML 工具：解析/读取/写出/格式化、树节点访问、简单 XPath 风格查询、转义、Map/Bean 转换和命名空间辅助。 |
 | `vjwt` | `github.com/imajinyun/go-knifer/vjwt` | JWT 创建、解析、签名、验签与时间字段校验，支持 HMAC、RSA、ECDSA、none 等 signer。 |
 | `vlog` | `github.com/imajinyun/go-knifer/vlog` | 日志 facade：console/color console logger、日志级别、全局 logger 与静态日志函数。 |
 | `verr` | `github.com/imajinyun/go-knifer/verr` | 错误工具：panic recover、错误聚合、multierror 匹配、堆栈捕获/格式化，以及可选 logrus/Sentry 集成。 |
@@ -224,6 +229,90 @@ jsonBody := vresty.PostJSON("https://api.example.com/events", `{"event":"created
 n, err := vresty.DownloadFile("https://example.com/report.csv", "./downloads")
 _, _, _ = body, jsonBody, n
 _ = err
+```
+
+### URL 与 URI 工具
+
+`vurl` 集中提供 URL 解析、标准化、query 字符串处理、协议判断、Data URI 构造
+和文件 URL 转换等能力。
+
+```go
+package main
+
+import (
+ "fmt"
+
+ "github.com/imajinyun/go-knifer/vurl"
+)
+
+func main() {
+ normalized := vurl.Normalize(`example.com\docs/a b`, true, true)
+ completed, _ := vurl.Complete("https://example.com/base/", "next?id=1")
+ query := vurl.BuildQuery(map[string]any{"lang": "go", "page": 1})
+ dataURI := vurl.DataURIBase64("text/plain", "aGVsbG8=")
+
+ fmt.Println(normalized)
+ fmt.Println(completed)
+ fmt.Println(query)
+ fmt.Println(vurl.IsWebURL(completed))
+ fmt.Println(dataURI)
+}
+```
+
+### 对象工具
+
+`vobj` 提供 nil 安全的对象辅助能力，覆盖相等性判断、空值判断、默认值、
+克隆/序列化、比较和类型检查等常见数据处理场景。
+
+```go
+package main
+
+import (
+ "fmt"
+
+ "github.com/imajinyun/go-knifer/vobj"
+)
+
+type Profile struct {
+ Name string
+ Tags []string
+}
+
+func main() {
+ name := "go-knifer"
+ profile := Profile{Name: name, Tags: []string{"go", "tool"}}
+
+ cloned := vobj.CloneIfPossible(profile)
+ fmt.Println(vobj.Equal(1, int64(1)))
+ fmt.Println(vobj.IsEmpty([]string{}))
+ fmt.Println(vobj.DefaultIfNil(&name, "default"))
+ fmt.Println(vobj.Contains(cloned.Tags, "go"))
+ fmt.Println(vobj.TypeName(profile))
+}
+```
+
+### ZIP、gzip 与 zlib 工具
+
+`vzip` 提供压缩包创建/解压、条目读取、遍历、追加、内存条目写入，
+以及 byte/string 级别的 gzip 和 zlib 压缩解压能力。
+
+```go
+package main
+
+import (
+ "fmt"
+
+ "github.com/imajinyun/go-knifer/vzip"
+)
+
+func main() {
+ _ = vzip.ZipEntries("demo.zip", vzip.EntryData{Name: "hello.txt", Data: []byte("hello")})
+ data, _ := vzip.GetBytes("demo.zip", "hello.txt")
+ gz, _ := vzip.GzipString(string(data))
+ text, _ := vzip.UnGzipString(gz)
+
+ fmt.Println(text)
+}
 ```
 
 ### 摘要与 JWT

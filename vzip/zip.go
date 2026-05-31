@@ -1,0 +1,188 @@
+package vzip
+
+import (
+	archivezip "archive/zip"
+	"io"
+	"os"
+
+	zipimpl "github.com/imajinyun/go-knifer/internal/zip"
+)
+
+// FileFilter decides whether a source path should be added to an archive.
+type FileFilter = zipimpl.FileFilter
+
+// Entry describes an archive entry.
+type Entry = zipimpl.Entry
+
+// Writer is a ZIP archive writer.
+type Writer = zipimpl.Writer
+
+// Reader is a ZIP archive reader.
+type Reader = zipimpl.Reader
+
+// EntryData represents in-memory content to add into a ZIP archive.
+type EntryData = zipimpl.EntryData
+
+// StreamEntry represents stream content to add into a ZIP archive.
+type StreamEntry = zipimpl.StreamEntry
+
+// Open opens a ZIP file for reading.
+func Open(path string) (*archivezip.ReadCloser, error) { return zipimpl.Open(path) }
+
+// NewWriter returns a ZIP writer for out.
+func NewWriter(out io.Writer) *archivezip.Writer { return zipimpl.NewWriter(out) }
+
+// GetStream returns a reader for entry.
+func GetStream(entry *archivezip.File) (io.ReadCloser, error) { return zipimpl.GetStream(entry) }
+
+// Append appends srcPath into zipPath by rewriting the archive.
+func Append(zipPath, srcPath string) error { return zipimpl.Append(zipPath, srcPath) }
+
+// Zip creates an archive next to srcPath and returns the archive path.
+func Zip(srcPath string) (string, error) { return zipimpl.Zip(srcPath) }
+
+// ZipTo creates an archive at zipPath from srcPath.
+func ZipTo(srcPath, zipPath string, withSrcDir bool) error {
+	return zipimpl.ZipTo(srcPath, zipPath, withSrcDir)
+}
+
+// ZipFiles creates a ZIP archive from source files or directories.
+func ZipFiles(dest string, withSrcDir bool, srcFiles ...string) error {
+	return zipimpl.ZipFiles(dest, withSrcDir, srcFiles...)
+}
+
+// ZipFilesFilter creates a ZIP archive and filters source paths.
+func ZipFilesFilter(dest string, withSrcDir bool, filter FileFilter, srcFiles ...string) error {
+	return zipimpl.ZipFilesFilter(dest, withSrcDir, filter, srcFiles...)
+}
+
+// ZipToWriter writes source files or directories into out as a ZIP archive.
+func ZipToWriter(out io.Writer, withSrcDir bool, filter FileFilter, srcFiles ...string) error {
+	return zipimpl.ZipToWriter(out, withSrcDir, filter, srcFiles...)
+}
+
+// ZipData creates or overwrites zipFile and adds one text entry.
+func ZipData(zipFile, path, data string) error { return zipimpl.ZipData(zipFile, path, data) }
+
+// ZipBytes creates or overwrites zipFile and adds one byte entry.
+func ZipBytes(zipFile, path string, data []byte) error { return zipimpl.ZipBytes(zipFile, path, data) }
+
+// ZipEntries creates or overwrites zipFile and adds in-memory entries.
+func ZipEntries(zipFile string, entries ...EntryData) error {
+	return zipimpl.ZipEntries(zipFile, entries...)
+}
+
+// ZipEntriesToWriter writes in-memory entries into out as a ZIP archive.
+func ZipEntriesToWriter(out io.Writer, entries ...EntryData) error {
+	return zipimpl.ZipEntriesToWriter(out, entries...)
+}
+
+// ZipStreams creates or overwrites zipFile and adds stream entries.
+func ZipStreams(zipFile string, entries ...StreamEntry) error {
+	return zipimpl.ZipStreams(zipFile, entries...)
+}
+
+// ZipStreamsToWriter writes stream entries into out as a ZIP archive.
+func ZipStreamsToWriter(out io.Writer, entries ...StreamEntry) error {
+	return zipimpl.ZipStreamsToWriter(out, entries...)
+}
+
+// Unzip extracts zipFile into a sibling directory named after the archive.
+func Unzip(zipFile string) (string, error) { return zipimpl.Unzip(zipFile) }
+
+// UnzipTo extracts zipFile into destDir.
+func UnzipTo(zipFile, destDir string) error { return zipimpl.UnzipTo(zipFile, destDir) }
+
+// UnzipToLimit extracts zipFile into destDir and optionally limits total uncompressed size.
+func UnzipToLimit(zipFile, destDir string, limit int64) error {
+	return zipimpl.UnzipToLimit(zipFile, destDir, limit)
+}
+
+// UnzipReaderTo extracts archive reader contents into destDir.
+func UnzipReaderTo(r *archivezip.Reader, destDir string) error {
+	return zipimpl.UnzipReaderTo(r, destDir)
+}
+
+// UnzipReaderToLimit extracts archive reader contents into destDir and optionally limits total size.
+func UnzipReaderToLimit(r *archivezip.Reader, destDir string, limit int64) error {
+	return zipimpl.UnzipReaderToLimit(r, destDir, limit)
+}
+
+// Get returns a reader for the named entry in zipFile.
+func Get(zipFile, name string) (io.ReadCloser, error) { return zipimpl.Get(zipFile, name) }
+
+// GetBytes returns the content of the named entry in zipFile.
+func GetBytes(zipFile, name string) ([]byte, error) { return zipimpl.GetBytes(zipFile, name) }
+
+// Read walks every archive entry and calls consumer.
+func Read(zipFile string, consumer func(*archivezip.File) error) error {
+	return zipimpl.Read(zipFile, consumer)
+}
+
+// ListFileNames returns direct file names under dir inside zipFile.
+func ListFileNames(zipFile, dir string) ([]string, error) { return zipimpl.ListFileNames(zipFile, dir) }
+
+// Gzip compresses data using gzip.
+func Gzip(data []byte) ([]byte, error) { return zipimpl.Gzip(data) }
+
+// GzipString compresses text using gzip.
+func GzipString(content string) ([]byte, error) { return zipimpl.GzipString(content) }
+
+// GzipFile compresses a file using gzip and returns compressed bytes.
+func GzipFile(path string) ([]byte, error) { return zipimpl.GzipFile(path) }
+
+// GzipReader compresses all bytes from r using gzip.
+func GzipReader(r io.Reader, estimatedLength int) ([]byte, error) {
+	return zipimpl.GzipReader(r, estimatedLength)
+}
+
+// UnGzip decompresses gzip data.
+func UnGzip(data []byte) ([]byte, error) { return zipimpl.UnGzip(data) }
+
+// Gunzip decompresses gzip data.
+func Gunzip(data []byte) ([]byte, error) { return zipimpl.Gunzip(data) }
+
+// UnGzipString decompresses gzip data and returns text.
+func UnGzipString(data []byte) (string, error) { return zipimpl.UnGzipString(data) }
+
+// UnGzipReader decompresses all gzip bytes from r.
+func UnGzipReader(r io.Reader, estimatedLength int) ([]byte, error) {
+	return zipimpl.UnGzipReader(r, estimatedLength)
+}
+
+// Zlib compresses data using zlib with the default compression level.
+func Zlib(data []byte) ([]byte, error) { return zipimpl.Zlib(data) }
+
+// ZlibString compresses text using zlib with the specified compression level.
+func ZlibString(content string, level int) ([]byte, error) { return zipimpl.ZlibString(content, level) }
+
+// ZlibFile compresses a file using zlib with the specified compression level.
+func ZlibFile(path string, level int) ([]byte, error) { return zipimpl.ZlibFile(path, level) }
+
+// ZlibLevel compresses data using zlib with the specified compression level.
+func ZlibLevel(data []byte, level int) ([]byte, error) { return zipimpl.ZlibLevel(data, level) }
+
+// ZlibReader compresses all bytes from r using zlib with the specified compression level.
+func ZlibReader(r io.Reader, level, estimatedLength int) ([]byte, error) {
+	return zipimpl.ZlibReader(r, level, estimatedLength)
+}
+
+// UnZlib decompresses zlib data.
+func UnZlib(data []byte) ([]byte, error) { return zipimpl.UnZlib(data) }
+
+// Unzlib decompresses zlib data.
+func Unzlib(data []byte) ([]byte, error) { return zipimpl.Unzlib(data) }
+
+// UnZlibString decompresses zlib data and returns text.
+func UnZlibString(data []byte) (string, error) { return zipimpl.UnZlibString(data) }
+
+// UnZlibReader decompresses all zlib bytes from r.
+func UnZlibReader(r io.Reader, estimatedLength int) ([]byte, error) {
+	return zipimpl.UnZlibReader(r, estimatedLength)
+}
+
+// ReadFile reads a file from disk. It is useful when composing in-memory archive entries.
+func ReadFile(path string) ([]byte, error) {
+	// #nosec G304 -- public file helper intentionally reads the caller-provided path.
+	return os.ReadFile(path)
+}

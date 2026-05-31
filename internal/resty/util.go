@@ -3,18 +3,19 @@ package resty
 import (
 	"encoding/base64"
 	"io"
-	"net/url"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
+
+	urlimpl "github.com/imajinyun/go-knifer/internal/url"
 )
 
 // IsHTTPS reports whether the given URL is https.
-func IsHTTPS(u string) bool { return strings.HasPrefix(strings.ToLower(u), "https:") }
+func IsHTTPS(u string) bool { return urlimpl.IsHTTPS(u) }
 
 // IsHTTP reports whether the given URL is http.
-func IsHTTP(u string) bool { return strings.HasPrefix(strings.ToLower(u), "http:") }
+func IsHTTP(u string) bool { return urlimpl.IsHTTP(u) }
 
 // CreateRequest creates a request with the specified method.
 func CreateRequest(method Method, rawURL string) *HTTPRequest { return NewRequest(method, rawURL) }
@@ -67,28 +68,10 @@ func Download(rawURL string, w io.Writer) (int64, error) { return Get(rawURL).Ex
 func DownloadBytes(rawURL string) []byte { return Get(rawURL).Execute().Bytes() }
 
 // ToParams converts a map to a URL query string.
-func ToParams(m map[string]any) string {
-	values := url.Values{}
-	for k, v := range m {
-		values.Set(k, toString(v))
-	}
-	return values.Encode()
-}
+func ToParams(m map[string]any) string { return urlimpl.EncodeQueryMap(m) }
 
 // URLWithForm appends form values to a URL.
-func URLWithForm(rawURL string, form map[string]any) string {
-	encoded := ToParams(form)
-	if encoded == "" {
-		return rawURL
-	}
-	if strings.Contains(rawURL, "?") {
-		if strings.HasSuffix(rawURL, "&") || strings.HasSuffix(rawURL, "?") {
-			return rawURL + encoded
-		}
-		return rawURL + "&" + encoded
-	}
-	return rawURL + "?" + encoded
-}
+func URLWithForm(rawURL string, form map[string]any) string { return urlimpl.AppendQuery(rawURL, form) }
 
 // BuildBasicAuth builds a Basic Auth string.
 func BuildBasicAuth(user, pass string) string {
