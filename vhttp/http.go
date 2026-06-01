@@ -11,6 +11,9 @@ import (
 // Request is a chainable HTTP request builder.
 type Request = httpx.HTTPRequest
 
+// RequestOption customizes one HTTP request at construction time.
+type RequestOption = httpx.RequestOption
+
 // Response wraps an HTTP response.
 type Response = httpx.HTTPResponse
 
@@ -50,27 +53,57 @@ const (
 )
 
 // Get creates a GET request.
-func Get(rawURL string) *Request { return httpx.Get(rawURL) }
+func Get(rawURL string, opts ...RequestOption) *Request { return httpx.Get(rawURL, opts...) }
 
 // Post creates a POST request.
-func Post(rawURL string) *Request { return httpx.Post(rawURL) }
+func Post(rawURL string, opts ...RequestOption) *Request { return httpx.Post(rawURL, opts...) }
 
 // Put creates a PUT request.
-func Put(rawURL string) *Request { return httpx.Put(rawURL) }
+func Put(rawURL string, opts ...RequestOption) *Request { return httpx.Put(rawURL, opts...) }
 
 // Delete creates a DELETE request.
-func Delete(rawURL string) *Request { return httpx.Delete(rawURL) }
+func Delete(rawURL string, opts ...RequestOption) *Request { return httpx.Delete(rawURL, opts...) }
 
 // Patch creates a PATCH request.
-func Patch(rawURL string) *Request { return httpx.Patch(rawURL) }
+func Patch(rawURL string, opts ...RequestOption) *Request { return httpx.Patch(rawURL, opts...) }
 
 // Head creates a HEAD request.
-func Head(rawURL string) *Request { return httpx.Head(rawURL) }
+func Head(rawURL string, opts ...RequestOption) *Request { return httpx.Head(rawURL, opts...) }
 
 // NewRequest creates a request by method.
-func NewRequest(method Method, rawURL string) *Request {
-	return httpx.NewRequest(method, rawURL)
+func NewRequest(method Method, rawURL string, opts ...RequestOption) *Request {
+	return httpx.NewRequest(method, rawURL, opts...)
 }
+
+// WithTimeout sets a per-request timeout.
+func WithTimeout(d time.Duration) RequestOption { return httpx.WithTimeout(d) }
+
+// WithHeader sets one per-request header.
+func WithHeader(name, value string) RequestOption { return httpx.WithHeader(name, value) }
+
+// WithHeaders sets per-request headers in batch.
+func WithHeaders(headers map[string]string) RequestOption { return httpx.WithHeaders(headers) }
+
+// WithFollowRedirects sets per-request redirect behavior.
+func WithFollowRedirects(b bool) RequestOption { return httpx.WithFollowRedirects(b) }
+
+// WithMaxRedirects sets the per-request redirect limit.
+func WithMaxRedirects(n int) RequestOption { return httpx.WithMaxRedirects(n) }
+
+// WithSkipTLSVerify sets per-request TLS verification behavior.
+func WithSkipTLSVerify(b bool) RequestOption { return httpx.WithSkipTLSVerify(b) }
+
+// WithTransport sets a per-request RoundTripper.
+func WithTransport(t http.RoundTripper) RequestOption { return httpx.WithTransport(t) }
+
+// WithClient sets a per-request HTTP client.
+func WithClient(c *http.Client) RequestOption { return httpx.WithClient(c) }
+
+// WithCookieJar sets a per-request CookieJar. nil disables cookie management for this request.
+func WithCookieJar(jar http.CookieJar) RequestOption { return httpx.WithCookieJar(jar) }
+
+// WithUserAgent sets a per-request User-Agent.
+func WithUserAgent(ua string) RequestOption { return httpx.WithUserAgent(ua) }
 
 // GetString sends a GET request and returns response body as string.
 func GetString(rawURL string) string { return httpx.GetString(rawURL) }

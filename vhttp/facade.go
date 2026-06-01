@@ -145,8 +145,8 @@ func FilterHTMLTag(s string, tagNames ...string) string {
 }
 
 // Options delegates to the internal httpx implementation.
-func Options(rawURL string) *Request {
-	return httpx.Options(rawURL)
+func Options(rawURL string, opts ...RequestOption) *Request {
+	return httpx.Options(rawURL, opts...)
 }
 
 // NewSimpleServerAddr delegates to the internal httpx implementation.
@@ -175,8 +175,8 @@ func IsHTTP(u string) bool {
 }
 
 // CreateRequest delegates to the internal httpx implementation.
-func CreateRequest(method Method, rawURL string) *Request {
-	return httpx.CreateRequest(method, rawURL)
+func CreateRequest(method Method, rawURL string, opts ...RequestOption) *Request {
+	return httpx.NewRequest(method, rawURL, opts...)
 }
 
 // CreateGet delegates to the internal httpx implementation.

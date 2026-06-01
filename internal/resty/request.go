@@ -26,6 +26,8 @@ type HTTPRequest struct {
 	followRedir  *bool
 	maxRedirects int
 	tlsSkip      bool
+	userAgent    string
+	cookieOff    bool
 	basicUser    string
 	basicPass    string
 	hasBasic     bool
@@ -39,38 +41,107 @@ type formFile struct {
 	reader   io.Reader
 }
 
+// RequestOption customizes one HTTP request at construction time.
+type RequestOption func(*HTTPRequest)
+
 // NewRequest creates a request with the specified method and URL.
-func NewRequest(method Method, rawURL string) *HTTPRequest {
-	return &HTTPRequest{
+func NewRequest(method Method, rawURL string, opts ...RequestOption) *HTTPRequest {
+	follow := GetGlobalFollowRedirects()
+	r := &HTTPRequest{
 		method:       method,
 		rawURL:       rawURL,
 		queryParams:  url.Values{},
 		headers:      CloneGlobalHeaders(),
 		charset:      "UTF-8",
+		timeout:      GetGlobalTimeout(),
+		followRedir:  &follow,
 		maxRedirects: GetGlobalMaxRedirects(),
+		tlsSkip:      IsTrustAnyHost(),
+		userAgent:    GetGlobalUserAgent(),
+		cookieOff:    isCookieDisabled(),
 	}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(r)
+		}
+	}
+	return r
 }
 
 // Get creates a GET request.
-func Get(rawURL string) *HTTPRequest { return NewRequest(MethodGet, rawURL) }
+func Get(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return NewRequest(MethodGet, rawURL, opts...)
+}
 
 // Post creates a POST request.
-func Post(rawURL string) *HTTPRequest { return NewRequest(MethodPost, rawURL) }
+func Post(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return NewRequest(MethodPost, rawURL, opts...)
+}
 
 // Put creates a PUT request.
-func Put(rawURL string) *HTTPRequest { return NewRequest(MethodPut, rawURL) }
+func Put(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return NewRequest(MethodPut, rawURL, opts...)
+}
 
 // Delete creates a DELETE request.
-func Delete(rawURL string) *HTTPRequest { return NewRequest(MethodDelete, rawURL) }
+func Delete(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return NewRequest(MethodDelete, rawURL, opts...)
+}
 
 // Patch creates a PATCH request.
-func Patch(rawURL string) *HTTPRequest { return NewRequest(MethodPatch, rawURL) }
+func Patch(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return NewRequest(MethodPatch, rawURL, opts...)
+}
 
 // Head creates a HEAD request.
-func Head(rawURL string) *HTTPRequest { return NewRequest(MethodHead, rawURL) }
+func Head(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return NewRequest(MethodHead, rawURL, opts...)
+}
 
 // Options creates an OPTIONS request.
-func Options(rawURL string) *HTTPRequest { return NewRequest(MethodOptions, rawURL) }
+func Options(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return NewRequest(MethodOptions, rawURL, opts...)
+}
+
+// WithTimeout sets a per-request timeout.
+func WithTimeout(d time.Duration) RequestOption { return func(r *HTTPRequest) { r.Timeout(d) } }
+
+// WithHeader sets one per-request header.
+func WithHeader(name, value string) RequestOption {
+	return func(r *HTTPRequest) { r.Header(name, value) }
+}
+
+// WithHeaders sets per-request headers in batch.
+func WithHeaders(headers map[string]string) RequestOption {
+	return func(r *HTTPRequest) { r.Headers(headers) }
+}
+
+// WithFollowRedirects sets per-request redirect behavior.
+func WithFollowRedirects(b bool) RequestOption { return func(r *HTTPRequest) { r.FollowRedirects(b) } }
+
+// WithMaxRedirects sets the per-request redirect limit.
+func WithMaxRedirects(n int) RequestOption { return func(r *HTTPRequest) { r.MaxRedirects(n) } }
+
+// WithSkipTLSVerify sets per-request TLS verification behavior.
+func WithSkipTLSVerify(b bool) RequestOption { return func(r *HTTPRequest) { r.SkipTLSVerify(b) } }
+
+// WithRestyClient sets a per-request resty client.
+func WithRestyClient(c *grestry.Client) RequestOption {
+	return func(r *HTTPRequest) { r.RestyClient(c) }
+}
+
+// WithUserAgent sets a per-request User-Agent.
+func WithUserAgent(ua string) RequestOption {
+	return func(r *HTTPRequest) {
+		r.userAgent = ua
+		setHeader(r.headers, string(HeaderUserAgent), ua)
+	}
+}
+
+// WithCookieDisabled sets per-request cookie management behavior.
+func WithCookieDisabled(disabled bool) RequestOption {
+	return func(r *HTTPRequest) { r.cookieOff = disabled }
+}
 
 // Method sets the HTTP method.
 func (r *HTTPRequest) Method(m Method) *HTTPRequest { r.method = m; return r }
@@ -231,20 +302,16 @@ func (r *HTTPRequest) buildClient() *grestry.Client {
 		return r.restyClient
 	}
 	c := grestry.New()
-	if isCookieDisabled() {
+	if r.cookieOff {
 		c.SetCookieJar(nil)
 	}
-	timeout := r.timeout
-	if timeout == 0 {
-		timeout = GetGlobalTimeout()
+	if r.timeout > 0 {
+		c.SetTimeout(r.timeout)
 	}
-	if timeout > 0 {
-		c.SetTimeout(timeout)
-	}
-	if r.tlsSkip || IsTrustAnyHost() {
+	if r.tlsSkip {
 		c.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true}) // #nosec G402 -- caller explicitly requested skipping TLS verification.
 	}
-	follow := GetGlobalFollowRedirects()
+	follow := true
 	if r.followRedir != nil {
 		follow = *r.followRedir
 	}
@@ -269,7 +336,7 @@ func (r *HTTPRequest) doExecute() (*HTTPResponse, error) {
 	if r.contentType != "" {
 		req.SetHeader(string(HeaderContentType), r.contentType)
 	}
-	if ua := GetGlobalUserAgent(); ua != "" && getHeader(r.headers, string(HeaderUserAgent)) == "" {
+	if ua := r.userAgent; ua != "" && getHeader(r.headers, string(HeaderUserAgent)) == "" {
 		req.SetHeader(string(HeaderUserAgent), ua)
 	}
 	if r.hasBasic {

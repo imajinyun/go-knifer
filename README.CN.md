@@ -68,8 +68,8 @@ text := vhash.MD5Hex("hello")
 | `vcaptcha` | `github.com/imajinyun/go-knifer/vcaptcha` | 图片验证码：线条、圆圈、扭曲、GIF 验证码，支持随机/数学表达式生成器。 |
 | `vcron` | `github.com/imajinyun/go-knifer/vcron` | Cron 表达式解析与任务调度，支持默认调度器和自定义调度器。 |
 | `vcrypto` | `github.com/imajinyun/go-knifer/vcrypto` | 加密与摘要：MD5/SHA、HMAC、PBKDF2、参数签名、随机字节、AES CBC/ECB/CTR/CFB/OFB/GCM、DES/3DES、RC4、Vigenere、XXTEA、RSA OAEP/PKCS#1/PSS、PEM 与 X.509 证书工具。 |
-| `vhttp` | `github.com/imajinyun/go-knifer/vhttp` | 链式 HTTP 客户端、下载、全局 Header/Timeout、BasicAuth、User-Agent 解析、简易服务端。 |
-| `vresty` | `github.com/imajinyun/go-knifer/vresty` | 基于 Resty v3 的 HTTP facade：链式请求、JSON/form/multipart 请求体、全局 Header/Timeout、下载与轻量响应工具。 |
+| `vhttp` | `github.com/imajinyun/go-knifer/vhttp` | 链式 HTTP 客户端、下载、单次请求 options、BasicAuth、User-Agent 解析、简易服务端。 |
+| `vresty` | `github.com/imajinyun/go-knifer/vresty` | 基于 Resty v3 的 HTTP facade：链式请求、JSON/form/multipart 请求体、单次请求 options、下载与轻量响应工具。 |
 | `vjson` | `github.com/imajinyun/go-knifer/vjson` | 有序 JSON 对象/数组、JSON 解析与格式化、路径表达式读写、Bean/List 转换、XML/JSON 转换。 |
 | `vxml` | `github.com/imajinyun/go-knifer/vxml` | XML 工具：解析/读取/写出/格式化、树节点访问、简单 XPath 风格查询、转义、Map/Bean 转换和命名空间辅助。 |
 | `vjwt` | `github.com/imajinyun/go-knifer/vjwt` | JWT 创建、解析、签名、验签与时间字段校验，支持 HMAC、RSA、ECDSA、none 等 signer。 |
@@ -195,12 +195,12 @@ import (
 )
 
 func main() {
-  vhttp.SetGlobalTimeout(3 * time.Second)
-
-  resp := vhttp.Get("https://example.com").
+  resp := vhttp.Get("https://example.com",
+    vhttp.WithTimeout(3*time.Second),
+    vhttp.WithHeader("X-Client", "go-knifer"),
+    vhttp.WithFollowRedirects(true),
+  ).
     Query("lang", "go").
-    Header("X-Client", "go-knifer").
-    FollowRedirects(true).
     Execute()
 
   if resp.Err() != nil {
@@ -213,11 +213,17 @@ func main() {
 }
 ```
 
+如果确实需要统一默认值，仍然可以使用全局配置；但新代码更推荐使用单次请求
+options，让每个请求的超时、Header、重定向、TLS、Cookie、User-Agent 等行为在调用点
+显式声明，避免全局状态影响其他请求。可用 options 包括 `WithTimeout`、`WithHeader`、
+`WithHeaders`、`WithFollowRedirects`、`WithMaxRedirects`、`WithSkipTLSVerify`、
+`WithTransport`、`WithClient`、`WithCookieJar` 和 `WithUserAgent`。
+
 ### Resty v3 HTTP facade
 
 `vresty` 是基于 `resty.dev/v3` 的轻量链式 facade，适合直接发起常见 HTTP
 请求。它支持 query 参数、Header、Cookie、Basic/Bearer Auth、JSON/form 请求体、
-multipart 文件上传、单请求超时、跳过 TLS 校验、重定向控制以及下载等能力；响应侧
+multipart 文件上传、单次请求 options、跳过 TLS 校验、重定向控制以及下载等能力；响应侧
 提供状态码、Header、Cookie、Content-Type、字符串/字节正文、保存到文件等便捷方法。
 
 ```go
@@ -231,14 +237,14 @@ import (
 )
 
 func main() {
-  vresty.SetGlobalTimeout(5 * time.Second)
-  vresty.SetGlobalHeader("X-App", "go-knifer")
-
-  resp := vresty.Post("https://api.example.com/users").
+  resp := vresty.Post("https://api.example.com/users",
+    vresty.WithTimeout(3*time.Second),
+    vresty.WithHeader("X-App", "go-knifer"),
+    vresty.WithUserAgent("go-knifer-demo/1.0"),
+  ).
     Query("source", "demo").
     BearerAuth("token").
     BodyJSON(`{"name":"go-knifer"}`).
-    Timeout(3 * time.Second).
     Execute()
 
   if resp.Err() != nil {
@@ -252,6 +258,10 @@ func main() {
   fmt.Println(resp.Body())
 }
 ```
+
+`vresty` 同样支持构造请求时传入 options，从而让每次调用独立覆盖默认行为：
+`WithTimeout`、`WithHeader`、`WithHeaders`、`WithFollowRedirects`、`WithMaxRedirects`、
+`WithSkipTLSVerify`、`WithRestyClient`、`WithUserAgent` 和 `WithCookieDisabled`。
 
 简单请求和下载也可以使用快捷函数：
 

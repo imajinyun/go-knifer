@@ -18,7 +18,9 @@ func IsHTTPS(u string) bool { return urlimpl.IsHTTPS(u) }
 func IsHTTP(u string) bool { return urlimpl.IsHTTP(u) }
 
 // CreateRequest creates a request with the specified method.
-func CreateRequest(method Method, rawURL string) *HTTPRequest { return NewRequest(method, rawURL) }
+func CreateRequest(method Method, rawURL string, opts ...RequestOption) *HTTPRequest {
+	return NewRequest(method, rawURL, opts...)
+}
 
 // CreateGet creates a GET request and sets whether redirects are followed.
 func CreateGet(rawURL string, followRedirects bool) *HTTPRequest {
