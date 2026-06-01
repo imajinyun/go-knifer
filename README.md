@@ -67,7 +67,7 @@ The project follows an “internal implementation + public facade” layout: `in
 | `vcache` | `github.com/imajinyun/go-knifer/vcache` | Generic caches: FIFO, LFU, LRU, Timed, Weak, and NoCache; supports TTL, removal listeners, and lazy loading. |
 | `vcaptcha` | `github.com/imajinyun/go-knifer/vcaptcha` | Image captcha generation: line, circle, shear, and GIF captchas, with random and math-expression generators. |
 | `vcron` | `github.com/imajinyun/go-knifer/vcron` | Cron expression parsing and task scheduling, including both default and custom schedulers. |
-| `vcrypto` | `github.com/imajinyun/go-knifer/vcrypto` | Cryptography and digests: MD5/SHA, HMAC, random bytes, AES-CBC/AES-GCM, RSA-OAEP, and RSA PEM encoding/decoding. |
+| `vcrypto` | `github.com/imajinyun/go-knifer/vcrypto` | Cryptography and digests: MD5/SHA, HMAC, PBKDF2, parameter signing, random bytes, AES CBC/ECB/CTR/CFB/OFB/GCM, DES/3DES, RC4, Vigenere, XXTEA, RSA OAEP/PKCS#1/PSS, PEM, and X.509 certificate helpers. |
 | `vhttp` | `github.com/imajinyun/go-knifer/vhttp` | Chainable HTTP client, downloads, global headers/timeouts, BasicAuth, User-Agent parsing, and a simple server helper. |
 | `vresty` | `github.com/imajinyun/go-knifer/vresty` | Resty v3 based HTTP facade: chainable requests, JSON/form/multipart bodies, global headers/timeouts, downloads, and lightweight response helpers. |
 | `vjson` | `github.com/imajinyun/go-knifer/vjson` | Ordered JSON objects/arrays, JSON parsing and formatting, path-based get/put, bean/list conversion, and XML/JSON conversion. |
@@ -480,6 +480,19 @@ import (
 
 func main() {
   fmt.Println(vcrypto.SHA256Hex("hello"))
+  fmt.Println(vcrypto.HMACSHA256Hex([]byte("key"), []byte("hello")))
+
+  aesKey := []byte("1234567890123456")
+  iv := []byte("abcdefghijklmnop")
+  cipherText, err := vcrypto.AESEncryptCBC([]byte("secret message"), aesKey, iv)
+  if err != nil {
+    panic(err)
+  }
+  plain, err := vcrypto.AESDecryptCBC(cipherText, aesKey, iv)
+  if err != nil {
+    panic(err)
+  }
+  fmt.Println(string(plain))
 
   key := []byte("secret")
   token, err := vjwt.NewJWT().

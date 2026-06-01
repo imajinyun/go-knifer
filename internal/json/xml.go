@@ -1,10 +1,10 @@
 package json
 
-import xmlutil "github.com/imajinyun/go-knifer/internal/xml"
+import xmlimpl "github.com/imajinyun/go-knifer/internal/xml"
 
 // XMLToJSON parses XML text into an ordered JSON object.
 func XMLToJSON(xmlStr string) (*JSONObject, error) {
-	m, err := xmlutil.XMLToMap(xmlStr)
+	m, err := xmlimpl.XMLToMap(xmlStr)
 	if err != nil {
 		return nil, err
 	}
@@ -13,7 +13,11 @@ func XMLToJSON(xmlStr string) (*JSONObject, error) {
 
 // JSONToXML serializes JSON-compatible data to XML text.
 func JSONToXML(root any, rootTag string) (string, error) {
-	return xmlutil.MapToXMLStrOptions(jsonValueToMap(root), rootTag, "", false, true, "UTF-8")
+	return xmlimpl.MarshalMap(
+		jsonValueToMap(root),
+		xmlimpl.WithRootName(rootTag),
+		xmlimpl.WithOmitDeclaration(true),
+	)
 }
 
 func mapToJSONObject(m map[string]any) *JSONObject {

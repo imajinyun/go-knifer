@@ -67,7 +67,7 @@ text := vhash.MD5Hex("hello")
 | `vcache` | `github.com/imajinyun/go-knifer/vcache` | 泛型缓存：FIFO、LFU、LRU、Timed、Weak、NoCache，支持 TTL、淘汰监听与懒加载。 |
 | `vcaptcha` | `github.com/imajinyun/go-knifer/vcaptcha` | 图片验证码：线条、圆圈、扭曲、GIF 验证码，支持随机/数学表达式生成器。 |
 | `vcron` | `github.com/imajinyun/go-knifer/vcron` | Cron 表达式解析与任务调度，支持默认调度器和自定义调度器。 |
-| `vcrypto` | `github.com/imajinyun/go-knifer/vcrypto` | 加密与摘要：MD5/SHA、HMAC、随机字节、AES-CBC/AES-GCM、RSA-OAEP、RSA PEM 编解码。 |
+| `vcrypto` | `github.com/imajinyun/go-knifer/vcrypto` | 加密与摘要：MD5/SHA、HMAC、PBKDF2、参数签名、随机字节、AES CBC/ECB/CTR/CFB/OFB/GCM、DES/3DES、RC4、Vigenere、XXTEA、RSA OAEP/PKCS#1/PSS、PEM 与 X.509 证书工具。 |
 | `vhttp` | `github.com/imajinyun/go-knifer/vhttp` | 链式 HTTP 客户端、下载、全局 Header/Timeout、BasicAuth、User-Agent 解析、简易服务端。 |
 | `vresty` | `github.com/imajinyun/go-knifer/vresty` | 基于 Resty v3 的 HTTP facade：链式请求、JSON/form/multipart 请求体、全局 Header/Timeout、下载与轻量响应工具。 |
 | `vjson` | `github.com/imajinyun/go-knifer/vjson` | 有序 JSON 对象/数组、JSON 解析与格式化、路径表达式读写、Bean/List 转换、XML/JSON 转换。 |
@@ -465,6 +465,19 @@ import (
 
 func main() {
   fmt.Println(vcrypto.SHA256Hex("hello"))
+  fmt.Println(vcrypto.HMACSHA256Hex([]byte("key"), []byte("hello")))
+
+  aesKey := []byte("1234567890123456")
+  iv := []byte("abcdefghijklmnop")
+  cipherText, err := vcrypto.AESEncryptCBC([]byte("secret message"), aesKey, iv)
+  if err != nil {
+    panic(err)
+  }
+  plain, err := vcrypto.AESDecryptCBC(cipherText, aesKey, iv)
+  if err != nil {
+    panic(err)
+  }
+  fmt.Println(string(plain))
 
   key := []byte("secret")
   token, err := vjwt.NewJWT().
