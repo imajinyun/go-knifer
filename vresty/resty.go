@@ -5,10 +5,14 @@ import (
 	"time"
 
 	restyimpl "github.com/imajinyun/go-knifer/internal/resty"
+	grestry "resty.dev/v3"
 )
 
 // Request is a chainable HTTP request builder backed by resty.
 type Request = restyimpl.HTTPRequest
+
+// RequestOption customizes one HTTP request at construction time.
+type RequestOption = restyimpl.RequestOption
 
 // Response wraps an HTTP response.
 type Response = restyimpl.HTTPResponse
@@ -53,28 +57,59 @@ const (
 )
 
 // Get creates a GET request.
-func Get(rawURL string) *Request { return restyimpl.Get(rawURL) }
+func Get(rawURL string, opts ...RequestOption) *Request { return restyimpl.Get(rawURL, opts...) }
 
 // Post creates a POST request.
-func Post(rawURL string) *Request { return restyimpl.Post(rawURL) }
+func Post(rawURL string, opts ...RequestOption) *Request { return restyimpl.Post(rawURL, opts...) }
 
 // Put creates a PUT request.
-func Put(rawURL string) *Request { return restyimpl.Put(rawURL) }
+func Put(rawURL string, opts ...RequestOption) *Request { return restyimpl.Put(rawURL, opts...) }
 
 // Delete creates a DELETE request.
-func Delete(rawURL string) *Request { return restyimpl.Delete(rawURL) }
+func Delete(rawURL string, opts ...RequestOption) *Request { return restyimpl.Delete(rawURL, opts...) }
 
 // Patch creates a PATCH request.
-func Patch(rawURL string) *Request { return restyimpl.Patch(rawURL) }
+func Patch(rawURL string, opts ...RequestOption) *Request { return restyimpl.Patch(rawURL, opts...) }
 
 // Head creates a HEAD request.
-func Head(rawURL string) *Request { return restyimpl.Head(rawURL) }
+func Head(rawURL string, opts ...RequestOption) *Request { return restyimpl.Head(rawURL, opts...) }
 
 // Options creates an OPTIONS request.
-func Options(rawURL string) *Request { return restyimpl.Options(rawURL) }
+func Options(rawURL string, opts ...RequestOption) *Request {
+	return restyimpl.Options(rawURL, opts...)
+}
 
 // NewRequest creates a request by method.
-func NewRequest(method Method, rawURL string) *Request { return restyimpl.NewRequest(method, rawURL) }
+func NewRequest(method Method, rawURL string, opts ...RequestOption) *Request {
+	return restyimpl.NewRequest(method, rawURL, opts...)
+}
+
+// WithTimeout sets a per-request timeout.
+func WithTimeout(d time.Duration) RequestOption { return restyimpl.WithTimeout(d) }
+
+// WithHeader sets one per-request header.
+func WithHeader(name, value string) RequestOption { return restyimpl.WithHeader(name, value) }
+
+// WithHeaders sets per-request headers in batch.
+func WithHeaders(headers map[string]string) RequestOption { return restyimpl.WithHeaders(headers) }
+
+// WithFollowRedirects sets per-request redirect behavior.
+func WithFollowRedirects(b bool) RequestOption { return restyimpl.WithFollowRedirects(b) }
+
+// WithMaxRedirects sets the per-request redirect limit.
+func WithMaxRedirects(n int) RequestOption { return restyimpl.WithMaxRedirects(n) }
+
+// WithSkipTLSVerify sets per-request TLS verification behavior.
+func WithSkipTLSVerify(b bool) RequestOption { return restyimpl.WithSkipTLSVerify(b) }
+
+// WithRestyClient sets a per-request resty client.
+func WithRestyClient(c *grestry.Client) RequestOption { return restyimpl.WithRestyClient(c) }
+
+// WithUserAgent sets a per-request User-Agent.
+func WithUserAgent(ua string) RequestOption { return restyimpl.WithUserAgent(ua) }
+
+// WithCookieDisabled sets per-request cookie management behavior.
+func WithCookieDisabled(disabled bool) RequestOption { return restyimpl.WithCookieDisabled(disabled) }
 
 // GetString sends a GET request and returns response body as string.
 func GetString(rawURL string) string { return restyimpl.GetString(rawURL) }

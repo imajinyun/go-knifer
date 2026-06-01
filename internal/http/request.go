@@ -22,6 +22,7 @@ type HTTPRequest struct {
 	queryParams  url.Values
 	headers      http.Header
 	cookies      []*http.Cookie
+	cookieJar    http.CookieJar
 	body         []byte
 	bodyReader   io.Reader
 	form         map[string]any
@@ -33,6 +34,7 @@ type HTTPRequest struct {
 	followRedir  *bool
 	maxRedirects int
 	tlsSkip      bool
+	userAgent    string
 	transport    http.RoundTripper
 	basicUser    string
 	basicPass    string
@@ -47,38 +49,108 @@ type formFile struct {
 	reader   io.Reader
 }
 
+// RequestOption customizes one HTTP request at construction time.
+type RequestOption func(*HTTPRequest)
+
 // NewRequest creates a request with the specified method and URL.
-func NewRequest(method Method, rawURL string) *HTTPRequest {
-	return &HTTPRequest{
+func NewRequest(method Method, rawURL string, opts ...RequestOption) *HTTPRequest {
+	follow := GetGlobalFollowRedirects()
+	r := &HTTPRequest{
 		method:       method,
 		rawURL:       rawURL,
 		queryParams:  url.Values{},
 		headers:      CloneGlobalHeaders(),
+		cookieJar:    GetCookieJar(),
 		charset:      "UTF-8",
+		timeout:      GetGlobalTimeout(),
+		followRedir:  &follow,
 		maxRedirects: GetGlobalMaxRedirects(),
+		tlsSkip:      IsTrustAnyHost(),
+		userAgent:    GetGlobalUserAgent(),
 	}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(r)
+		}
+	}
+	return r
 }
 
 // Get creates a GET request.
-func Get(rawURL string) *HTTPRequest { return NewRequest(MethodGet, rawURL) }
+func Get(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return NewRequest(MethodGet, rawURL, opts...)
+}
 
 // Post creates a POST request.
-func Post(rawURL string) *HTTPRequest { return NewRequest(MethodPost, rawURL) }
+func Post(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return NewRequest(MethodPost, rawURL, opts...)
+}
 
 // Put creates a PUT request.
-func Put(rawURL string) *HTTPRequest { return NewRequest(MethodPut, rawURL) }
+func Put(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return NewRequest(MethodPut, rawURL, opts...)
+}
 
 // Delete creates a DELETE request.
-func Delete(rawURL string) *HTTPRequest { return NewRequest(MethodDelete, rawURL) }
+func Delete(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return NewRequest(MethodDelete, rawURL, opts...)
+}
 
 // Patch creates a PATCH request.
-func Patch(rawURL string) *HTTPRequest { return NewRequest(MethodPatch, rawURL) }
+func Patch(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return NewRequest(MethodPatch, rawURL, opts...)
+}
 
 // Head creates a HEAD request.
-func Head(rawURL string) *HTTPRequest { return NewRequest(MethodHead, rawURL) }
+func Head(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return NewRequest(MethodHead, rawURL, opts...)
+}
 
 // Options creates an OPTIONS request.
-func Options(rawURL string) *HTTPRequest { return NewRequest(MethodOptions, rawURL) }
+func Options(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return NewRequest(MethodOptions, rawURL, opts...)
+}
+
+// WithTimeout sets a per-request timeout.
+func WithTimeout(d time.Duration) RequestOption { return func(r *HTTPRequest) { r.Timeout(d) } }
+
+// WithHeader sets one per-request header.
+func WithHeader(name, value string) RequestOption {
+	return func(r *HTTPRequest) { r.Header(name, value) }
+}
+
+// WithHeaders sets per-request headers in batch.
+func WithHeaders(headers map[string]string) RequestOption {
+	return func(r *HTTPRequest) { r.Headers(headers) }
+}
+
+// WithFollowRedirects sets per-request redirect behavior.
+func WithFollowRedirects(b bool) RequestOption { return func(r *HTTPRequest) { r.FollowRedirects(b) } }
+
+// WithMaxRedirects sets the per-request redirect limit.
+func WithMaxRedirects(n int) RequestOption { return func(r *HTTPRequest) { r.MaxRedirects(n) } }
+
+// WithSkipTLSVerify sets per-request TLS verification behavior.
+func WithSkipTLSVerify(b bool) RequestOption { return func(r *HTTPRequest) { r.SkipTLSVerify(b) } }
+
+// WithTransport sets a per-request RoundTripper.
+func WithTransport(t http.RoundTripper) RequestOption { return func(r *HTTPRequest) { r.Transport(t) } }
+
+// WithClient sets a per-request HTTP client.
+func WithClient(c *http.Client) RequestOption { return func(r *HTTPRequest) { r.Client(c) } }
+
+// WithCookieJar sets a per-request CookieJar. nil disables cookie management for this request.
+func WithCookieJar(jar http.CookieJar) RequestOption {
+	return func(r *HTTPRequest) { r.cookieJar = jar }
+}
+
+// WithUserAgent sets a per-request User-Agent.
+func WithUserAgent(ua string) RequestOption {
+	return func(r *HTTPRequest) {
+		r.userAgent = ua
+		r.headers.Set(string(HeaderUserAgent), ua)
+	}
+}
 
 // Method sets the HTTP method.
 func (r *HTTPRequest) Method(m Method) *HTTPRequest { r.method = m; return r }
@@ -313,7 +385,7 @@ func (r *HTTPRequest) buildClient() *http.Client {
 	}
 	transport := r.transport
 	if transport == nil {
-		if r.tlsSkip || IsTrustAnyHost() {
+		if r.tlsSkip {
 			t := defaultTransport.Clone()
 			t.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 			transport = t
@@ -322,10 +394,7 @@ func (r *HTTPRequest) buildClient() *http.Client {
 		}
 	}
 	timeout := r.timeout
-	if timeout == 0 {
-		timeout = GetGlobalTimeout()
-	}
-	follow := GetGlobalFollowRedirects()
+	follow := true
 	if r.followRedir != nil {
 		follow = *r.followRedir
 	}
@@ -333,7 +402,7 @@ func (r *HTTPRequest) buildClient() *http.Client {
 	c := &http.Client{
 		Timeout:   timeout,
 		Transport: transport,
-		Jar:       GetCookieJar(),
+		Jar:       r.cookieJar,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			if !follow {
 				return http.ErrUseLastResponse
@@ -376,7 +445,7 @@ func (r *HTTPRequest) doExecute() (*HTTPResponse, error) {
 	if ct != "" {
 		req.Header.Set(string(HeaderContentType), ct)
 	}
-	if ua := GetGlobalUserAgent(); ua != "" && req.Header.Get(string(HeaderUserAgent)) == "" {
+	if ua := r.userAgent; ua != "" && req.Header.Get(string(HeaderUserAgent)) == "" {
 		req.Header.Set(string(HeaderUserAgent), ua)
 	}
 	for _, c := range r.cookies {

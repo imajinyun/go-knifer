@@ -68,8 +68,8 @@ The project follows an “internal implementation + public facade” layout: `in
 | `vcaptcha` | `github.com/imajinyun/go-knifer/vcaptcha` | Image captcha generation: line, circle, shear, and GIF captchas, with random and math-expression generators. |
 | `vcron` | `github.com/imajinyun/go-knifer/vcron` | Cron expression parsing and task scheduling, including both default and custom schedulers. |
 | `vcrypto` | `github.com/imajinyun/go-knifer/vcrypto` | Cryptography and digests: MD5/SHA, HMAC, PBKDF2, parameter signing, random bytes, AES CBC/ECB/CTR/CFB/OFB/GCM, DES/3DES, RC4, Vigenere, XXTEA, RSA OAEP/PKCS#1/PSS, PEM, and X.509 certificate helpers. |
-| `vhttp` | `github.com/imajinyun/go-knifer/vhttp` | Chainable HTTP client, downloads, global headers/timeouts, BasicAuth, User-Agent parsing, and a simple server helper. |
-| `vresty` | `github.com/imajinyun/go-knifer/vresty` | Resty v3 based HTTP facade: chainable requests, JSON/form/multipart bodies, global headers/timeouts, downloads, and lightweight response helpers. |
+| `vhttp` | `github.com/imajinyun/go-knifer/vhttp` | Chainable HTTP client, downloads, per-call request options, BasicAuth, User-Agent parsing, and a simple server helper. |
+| `vresty` | `github.com/imajinyun/go-knifer/vresty` | Resty v3 based HTTP facade: chainable requests, JSON/form/multipart bodies, per-call request options, downloads, and lightweight response helpers. |
 | `vjson` | `github.com/imajinyun/go-knifer/vjson` | Ordered JSON objects/arrays, JSON parsing and formatting, path-based get/put, bean/list conversion, and XML/JSON conversion. |
 | `vxml` | `github.com/imajinyun/go-knifer/vxml` | XML helpers: parse/read/write/format, tree navigation, simple XPath-style lookup, escaping, map/bean conversion, and namespace utilities. |
 | `vjwt` | `github.com/imajinyun/go-knifer/vjwt` | JWT creation, parsing, signing, verification, and time-claim validation; supports HMAC, RSA, ECDSA, and none signers. |
@@ -204,12 +204,12 @@ import (
 )
 
 func main() {
-  vhttp.SetGlobalTimeout(3 * time.Second)
-
-  resp := vhttp.Get("https://example.com").
+  resp := vhttp.Get("https://example.com",
+    vhttp.WithTimeout(3*time.Second),
+    vhttp.WithHeader("X-Client", "go-knifer"),
+    vhttp.WithFollowRedirects(true),
+  ).
     Query("lang", "go").
-    Header("X-Client", "go-knifer").
-    FollowRedirects(true).
     Execute()
 
   if resp.Err() != nil {
@@ -222,12 +222,19 @@ func main() {
 }
 ```
 
+Request defaults can still be configured globally when needed, but new code
+should prefer per-call options to keep request behavior explicit and avoid
+cross-request state coupling. Available options include `WithTimeout`,
+`WithHeader`, `WithHeaders`, `WithFollowRedirects`, `WithMaxRedirects`,
+`WithSkipTLSVerify`, `WithTransport`, `WithClient`, `WithCookieJar`, and
+`WithUserAgent`.
+
 ### Resty v3 HTTP facade
 
 `vresty` provides a thin, chainable facade over `resty.dev/v3`. It keeps the
 public API lightweight while supporting common HTTP operations such as query
 parameters, headers, cookies, Basic/Bearer auth, JSON/form bodies, multipart
-uploads, per-request timeout, TLS skip verification, redirect control, and
+uploads, per-call options, TLS skip verification, redirect control, and
 downloads.
 
 ```go
@@ -241,14 +248,14 @@ import (
 )
 
 func main() {
-  vresty.SetGlobalTimeout(5 * time.Second)
-  vresty.SetGlobalHeader("X-App", "go-knifer")
-
-  resp := vresty.Post("https://api.example.com/users").
+  resp := vresty.Post("https://api.example.com/users",
+    vresty.WithTimeout(3*time.Second),
+    vresty.WithHeader("X-App", "go-knifer"),
+    vresty.WithUserAgent("go-knifer-demo/1.0"),
+  ).
     Query("source", "demo").
     BearerAuth("token").
     BodyJSON(`{"name":"go-knifer"}`).
-    Timeout(3 * time.Second).
     Execute()
 
   if resp.Err() != nil {
@@ -262,6 +269,11 @@ func main() {
   fmt.Println(resp.Body())
 }
 ```
+
+Like `vhttp`, `vresty` supports construction-time request options so each call
+can override defaults independently: `WithTimeout`, `WithHeader`, `WithHeaders`,
+`WithFollowRedirects`, `WithMaxRedirects`, `WithSkipTLSVerify`,
+`WithRestyClient`, `WithUserAgent`, and `WithCookieDisabled`.
 
 Shortcuts are available for simple cases and downloads:
 

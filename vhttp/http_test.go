@@ -39,6 +39,24 @@ func TestFacadeUsesNamesWithoutHTTPPrefix(t *testing.T) {
 	}
 }
 
+func TestFacadeRequestOptions(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(r.Header.Get("X-Opt") + ":" + r.Header.Get("User-Agent")))
+	}))
+	defer server.Close()
+
+	resp := vhttp.Get(server.URL,
+		vhttp.WithHeader("X-Opt", "yes"),
+		vhttp.WithUserAgent("vhttp-test/1.0"),
+	).Execute()
+	if resp.Err() != nil {
+		t.Fatal(resp.Err())
+	}
+	if got := resp.Body(); got != "yes:vhttp-test/1.0" {
+		t.Fatalf("Body() = %q, want option headers", got)
+	}
+}
+
 func TestFacadeHelperNamesWithoutHTTPPrefix(t *testing.T) {
 	vhttp.SetGlobalTimeout(2 * time.Second)
 	if got := vhttp.GetGlobalTimeout(); got != 2*time.Second {
