@@ -1,4 +1,4 @@
-package vtemplate
+package vtpl
 
 import templateimpl "github.com/imajinyun/go-knifer/internal/template"
 
