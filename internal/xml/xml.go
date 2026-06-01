@@ -1,3 +1,5 @@
+// Package xml is the internal implementation of the vxml facade.
+// External callers must depend on github.com/imajinyun/go-knifer/vxml.
 package xml
 
 import (
@@ -16,31 +18,32 @@ import (
 	"strings"
 )
 
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
 const (
-	NBSP          = "&nbsp;"
-	AMP           = "&amp;"
-	QUOTE         = "&quot;"
-	APOS          = "&apos;"
-	LT            = "&lt;"
-	GT            = "&gt;"
-	InvalidRegex  = "[\\x00-\\x08\\x0b-\\x0c\\x0e-\\x1f]"
-	CommentRegex  = "(?s)<!--.+?-->"
-	IndentDefault = 2
-	ContentKey    = "content"
+	NBSP           = "&nbsp;"
+	AMP            = "&amp;"
+	QUOTE          = "&quot;"
+	APOS           = "&apos;"
+	LT             = "&lt;"
+	GT             = "&gt;"
+	InvalidRegex   = "[\\x00-\\x08\\x0b-\\x0c\\x0e-\\x1f]"
+	CommentRegex   = "(?s)<!--.+?-->"
+	IndentDefault  = 2
+	ContentKey     = "content"
+	DefaultCharset = "UTF-8"
 )
 
 var (
-	namespaceAware = true
-	invalidRe      = regexp.MustCompile(InvalidRegex)
-	commentRe      = regexp.MustCompile(CommentRegex)
+	invalidRe = regexp.MustCompile(InvalidRegex)
+	commentRe = regexp.MustCompile(CommentRegex)
 )
 
-// ParseOption customizes XML parsing without changing package-level defaults.
-type ParseOption func(*parseConfig)
-
-type parseConfig struct {
-	namespaceAware bool
-}
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
 // Document is a lightweight XML document tree.
 type Document struct {
@@ -59,82 +62,150 @@ type Element struct {
 // TokenHandler consumes streaming XML tokens.
 type TokenHandler func(stdxml.Token) error
 
-// NamespaceCache stores prefix to namespace URI mappings discovered from a document.
+// NamespaceCache stores prefix-to-namespace URI mappings discovered from a document.
 type NamespaceCache struct {
 	Default string
 	Prefix  map[string]string
 	URI     map[string]string
 }
 
-// DisableDefaultDocumentBuilderFactory is a no-op compatibility hook.
-func DisableDefaultDocumentBuilderFactory() {}
+// ---------------------------------------------------------------------------
+// Parse options
+// ---------------------------------------------------------------------------
 
-// SetNamespaceAwareForCompatibility records whether parsed element names should
-// keep namespace URIs for compatibility facades.
-//
-// New code should prefer ReadXMLReaderWithOptions or ParseXMLWithOptions to
-// avoid package-level mutable state in concurrent callers.
-func SetNamespaceAwareForCompatibility(isNamespaceAware bool) { namespaceAware = isNamespaceAware }
+// ParseOption customizes XML parsing per call.
+type ParseOption func(*parseConfig)
 
-// SetNamespaceAware records whether parsed element names should keep namespace URIs.
-//
-// Deprecated: prefer ReadXMLReaderWithOptions or ParseXMLWithOptions to avoid
-// package-level mutable state in concurrent callers.
-func SetNamespaceAware(isNamespaceAware bool) { SetNamespaceAwareForCompatibility(isNamespaceAware) }
-
-// WithNamespaceAware controls whether parsed element names keep namespace URIs.
-func WithNamespaceAware(isNamespaceAware bool) ParseOption {
-	return func(cfg *parseConfig) { cfg.namespaceAware = isNamespaceAware }
+type parseConfig struct {
+	namespaceAware bool
 }
 
-// ReadXML parses XML content directly, or treats the input as a file path when it does not start with '<'.
-func ReadXML(pathOrContent string) (*Document, error) {
-	if strings.HasPrefix(strings.TrimSpace(pathOrContent), "<") {
-		return ParseXML(pathOrContent)
-	}
-	return ReadXMLFile(pathOrContent)
+func defaultParseConfig() parseConfig {
+	return parseConfig{namespaceAware: true}
 }
 
-// ReadXMLFile parses an XML file.
-func ReadXMLFile(path string) (*Document, error) {
-	// #nosec G304 -- SDK file helper intentionally reads the caller-provided XML path.
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	return ReadXMLBytes(data)
-}
-
-// ReadXMLBytes parses XML bytes.
-func ReadXMLBytes(data []byte) (*Document, error) { return ReadXMLReader(bytes.NewReader(data)) }
-
-// ReadXMLReader parses XML from reader.
-func ReadXMLReader(r io.Reader) (*Document, error) {
-	return readXMLReader(r, parseConfig{namespaceAware: namespaceAware})
-}
-
-// ReadXMLReaderWithOptions parses XML from reader with per-call options.
-func ReadXMLReaderWithOptions(r io.Reader, opts ...ParseOption) (*Document, error) {
-	cfg := parseConfig{namespaceAware: namespaceAware}
+func applyParse(opts []ParseOption) parseConfig {
+	cfg := defaultParseConfig()
 	for _, opt := range opts {
 		if opt != nil {
 			opt(&cfg)
 		}
 	}
-	return readXMLReader(r, cfg)
+	return cfg
+}
+
+// WithNamespaceAware controls whether parsed element names keep namespace URIs.
+func WithNamespaceAware(b bool) ParseOption {
+	return func(c *parseConfig) { c.namespaceAware = b }
+}
+
+// ---------------------------------------------------------------------------
+// Write options
+// ---------------------------------------------------------------------------
+
+// WriteOption customizes XML serialization per call.
+type WriteOption func(*writeConfig)
+
+type writeConfig struct {
+	charset            string
+	indent             int // 0 means no indentation
+	omitXMLDeclaration bool
+	ignoreNullFields   bool
+	rootName           string
+	namespace          string
+}
+
+func defaultWriteConfig() writeConfig {
+	return writeConfig{charset: DefaultCharset}
+}
+
+func applyWrite(opts []WriteOption) writeConfig {
+	cfg := defaultWriteConfig()
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.charset == "" {
+		cfg.charset = DefaultCharset
+	}
+	return cfg
+}
+
+// WithCharset sets the XML declaration charset.
+func WithCharset(s string) WriteOption { return func(c *writeConfig) { c.charset = s } }
+
+// WithIndent sets the indentation width in spaces (0 disables pretty printing).
+func WithIndent(n int) WriteOption { return func(c *writeConfig) { c.indent = n } }
+
+// WithPretty enables pretty printing with the default indentation.
+func WithPretty() WriteOption { return func(c *writeConfig) { c.indent = IndentDefault } }
+
+// WithOmitDeclaration controls whether the <?xml ... ?> prolog is emitted.
+func WithOmitDeclaration(b bool) WriteOption {
+	return func(c *writeConfig) { c.omitXMLDeclaration = b }
+}
+
+// WithIgnoreNullFields skips struct fields whose value is a typed nil.
+func WithIgnoreNullFields(b bool) WriteOption { return func(c *writeConfig) { c.ignoreNullFields = b } }
+
+// WithRootName overrides the root element name for MarshalMap / MarshalBean.
+func WithRootName(s string) WriteOption { return func(c *writeConfig) { c.rootName = s } }
+
+// WithNamespace sets the xmlns attribute on the synthesized root element.
+func WithNamespace(s string) WriteOption { return func(c *writeConfig) { c.namespace = s } }
+
+// ---------------------------------------------------------------------------
+// Reading
+// ---------------------------------------------------------------------------
+
+// ReadXML parses XML content directly, or treats the input as a file path when
+// it does not start with '<'.
+func ReadXML(pathOrContent string, opts ...ParseOption) (*Document, error) {
+	if strings.HasPrefix(strings.TrimSpace(pathOrContent), "<") {
+		return ParseXML(pathOrContent, opts...)
+	}
+	return ReadXMLFile(pathOrContent, opts...)
+}
+
+// ReadXMLFile parses an XML file.
+func ReadXMLFile(path string, opts ...ParseOption) (*Document, error) {
+	// #nosec G304 -- SDK file helper intentionally reads the caller-provided XML path.
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	return ReadXMLBytes(data, opts...)
+}
+
+// ReadXMLBytes parses XML bytes.
+func ReadXMLBytes(data []byte, opts ...ParseOption) (*Document, error) {
+	return ReadXMLReader(bytes.NewReader(data), opts...)
+}
+
+// ReadXMLReader parses XML from reader.
+func ReadXMLReader(r io.Reader, opts ...ParseOption) (*Document, error) {
+	return readXMLReader(r, applyParse(opts))
+}
+
+// ParseXML parses an XML string.
+func ParseXML(xmlStr string, opts ...ParseOption) (*Document, error) {
+	return ReadXMLReader(strings.NewReader(xmlStr), opts...)
 }
 
 func readXMLReader(r io.Reader, cfg parseConfig) (*Document, error) {
 	dec := stdxml.NewDecoder(r)
-	var stack []*Element
-	var root *Element
+	var (
+		stack []*Element
+		root  *Element
+	)
 	for {
 		tok, err := dec.Token()
 		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("vxml: decode token: %w", err)
 		}
 		switch t := tok.(type) {
 		case stdxml.StartElement:
@@ -153,27 +224,19 @@ func readXMLReader(r io.Reader, cfg parseConfig) (*Document, error) {
 			stack = append(stack, ele)
 		case stdxml.EndElement:
 			if len(stack) == 0 {
-				return nil, fmt.Errorf("unexpected closing tag: %s", t.Name.Local)
+				return nil, fmt.Errorf("vxml: unexpected closing tag: %s", t.Name.Local)
 			}
 			stack = stack[:len(stack)-1]
 		case stdxml.CharData:
 			if len(stack) > 0 {
-				stack[len(stack)-1].Text += string([]byte(t))
+				stack[len(stack)-1].Text += string(t)
 			}
 		}
 	}
 	if root == nil {
-		return nil, errors.New("xml: root element not found")
+		return nil, errors.New("vxml: root element not found")
 	}
 	return &Document{Root: root}, nil
-}
-
-// ParseXML parses an XML string.
-func ParseXML(xmlStr string) (*Document, error) { return ReadXMLReader(strings.NewReader(xmlStr)) }
-
-// ParseXMLWithOptions parses an XML string with per-call options.
-func ParseXMLWithOptions(xmlStr string, opts ...ParseOption) (*Document, error) {
-	return ReadXMLReaderWithOptions(strings.NewReader(xmlStr), opts...)
 }
 
 // ReadBySAX streams XML tokens from reader to handler.
@@ -188,7 +251,7 @@ func ReadBySAX(r io.Reader, handler TokenHandler) error {
 			return nil
 		}
 		if err != nil {
-			return err
+			return fmt.Errorf("vxml: sax decode: %w", err)
 		}
 		if err := handler(tok); err != nil {
 			return err
@@ -211,39 +274,31 @@ func ReadBySAXFile(path string, handler TokenHandler) (err error) {
 	return ReadBySAX(f, handler)
 }
 
-// ToStr serializes a document or element without pretty indentation.
-func ToStr(v any) string { return ToStrPretty(v, false) }
+// ---------------------------------------------------------------------------
+// Writing
+// ---------------------------------------------------------------------------
 
-// ToStrPretty serializes a document or element and optionally pretty prints it.
-func ToStrPretty(v any, pretty bool) string {
-	s, _ := ToStrCharset(v, "UTF-8", pretty, false)
-	return s
+// WriteTo serializes a document or element to writer.
+func WriteTo(w io.Writer, v any, opts ...WriteOption) error {
+	if w == nil {
+		return errors.New("vxml: nil writer")
+	}
+	return writeWithConfig(w, v, applyWrite(opts))
 }
 
-// ToStrCharset serializes a document or element with charset declaration options.
-func ToStrCharset(v any, charset string, pretty bool, omitXMLDeclaration bool) (string, error) {
+// MarshalString serializes a document or element to string.
+func MarshalString(v any, opts ...WriteOption) (string, error) {
 	var buf bytes.Buffer
-	if err := Write(v, &buf, charset, indent(pretty), omitXMLDeclaration); err != nil {
+	if err := WriteTo(&buf, v, opts...); err != nil {
 		return "", err
 	}
 	return buf.String(), nil
 }
 
-// Format pretty prints XML content.
-func Format(xmlStr string) (string, error) {
-	doc, err := ParseXML(xmlStr)
-	if err != nil {
-		return "", err
-	}
-	return ToStrCharset(doc, "UTF-8", true, false)
-}
-
-// ToFile writes a document or element to path.
-func ToFile(v any, path string, charset string) (err error) {
-	if charset == "" {
-		charset = "UTF-8"
-	}
-	f, err := os.Create(path) // #nosec G304 -- SDK file helper intentionally creates the caller-provided XML path.
+// WriteFile writes a document or element to path.
+func WriteFile(path string, v any, opts ...WriteOption) (err error) {
+	// #nosec G304 -- SDK file helper intentionally creates the caller-provided XML path.
+	f, err := os.Create(path)
 	if err != nil {
 		return err
 	}
@@ -252,45 +307,58 @@ func ToFile(v any, path string, charset string) (err error) {
 			err = closeErr
 		}
 	}()
-	return Write(v, f, charset, IndentDefault, false)
+	return WriteTo(f, v, opts...)
 }
 
-// WriteObjectAsXML writes a struct, map, or scalar value as XML to path.
-func WriteObjectAsXML(path string, bean any) error { return ToFile(BeanToXML(bean), path, "UTF-8") }
-
-// Write serializes a document or element to writer.
-func Write(v any, w io.Writer, charset string, indentSize int, omitXMLDeclaration bool) error {
-	if w == nil {
-		return errors.New("xml: nil writer")
+// MarshalMap serializes map data to an XML string.
+func MarshalMap(data map[string]any, opts ...WriteOption) (string, error) {
+	cfg := applyWrite(opts)
+	root := cfg.rootName
+	if root == "" {
+		root = "xml"
 	}
-	if charset == "" {
-		charset = "UTF-8"
-	}
-	if !omitXMLDeclaration {
-		if _, err := fmt.Fprintf(w, `<?xml version="1.0" encoding="%s"?>`, charset); err != nil {
-			return err
-		}
-		if indentSize > 0 {
-			if _, err := io.WriteString(w, "\n"); err != nil {
-				return err
-			}
-		}
-	}
-	ele := elementOf(v)
-	if ele == nil {
-		return errors.New("xml: unsupported node")
-	}
-	return writeElement(w, ele, indentSize, 0)
+	doc := CreateXMLWithRootNS(root, cfg.namespace)
+	Append(doc.Root, data)
+	return MarshalString(doc, opts...)
 }
 
-// Transform copies XML from source to result with optional pretty formatting.
-func Transform(source io.Reader, result io.Writer, charset string, indentSize int, omitXMLDeclaration bool) error {
+// MarshalBean serializes a struct or map-like value to an XML string.
+func MarshalBean(bean any, opts ...WriteOption) (string, error) {
+	cfg := applyWrite(opts)
+	name := cfg.rootName
+	if name == "" {
+		name = typeName(bean)
+	}
+	if name == "" {
+		name = "xml"
+	}
+	m := structToMap(bean, false, cfg.ignoreNullFields)
+	doc := CreateXMLWithRootNS(name, cfg.namespace)
+	Append(doc.Root, m)
+	return MarshalString(doc, opts...)
+}
+
+// TransformWith copies XML from source to result with per-call options.
+func TransformWith(source io.Reader, result io.Writer, opts ...WriteOption) error {
 	doc, err := ReadXMLReader(source)
 	if err != nil {
 		return err
 	}
-	return Write(doc, result, charset, indentSize, omitXMLDeclaration)
+	return WriteTo(result, doc, opts...)
 }
+
+// Format pretty prints XML content.
+func Format(xmlStr string) (string, error) {
+	doc, err := ParseXML(xmlStr)
+	if err != nil {
+		return "", err
+	}
+	return MarshalString(doc, WithPretty())
+}
+
+// ---------------------------------------------------------------------------
+// Element construction & traversal
+// ---------------------------------------------------------------------------
 
 // CreateXML creates an empty XML document.
 func CreateXML() *Document { return &Document{} }
@@ -309,12 +377,6 @@ func CreateXMLWithRootNS(rootElementName, namespace string) *Document {
 	return &Document{Root: root}
 }
 
-// CreateDocumentBuilder is a no-op compatibility hook.
-func CreateDocumentBuilder() struct{} { return struct{}{} }
-
-// CreateDocumentBuilderFactory is a no-op compatibility hook.
-func CreateDocumentBuilderFactory() struct{} { return struct{}{} }
-
 // GetRootElement returns the document root element.
 func GetRootElement(doc *Document) *Element {
 	if doc == nil {
@@ -323,7 +385,7 @@ func GetRootElement(doc *Document) *Element {
 	return doc.Root
 }
 
-// GetOwnerDocument returns the document that owns node by walking to the root.
+// GetOwnerDocument returns the document that owns node.
 func GetOwnerDocument(node *Element) *Document {
 	if node == nil {
 		return nil
@@ -345,7 +407,7 @@ func GetElements(element *Element, tagName string) []*Element {
 	if element == nil {
 		return nil
 	}
-	out := make([]*Element, 0)
+	out := make([]*Element, 0, len(element.Children))
 	for _, child := range element.Children {
 		if tagName == "" || child.Name.Local == tagName {
 			out = append(out, child)
@@ -356,17 +418,15 @@ func GetElements(element *Element, tagName string) []*Element {
 
 // GetElement returns the first child element with tag name.
 func GetElement(element *Element, tagName string) *Element {
-	children := GetElements(element, tagName)
-	if len(children) == 0 {
-		return nil
+	for _, child := range GetElements(element, tagName) {
+		return child
 	}
-	return children[0]
+	return nil
 }
 
 // ElementText returns child text or defaultValue when missing.
 func ElementText(element *Element, tagName string, defaultValue ...string) string {
-	child := GetElement(element, tagName)
-	if child != nil {
+	if child := GetElement(element, tagName); child != nil {
 		return strings.TrimSpace(child.Text)
 	}
 	if len(defaultValue) > 0 {
@@ -384,176 +444,6 @@ func TransElements(nodes []*Element) []*Element {
 		}
 	}
 	return out
-}
-
-// CreateXPath is a compatibility hook for simple path expressions.
-func CreateXPath() struct{} { return struct{}{} }
-
-// GetElementByXPath returns the first element matched by a simple XPath-like expression.
-func GetElementByXPath(expression string, source any) *Element {
-	if node := GetNodeByXPath(expression, source); node != nil {
-		return node
-	}
-	return nil
-}
-
-// GetNodeListByXPath returns all elements matched by a simple XPath-like expression.
-func GetNodeListByXPath(expression string, source any) []*Element {
-	root := elementOf(source)
-	if root == nil {
-		return nil
-	}
-	return findByPath(root, expression)
-}
-
-// GetNodeByXPath returns the first node matched by a simple XPath-like expression.
-func GetNodeByXPath(expression string, source any) *Element {
-	nodes := GetNodeListByXPath(expression, source)
-	if len(nodes) == 0 {
-		return nil
-	}
-	return nodes[0]
-}
-
-// GetByXPath returns matched text, element, or list based on returnType: string, node, or nodes.
-func GetByXPath(expression string, source any, returnType string) any {
-	switch strings.ToLower(returnType) {
-	case "string", "text":
-		if node := GetNodeByXPath(expression, source); node != nil {
-			return strings.TrimSpace(node.Text)
-		}
-		return ""
-	case "nodes", "nodelist", "list":
-		return GetNodeListByXPath(expression, source)
-	default:
-		return GetNodeByXPath(expression, source)
-	}
-}
-
-// Escape escapes XML text.
-func Escape(s string) string {
-	var buf bytes.Buffer
-	if err := stdxml.EscapeText(&buf, []byte(s)); err != nil {
-		return s
-	}
-	return buf.String()
-}
-
-// Unescape unescapes XML/HTML entities.
-func Unescape(s string) string { return html.UnescapeString(s) }
-
-// XMLToMap parses XML into a nested map. Repeated sibling tags become []any.
-func XMLToMap(xmlStr string) (map[string]any, error) {
-	doc, err := ParseXML(xmlStr)
-	if err != nil {
-		return nil, err
-	}
-	result := map[string]any{}
-	if doc.Root != nil {
-		addMapValue(result, doc.Root.Name.Local, elementToValue(doc.Root))
-	}
-	return result, nil
-}
-
-// XMLNodeToMap converts an element into a nested map value.
-func XMLNodeToMap(node *Element) map[string]any {
-	result := map[string]any{}
-	if node != nil {
-		addMapValue(result, node.Name.Local, elementToValue(node))
-	}
-	return result
-}
-
-// XMLToBean parses XML and decodes the generated map into dst.
-func XMLToBean(xmlStr string, dst any) error {
-	m, err := XMLToMap(xmlStr)
-	if err != nil {
-		return err
-	}
-	return mapToBean(m, dst)
-}
-
-// XMLNodeToBean converts an element tree to a map and decodes it into dst.
-func XMLNodeToBean(node *Element, dst any) error { return mapToBean(XMLNodeToMap(node), dst) }
-
-func mapToBean(m map[string]any, dst any) error {
-	data, err := json.Marshal(m)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(data, dst)
-}
-
-// XMLToMapInto parses XML and merges values into result.
-func XMLToMapInto(xmlStr string, result map[string]any) (map[string]any, error) {
-	m, err := XMLToMap(xmlStr)
-	if err != nil {
-		return result, err
-	}
-	if result == nil {
-		result = map[string]any{}
-	}
-	for k, v := range m {
-		result[k] = v
-	}
-	return result, nil
-}
-
-// XMLNodeToMapInto converts an element to map and merges values into result.
-func XMLNodeToMapInto(node *Element, result map[string]any) map[string]any {
-	if result == nil {
-		result = map[string]any{}
-	}
-	for k, v := range XMLNodeToMap(node) {
-		result[k] = v
-	}
-	return result
-}
-
-// MapToXMLStr serializes map data to XML string. Empty rootName emits each top-level key as a tag.
-func MapToXMLStr(data map[string]any, rootName ...string) (string, error) {
-	root := ""
-	if len(rootName) > 0 {
-		root = rootName[0]
-	}
-	return MapToXMLStrOptions(data, root, "", true, false, "UTF-8")
-}
-
-// MapToXMLStrOptions serializes map data with namespace, pretty, declaration, and charset options.
-func MapToXMLStrOptions(data map[string]any, rootName, namespace string, pretty, omitXMLDeclaration bool, charset string) (string, error) {
-	doc := MapToXML(data, rootName, namespace)
-	return ToStrCharset(doc, charset, pretty, omitXMLDeclaration)
-}
-
-// MapToXML converts map data to a document.
-func MapToXML(data map[string]any, rootName string, namespace ...string) *Document {
-	ns := ""
-	if len(namespace) > 0 {
-		ns = namespace[0]
-	}
-	if rootName != "" {
-		doc := CreateXMLWithRootNS(rootName, ns)
-		Append(doc.Root, data)
-		return doc
-	}
-	doc := CreateXMLWithRootNS("xml", ns)
-	Append(doc.Root, data)
-	return doc
-}
-
-// BeanToXML converts a struct or map-like value to a document.
-func BeanToXML(bean any, namespace ...string) *Document {
-	return BeanToXMLWithOptions(bean, first(namespace), false)
-}
-
-// BeanToXMLWithOptions converts a struct or map-like value to a document with namespace and nil-field handling.
-func BeanToXMLWithOptions(bean any, namespace string, ignoreNull bool) *Document {
-	name := typeName(bean)
-	if name == "" {
-		name = "xml"
-	}
-	m := structToMap(bean, false, ignoreNull)
-	return MapToXML(m, name, namespace)
 }
 
 // IsElement reports whether node is not nil.
@@ -591,6 +481,144 @@ func Append(node *Element, data any) {
 	}
 	appendValue(node, data)
 }
+
+// ---------------------------------------------------------------------------
+// XPath (simple expression subset)
+// ---------------------------------------------------------------------------
+
+// GetElementByXPath returns the first element matched by a simple expression.
+func GetElementByXPath(expression string, source any) *Element {
+	return GetNodeByXPath(expression, source)
+}
+
+// GetNodeListByXPath returns all elements matched by a simple expression.
+func GetNodeListByXPath(expression string, source any) []*Element {
+	root := elementOf(source)
+	if root == nil {
+		return nil
+	}
+	return findByPath(root, expression)
+}
+
+// GetNodeByXPath returns the first node matched by a simple expression.
+func GetNodeByXPath(expression string, source any) *Element {
+	nodes := GetNodeListByXPath(expression, source)
+	if len(nodes) == 0 {
+		return nil
+	}
+	return nodes[0]
+}
+
+// GetByXPath returns matched text, element, or list based on returnType:
+// "string"/"text", "node" (default), or "nodes"/"nodelist"/"list".
+func GetByXPath(expression string, source any, returnType string) any {
+	switch strings.ToLower(returnType) {
+	case "string", "text":
+		if node := GetNodeByXPath(expression, source); node != nil {
+			return strings.TrimSpace(node.Text)
+		}
+		return ""
+	case "nodes", "nodelist", "list":
+		return GetNodeListByXPath(expression, source)
+	default:
+		return GetNodeByXPath(expression, source)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Escape / unescape
+// ---------------------------------------------------------------------------
+
+// Escape escapes XML text.
+func Escape(s string) string {
+	var buf bytes.Buffer
+	if err := stdxml.EscapeText(&buf, []byte(s)); err != nil {
+		return s
+	}
+	return buf.String()
+}
+
+// Unescape unescapes XML/HTML entities.
+func Unescape(s string) string { return html.UnescapeString(s) }
+
+// ---------------------------------------------------------------------------
+// XML <-> Map / Bean
+// ---------------------------------------------------------------------------
+
+// XMLToMap parses XML into a nested map. Repeated sibling tags become []any.
+func XMLToMap(xmlStr string) (map[string]any, error) {
+	doc, err := ParseXML(xmlStr)
+	if err != nil {
+		return nil, err
+	}
+	result := map[string]any{}
+	if doc.Root != nil {
+		addMapValue(result, doc.Root.Name.Local, elementToValue(doc.Root))
+	}
+	return result, nil
+}
+
+// XMLNodeToMap converts an element into a nested map value.
+func XMLNodeToMap(node *Element) map[string]any {
+	result := map[string]any{}
+	if node != nil {
+		addMapValue(result, node.Name.Local, elementToValue(node))
+	}
+	return result
+}
+
+// XMLToBean parses XML and decodes the generated map into dst.
+func XMLToBean(xmlStr string, dst any) error {
+	m, err := XMLToMap(xmlStr)
+	if err != nil {
+		return err
+	}
+	return mapToBean(m, dst)
+}
+
+// XMLNodeToBean converts an element tree to a map and decodes it into dst.
+func XMLNodeToBean(node *Element, dst any) error { return mapToBean(XMLNodeToMap(node), dst) }
+
+// XMLToMapInto parses XML and merges values into result.
+func XMLToMapInto(xmlStr string, result map[string]any) (map[string]any, error) {
+	m, err := XMLToMap(xmlStr)
+	if err != nil {
+		return result, err
+	}
+	if result == nil {
+		result = map[string]any{}
+	}
+	for k, v := range m {
+		result[k] = v
+	}
+	return result, nil
+}
+
+// XMLNodeToMapInto converts an element to map and merges values into result.
+func XMLNodeToMapInto(node *Element, result map[string]any) map[string]any {
+	if result == nil {
+		result = map[string]any{}
+	}
+	for k, v := range XMLNodeToMap(node) {
+		result[k] = v
+	}
+	return result
+}
+
+func mapToBean(m map[string]any, dst any) error {
+	data, err := json.Marshal(m)
+	if err != nil {
+		return fmt.Errorf("vxml: encode intermediate: %w", err)
+	}
+	if err := json.Unmarshal(data, dst); err != nil {
+		return fmt.Errorf("vxml: decode into dst: %w", err)
+	}
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// Namespace cache
+// ---------------------------------------------------------------------------
 
 // NewNamespaceCache collects namespace declarations from doc.
 func NewNamespaceCache(doc *Document) *NamespaceCache {
@@ -631,6 +659,28 @@ func (c *NamespaceCache) PrefixOf(uri string) string {
 	return c.URI[uri]
 }
 
+// ---------------------------------------------------------------------------
+// Internals
+// ---------------------------------------------------------------------------
+
+func writeWithConfig(w io.Writer, v any, cfg writeConfig) error {
+	if !cfg.omitXMLDeclaration {
+		if _, err := fmt.Fprintf(w, `<?xml version="1.0" encoding="%s"?>`, cfg.charset); err != nil {
+			return err
+		}
+		if cfg.indent > 0 {
+			if _, err := io.WriteString(w, "\n"); err != nil {
+				return err
+			}
+		}
+	}
+	ele := elementOf(v)
+	if ele == nil {
+		return errors.New("vxml: unsupported node")
+	}
+	return writeElement(w, ele, cfg.indent, 0)
+}
+
 func elementOf(v any) *Element {
 	switch x := v.(type) {
 	case *Document:
@@ -643,13 +693,6 @@ func elementOf(v any) *Element {
 	default:
 		return nil
 	}
-}
-
-func indent(pretty bool) int {
-	if pretty {
-		return IndentDefault
-	}
-	return 0
 }
 
 func writeElement(w io.Writer, ele *Element, indentSize, level int) error {
@@ -691,8 +734,7 @@ func writeElement(w io.Writer, ele *Element, indentSize, level int) error {
 	if _, err := io.WriteString(w, ">"); err != nil {
 		return err
 	}
-	text := strings.TrimSpace(ele.Text)
-	if text != "" {
+	if text := strings.TrimSpace(ele.Text); text != "" {
 		if _, err := io.WriteString(w, Escape(text)); err != nil {
 			return err
 		}
@@ -842,13 +884,13 @@ func normalizeMap(data any) (map[string]any, bool) {
 	case map[string]any:
 		return m, true
 	case map[string]string:
-		out := map[string]any{}
+		out := make(map[string]any, len(m))
 		for k, v := range m {
 			out[k] = v
 		}
 		return out, true
 	case map[any]any:
-		out := map[string]any{}
+		out := make(map[string]any, len(m))
 		for k, v := range m {
 			out[fmt.Sprint(k)] = v
 		}
@@ -877,7 +919,7 @@ func isStruct(data any) bool {
 	return rv.IsValid() && rv.Kind() == reflect.Struct
 }
 
-func structToMap(data any, honorXMLName bool, ignoreNull bool) map[string]any {
+func structToMap(data any, honorXMLName, ignoreNull bool) map[string]any {
 	out := map[string]any{}
 	rv := reflect.ValueOf(data)
 	if !rv.IsValid() {
@@ -933,13 +975,6 @@ func isNilValue(v any) bool {
 	}
 }
 
-func first(values []string) string {
-	if len(values) == 0 {
-		return ""
-	}
-	return values[0]
-}
-
 func typeName(data any) string {
 	if data == nil {
 		return ""
@@ -951,7 +986,7 @@ func typeName(data any) string {
 	if t.Kind() == reflect.Struct {
 		return strings.ToLower(t.Name())
 	}
-	return "xml"
+	return ""
 }
 
 func findByPath(root *Element, expr string) []*Element {
