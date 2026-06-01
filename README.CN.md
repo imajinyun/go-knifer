@@ -59,7 +59,7 @@ text := vhash.MD5Hex("hello")
 | `vid` | `github.com/imajinyun/go-knifer/vid` | ID 工具：random/simple/fast UUID、MongoDB 风格 ObjectId、Snowflake 生成器与单例 next-id、worker/datacenter id 推导和 NanoId。 |
 | `vhash` | `github.com/imajinyun/go-knifer/vhash` | Hash 工具：Additive、FNV、MD5、SHA-1、SHA-256 Hex。 |
 | `vvalidator` | `github.com/imajinyun/go-knifer/vvalidator` | 校验工具：邮箱、手机号、URL、IPv4、中文和数字字符串。 |
-| `vtemplate` | `github.com/imajinyun/go-knifer/vtemplate` | Go html/template 渲染工具。 |
+| `vtpl` | `github.com/imajinyun/go-knifer/vtpl` | Go html/template 渲染工具。 |
 | `vregex` | `github.com/imajinyun/go-knifer/vregex` | 正则工具：匹配、分组提取、命名分组、删除、计数、索引定位、模板/函数替换和元字符转义。 |
 | `vchar` | `github.com/imajinyun/go-knifer/vchar` | 字符工具：空白、字母、数字、ASCII、字母或数字判断。 |
 | `vbool` | `github.com/imajinyun/go-knifer/vbool` | 布尔工具：取反、转 int、全真/任一为真判断。 |

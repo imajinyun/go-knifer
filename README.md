@@ -59,7 +59,7 @@ The project follows an “internal implementation + public facade” layout: `in
 | `vid` | `github.com/imajinyun/go-knifer/vid` | ID helpers: random/simple/fast UUIDs, MongoDB-style ObjectId, Snowflake generators and singleton next-id helpers, worker/datacenter id derivation, and NanoId generation. |
 | `vhash` | `github.com/imajinyun/go-knifer/vhash` | Hash helpers: additive hash, FNV, MD5, SHA-1, and SHA-256 hex helpers. |
 | `vvalidator` | `github.com/imajinyun/go-knifer/vvalidator` | Validation helpers: email, mobile, URL, IPv4, Chinese text, and number string checks. |
-| `vtemplate` | `github.com/imajinyun/go-knifer/vtemplate` | Go html/template rendering helpers. |
+| `vtpl` | `github.com/imajinyun/go-knifer/vtpl` | Go html/template rendering helpers. |
 | `vregex` | `github.com/imajinyun/go-knifer/vregex` | Regular-expression helpers: matching, group extraction, named groups, deletion, counting, index lookup, template/function replacement, and escaping. |
 | `vchar` | `github.com/imajinyun/go-knifer/vchar` | Character helpers: blank, letter, digit, ASCII, and letter-or-digit checks. |
 | `vbool` | `github.com/imajinyun/go-knifer/vbool` | Boolean helpers: negate, bool-to-int, all/any checks. |
