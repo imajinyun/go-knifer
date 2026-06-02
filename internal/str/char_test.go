@@ -1,8 +1,8 @@
-package vchar
+package str
 
 import "testing"
 
-func TestCharFacade(t *testing.T) {
+func TestCharFunctions(t *testing.T) {
 	if !IsBlankChar(' ') || !IsBlankChar('\u00A0') || IsBlankChar('a') {
 		t.Fatal("IsBlankChar failed")
 	}

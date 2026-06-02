@@ -29,7 +29,7 @@ text := hex.EncodeToString(sum[:])
 现在，使用 `go-knifer` 可以直接调用工具方法：
 
 ```go
-text := vhash.MD5Hex("hello")
+text := vcrypto.MD5Hex("hello")
 ```
 
 这类封装能减少重复代码、降低复制粘贴带来的隐患，也让团队内相同场景使用一致的 API。
@@ -40,7 +40,7 @@ text := vhash.MD5Hex("hello")
 
 | 模块 | 导入路径 | 功能说明 |
 | --- | --- | --- |
-| `vstr` | `github.com/imajinyun/go-knifer/vstr` | 字符串工具：空白判断、裁剪、切分、截取、格式化、emoji、命名转换、默认值和 HTML 转义。 |
+| `vstr` | `github.com/imajinyun/go-knifer/vstr` | 字符串工具：空白判断、裁剪、切分、截取、格式化、emoji、命名转换、默认值、HTML 转义，以及字符判断（空白、字母、数字、ASCII、字母或数字）。 |
 | `vslice` | `github.com/imajinyun/go-knifer/vslice` | Slice 工具：包含/索引、反转、去重、拼接、过滤/映射、截取、合并、集合操作和分页。 |
 | `vmap` | `github.com/imajinyun/go-knifer/vmap` | Map 工具：空判断、keys、values、反转和合并。 |
 | `vconv` | `github.com/imajinyun/go-knifer/vconv` | 宽松类型转换：string、int、int64、float64、bool、bytes 及默认值版本。 |
@@ -60,11 +60,10 @@ text := vhash.MD5Hex("hello")
 | `vnum` | `github.com/imajinyun/go-knifer/vnum` | 数字工具：精确加减乘除、舍入模式、格式化、数字判断、不重复随机数、range、阶乘/组合数、最大公约数/最小公倍数、二进制转换、比较、解析、字节转换、表达式计算和奇偶判断。 |
 | `vrand` | `github.com/imajinyun/go-knifer/vrand` | 随机工具：整数、浮点、布尔、字节、字符串、数字字符串和随机元素。 |
 | `vid` | `github.com/imajinyun/go-knifer/vid` | ID 工具：random/simple/fast UUID、MongoDB 风格 ObjectId、Snowflake 生成器与单例 next-id、worker/datacenter id 推导和 NanoId。 |
-| `vhash` | `github.com/imajinyun/go-knifer/vhash` | Hash 工具：Additive、FNV、MD5、SHA-1、SHA-256 Hex。 |
+| `vhash` | `github.com/imajinyun/go-knifer/vhash` | 非加密 Hash 工具：Additive、FNV，以及一组经典字符串哈希（RS、JS、PJW、ELF、BKDR、SDBM、DJB、AP、HF、HFIP、TianL、Java 默认）。 |
 | `vvalidator` | `github.com/imajinyun/go-knifer/vvalidator` | 校验工具：邮箱、手机号、URL、IPv4、中文和数字字符串。 |
 | `vtpl` | `github.com/imajinyun/go-knifer/vtpl` | Go html/template 渲染工具。 |
 | `vregex` | `github.com/imajinyun/go-knifer/vregex` | 正则工具：匹配、分组提取、命名分组、删除、计数、索引定位、模板/函数替换和元字符转义。 |
-| `vchar` | `github.com/imajinyun/go-knifer/vchar` | 字符工具：空白、字母、数字、ASCII、字母或数字判断。 |
 | `vbool` | `github.com/imajinyun/go-knifer/vbool` | 布尔工具：取反、转 int、全真/任一为真判断。 |
 | `vblf` | `github.com/imajinyun/go-knifer/vblf` | 布隆过滤器：bitmap/bitset/filter 抽象，以及多种字符串哈希算法。 |
 | `vcache` | `github.com/imajinyun/go-knifer/vcache` | 泛型缓存：FIFO、LFU、LRU、Timed、Weak、NoCache，支持 TTL、淘汰监听与懒加载。 |
@@ -102,8 +101,8 @@ facade 规则：
 
 领域边界规则：
 
-- `vhash` 面向通用 hash 能力，例如 Additive/FNV 和简单摘要快捷方法；`vcrypto` 面向安全相关摘要、
-  HMAC、加解密、密钥和 PEM 编解码。
+- `vhash` 面向非加密 hash 能力，例如 Additive/FNV（分桶、布隆过滤器等场景）；`vcrypto` 独占所有
+  安全相关摘要（MD5/SHA 系列）、HMAC、加解密、密钥和 PEM 编解码。
 - `vhttp` 是基于标准库的轻量 HTTP facade；`vresty` 是基于 Resty 的链式高级 HTTP client facade。
 - `vdb` 负责基于 `database/sql` 的 SQL 数据库辅助能力；调用方继续通过 `*sql.DB` 和单次调用 options
   控制驱动和连接池。

@@ -29,6 +29,7 @@ func Length(v any) int { return objimpl.Length(v) }
 func Contains(obj, element any) bool { return objimpl.Contains(obj, element) }
 
 // IsNil reports whether v is nil, including typed nil values.
+// For reflection-centric workflows, vref.IsNil is the canonical source.
 func IsNil(v any) bool { return objimpl.IsNil(v) }
 
 // IsNull is an alias of IsNil.
@@ -66,33 +67,6 @@ func Apply[T any, R any](source *T, handle func(T) R) R { return objimpl.Apply(s
 
 // Accept calls consumer when source is not nil.
 func Accept[T any](source *T, consumer func(T)) { objimpl.Accept(source, consumer) }
-
-// DefaultIfEmpty returns defaultValue when s is empty.
-func DefaultIfEmpty(s, defaultValue string) string { return objimpl.DefaultIfEmpty(s, defaultValue) }
-
-// DefaultIfEmptyFunc returns a supplier value when s is empty.
-func DefaultIfEmptyFunc(s string, supplier func() string) string {
-	return objimpl.DefaultIfEmptyFunc(s, supplier)
-}
-
-// DefaultIfEmptyApply returns defaultValue when s is empty; otherwise it maps s.
-func DefaultIfEmptyApply[T any](s string, handle func(string) T, defaultValue T) T {
-	return objimpl.DefaultIfEmptyApply(s, handle, defaultValue)
-}
-
-// DefaultIfBlank returns defaultValue when s is empty or contains only whitespace.
-// String-specific blank checking is available via vstr.DefaultIfBlank.
-func DefaultIfBlank(s, defaultValue string) string { return objimpl.DefaultIfBlank(s, defaultValue) }
-
-// DefaultIfBlankFunc returns a supplier value when s is blank.
-func DefaultIfBlankFunc(s string, supplier func() string) string {
-	return objimpl.DefaultIfBlankFunc(s, supplier)
-}
-
-// DefaultIfBlankApply returns defaultValue when s is blank; otherwise it maps s.
-func DefaultIfBlankApply[T any](s string, handle func(string) T, defaultValue T) T {
-	return objimpl.DefaultIfBlankApply(s, handle, defaultValue)
-}
 
 // Clone creates a deep copy through gob serialization.
 func Clone[T any](src T) (T, error) { return objimpl.Clone(src) }

@@ -31,9 +31,6 @@ func TestDefaultsApplyAcceptAndAggregates(t *testing.T) {
 	if DefaultIfNil(&value, "x") != "go" || DefaultIfNil[string](nil, "x") != "x" {
 		t.Fatal("DefaultIfNil failed")
 	}
-	if DefaultIfEmpty("", "x") != "x" || DefaultIfBlank("  ", "x") != "x" {
-		t.Fatal("string defaults failed")
-	}
 	if got := Apply(&value, func(s string) int { return len(s) }); got != 2 {
 		t.Fatalf("Apply: %d", got)
 	}

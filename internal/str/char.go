@@ -1,4 +1,4 @@
-package char
+package str
 
 import "unicode"
 

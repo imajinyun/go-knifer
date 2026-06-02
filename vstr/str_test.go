@@ -48,8 +48,7 @@ func TestStringFacade(t *testing.T) {
 	if !ContainsEmoji("hello😀") || RemoveEmoji("hello😀") != "hello" {
 		t.Fatal("emoji helpers failed")
 	}
-	value := 5
-	if DefaultIfNil(&value, 1) != 5 || DefaultIfEmpty("", "x") != "x" || DefaultIfBlank(" ", "x") != "x" {
+	if DefaultIfEmpty("", "x") != "x" || DefaultIfBlank(" ", "x") != "x" {
 		t.Fatal("default helpers failed")
 	}
 	if EscapeHTML(`<a>&`) != "&lt;a&gt;&amp;" || UnescapeHTML("&lt;a&gt;&amp;") != `<a>&` {
@@ -57,5 +56,23 @@ func TestStringFacade(t *testing.T) {
 	}
 	if ToCamelCase("hello_world") != "helloWorld" || ToPascalCase("hello_world") != "HelloWorld" || ToUnderlineCase("HelloWorld") != "hello_world" || ToKebabCase("HelloWorld") != "hello-world" {
 		t.Fatal("naming helpers failed")
+	}
+}
+
+func TestCharFacade(t *testing.T) {
+	if !IsBlankChar(' ') || !IsBlankChar('\u00A0') || IsBlankChar('a') {
+		t.Fatal("IsBlankChar failed")
+	}
+	if !IsLetter('A') || IsLetter('1') {
+		t.Fatal("IsLetter failed")
+	}
+	if !IsDigit('1') || IsDigit('a') {
+		t.Fatal("IsDigit failed")
+	}
+	if !IsAscii('A') || IsAscii('中') {
+		t.Fatal("IsAscii failed")
+	}
+	if !IsLetterOrDigit('a') || !IsLetterOrDigit('1') || IsLetterOrDigit('?') {
+		t.Fatal("IsLetterOrDigit failed")
 	}
 }

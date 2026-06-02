@@ -29,7 +29,7 @@ text := hex.EncodeToString(sum[:])
 Now, with `go-knifer`, you can call a utility function directly:
 
 ```go
-text := vhash.MD5Hex("hello")
+text := vcrypto.MD5Hex("hello")
 ```
 
 This style of utility wrapping reduces repeated code, avoids hidden risks from copy-paste snippets, and keeps the same scenarios represented by consistent APIs across a team.
@@ -40,7 +40,7 @@ The project follows an “internal implementation + public facade” layout: `in
 
 | Module | Import path | Description |
 | --- | --- | --- |
-| `vstr` | `github.com/imajinyun/go-knifer/vstr` | String helpers: blank/empty checks, trimming, splitting, substring helpers, formatting, emoji helpers, naming conversion, defaults, and HTML escaping. |
+| `vstr` | `github.com/imajinyun/go-knifer/vstr` | String helpers: blank/empty checks, trimming, splitting, substring helpers, formatting, emoji helpers, naming conversion, defaults, HTML escaping, and rune checks (blank, letter, digit, ASCII, letter-or-digit). |
 | `vslice` | `github.com/imajinyun/go-knifer/vslice` | Slice helpers: contains/index, reverse, distinct, join, filter/map, sub-slice, concat, set-like operations, and paging. |
 | `vmap` | `github.com/imajinyun/go-knifer/vmap` | Map helpers: empty checks, keys, values, inverse, and merge. |
 | `vconv` | `github.com/imajinyun/go-knifer/vconv` | Permissive type conversion: string, int, int64, float64, bool, bytes, and default-value variants. |
@@ -60,11 +60,10 @@ The project follows an “internal implementation + public facade” layout: `in
 | `vnum` | `github.com/imajinyun/go-knifer/vnum` | Numeric helpers: precise arithmetic, rounding modes, formatting, number checks, random unique numbers, ranges, factorial/combinations, gcd/lcm, binary conversion, comparison, parsing, byte conversion, expression calculation, and odd/even checks. |
 | `vrand` | `github.com/imajinyun/go-knifer/vrand` | Random helpers: integers, floats, booleans, bytes, strings, numeric strings, and random element selection. |
 | `vid` | `github.com/imajinyun/go-knifer/vid` | ID helpers: random/simple/fast UUIDs, MongoDB-style ObjectId, Snowflake generators and singleton next-id helpers, worker/datacenter id derivation, and NanoId generation. |
-| `vhash` | `github.com/imajinyun/go-knifer/vhash` | Hash helpers: additive hash, FNV, MD5, SHA-1, and SHA-256 hex helpers. |
+| `vhash` | `github.com/imajinyun/go-knifer/vhash` | Non-cryptographic hash helpers: additive, FNV, and a set of classic string hashes (RS, JS, PJW, ELF, BKDR, SDBM, DJB, AP, HF, HFIP, TianL, Java default). |
 | `vvalidator` | `github.com/imajinyun/go-knifer/vvalidator` | Validation helpers: email, mobile, URL, IPv4, Chinese text, and number string checks. |
 | `vtpl` | `github.com/imajinyun/go-knifer/vtpl` | Go html/template rendering helpers. |
 | `vregex` | `github.com/imajinyun/go-knifer/vregex` | Regular-expression helpers: matching, group extraction, named groups, deletion, counting, index lookup, template/function replacement, and escaping. |
-| `vchar` | `github.com/imajinyun/go-knifer/vchar` | Character helpers: blank, letter, digit, ASCII, and letter-or-digit checks. |
 | `vbool` | `github.com/imajinyun/go-knifer/vbool` | Boolean helpers: negate, bool-to-int, all/any checks. |
 | `vblf` | `github.com/imajinyun/go-knifer/vblf` | Bloom filters: bitmap/bitset/filter abstractions and multiple string hash algorithms. |
 | `vcache` | `github.com/imajinyun/go-knifer/vcache` | Generic caches: FIFO, LFU, LRU, Timed, Weak, and NoCache; supports TTL, removal listeners, and lazy loading. |
@@ -105,9 +104,9 @@ Facade rules:
 
 Domain boundary rules:
 
-- `vhash` is for general hash helpers such as additive/FNV and simple digest
-  shortcuts; `vcrypto` is for security-oriented digest, HMAC, encryption, and
-  key/PEM operations.
+- `vhash` is for non-cryptographic hash helpers such as additive/FNV (bucketing,
+  bloom filters); `vcrypto` owns all security-oriented digests (MD5/SHA family),
+  HMAC, encryption, and key/PEM operations.
 - `vhttp` is the lightweight standard-library HTTP facade; `vresty` is the
   Resty-based chainable client facade.
 - `vdb` owns SQL database helpers on top of `database/sql`; callers keep control

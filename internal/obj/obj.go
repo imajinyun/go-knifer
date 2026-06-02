@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 
+	refimpl "github.com/imajinyun/go-knifer/internal/ref"
 	serializeimpl "github.com/imajinyun/go-knifer/internal/serialize"
 )
 
@@ -83,18 +84,7 @@ func Contains(obj, element any) bool {
 }
 
 // IsNil reports whether v is nil, including typed nil values.
-func IsNil(v any) bool {
-	if v == nil {
-		return true
-	}
-	rv := reflect.ValueOf(v)
-	switch rv.Kind() {
-	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Pointer, reflect.Slice:
-		return rv.IsNil()
-	default:
-		return false
-	}
-}
+func IsNil(v any) bool { return refimpl.IsNil(v) }
 
 // IsNull is an alias of IsNil.
 func IsNull(v any) bool { return IsNil(v) }
@@ -157,54 +147,6 @@ func Accept[T any](source *T, consumer func(T)) {
 	if source != nil {
 		consumer(*source)
 	}
-}
-
-// DefaultIfEmpty returns defaultValue when s is empty.
-func DefaultIfEmpty(s, defaultValue string) string {
-	if s == "" {
-		return defaultValue
-	}
-	return s
-}
-
-// DefaultIfEmptyFunc returns a supplier value when s is empty.
-func DefaultIfEmptyFunc(s string, supplier func() string) string {
-	if s == "" {
-		return supplier()
-	}
-	return s
-}
-
-// DefaultIfEmptyApply returns defaultValue when s is empty; otherwise it maps s.
-func DefaultIfEmptyApply[T any](s string, handle func(string) T, defaultValue T) T {
-	if s == "" {
-		return defaultValue
-	}
-	return handle(s)
-}
-
-// DefaultIfBlank returns defaultValue when s is empty or contains only whitespace.
-func DefaultIfBlank(s, defaultValue string) string {
-	if strings.TrimSpace(s) == "" {
-		return defaultValue
-	}
-	return s
-}
-
-// DefaultIfBlankFunc returns a supplier value when s is blank.
-func DefaultIfBlankFunc(s string, supplier func() string) string {
-	if strings.TrimSpace(s) == "" {
-		return supplier()
-	}
-	return s
-}
-
-// DefaultIfBlankApply returns defaultValue when s is blank; otherwise it maps s.
-func DefaultIfBlankApply[T any](s string, handle func(string) T, defaultValue T) T {
-	if strings.TrimSpace(s) == "" {
-		return defaultValue
-	}
-	return handle(s)
 }
 
 // Clone creates a deep copy through gob serialization.
@@ -284,12 +226,7 @@ func CompareNull[T Ordered](a, b *T, nilGreater bool) int {
 }
 
 // TypeOf returns the reflection type of object, or nil for nil values.
-func TypeOf(object any) reflect.Type {
-	if IsNil(object) {
-		return nil
-	}
-	return reflect.TypeOf(object)
-}
+func TypeOf(object any) reflect.Type { return refimpl.TypeOf(object) }
 
 // TypeName returns the full type name of object.
 func TypeName(object any) string {

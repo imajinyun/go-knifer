@@ -43,7 +43,6 @@ func RemoveSuffix(s, suffix string) string           { return strimpl.RemoveSuff
 func AddPrefixIfNot(s, prefix string) string         { return strimpl.AddPrefixIfNot(s, prefix) }
 func AddSuffixIfNot(s, suffix string) string         { return strimpl.AddSuffixIfNot(s, suffix) }
 func Length(s string) int                            { return strimpl.Length(s) }
-func DefaultIfNil[T any](v *T, def T) T              { return strimpl.DefaultIfNil(v, def) }
 func DefaultIfEmpty(s, def string) string            { return strimpl.DefaultIfEmpty(s, def) }
 func DefaultIfBlank(s, def string) string            { return strimpl.DefaultIfBlank(s, def) }
 func EscapeHTML(s string) string                     { return strimpl.EscapeHTML(s) }
@@ -53,3 +52,8 @@ func ToPascalCase(s string) string                   { return strimpl.ToPascalCa
 func ToUnderlineCase(s string) string                { return strimpl.ToUnderlineCase(s) }
 func ToKebabCase(s string) string                    { return strimpl.ToKebabCase(s) }
 func RuneLen(s string) int                           { return strimpl.RuneLen(s) }
+func IsBlankChar(r rune) bool                        { return strimpl.IsBlankChar(r) }
+func IsLetter(r rune) bool                           { return strimpl.IsLetter(r) }
+func IsDigit(r rune) bool                            { return strimpl.IsDigit(r) }
+func IsAscii(r rune) bool                            { return strimpl.IsAscii(r) }
+func IsLetterOrDigit(r rune) bool                    { return strimpl.IsLetterOrDigit(r) }

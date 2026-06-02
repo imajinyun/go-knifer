@@ -5,7 +5,6 @@ import (
 
 	"github.com/imajinyun/go-knifer/vobj"
 	"github.com/imajinyun/go-knifer/vser"
-	"github.com/imajinyun/go-knifer/vstr"
 )
 
 type record struct {
@@ -21,7 +20,7 @@ func TestFacadeObjectHelpers(t *testing.T) {
 		t.Fatal("empty or length failed")
 	}
 	name := "go"
-	if vobj.DefaultIfNil(&name, "x") != "go" || vobj.DefaultIfBlank(" ", "x") != "x" {
+	if vobj.DefaultIfNil(&name, "x") != "go" || vobj.DefaultIfNil[string](nil, "x") != "x" {
 		t.Fatal("defaults failed")
 	}
 	if got := vobj.Apply(&name, func(s string) int { return len(s) }); got != 2 {
@@ -50,10 +49,6 @@ func TestFacadeCloneAndSerialize(t *testing.T) {
 }
 
 func TestObjectFacadeMatchesDomainHelpers_BitsUT(t *testing.T) {
-	if got, want := vobj.DefaultIfBlank(" ", "fallback"), vstr.DefaultIfBlank(" ", "fallback"); got != want {
-		t.Fatalf("DefaultIfBlank mismatch: got %q, want %q", got, want)
-	}
-
 	src := record{Name: "go", Tags: []string{"tool"}}
 	objData, err := vobj.Serialize(src)
 	if err != nil {
