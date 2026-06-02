@@ -53,6 +53,7 @@ The project follows an “internal implementation + public facade” layout: `in
 | `vver` | `github.com/imajinyun/go-knifer/vver` | Version helpers: version comparison, greater/less predicates, expression matching, inclusive ranges, and custom expression delimiters. |
 | `vref` | `github.com/imajinyun/go-knifer/vref` | Reflection helpers: field lookup and mutation, method discovery and invocation, constructor-style function calls, type/value utilities, and method classification. |
 | `vzip` | `github.com/imajinyun/go-knifer/vzip` | ZIP, gzip, and zlib helpers: archive creation/extraction, entry lookup, archive traversal, append, in-memory entries, and stream compression. |
+| `vpoi` | `github.com/imajinyun/go-knifer/vpoi` | Office document helpers: lightweight Excel XLSX sheet listing, row reading, row writing, multi-sheet writing, and in-memory workbook creation. |
 | `vdes` | `github.com/imajinyun/go-knifer/vdes` | Desensitization helpers: mask names, IDs, phones, addresses, email, passwords, license plates, bank cards, IPs, passports, and credit codes. |
 | `vnum` | `github.com/imajinyun/go-knifer/vnum` | Numeric helpers: precise arithmetic, rounding modes, formatting, number checks, random unique numbers, ranges, factorial/combinations, gcd/lcm, binary conversion, comparison, parsing, byte conversion, expression calculation, and odd/even checks. |
 | `vrand` | `github.com/imajinyun/go-knifer/vrand` | Random helpers: integers, floats, booleans, bytes, strings, numeric strings, and random element selection. |
@@ -116,9 +117,10 @@ Domain boundary rules:
   implemented first in clear packages such as `vstr`, `vslice`, `vmap`, `vser`,
   or `vref`, then wrapped by `vobj` only when a broad object helper is useful.
 
-Some `internal` packages, such as `db`, `dfa`, and `poi`, are intentionally
-reserved placeholders. They document future domain ownership and currently do
-not provide runtime APIs.
+Some `internal` packages, such as `db` and `dfa`, are intentionally reserved
+placeholders. They document future domain ownership and currently do not provide
+runtime APIs. Office-document helpers belong to `internal/poi` and are exposed
+through `vpoi`.
 
 ## 🚀 Install
 

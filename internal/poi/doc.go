@@ -1,6 +1,6 @@
-// Package poi is reserved for future office-document utilities.
+// Package poi provides internal office-document utilities.
 //
-// This package intentionally contains no runtime API yet. When implemented, it
-// should own Excel, Word, and other office-document read/write capabilities
-// instead of placing them in generic file helpers.
+// It currently focuses on lightweight Excel XLSX helpers: listing sheets,
+// reading rows, and writing rows or multiple sheets. The public vpoi facade
+// exposes these APIs while this package owns the concrete implementation.
 package poi
