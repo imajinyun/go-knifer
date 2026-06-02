@@ -2,8 +2,6 @@ package codec
 
 import "testing"
 
-// Tests cover the utility toolkit-core Base64Test, HexUtilTest, and URLUtilTest.
-
 func TestBase64(t *testing.T) {
 	src := "Hello, 世界"
 	enc := Base64EncodeStr(src)
@@ -35,16 +33,5 @@ func TestHex(t *testing.T) {
 	got, err := HexDecodeStr("4142")
 	if err != nil || got != "AB" {
 		t.Fatalf("HexDecode: %v %q", err, got)
-	}
-}
-
-func TestURLEncodeDecode(t *testing.T) {
-	enc := URLEncode("a b&c=d")
-	if enc != "a+b%26c%3Dd" {
-		t.Fatalf("URLEncode: %q", enc)
-	}
-	dec, err := URLDecode(enc)
-	if err != nil || dec != "a b&c=d" {
-		t.Fatalf("URLDecode: %v %q", err, dec)
 	}
 }

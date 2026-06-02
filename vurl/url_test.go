@@ -11,6 +11,11 @@ func TestFacadeQueryAndNormalize(t *testing.T) {
 	if got := vurl.Normalize("example.com/a b", true, false); got != "http://example.com/a%20b" {
 		t.Fatalf("Normalize: %q", got)
 	}
+	encoded := vurl.URLEncode("a b+c/中文")
+	decoded, err := vurl.URLDecode(encoded)
+	if err != nil || decoded != "a b+c/中文" {
+		t.Fatalf("URL query roundtrip = %q, %v", decoded, err)
+	}
 	query := vurl.BuildQuery(map[string]any{"a": "1", "b": "x y"})
 	if !strings.Contains(query, "a=1") || !strings.Contains(query, "b=x+y") {
 		t.Fatalf("BuildQuery: %q", query)

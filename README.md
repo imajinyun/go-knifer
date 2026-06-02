@@ -46,8 +46,8 @@ The project follows an “internal implementation + public facade” layout: `in
 | `vconv` | `github.com/imajinyun/go-knifer/vconv` | Permissive type conversion: string, int, int64, float64, bool, bytes, and default-value variants. |
 | `vdate` | `github.com/imajinyun/go-knifer/vdate` | Date/time helpers: common layouts, parse/format, begin/end of day/month/year, offsets, and comparisons. |
 | `vfile` | `github.com/imajinyun/go-knifer/vfile` | File and IO helpers: read/write/copy, lines, mkdir/touch/delete, filename helpers, and quiet close. |
-| `vcodec` | `github.com/imajinyun/go-knifer/vcodec` | Encoding helpers: Base64, URL-safe Base64, Hex, and URL query escaping. |
-| `vurl` | `github.com/imajinyun/go-knifer/vurl` | URL and URI helpers: parse, normalize, resolve relative URLs, query encode/decode, Data URI building, scheme checks, and file URL conversion. |
+| `vcodec` | `github.com/imajinyun/go-knifer/vcodec` | Encoding helpers: Base64, URL-safe Base64, and Hex. |
+| `vurl` | `github.com/imajinyun/go-knifer/vurl` | URL and URI helpers: parse, normalize, resolve relative URLs, query encode/decode, URL encode/decode, Data URI building, scheme checks, and file URL conversion. |
 | `vnet` | `github.com/imajinyun/go-knifer/vnet` | Network helpers: IPv4/IPv6 conversion, CIDR/range/mask utilities, local ports, host/interface/MAC lookup, URL percent encoding, TLS config, and multipart form helpers. |
 | `vobj` | `github.com/imajinyun/go-knifer/vobj` | Object helpers: nil/empty checks, equality, defaults, clone/serialization, comparison, type inspection, and container utilities. |
 | `vser` | `github.com/imajinyun/go-knifer/vser` | Serialization helpers: gob encode/decode, typed deserialization, deep clone, type registration, and optional decoded-type validation. |
@@ -112,8 +112,8 @@ Domain boundary rules:
   Resty-based chainable client facade.
 - `vdb` owns SQL database helpers on top of `database/sql`; callers keep control
   of drivers and connection pools through `*sql.DB` and per-call options.
-- `vcodec` owns encoding/decoding algorithms such as Base64, Hex, and query
-  escaping; `vurl` owns URL/URI parsing, normalization, resource, and scheme
+- `vcodec` owns encoding/decoding algorithms such as Base64 and Hex; `vurl`
+  owns URL escaping, URL/URI parsing, normalization, resource, and scheme
   semantics.
 - `vjson` owns JSON objects, arrays, paths, and lightweight XML adapters;
   `vxml` owns XML parsing, tree navigation, formatting, namespace handling, and

@@ -63,12 +63,16 @@ func Complete(baseURL, relativePath string) (string, error) {
 }
 
 // Encode escapes a string for URL query components.
-// Direct query escaping convenience is also available via vcodec.URLEncode.
 func Encode(s string) string { return urlimpl.Encode(s) }
 
+// URLEncode escapes a string for URL query components.
+func URLEncode(s string) string { return urlimpl.URLEncode(s) }
+
 // Decode unescapes a URL query component and converts plus signs to spaces.
-// Direct query unescaping convenience is also available via vcodec.URLDecode.
 func Decode(s string) (string, error) { return urlimpl.Decode(s) }
+
+// URLDecode unescapes a URL query component and converts plus signs to spaces.
+func URLDecode(s string) (string, error) { return urlimpl.URLDecode(s) }
 
 // DecodePlus unescapes percent-encoded text and controls whether plus signs become spaces.
 func DecodePlus(s string, plusToSpace bool) (string, error) {

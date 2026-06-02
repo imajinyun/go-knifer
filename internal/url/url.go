@@ -146,8 +146,14 @@ func Complete(baseURL, relativePath string) (string, error) {
 // Encode escapes a string for URL query components.
 func Encode(s string) string { return neturl.QueryEscape(s) }
 
+// URLEncode escapes a string for URL query components.
+func URLEncode(s string) string { return Encode(s) }
+
 // Decode unescapes a URL query component and converts plus signs to spaces.
 func Decode(s string) (string, error) { return DecodePlus(s, true) }
+
+// URLDecode unescapes a URL query component and converts plus signs to spaces.
+func URLDecode(s string) (string, error) { return Decode(s) }
 
 // DecodePlus unescapes percent-encoded text and controls whether plus signs become spaces.
 func DecodePlus(s string, plusToSpace bool) (string, error) {

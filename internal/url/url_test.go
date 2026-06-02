@@ -33,6 +33,14 @@ func TestNormalizeAndComplete(t *testing.T) {
 }
 
 func TestQueryHelpers(t *testing.T) {
+	queryPart := URLEncode("a b&c=d")
+	if queryPart != "a+b%26c%3Dd" {
+		t.Fatalf("URLEncode: %q", queryPart)
+	}
+	decoded, err := URLDecode(queryPart)
+	if err != nil || decoded != "a b&c=d" {
+		t.Fatalf("URLDecode: %v %q", err, decoded)
+	}
 	encoded := BuildQuery(map[string]any{"a": "1", "b": "x y", "": "skip"})
 	if !strings.Contains(encoded, "a=1") || !strings.Contains(encoded, "b=x+y") || strings.Contains(encoded, "skip") {
 		t.Fatalf("BuildQuery: %q", encoded)
