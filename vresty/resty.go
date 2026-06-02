@@ -184,15 +184,6 @@ func CloseCookie() { restyimpl.CloseCookie() }
 // BuildBasicAuth builds a Basic authorization value.
 func BuildBasicAuth(user, pass string) string { return restyimpl.BuildBasicAuth(user, pass) }
 
-// ToParams converts a map to query parameters.
-func ToParams(m map[string]any) string { return restyimpl.ToParams(m) }
-
-// IsHTTPS reports whether u uses HTTPS.
-func IsHTTPS(u string) bool { return restyimpl.IsHTTPS(u) }
-
-// IsHTTP reports whether u uses HTTP.
-func IsHTTP(u string) bool { return restyimpl.IsHTTP(u) }
-
 // BuildContentType builds a Content-Type string with charset.
 func BuildContentType(contentType, charset string) string {
 	return restyimpl.BuildContentType(contentType, charset)

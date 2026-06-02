@@ -164,16 +164,6 @@ func IsRedirected(status int) bool {
 	return httpx.IsRedirected(status)
 }
 
-// IsHTTPS delegates to the internal httpx implementation.
-func IsHTTPS(u string) bool {
-	return httpx.IsHTTPS(u)
-}
-
-// IsHTTP delegates to the internal httpx implementation.
-func IsHTTP(u string) bool {
-	return httpx.IsHTTP(u)
-}
-
 // CreateRequest delegates to the internal httpx implementation.
 func CreateRequest(method Method, rawURL string, opts ...RequestOption) *Request {
 	return httpx.NewRequest(method, rawURL, opts...)
@@ -212,26 +202,6 @@ func DownloadString(rawURL, customCharset string) string {
 // DownloadBytes delegates to the internal httpx implementation.
 func DownloadBytes(rawURL string) []byte {
 	return httpx.DownloadBytes(rawURL)
-}
-
-// EncodeParams delegates to the internal httpx implementation.
-func EncodeParams(rawURL string) string {
-	return httpx.EncodeParams(rawURL)
-}
-
-// DecodeParamMap delegates to the internal httpx implementation.
-func DecodeParamMap(paramsStr string) map[string]string {
-	return httpx.DecodeParamMap(paramsStr)
-}
-
-// DecodeParams delegates to the internal httpx implementation.
-func DecodeParams(paramsStr string) map[string][]string {
-	return httpx.DecodeParams(paramsStr)
-}
-
-// URLWithForm delegates to the internal httpx implementation.
-func URLWithForm(rawURL string, form map[string]any) string {
-	return httpx.URLWithForm(rawURL, form)
 }
 
 // GetCharsetFromContentType delegates to the internal httpx implementation.

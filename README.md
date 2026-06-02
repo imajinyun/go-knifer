@@ -108,7 +108,9 @@ Domain boundary rules:
   bloom filters); `vcrypto` owns all security-oriented digests (MD5/SHA family),
   HMAC, encryption, and key/PEM operations.
 - `vhttp` is the lightweight standard-library HTTP facade; `vresty` is the
-  Resty-based chainable client facade.
+  Resty-based chainable client facade. Neither re-exports URL helpers: URL
+  escaping, query building/parsing, and scheme checks (`IsHTTP`/`IsHTTPS`,
+  `EncodeQueryMap`, `DecodeQuery`, etc.) live solely in `vurl`.
 - `vdb` owns SQL database helpers on top of `database/sql`; callers keep control
   of drivers and connection pools through `*sql.DB` and per-call options.
 - `vcodec` owns encoding/decoding algorithms such as Base64 and Hex; `vurl`

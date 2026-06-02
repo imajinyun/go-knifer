@@ -172,9 +172,6 @@ func CloneGlobalHeaders() http.Header { return httpx.CloneGlobalHeaders() }
 // BuildBasicAuth builds a Basic authorization value.
 func BuildBasicAuth(user, pass string) string { return httpx.BuildBasicAuth(user, pass) }
 
-// ToParams converts a map to query parameters.
-func ToParams(m map[string]any) string { return httpx.ToParams(m) }
-
 // ParseUserAgent parses a User-Agent string.
 func ParseUserAgent(ua string) *UserAgent { return httpx.ParseUserAgent(ua) }
 

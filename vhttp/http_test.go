@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/imajinyun/go-knifer/vhttp"
+	"github.com/imajinyun/go-knifer/vurl"
 )
 
 func TestFacadeUsesNamesWithoutHTTPPrefix(t *testing.T) {
@@ -76,8 +77,8 @@ func TestFacadeHelperNamesWithoutHTTPPrefix(t *testing.T) {
 	if got := vhttp.BuildBasicAuth("aladdin", "opensesame"); got != "Basic YWxhZGRpbjpvcGVuc2VzYW1l" {
 		t.Fatalf("BuildBasicAuth() = %q", got)
 	}
-	if got := vhttp.ToParams(map[string]any{"q": "go", "page": 1}); !strings.Contains(got, "q=go") || !strings.Contains(got, "page=1") {
-		t.Fatalf("ToParams() = %q", got)
+	if got := vurl.EncodeQueryMap(map[string]any{"q": "go", "page": 1}); !strings.Contains(got, "q=go") || !strings.Contains(got, "page=1") {
+		t.Fatalf("EncodeQueryMap() = %q", got)
 	}
 }
 

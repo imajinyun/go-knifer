@@ -8,7 +8,6 @@ import (
 	"mime/multipart"
 	stdnet "net"
 	"net/http"
-	"net/url"
 	"time"
 
 	netimpl "github.com/imajinyun/go-knifer/internal/net"
@@ -192,6 +191,3 @@ func UploadFileSize(file *multipart.FileHeader) int64  { return netimpl.UploadFi
 func UploadFileContentType(file *multipart.FileHeader) string {
 	return netimpl.UploadFileContentType(file)
 }
-
-// URLValues creates a URL query value map.
-func URLValues() url.Values { return url.Values{} }
