@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// UserInfo 对应 hutool UserInfo，代表当前登录用户信息。
+// UserInfo describes current logged-in user information.
 type UserInfo struct {
 	Name       string
 	HomeDir    string
@@ -17,7 +17,7 @@ type UserInfo struct {
 	Country    string
 }
 
-// NewUserInfo 构造当前用户信息。
+// NewUserInfo creates current user information.
 func NewUserInfo() *UserInfo {
 	u := &UserInfo{}
 
@@ -46,25 +46,25 @@ func NewUserInfo() *UserInfo {
 	return u
 }
 
-// GetName 取得用户名。
+// GetName returns the user name.
 func (u *UserInfo) GetName() string { return u.Name }
 
-// GetHomeDir 取得 home 目录。
+// GetHomeDir returns the home directory.
 func (u *UserInfo) GetHomeDir() string { return u.HomeDir }
 
-// GetCurrentDir 取得当前工作目录。
+// GetCurrentDir returns the current working directory.
 func (u *UserInfo) GetCurrentDir() string { return u.CurrentDir }
 
-// GetTempDir 取得临时目录。
+// GetTempDir returns the temporary directory.
 func (u *UserInfo) GetTempDir() string { return u.TempDir }
 
-// GetLanguage 取得语言（如 zh）。
+// GetLanguage returns the language, such as zh.
 func (u *UserInfo) GetLanguage() string { return u.Language }
 
-// GetCountry 取得国家/区域（如 CN）。
+// GetCountry returns the country or region, such as CN.
 func (u *UserInfo) GetCountry() string { return u.Country }
 
-// String 实现 fmt.Stringer。
+// String implements fmt.Stringer.
 func (u *UserInfo) String() string {
 	var b strings.Builder
 	appendLine(&b, "User Name:        ", u.Name)
@@ -76,7 +76,7 @@ func (u *UserInfo) String() string {
 	return b.String()
 }
 
-// fixPath 路径末尾追加分隔符。
+// fixPath appends a trailing path separator.
 func fixPath(p string) string {
 	if p == "" {
 		return p
@@ -84,7 +84,7 @@ func fixPath(p string) string {
 	return addSuffixIfNot(p, string(filepath.Separator))
 }
 
-// parseLocale 解析形如 "zh_CN.UTF-8" 的 LANG 字符串，返回语言与国家。
+// parseLocale parses a LANG string such as "zh_CN.UTF-8" and returns language and country.
 func parseLocale(locale string) (lang, country string) {
 	if locale == "" {
 		return "", ""

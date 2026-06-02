@@ -2,18 +2,18 @@ package socket
 
 import "bytes"
 
-// MsgDecoder is aligned with hutool MsgDecoder and decodes business objects from the read buffer.
+// MsgDecoder is aligned with the utility toolkit MsgDecoder and decodes business objects from the read buffer.
 // The boolean return value indicates whether a complete message was decoded.
 type MsgDecoder[T any] interface {
 	Decode(session *AioSession, readBuffer *bytes.Buffer) (T, bool)
 }
 
-// MsgEncoder is aligned with hutool MsgEncoder and encodes business objects into the write buffer.
+// MsgEncoder is aligned with the utility toolkit MsgEncoder and encodes business objects into the write buffer.
 type MsgEncoder[T any] interface {
 	Encode(session *AioSession, writeBuffer *bytes.Buffer, data T)
 }
 
-// Protocol is aligned with hutool Protocol and combines MsgEncoder with MsgDecoder.
+// Protocol is aligned with the utility toolkit Protocol and combines MsgEncoder with MsgDecoder.
 type Protocol[T any] interface {
 	MsgEncoder[T]
 	MsgDecoder[T]

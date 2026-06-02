@@ -2,7 +2,7 @@ package cron
 
 import "sync"
 
-// listenerManager is aligned with hutool TaskListenerManager.
+// listenerManager is aligned with the utility toolkit TaskListenerManager.
 type listenerManager struct {
 	mu        sync.RWMutex
 	listeners []TaskListener

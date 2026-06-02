@@ -2,7 +2,7 @@ package jwt
 
 import "testing"
 
-// 对应 hutool-jwt JWTUtilTest（简化）。
+// 对应 the utility toolkit-jwt JWTUtilTest（简化）。
 
 func TestUtil_CreateAndVerify(t *testing.T) {
 	key := []byte("1234567890")

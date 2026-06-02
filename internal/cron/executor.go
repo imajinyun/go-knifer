@@ -4,7 +4,7 @@ import (
 	"sync"
 )
 
-// TaskExecutor is aligned with hutool TaskExecutor and executes a single CronTask.
+// TaskExecutor is aligned with the utility toolkit TaskExecutor and executes a single CronTask.
 type TaskExecutor struct {
 	scheduler *Scheduler
 	task      *CronTask
@@ -29,7 +29,7 @@ func (e *TaskExecutor) run() {
 	e.scheduler.listenerMgr.notifySucceeded(e)
 }
 
-// taskExecutorManager is aligned with hutool TaskExecutorManager.
+// taskExecutorManager is aligned with the utility toolkit TaskExecutorManager.
 type taskExecutorManager struct {
 	scheduler *Scheduler
 	mu        sync.Mutex
@@ -62,7 +62,7 @@ func (m *taskExecutorManager) completed(e *TaskExecutor) {
 	}
 }
 
-// taskLauncher is aligned with hutool TaskLauncher; one launcher is submitted per firing instant.
+// taskLauncher is aligned with the utility toolkit TaskLauncher; one launcher is submitted per firing instant.
 type taskLauncher struct {
 	scheduler *Scheduler
 	millis    int64
@@ -73,7 +73,7 @@ func (l *taskLauncher) run() {
 	l.scheduler.taskTable.executeIfMatch(l.scheduler, l.millis)
 }
 
-// taskLauncherManager is aligned with hutool TaskLauncherManager.
+// taskLauncherManager is aligned with the utility toolkit TaskLauncherManager.
 type taskLauncherManager struct {
 	scheduler *Scheduler
 	mu        sync.Mutex

@@ -2,7 +2,7 @@ package log
 
 import "sync"
 
-// LogFactory 对应 hutool LogFactory，提供根据名称获取 Log 实例的能力。
+// LogFactory 对应 the utility toolkit LogFactory，提供根据名称获取 Log 实例的能力。
 //
 // 通过 SetFactory 可全局替换实现，默认返回 ConsoleLog。
 type LogFactory interface {

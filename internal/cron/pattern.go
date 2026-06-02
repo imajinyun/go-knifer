@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// patternMatcher is aligned with hutool PatternMatcher and consists of seven field matchers.
+// patternMatcher is aligned with the utility toolkit PatternMatcher and consists of seven field matchers.
 type patternMatcher struct {
 	matchers [7]PartMatcher
 }
@@ -78,7 +78,7 @@ func (pm *patternMatcher) match(fields [7]int) bool {
 	return true
 }
 
-// Pattern is aligned with hutool CronPattern and may contain multiple | separated sub-expressions.
+// Pattern is aligned with the utility toolkit CronPattern and may contain multiple | separated sub-expressions.
 type Pattern struct {
 	raw      string
 	matchers []*patternMatcher

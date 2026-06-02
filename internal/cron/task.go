@@ -1,6 +1,6 @@
 package cron
 
-// Task is the cron task interface aligned with hutool cn.hutool.cron.task.Task.
+// Task is the cron task interface aligned with the utility toolkit cn.the utility toolkit.cron.task.Task.
 type Task interface {
 	Execute()
 }
@@ -15,7 +15,7 @@ func (f TaskFunc) Execute() {
 	}
 }
 
-// CronTask is aligned with hutool CronTask and wraps an id, Pattern, and raw Task.
+// CronTask is aligned with the utility toolkit CronTask and wraps an id, Pattern, and raw Task.
 type CronTask struct {
 	id      string
 	pattern *Pattern

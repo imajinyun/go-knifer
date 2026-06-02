@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// Scheduler is aligned with hutool Scheduler and is the core scheduler of gkcron.
+// Scheduler is aligned with the utility toolkit Scheduler and is the core scheduler of gkcron.
 type Scheduler struct {
 	mu          sync.Mutex
 	config      *Config

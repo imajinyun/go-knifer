@@ -1,7 +1,9 @@
 package vhttp
 
 import (
+	"crypto/tls"
 	"io"
+	"io/fs"
 	"net/http"
 	"time"
 
@@ -16,6 +18,9 @@ type RequestOption = httpx.RequestOption
 
 // Response wraps an HTTP response.
 type Response = httpx.HTTPResponse
+
+// SaveOption customizes response file saving.
+type SaveOption = httpx.SaveOption
 
 // Method represents an HTTP method.
 type Method = httpx.Method
@@ -93,6 +98,9 @@ func WithMaxRedirects(n int) RequestOption { return httpx.WithMaxRedirects(n) }
 // WithSkipTLSVerify sets per-request TLS verification behavior.
 func WithSkipTLSVerify(b bool) RequestOption { return httpx.WithSkipTLSVerify(b) }
 
+// WithTLSConfig sets a per-request TLS config.
+func WithTLSConfig(cfg *tls.Config) RequestOption { return httpx.WithTLSConfig(cfg) }
+
 // WithTransport sets a per-request RoundTripper.
 func WithTransport(t http.RoundTripper) RequestOption { return httpx.WithTransport(t) }
 
@@ -104,6 +112,27 @@ func WithCookieJar(jar http.CookieJar) RequestOption { return httpx.WithCookieJa
 
 // WithUserAgent sets a per-request User-Agent.
 func WithUserAgent(ua string) RequestOption { return httpx.WithUserAgent(ua) }
+
+// WithContentType sets a per-request Content-Type at construction time.
+func WithContentType(ct string) RequestOption { return httpx.WithContentType(ct) }
+
+// WithCharset sets a per-request charset at construction time.
+func WithCharset(charset string) RequestOption { return httpx.WithCharset(charset) }
+
+// WithSaveFilePerm sets the file permission used when creating the destination file.
+func WithSaveFilePerm(perm fs.FileMode) SaveOption { return httpx.WithSaveFilePerm(perm) }
+
+// WithSaveDirPerm sets the directory permission used when creating parent directories.
+func WithSaveDirPerm(perm fs.FileMode) SaveOption { return httpx.WithSaveDirPerm(perm) }
+
+// WithSaveOverwrite controls whether an existing destination file may be replaced.
+func WithSaveOverwrite(overwrite bool) SaveOption { return httpx.WithSaveOverwrite(overwrite) }
+
+// WithSaveCreateParents controls whether parent directories are created automatically.
+func WithSaveCreateParents(create bool) SaveOption { return httpx.WithSaveCreateParents(create) }
+
+// WithSaveDefaultFilename sets the fallback file name used when dest is a directory.
+func WithSaveDefaultFilename(name string) SaveOption { return httpx.WithSaveDefaultFilename(name) }
 
 // GetString sends a GET request and returns response body as string.
 func GetString(rawURL string) string { return httpx.GetString(rawURL) }
@@ -118,7 +147,9 @@ func PostJSON(rawURL, jsonStr string) string { return httpx.PostJSON(rawURL, jso
 func Download(rawURL string, w io.Writer) (int64, error) { return httpx.Download(rawURL, w) }
 
 // DownloadFile downloads rawURL to dest.
-func DownloadFile(rawURL, dest string) (int64, error) { return httpx.DownloadFile(rawURL, dest) }
+func DownloadFile(rawURL, dest string, opts ...SaveOption) (int64, error) {
+	return httpx.DownloadFile(rawURL, dest, opts...)
+}
 
 // SetGlobalTimeout sets the global HTTP timeout.
 func SetGlobalTimeout(d time.Duration) { httpx.SetGlobalTimeout(d) }

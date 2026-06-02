@@ -2,7 +2,7 @@ package cron
 
 import "sync"
 
-// TaskTable is aligned with hutool TaskTable and stores tasks in insertion order.
+// TaskTable is aligned with the utility toolkit TaskTable and stores tasks in insertion order.
 type TaskTable struct {
 	mu       sync.RWMutex
 	ids      []string

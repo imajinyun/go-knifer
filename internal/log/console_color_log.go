@@ -60,7 +60,7 @@ func getColorFactory() ColorFactory {
 	return colorFactory
 }
 
-// ConsoleColorLog 对应 hutool 的 ConsoleColorLog，使用 ANSI 颜色打印日志。
+// ConsoleColorLog 对应 the utility ConsoleColorLog，使用 ANSI 颜色打印日志。
 type ConsoleColorLog struct {
 	*ConsoleLog
 }

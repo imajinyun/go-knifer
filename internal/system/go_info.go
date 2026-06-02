@@ -1,14 +1,16 @@
 package system
 
 import (
+	"os"
+	"os/exec"
 	"runtime"
 	"strings"
 )
 
-// GoInfo 对应 hutool 中的 JavaInfo / JavaSpecInfo / JavaRuntimeInfo / JvmInfo / JvmSpecInfo。
-// 由于 Go 没有 JVM 概念，这里聚合 Go 运行时与编译信息。
+// GoInfo describes Go runtime and compilation metadata.
+// It aggregates the metadata that would otherwise be split across Java/JVM info types.
 type GoInfo struct {
-	Version     string // 例如 go1.22.3
+	Version     string // For example, go1.22.3.
 	Compiler    string // gc / gccgo
 	GOROOT      string
 	GOOS        string
@@ -17,12 +19,12 @@ type GoInfo struct {
 	NumCgoCalls int64
 }
 
-// NewGoInfo 构造 GoInfo。
+// NewGoInfo creates GoInfo.
 func NewGoInfo() *GoInfo {
 	return &GoInfo{
 		Version:     runtime.Version(),
 		Compiler:    runtime.Compiler,
-		GOROOT:      runtime.GOROOT(),
+		GOROOT:      goRoot(),
 		GOOS:        runtime.GOOS,
 		GOARCH:      runtime.GOARCH,
 		NumCPU:      runtime.NumCPU(),
@@ -30,25 +32,25 @@ func NewGoInfo() *GoInfo {
 	}
 }
 
-// GetVersion 取得 Go 版本。
+// GetVersion returns the Go version.
 func (g *GoInfo) GetVersion() string { return g.Version }
 
-// GetCompiler 取得编译器名称。
+// GetCompiler returns the compiler name.
 func (g *GoInfo) GetCompiler() string { return g.Compiler }
 
-// GetGOROOT 取得 GOROOT 路径。
+// GetGOROOT returns the GOROOT path.
 func (g *GoInfo) GetGOROOT() string { return g.GOROOT }
 
-// GetGOOS 取得目标 OS。
+// GetGOOS returns the target OS.
 func (g *GoInfo) GetGOOS() string { return g.GOOS }
 
-// GetGOARCH 取得目标架构。
+// GetGOARCH returns the target architecture.
 func (g *GoInfo) GetGOARCH() string { return g.GOARCH }
 
-// GetNumCPU 取得可用 CPU 数。
+// GetNumCPU returns the number of available CPUs.
 func (g *GoInfo) GetNumCPU() int { return g.NumCPU }
 
-// String 实现 fmt.Stringer。
+// String implements fmt.Stringer.
 func (g *GoInfo) String() string {
 	var b strings.Builder
 	appendLine(&b, "Go Version:    ", g.Version)
@@ -59,4 +61,14 @@ func (g *GoInfo) String() string {
 	appendLine(&b, "NumCPU:        ", g.NumCPU)
 	appendLine(&b, "NumCgoCall:    ", g.NumCgoCalls)
 	return b.String()
+}
+
+func goRoot() string {
+	out, err := exec.Command("go", "env", "GOROOT").Output()
+	if err == nil {
+		if root := strings.TrimSpace(string(out)); root != "" {
+			return root
+		}
+	}
+	return os.Getenv("GOROOT")
 }

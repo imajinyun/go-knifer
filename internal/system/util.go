@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-// appendLine 与 hutool SystemUtil.append 对应，将形如 "Caption: value\n" 写入 builder。
-// 当 value 为空字符串时，使用 [n/a] 占位。
+// appendLine writes a line in the form "Caption: value\n" to the builder.
+// It uses [n/a] as a placeholder when value is an empty string.
 func appendLine(b *strings.Builder, caption string, value any) {
 	s := toStr(value)
 	if s == "" {
@@ -17,7 +17,7 @@ func appendLine(b *strings.Builder, caption string, value any) {
 	b.WriteByte('\n')
 }
 
-// toStr 将任意值转为字符串。
+// toStr converts any value to a string.
 func toStr(v any) string {
 	switch x := v.(type) {
 	case nil:
@@ -31,7 +31,7 @@ func toStr(v any) string {
 	}
 }
 
-// readableSize 将字节数转为可读字符串，例如 "1.2 GB"。
+// readableSize converts bytes to a human-readable string, such as "1.2 GB".
 func readableSize(bytes uint64) string {
 	const unit = 1024
 	if bytes < unit {
@@ -49,7 +49,7 @@ func readableSize(bytes uint64) string {
 	return fmt.Sprintf("%.2f %s", float64(bytes)/float64(div), units[exp])
 }
 
-// addSuffixIfNot 如果 s 不以 suffix 结尾，则追加 suffix。
+// addSuffixIfNot appends suffix when s does not already end with it.
 func addSuffixIfNot(s, suffix string) string {
 	if s == "" {
 		return s

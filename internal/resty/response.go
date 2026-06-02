@@ -3,6 +3,7 @@ package resty
 import (
 	"bytes"
 	"io"
+	"io/fs"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -24,6 +25,56 @@ type Cookie struct {
 }
 
 func wrapResponse(r *grestry.Response) *HTTPResponse { return &HTTPResponse{resp: r} }
+
+type saveConfig struct {
+	filePerm        fs.FileMode
+	dirPerm         fs.FileMode
+	overwrite       bool
+	createParents   bool
+	defaultFilename string
+}
+
+// SaveOption customizes response file saving.
+type SaveOption func(*saveConfig)
+
+func defaultSaveConfig() saveConfig {
+	return saveConfig{filePerm: 0o644, dirPerm: 0o750, overwrite: true, createParents: true, defaultFilename: "download.bin"}
+}
+
+// WithSaveFilePerm sets the file permission used when creating the destination file.
+func WithSaveFilePerm(perm fs.FileMode) SaveOption { return func(c *saveConfig) { c.filePerm = perm } }
+
+// WithSaveDirPerm sets the directory permission used when creating parent directories.
+func WithSaveDirPerm(perm fs.FileMode) SaveOption { return func(c *saveConfig) { c.dirPerm = perm } }
+
+// WithSaveOverwrite controls whether an existing destination file may be replaced.
+func WithSaveOverwrite(overwrite bool) SaveOption {
+	return func(c *saveConfig) { c.overwrite = overwrite }
+}
+
+// WithSaveCreateParents controls whether parent directories are created automatically.
+func WithSaveCreateParents(create bool) SaveOption {
+	return func(c *saveConfig) { c.createParents = create }
+}
+
+// WithSaveDefaultFilename sets the fallback file name used when dest is a directory.
+func WithSaveDefaultFilename(name string) SaveOption {
+	return func(c *saveConfig) {
+		if name != "" {
+			c.defaultFilename = name
+		}
+	}
+}
+
+func applySaveOptions(opts []SaveOption) saveConfig {
+	cfg := defaultSaveConfig()
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	return cfg
+}
 
 // Err returns the error raised during execution.
 func (r *HTTPResponse) Err() error { return r.err }
@@ -111,19 +162,29 @@ func (r *HTTPResponse) WriteTo(w io.Writer) (int64, error) {
 // SaveAs saves the response body to a file and returns the number of bytes written.
 //
 // When dest is a directory, the file name is extracted from URL or Content-Disposition automatically.
-func (r *HTTPResponse) SaveAs(dest string) (n int64, err error) {
+func (r *HTTPResponse) SaveAs(dest string, opts ...SaveOption) (n int64, err error) {
 	if r.resp == nil {
 		return 0, HTTPErrorf("no response")
 	}
+	cfg := applySaveOptions(opts)
 	target := dest
 	if info, err := os.Stat(dest); err == nil && info.IsDir() {
 		fileName := r.fileName()
 		if fileName == "" {
-			fileName = "download.bin"
+			fileName = cfg.defaultFilename
 		}
 		target = filepath.Join(dest, fileName)
 	}
-	f, err := os.Create(target) // #nosec G304 -- SaveAs intentionally writes to a caller-provided destination.
+	if cfg.createParents {
+		if err := os.MkdirAll(filepath.Dir(target), cfg.dirPerm); err != nil {
+			return 0, NewHTTPError("create parent directory failed", err)
+		}
+	}
+	flag := os.O_CREATE | os.O_WRONLY | os.O_TRUNC
+	if !cfg.overwrite {
+		flag |= os.O_EXCL
+	}
+	f, err := os.OpenFile(target, flag, cfg.filePerm) // #nosec G304 -- SaveAs intentionally writes to a caller-provided destination.
 	if err != nil {
 		return 0, NewHTTPError("create file failed", err)
 	}

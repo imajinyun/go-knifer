@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// Mirrors hutool-http HttpGlobalConfigTest.
+// Covers the utility toolkit-http HttpGlobalConfigTest.
 
 func TestGlobalTimeout(t *testing.T) {
 	old := GetGlobalTimeout()

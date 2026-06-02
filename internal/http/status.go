@@ -1,6 +1,6 @@
 package http
 
-// Common HTTP status codes, aligned with hutool-http HttpStatus.
+// Common HTTP status codes, aligned with the utility toolkit-http HttpStatus.
 const (
 	StatusContinue           = 100
 	StatusSwitchingProtocols = 101

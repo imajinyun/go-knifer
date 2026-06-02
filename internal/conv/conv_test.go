@@ -2,7 +2,7 @@ package conv
 
 import "testing"
 
-// Tests aligned with hutool-core ConvertTest.
+// Tests cover the utility toolkit-core ConvertTest.
 
 func TestToString(t *testing.T) {
 	if ToString(nil) != "" {

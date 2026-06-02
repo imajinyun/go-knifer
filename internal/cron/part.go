@@ -1,6 +1,6 @@
 package cron
 
-// Part represents a cron expression field position aligned with hutool cn.hutool.cron.pattern.Part.
+// Part represents a cron expression field position aligned with the utility toolkit cn.the utility toolkit.cron.pattern.Part.
 type Part int
 
 const (

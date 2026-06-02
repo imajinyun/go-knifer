@@ -18,7 +18,9 @@ func IsHTTPS(u string) bool { return urlimpl.IsHTTPS(u) }
 func IsHTTP(u string) bool { return urlimpl.IsHTTP(u) }
 
 // CreateRequest creates a request with the specified method, aligned with HttpUtil.createRequest.
-func CreateRequest(method Method, rawURL string) *HTTPRequest { return NewRequest(method, rawURL) }
+func CreateRequest(method Method, rawURL string, opts ...RequestOption) *HTTPRequest {
+	return NewRequest(method, rawURL, opts...)
+}
 
 // CreateGet creates a GET request and sets whether redirects are followed.
 func CreateGet(rawURL string, followRedirects bool) *HTTPRequest {
@@ -70,12 +72,12 @@ func DownloadString(rawURL, customCharset string) string {
 }
 
 // DownloadFile downloads to a file, using URL or response headers for the file name when dest is a directory.
-func DownloadFile(rawURL, dest string) (int64, error) {
+func DownloadFile(rawURL, dest string, opts ...SaveOption) (int64, error) {
 	resp := Get(rawURL).Execute()
 	if resp.err != nil {
 		return 0, resp.err
 	}
-	return resp.SaveAs(dest)
+	return resp.SaveAs(dest, opts...)
 }
 
 // Download downloads to a Writer.

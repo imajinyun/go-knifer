@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// This file provides permissive conversion helpers aligned with hutool-core Convert.
+// This file provides permissive conversion helpers aligned with the utility toolkit-core Convert.
 // Failed conversions return zero values or caller-provided defaults instead of panicking.
 
 // ToString converts any value to a string; nil becomes an empty string.

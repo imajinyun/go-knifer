@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-// JWTSigner JWT 签名器接口（对应 hutool-jwt JWTSigner）。
+// JWTSigner JWT 签名器接口（对应 the utility toolkit-jwt JWTSigner）。
 type JWTSigner interface {
 	// Algorithm 返回算法 ID（如 HS256）。
 	Algorithm() string
@@ -112,7 +112,7 @@ func CreateSigner(algorithmID string, key []byte) (JWTSigner, error) {
 	return NewHMACSigner(algorithmID, key)
 }
 
-// AlgorithmName 返回 JWT 算法 ID 对应的标准算法名（hutool AlgorithmUtil.getAlgorithm）。
+// AlgorithmName 返回 JWT 算法 ID 对应的标准算法名（the utility toolkit AlgorithmUtil.getAlgorithm）。
 // 若传入未知 ID，则原样返回。
 func AlgorithmName(idOrAlgorithm string) string {
 	id := strings.ToUpper(strings.TrimSpace(idOrAlgorithm))

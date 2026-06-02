@@ -7,7 +7,7 @@ package captcha
 // bit representing the leftmost pixel.
 //
 // A built-in font avoids dependencies such as freetype or x/image. Rendering
-// differs from hutool details but fully satisfies the ICaptcha semantics.
+// differs from the utility toolkit details but fully satisfies the ICaptcha semantics.
 const (
 	fontWidth  = 5
 	fontHeight = 7

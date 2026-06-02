@@ -2,7 +2,7 @@ package http
 
 import "strings"
 
-// UserAgent represents parsed User-Agent information, aligned with hutool-http UserAgent.
+// UserAgent represents parsed User-Agent information, aligned with the utility toolkit-http UserAgent.
 type UserAgent struct {
 	IsMobile bool
 	Browser  string

@@ -1,12 +1,14 @@
 package file
 
 import (
+	"errors"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 )
 
-// Tests aligned with hutool-core IoUtilTest, FileUtilTest, and FileNameUtilTest.
+// Tests cover the utility toolkit-core IoUtilTest, FileUtilTest, and FileNameUtilTest.
 
 func TestReadString(t *testing.T) {
 	r := ReaderFromString("hello world")
@@ -104,6 +106,54 @@ func TestFileCopy(t *testing.T) {
 	got, _ := FileReadString(dst)
 	if got != "hello" {
 		t.Fatalf("copy content: %q", got)
+	}
+}
+
+func TestWriteOptions(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "a.txt")
+	if err := FileWriteString(path, "first", WithFilePerm(0o600)); err != nil {
+		t.Fatalf("write with options: %v", err)
+	}
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatalf("stat: %v", err)
+	}
+	if got := info.Mode().Perm(); got != 0o600 {
+		t.Fatalf("perm = %o, want 600", got)
+	}
+	if err := FileWriteString(path, "second", WithOverwrite(false)); !errors.Is(err, os.ErrExist) {
+		t.Fatalf("overwrite false error = %v, want exists", err)
+	}
+	missingParent := filepath.Join(dir, "missing", "b.txt")
+	if err := FileWriteString(missingParent, "x", WithCreateParents(false)); err == nil {
+		t.Fatal("write without parent creation should fail")
+	}
+}
+
+func TestMkdirAndCopyOptions(t *testing.T) {
+	dir := t.TempDir()
+	sub := filepath.Join(dir, "private")
+	if err := Mkdir(sub, WithMkdirPerm(0o700)); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	info, err := os.Stat(sub)
+	if err != nil {
+		t.Fatalf("stat: %v", err)
+	}
+	if got := info.Mode().Perm(); got != 0o700 {
+		t.Fatalf("dir perm = %o, want 700", got)
+	}
+	src := filepath.Join(dir, "src.txt")
+	dst := filepath.Join(dir, "dst.txt")
+	if err := FileWriteString(src, "src"); err != nil {
+		t.Fatalf("write src: %v", err)
+	}
+	if err := FileWriteString(dst, "dst"); err != nil {
+		t.Fatalf("write dst: %v", err)
+	}
+	if err := FileCopy(src, dst, WithOverwrite(false)); !errors.Is(err, os.ErrExist) {
+		t.Fatalf("copy overwrite false error = %v, want exists", err)
 	}
 }
 

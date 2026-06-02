@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// renderLogMessage supports Hutool-style "{}" placeholders.
+// renderLogMessage supports brace-style "{}" placeholders.
 // When template contains "{}", arguments are replaced positionally;
 // otherwise it falls back to fmt.Sprintf.
 //

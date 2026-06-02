@@ -1,6 +1,6 @@
 package http
 
-// Method represents an HTTP request method, aligned with hutool-http Method.
+// Method represents an HTTP request method, aligned with the utility toolkit-http Method.
 type Method string
 
 const (

@@ -1,4 +1,4 @@
-// Package log 对应 hutool-log，提供统一的日志接口与默认控制台实现。
+// Package log 对应 the utility toolkit-log，提供统一的日志接口与默认控制台实现。
 //
 // 主要类型：
 //   - Level：日志级别（Trace/Debug/Info/Warn/Error/Fatal/All/Off）。

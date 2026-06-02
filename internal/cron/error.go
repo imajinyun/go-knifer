@@ -2,7 +2,7 @@ package cron
 
 import "fmt"
 
-// CronError is aligned with hutool CronException and represents cron-related errors.
+// CronError is aligned with the utility toolkit CronException and represents cron-related errors.
 type CronError struct {
 	Msg   string
 	Cause error

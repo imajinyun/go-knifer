@@ -15,7 +15,7 @@ import (
 
 var defaultTransport = http.DefaultTransport.(*http.Transport).Clone()
 
-// HTTPRequest is a chainable HTTP request builder, aligned with hutool-http HttpRequest.
+// HTTPRequest is a chainable HTTP request builder, aligned with the utility toolkit-http HttpRequest.
 type HTTPRequest struct {
 	method       Method
 	rawURL       string
@@ -34,6 +34,7 @@ type HTTPRequest struct {
 	followRedir  *bool
 	maxRedirects int
 	tlsSkip      bool
+	tlsConfig    *tls.Config
 	userAgent    string
 	transport    http.RoundTripper
 	basicUser    string
@@ -133,6 +134,9 @@ func WithMaxRedirects(n int) RequestOption { return func(r *HTTPRequest) { r.Max
 // WithSkipTLSVerify sets per-request TLS verification behavior.
 func WithSkipTLSVerify(b bool) RequestOption { return func(r *HTTPRequest) { r.SkipTLSVerify(b) } }
 
+// WithTLSConfig sets a per-request TLS config. It is ignored when a custom client or transport is set.
+func WithTLSConfig(cfg *tls.Config) RequestOption { return func(r *HTTPRequest) { r.TLSConfig(cfg) } }
+
 // WithTransport sets a per-request RoundTripper.
 func WithTransport(t http.RoundTripper) RequestOption { return func(r *HTTPRequest) { r.Transport(t) } }
 
@@ -151,6 +155,12 @@ func WithUserAgent(ua string) RequestOption {
 		r.headers.Set(string(HeaderUserAgent), ua)
 	}
 }
+
+// WithContentType sets a per-request Content-Type at construction time.
+func WithContentType(ct string) RequestOption { return func(r *HTTPRequest) { r.ContentType(ct) } }
+
+// WithCharset sets a per-request charset at construction time.
+func WithCharset(charset string) RequestOption { return func(r *HTTPRequest) { r.Charset(charset) } }
 
 // Method sets the HTTP method.
 func (r *HTTPRequest) Method(m Method) *HTTPRequest { r.method = m; return r }
@@ -213,6 +223,9 @@ func (r *HTTPRequest) MaxRedirects(n int) *HTTPRequest { r.maxRedirects = n; ret
 
 // SkipTLSVerify skips TLS certificate verification.
 func (r *HTTPRequest) SkipTLSVerify(b bool) *HTTPRequest { r.tlsSkip = b; return r }
+
+// TLSConfig sets a custom TLS config for the generated HTTP transport.
+func (r *HTTPRequest) TLSConfig(cfg *tls.Config) *HTTPRequest { r.tlsConfig = cfg; return r }
 
 // Transport sets a custom RoundTripper.
 func (r *HTTPRequest) Transport(t http.RoundTripper) *HTTPRequest { r.transport = t; return r }
@@ -385,9 +398,16 @@ func (r *HTTPRequest) buildClient() *http.Client {
 	}
 	transport := r.transport
 	if transport == nil {
-		if r.tlsSkip {
+		if r.tlsSkip || r.tlsConfig != nil {
 			t := defaultTransport.Clone()
-			t.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+			if r.tlsConfig != nil {
+				t.TLSClientConfig = r.tlsConfig.Clone()
+			} else {
+				t.TLSClientConfig = &tls.Config{}
+			}
+			if r.tlsSkip {
+				t.TLSClientConfig.InsecureSkipVerify = true
+			}
 			transport = t
 		} else {
 			transport = defaultTransport

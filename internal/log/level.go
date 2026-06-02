@@ -1,6 +1,6 @@
 package log
 
-// Level 日志等级，对应 hutool log.level.Level。
+// Level 日志等级，对应 the utility toolkit log.level.Level。
 // 数值越小越详细：All < Trace < Debug < Info < Warn < Error < Fatal < Off。
 type Level int
 

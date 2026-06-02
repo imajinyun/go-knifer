@@ -2,14 +2,14 @@ package jwt
 
 import "time"
 
-// 对应 hutool-jwt JWTValidator。
+// 对应 the utility toolkit-jwt JWTValidator。
 
 // JWTValidator JWT 数据校验器，用于：
 //   - 算法是否一致
 //   - 算法签名是否正确
 //   - 字段值是否有效（例如时间未过期等）
 //
-// 使用方式与 hutool 类似的链式 API：
+// 使用方式与 the utility toolkit 类似的链式 API：
 //
 //	err := gkjwt.OfValidator(token).
 //	    ValidateAlgorithm(signer).

@@ -5,13 +5,13 @@ import (
 	"strings"
 )
 
-// HostInfo 对应 hutool HostInfo，代表当前主机的信息。
+// HostInfo describes current host information.
 type HostInfo struct {
 	Name    string
 	Address string
 }
 
-// NewHostInfo 收集当前主机信息。
+// NewHostInfo collects current host information.
 func NewHostInfo() *HostInfo {
 	h := &HostInfo{}
 	if hostname, err := osHostname(); err == nil {
@@ -21,13 +21,13 @@ func NewHostInfo() *HostInfo {
 	return h
 }
 
-// GetName 取得主机名。
+// GetName returns the host name.
 func (h *HostInfo) GetName() string { return h.Name }
 
-// GetAddress 取得主机 IP 地址。
+// GetAddress returns the host IP address.
 func (h *HostInfo) GetAddress() string { return h.Address }
 
-// String 实现 fmt.Stringer。
+// String implements fmt.Stringer.
 func (h *HostInfo) String() string {
 	var b strings.Builder
 	appendLine(&b, "Host Name:    ", h.Name)
@@ -35,7 +35,7 @@ func (h *HostInfo) String() string {
 	return b.String()
 }
 
-// firstNonLoopbackIPv4 返回第一个非回环的 IPv4 地址。
+// firstNonLoopbackIPv4 returns the first non-loopback IPv4 address.
 func firstNonLoopbackIPv4() string {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {

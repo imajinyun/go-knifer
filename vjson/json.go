@@ -11,6 +11,9 @@ type Array = jsonx.JSONArray
 // Config controls JSON serialization behavior.
 type Config = jsonx.Config
 
+// EncodeOption customizes JSON serialization helpers.
+type EncodeOption = jsonx.EncodeOption
+
 // Error is the JSON module error type.
 type Error = jsonx.JSONError
 
@@ -36,6 +39,18 @@ func NewArrayWithConfig(cfg *Config) *Array {
 // NewConfig creates a default JSON config.
 func NewConfig() *Config { return jsonx.NewConfig() }
 
+// WithConfig sets the JSON config used by serialization helpers.
+func WithConfig(cfg *Config) EncodeOption { return jsonx.WithConfig(cfg) }
+
+// WithIndent sets the indentation width. Use 0 for compact output.
+func WithIndent(indent int) EncodeOption { return jsonx.WithIndent(indent) }
+
+// WithIgnoreNullValue controls whether null values are ignored during serialization.
+func WithIgnoreNullValue(ignore bool) EncodeOption { return jsonx.WithIgnoreNullValue(ignore) }
+
+// WithDateFormat sets the time layout used for time.Time values.
+func WithDateFormat(layout string) EncodeOption { return jsonx.WithDateFormat(layout) }
+
 // IsNull reports whether v is nil or JSON null.
 func IsNull(v any) bool { return jsonx.IsNull(v) }
 
@@ -49,14 +64,24 @@ func ParseObj(src any) (*Object, error) { return jsonx.ParseObj(src) }
 func ParseArray(src any) (*Array, error) { return jsonx.ParseArray(src) }
 
 // ToStr serializes v to compact JSON.
-func ToStr(v any) (string, error) { return jsonx.ToJSONStr(v) }
+func ToStr(v any, opts ...EncodeOption) (string, error) { return jsonx.ToJSONStr(v, opts...) }
 
 // ToPrettyStr serializes v to pretty JSON with 4-space indentation.
-func ToPrettyStr(v any) (string, error) { return jsonx.ToJSONPrettyStr(v) }
+func ToPrettyStr(v any, opts ...EncodeOption) (string, error) {
+	return jsonx.ToJSONPrettyStr(v, opts...)
+}
 
 // ToStrIndent serializes v to pretty JSON with custom indentation.
-func ToStrIndent(v any, indent int) (string, error) {
-	return jsonx.ToJSONStrIndent(v, indent)
+func ToStrIndent(v any, indent int, opts ...EncodeOption) (string, error) {
+	return jsonx.ToJSONStrIndent(v, indent, opts...)
+}
+
+// ToStrWithConfig serializes v using cfg.
+func ToStrWithConfig(v any, cfg *Config) (string, error) { return jsonx.ToJSONStrWithConfig(v, cfg) }
+
+// ToPrettyStrWithConfig serializes v using cfg and cfg.IndentFactor.
+func ToPrettyStrWithConfig(v any, cfg *Config) (string, error) {
+	return jsonx.ToJSONPrettyStrWithConfig(v, cfg)
 }
 
 // Format formats raw JSON string.

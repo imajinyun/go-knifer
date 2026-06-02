@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// Mirrors hutool-http HtmlUtilTest.
+// Covers the utility toolkit-http HtmlUtilTest.
 
 func TestHTMLEscape(t *testing.T) {
 	html := "<html><body>123'123'</body></html>"
@@ -61,7 +61,7 @@ func TestFilterHTMLTag(t *testing.T) {
 	}
 }
 
-// Mirrors HTMLFilterTest issue3433Test with a simplified removal of unsafe attributes and tags.
+// Covers HTMLFilterTest issue3433Test with a simplified removal of unsafe attributes and tags.
 func TestCleanHTMLPreservesText(t *testing.T) {
 	got := CleanHTML(`<p onclick="bbbb">a</p>`)
 	if got != "a" {

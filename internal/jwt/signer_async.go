@@ -28,7 +28,7 @@ const (
 	AlgES512 = "ES512"
 )
 
-// rsaSigner 对应 hutool AsymmetricJWTSigner（仅限 RSA / RSA-PSS）。
+// rsaSigner 对应 the utility toolkit AsymmetricJWTSigner（仅限 RSA / RSA-PSS）。
 type rsaSigner struct {
 	alg    string
 	pub    *rsa.PublicKey
@@ -130,7 +130,7 @@ func (s *rsaSigner) Verify(headerB64, payloadB64, signB64 string) bool {
 	return rsa.VerifyPKCS1v15(s.pub, s.hashID, digest, sig) == nil
 }
 
-// ecdsaSigner 对应 hutool EllipticCurveJWTSigner。
+// ecdsaSigner 对应 the utility toolkit EllipticCurveJWTSigner。
 type ecdsaSigner struct {
 	alg    string
 	priv   *ecdsa.PrivateKey

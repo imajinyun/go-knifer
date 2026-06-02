@@ -2,6 +2,7 @@ package net
 
 import (
 	"io"
+	"io/fs"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -15,6 +16,50 @@ type UploadSetting struct {
 	TmpUploadPath   string
 	FileExts        []string
 	AllowFileExts   bool
+}
+
+type uploadSaveConfig struct {
+	filePerm      fs.FileMode
+	dirPerm       fs.FileMode
+	overwrite     bool
+	createParents bool
+}
+
+// UploadSaveOption customizes uploaded-file saving.
+type UploadSaveOption func(*uploadSaveConfig)
+
+func defaultUploadSaveConfig() uploadSaveConfig {
+	return uploadSaveConfig{filePerm: 0o644, dirPerm: 0o750, overwrite: true, createParents: true}
+}
+
+// WithUploadFilePerm sets the file permission used when creating the destination file.
+func WithUploadFilePerm(perm fs.FileMode) UploadSaveOption {
+	return func(c *uploadSaveConfig) { c.filePerm = perm }
+}
+
+// WithUploadDirPerm sets the directory permission used when creating parent directories.
+func WithUploadDirPerm(perm fs.FileMode) UploadSaveOption {
+	return func(c *uploadSaveConfig) { c.dirPerm = perm }
+}
+
+// WithUploadOverwrite controls whether an existing destination file may be replaced.
+func WithUploadOverwrite(overwrite bool) UploadSaveOption {
+	return func(c *uploadSaveConfig) { c.overwrite = overwrite }
+}
+
+// WithUploadCreateParents controls whether parent directories are created automatically.
+func WithUploadCreateParents(create bool) UploadSaveOption {
+	return func(c *uploadSaveConfig) { c.createParents = create }
+}
+
+func applyUploadSaveOptions(opts []UploadSaveOption) uploadSaveConfig {
+	cfg := defaultUploadSaveConfig()
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	return cfg
 }
 
 // NewUploadSetting returns a default upload setting.
@@ -152,19 +197,26 @@ func (m *MultipartFormData) GetFileListValueMap() map[string][]*multipart.FileHe
 }
 
 // SaveUploadedFile saves file to destPath.
-func SaveUploadedFile(file *multipart.FileHeader, destPath string) error {
+func SaveUploadedFile(file *multipart.FileHeader, destPath string, opts ...UploadSaveOption) error {
 	if file == nil {
 		return nil
 	}
-	if err := os.MkdirAll(filepath.Dir(destPath), 0o750); err != nil {
-		return err
+	cfg := applyUploadSaveOptions(opts)
+	if cfg.createParents {
+		if err := os.MkdirAll(filepath.Dir(destPath), cfg.dirPerm); err != nil {
+			return err
+		}
 	}
 	src, err := file.Open()
 	if err != nil {
 		return err
 	}
 	defer func() { _ = src.Close() }()
-	dst, err := os.Create(destPath) // #nosec G304 -- caller controls destination path.
+	flag := os.O_CREATE | os.O_WRONLY | os.O_TRUNC
+	if !cfg.overwrite {
+		flag |= os.O_EXCL
+	}
+	dst, err := os.OpenFile(destPath, flag, cfg.filePerm) // #nosec G304 -- caller controls destination path.
 	if err != nil {
 		return err
 	}

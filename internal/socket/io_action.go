@@ -2,7 +2,7 @@ package socket
 
 import "bytes"
 
-// IoAction is aligned with hutool aio.IoAction.
+// IoAction is aligned with the utility AIO IoAction.
 // Implement this interface to handle socket session events.
 // T is the decoded business data type; use []byte or *bytes.Buffer directly when no decoding is needed.
 type IoAction[T any] interface {
@@ -14,7 +14,7 @@ type IoAction[T any] interface {
 	Failed(err error, session *AioSession)
 }
 
-// SimpleIoAction is aligned with hutool SimpleIoAction.
+// SimpleIoAction is aligned with the utility toolkit SimpleIoAction.
 // It provides default Accept and Failed behavior, so callers only need to implement DoAction.
 type SimpleIoAction struct {
 	OnAccept   func(session *AioSession)

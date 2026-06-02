@@ -2,7 +2,7 @@ package cron
 
 import "sync"
 
-// defaultScheduler is the package-level scheduler aligned with hutool CronUtil.scheduler.
+// defaultScheduler is the package-level scheduler aligned with the utility toolkit CronUtil.scheduler.
 var (
 	defaultMu        sync.Mutex
 	defaultScheduler = NewScheduler()

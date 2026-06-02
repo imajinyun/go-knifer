@@ -2,10 +2,10 @@ package socket
 
 import "runtime"
 
-// DefaultBufferSize is aligned with hutool IoUtil.DEFAULT_BUFFER_SIZE at 8 KB.
+// DefaultBufferSize is aligned with the utility toolkit IoUtil.DEFAULT_BUFFER_SIZE at 8 KB.
 const DefaultBufferSize = 8 * 1024
 
-// SocketConfig is aligned with hutool SocketConfig.
+// SocketConfig is aligned with the utility toolkit SocketConfig.
 // It provides thread-pool size, timeout, buffer-size, and related socket options.
 type SocketConfig struct {
 	// ThreadPoolSize is the shared pool size and maps to the concurrency limit for accepting and handling connections in Go.

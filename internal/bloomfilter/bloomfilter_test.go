@@ -121,7 +121,7 @@ func TestIntMapAndLongMap(t *testing.T) {
 }
 
 func TestHashAlgorithms(t *testing.T) {
-	s := "hutool-bloomFilter"
+	s := "test-bloomFilter"
 	checks := map[string]int32{
 		"rs":   RsHash(s),
 		"js":   JsHash(s),

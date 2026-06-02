@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// 对应 hutool-jwt JWTTest。
+// 对应 the utility toolkit-jwt JWTTest。
 
 func TestCreateHS256(t *testing.T) {
 	key := []byte("1234567890")
@@ -45,7 +45,7 @@ func TestCreateHS256(t *testing.T) {
 }
 
 func TestParseAndVerifyKnownToken(t *testing.T) {
-	// 来自 hutool 的固定测试 token
+	// 来自 the utility toolkit 的固定测试 token
 	rightToken := "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9." +
 		"eyJzdWIiOiIxMjM0NTY3ODkwIiwiYWRtaW4iOnRydWUsIm5hbWUiOiJsb29seSJ9." +
 		"U2aQkC2THYV9L0fTN-yBBI7gmo5xhmvMhATtu8v0zEA"

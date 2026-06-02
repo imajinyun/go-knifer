@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// ICaptcha mirrors the hutool-captcha ICaptcha interface.
+// ICaptcha mirrors the ICaptcha interface.
 type ICaptcha interface {
 	// CreateCode generates the captcha text and renders the image.
 	CreateCode()
@@ -29,7 +29,7 @@ type ICaptcha interface {
 	WriteToFile(path string) error
 }
 
-// AbstractCaptcha mirrors hutool-captcha AbstractCaptcha and holds shared captcha state.
+// AbstractCaptcha mirrors the utility captcha AbstractCaptcha and holds shared captcha state.
 type AbstractCaptcha struct {
 	Width          int         // Image width.
 	Height         int         // Image height.

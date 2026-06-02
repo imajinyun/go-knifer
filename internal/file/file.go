@@ -4,13 +4,77 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-// This section provides IO helpers aligned with hutool-core IoUtil.
+// This section provides IO helpers aligned with the utility toolkit-core IoUtil.
+
+type writeConfig struct {
+	filePerm      fs.FileMode
+	dirPerm       fs.FileMode
+	overwrite     bool
+	createParents bool
+}
+
+// WriteOption customizes file write helpers.
+type WriteOption func(*writeConfig)
+
+type dirConfig struct {
+	dirPerm fs.FileMode
+}
+
+// DirOption customizes directory helpers.
+type DirOption func(*dirConfig)
+
+func defaultWriteConfig() writeConfig {
+	return writeConfig{filePerm: 0o644, dirPerm: 0o755, overwrite: true, createParents: true}
+}
+
+func defaultDirConfig() dirConfig { return dirConfig{dirPerm: 0o755} }
+
+// WithFilePerm sets the file permission used when creating files.
+func WithFilePerm(perm fs.FileMode) WriteOption { return func(c *writeConfig) { c.filePerm = perm } }
+
+// WithDirPerm sets the parent-directory permission used when creating directories.
+func WithDirPerm(perm fs.FileMode) WriteOption { return func(c *writeConfig) { c.dirPerm = perm } }
+
+// WithOverwrite controls whether an existing destination file may be replaced.
+func WithOverwrite(overwrite bool) WriteOption {
+	return func(c *writeConfig) { c.overwrite = overwrite }
+}
+
+// WithCreateParents controls whether parent directories are created automatically.
+func WithCreateParents(create bool) WriteOption {
+	return func(c *writeConfig) { c.createParents = create }
+}
+
+// WithMkdirPerm sets the directory permission used by Mkdir.
+func WithMkdirPerm(perm fs.FileMode) DirOption { return func(c *dirConfig) { c.dirPerm = perm } }
+
+func applyWriteOptions(opts []WriteOption) writeConfig {
+	cfg := defaultWriteConfig()
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	return cfg
+}
+
+func applyDirOptions(opts []DirOption) dirConfig {
+	cfg := defaultDirConfig()
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	return cfg
+}
 
 // ReadAll reads all data from r.
 func ReadAll(r io.Reader) ([]byte, error) { return io.ReadAll(r) }
@@ -49,7 +113,7 @@ func CloseQuietly(c io.Closer) {
 	_ = c.Close()
 }
 
-// This section provides file and filename helpers aligned with hutool-core FileUtil and FileNameUtil.
+// This section provides file and filename helpers aligned with the utility toolkit-core FileUtil and FileNameUtil.
 
 // FileExists reports whether a file or directory exists.
 func FileExists(path string) bool {
@@ -92,27 +156,34 @@ func FileReadLines(path string) ([]string, error) {
 }
 
 // FileWriteString writes content to a file, overwriting existing data and creating parent directories.
-func FileWriteString(path, content string) error {
-	if err := Mkdir(filepath.Dir(path)); err != nil {
-		return err
-	}
-	return os.WriteFile(path, []byte(content), 0o644)
+func FileWriteString(path, content string, opts ...WriteOption) error {
+	return FileWriteBytes(path, []byte(content), opts...)
 }
 
 // FileWriteBytes writes bytes to a file, overwriting existing data and creating parent directories.
-func FileWriteBytes(path string, data []byte) error {
-	if err := Mkdir(filepath.Dir(path)); err != nil {
+func FileWriteBytes(path string, data []byte, opts ...WriteOption) error {
+	cfg := applyWriteOptions(opts)
+	if err := ensureWriteParent(path, cfg); err != nil {
 		return err
 	}
-	return os.WriteFile(path, data, 0o644)
+	flag := os.O_CREATE | os.O_WRONLY | os.O_TRUNC
+	if !cfg.overwrite {
+		flag |= os.O_EXCL
+	}
+	return writeFile(path, data, flag, cfg.filePerm)
 }
 
 // FileAppendString appends content to a file and creates parent directories when needed.
-func FileAppendString(path, content string) error {
-	if err := Mkdir(filepath.Dir(path)); err != nil {
+func FileAppendString(path, content string, opts ...WriteOption) error {
+	cfg := applyWriteOptions(opts)
+	if err := ensureWriteParent(path, cfg); err != nil {
 		return err
 	}
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	flag := os.O_APPEND | os.O_CREATE | os.O_WRONLY
+	if !cfg.overwrite {
+		flag |= os.O_EXCL
+	}
+	f, err := os.OpenFile(path, flag, cfg.filePerm)
 	if err != nil {
 		return err
 	}
@@ -122,22 +193,24 @@ func FileAppendString(path, content string) error {
 }
 
 // Mkdir creates a directory tree. Empty and current-directory paths are treated as no-ops.
-func Mkdir(dir string) error {
+func Mkdir(dir string, opts ...DirOption) error {
 	if dir == "" || dir == "." {
 		return nil
 	}
-	return os.MkdirAll(dir, 0o755)
+	cfg := applyDirOptions(opts)
+	return os.MkdirAll(dir, cfg.dirPerm)
 }
 
 // Touch creates an empty file when it does not exist.
-func Touch(path string) error {
+func Touch(path string, opts ...WriteOption) error {
 	if FileExists(path) {
 		return nil
 	}
-	if err := Mkdir(filepath.Dir(path)); err != nil {
+	cfg := applyWriteOptions(opts)
+	if err := ensureWriteParent(path, cfg); err != nil {
 		return err
 	}
-	f, err := os.Create(path)
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, cfg.filePerm)
 	if err != nil {
 		return err
 	}
@@ -153,11 +226,12 @@ func Del(path string) error {
 }
 
 // FileCopy copies a file and overwrites the destination when it already exists.
-func FileCopy(src, dst string) error {
+func FileCopy(src, dst string, opts ...WriteOption) error {
 	if !IsFile(src) {
 		return errors.New("source is not a file: " + src)
 	}
-	if err := Mkdir(filepath.Dir(dst)); err != nil {
+	cfg := applyWriteOptions(opts)
+	if err := ensureWriteParent(dst, cfg); err != nil {
 		return err
 	}
 	in, err := os.Open(src)
@@ -165,13 +239,43 @@ func FileCopy(src, dst string) error {
 		return err
 	}
 	defer CloseQuietly(in)
-	out, err := os.Create(dst)
+	flag := os.O_CREATE | os.O_WRONLY | os.O_TRUNC
+	if !cfg.overwrite {
+		flag |= os.O_EXCL
+	}
+	out, err := os.OpenFile(dst, flag, cfg.filePerm)
 	if err != nil {
 		return err
 	}
 	defer CloseQuietly(out)
 	_, err = io.Copy(out, in)
 	return err
+}
+
+func ensureWriteParent(path string, cfg writeConfig) error {
+	if !cfg.createParents {
+		return nil
+	}
+	return Mkdir(filepath.Dir(path), WithMkdirPerm(cfg.dirPerm))
+}
+
+func writeFile(path string, data []byte, flag int, perm fs.FileMode) error {
+	f, err := os.OpenFile(path, flag, perm)
+	if err != nil {
+		return err
+	}
+	defer CloseQuietly(f)
+	n, err := f.Write(data)
+	if err == nil && n < len(data) {
+		err = io.ErrShortWrite
+	}
+	if err1 := f.Close(); err == nil {
+		err = err1
+	}
+	if err != nil {
+		return fmt.Errorf("write file %s: %w", path, err)
+	}
+	return nil
 }
 
 // MainName returns the file name without its extension; parent directories are ignored.

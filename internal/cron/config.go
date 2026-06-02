@@ -2,7 +2,7 @@ package cron
 
 import "time"
 
-// Config is aligned with hutool CronConfig and configures the scheduler.
+// Config is aligned with the utility toolkit CronConfig and configures the scheduler.
 type Config struct {
 	// Location is the scheduler time zone.
 	Location *time.Location

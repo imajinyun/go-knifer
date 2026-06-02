@@ -8,7 +8,7 @@ import (
 	"sync/atomic"
 )
 
-// AioServer is an AIO-style socket server aligned with hutool aio.AioServer.
+// AioServer is an AIO-style socket server aligned with the utility AIO AioServer.
 // In Go, goroutines plus blocking reads are used to simulate AIO callback semantics.
 type AioServer struct {
 	listener net.Listener

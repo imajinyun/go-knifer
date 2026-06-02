@@ -2,7 +2,7 @@ package system
 
 import "os"
 
-// osHostname 是 os.Hostname 的别名，便于测试覆盖。
+// osHostname aliases os.Hostname so tests can override it.
 func osHostname() (string, error) {
 	return os.Hostname()
 }

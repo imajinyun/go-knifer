@@ -26,6 +26,7 @@ type HTTPRequest struct {
 	followRedir  *bool
 	maxRedirects int
 	tlsSkip      bool
+	tlsConfig    *tls.Config
 	userAgent    string
 	cookieOff    bool
 	basicUser    string
@@ -125,6 +126,9 @@ func WithMaxRedirects(n int) RequestOption { return func(r *HTTPRequest) { r.Max
 // WithSkipTLSVerify sets per-request TLS verification behavior.
 func WithSkipTLSVerify(b bool) RequestOption { return func(r *HTTPRequest) { r.SkipTLSVerify(b) } }
 
+// WithTLSConfig sets a per-request TLS config. It is ignored when a custom resty client is set.
+func WithTLSConfig(cfg *tls.Config) RequestOption { return func(r *HTTPRequest) { r.TLSConfig(cfg) } }
+
 // WithRestyClient sets a per-request resty client.
 func WithRestyClient(c *grestry.Client) RequestOption {
 	return func(r *HTTPRequest) { r.RestyClient(c) }
@@ -142,6 +146,12 @@ func WithUserAgent(ua string) RequestOption {
 func WithCookieDisabled(disabled bool) RequestOption {
 	return func(r *HTTPRequest) { r.cookieOff = disabled }
 }
+
+// WithContentType sets a per-request Content-Type at construction time.
+func WithContentType(ct string) RequestOption { return func(r *HTTPRequest) { r.ContentType(ct) } }
+
+// WithCharset sets a per-request charset at construction time.
+func WithCharset(charset string) RequestOption { return func(r *HTTPRequest) { r.Charset(charset) } }
 
 // Method sets the HTTP method.
 func (r *HTTPRequest) Method(m Method) *HTTPRequest { r.method = m; return r }
@@ -201,6 +211,9 @@ func (r *HTTPRequest) MaxRedirects(n int) *HTTPRequest { r.maxRedirects = n; ret
 
 // SkipTLSVerify skips TLS certificate verification.
 func (r *HTTPRequest) SkipTLSVerify(b bool) *HTTPRequest { r.tlsSkip = b; return r }
+
+// TLSConfig sets a custom TLS config for the generated resty client.
+func (r *HTTPRequest) TLSConfig(cfg *tls.Config) *HTTPRequest { r.tlsConfig = cfg; return r }
 
 // RestyClient sets a custom resty client.
 func (r *HTTPRequest) RestyClient(c *grestry.Client) *HTTPRequest { r.restyClient = c; return r }
@@ -308,8 +321,16 @@ func (r *HTTPRequest) buildClient() *grestry.Client {
 	if r.timeout > 0 {
 		c.SetTimeout(r.timeout)
 	}
+	if r.tlsConfig != nil {
+		c.SetTLSClientConfig(r.tlsConfig.Clone())
+	}
 	if r.tlsSkip {
-		c.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true}) // #nosec G402 -- caller explicitly requested skipping TLS verification.
+		cfg := &tls.Config{}
+		if r.tlsConfig != nil {
+			cfg = r.tlsConfig.Clone()
+		}
+		cfg.InsecureSkipVerify = true
+		c.SetTLSClientConfig(cfg) // #nosec G402 -- caller explicitly requested skipping TLS verification.
 	}
 	follow := true
 	if r.followRedir != nil {

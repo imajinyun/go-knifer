@@ -2,7 +2,7 @@ package json
 
 import "strings"
 
-// JSONArray 对应 hutool 的 JSONArray，是有序的 JSON 值列表。
+// JSONArray 对应 the utility JSONArray，是有序的 JSON 值列表。
 type JSONArray struct {
 	cfg    *Config
 	values []any

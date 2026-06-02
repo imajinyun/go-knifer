@@ -34,7 +34,7 @@ func TestFacadeZipAndCompression(t *testing.T) {
 	if err != nil || text != "hello" {
 		t.Fatalf("UnGzipString: %q %v", text, err)
 	}
-	dataBytes := []byte("hello hutool zip facade")
+	dataBytes := []byte("hello the utility toolkit zip facade")
 	gzipBytes, err := vzip.Gzip(dataBytes)
 	if err != nil {
 		t.Fatalf("Gzip: %v", err)

@@ -7,7 +7,7 @@ import (
 	"sync/atomic"
 )
 
-// NioServer is an event-driven TCP server aligned with hutool nio.NioServer.
+// NioServer is an event-driven TCP server aligned with the utility NIO NioServer.
 // In Go, goroutines plus blocking Accept/Read calls provide equivalent semantics.
 type NioServer struct {
 	listener net.Listener

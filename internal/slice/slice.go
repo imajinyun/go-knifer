@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// This file provides generic slice helpers aligned with hutool-core ArrayUtil.
+// This file provides generic slice helpers aligned with the utility toolkit-core ArrayUtil.
 // Functions return new slices where mutation would be surprising, while
 // Reverse intentionally reverses the input slice in place for efficiency.
 
@@ -98,7 +98,7 @@ func Map[T, R any](a []T, fn func(T) R) []R {
 
 // Sub returns a copied sub-slice and supports negative indexes.
 // Negative indexes are resolved from the end of the slice, and reversed ranges
-// are normalized by swapping fromIndex and toIndex, following hutool behavior.
+// are normalized by swapping fromIndex and toIndex, following the utility toolkit behavior.
 func Sub[T any](a []T, fromIndex, toIndex int) []T {
 	n := len(a)
 	if n == 0 {

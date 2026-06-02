@@ -2,7 +2,7 @@ package http
 
 import "testing"
 
-// Mirrors representative cases from hutool-http useragent/UserAgentUtilTest.
+// Covers representative cases from the utility toolkit-http useragent/UserAgentUtilTest.
 
 func TestParseDesktopChromeWindows7(t *testing.T) {
 	uaStr := "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/535.1 (KHTML, like Gecko) Chrome/14.0.835.163 Safari/535.1"

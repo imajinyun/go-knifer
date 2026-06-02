@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// Mirrors the action routing example from hutool-http server/SimpleServerTest.
+// Covers the action routing example from the utility toolkit-http server/SimpleServerTest.
 
 func TestSimpleServerStartAndStop(t *testing.T) {
 	port := pickFreePort(t)

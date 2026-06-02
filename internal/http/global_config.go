@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// Global default configuration, aligned with hutool-http HttpGlobalConfig.
+// Global default configuration, aligned with the utility toolkit-http HttpGlobalConfig.
 var (
 	globalMu               sync.RWMutex
 	globalTimeout          = 0 * time.Second // 0 means using the HTTP client's default timeout.

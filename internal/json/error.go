@@ -2,7 +2,7 @@ package json
 
 import "fmt"
 
-// JSONError 对应 hutool 的 JSONException。
+// JSONError 对应 the utility JSONException。
 type JSONError struct {
 	Msg   string
 	Cause error

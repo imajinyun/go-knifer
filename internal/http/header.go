@@ -1,6 +1,6 @@
 package http
 
-// Header defines common HTTP header names, aligned with hutool-http Header.
+// Header defines common HTTP header names, aligned with the utility toolkit-http Header.
 type Header string
 
 const (

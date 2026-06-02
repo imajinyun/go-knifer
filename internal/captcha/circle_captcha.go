@@ -8,7 +8,7 @@ import (
 	randutil "github.com/imajinyun/go-knifer/internal/rand"
 )
 
-// CircleCaptcha mirrors hutool CircleCaptcha and uses interference circles.
+// CircleCaptcha mirrors CircleCaptcha and uses interference circles.
 type CircleCaptcha struct {
 	AbstractCaptcha
 }

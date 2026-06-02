@@ -86,6 +86,38 @@ func TestRowsBufferRoundTrip(t *testing.T) {
 	}
 }
 
+func TestReadWriteOptions(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "book.xlsx")
+	rows := [][]string{{"name", "score"}, {"go", "100"}}
+	if err := WriteRows(path, rows, WithWriteSheet("Data"), WithStartCell(2, 3)); err != nil {
+		t.Fatalf("WriteRows with options: %v", err)
+	}
+	got, err := ReadRows(path, WithReadSheet("Data"))
+	if err != nil {
+		t.Fatalf("ReadRows with sheet option: %v", err)
+	}
+	want := [][]string{nil, {"", "", "name", "score"}, {"", "", "go", "100"}}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("ReadRows with options = %#v, want %#v", got, want)
+	}
+}
+
+func TestWriteRowsToBufferOptions(t *testing.T) {
+	rows := [][]string{{"x"}}
+	buf, err := WriteRowsToBuffer("Data", rows, WithStartCell(2, 2))
+	if err != nil {
+		t.Fatalf("WriteRowsToBuffer with options: %v", err)
+	}
+	got, err := ReadRowsFromReader(bytes.NewReader(buf.Bytes()), WithReadSheet("Data"))
+	if err != nil {
+		t.Fatalf("ReadRowsFromReader: %v", err)
+	}
+	want := [][]string{nil, {"", "x"}}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("rows = %#v, want %#v", got, want)
+	}
+}
+
 func TestEmptySheetName(t *testing.T) {
 	if err := WriteSheetRows(filepath.Join(t.TempDir(), "book.xlsx"), "", nil); !errors.Is(err, ErrEmptySheetName) {
 		t.Fatalf("WriteSheetRows empty sheet error = %v", err)

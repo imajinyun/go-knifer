@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// SimpleServer is a simple HTTP server, aligned with hutool-http SimpleServer.
+// SimpleServer is a simple HTTP server, aligned with the utility toolkit-http SimpleServer.
 type SimpleServer struct {
 	addr   string
 	mux    *http.ServeMux

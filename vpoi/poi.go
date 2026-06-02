@@ -3,9 +3,28 @@ package vpoi
 import (
 	"bytes"
 	"io"
+	"io/fs"
 
 	poiimpl "github.com/imajinyun/go-knifer/internal/poi"
 )
+
+// ReadOption customizes Excel read helpers.
+type ReadOption = poiimpl.ReadOption
+
+// WriteOption customizes Excel write helpers.
+type WriteOption = poiimpl.WriteOption
+
+// WithReadSheet selects the worksheet read by read helpers.
+func WithReadSheet(sheet string) ReadOption { return poiimpl.WithReadSheet(sheet) }
+
+// WithWriteSheet selects the worksheet written by write helpers.
+func WithWriteSheet(sheet string) WriteOption { return poiimpl.WithWriteSheet(sheet) }
+
+// WithStartCell sets the 1-based start row and column used by row-writing helpers.
+func WithStartCell(row, col int) WriteOption { return poiimpl.WithStartCell(row, col) }
+
+// WithDirPerm sets the parent-directory permission used when saving workbooks.
+func WithDirPerm(perm fs.FileMode) WriteOption { return poiimpl.WithDirPerm(perm) }
 
 const (
 	// DefaultSheetName is the default worksheet name used for read/write helpers.
@@ -23,7 +42,9 @@ var (
 func SheetNames(path string) ([]string, error) { return poiimpl.SheetNames(path) }
 
 // ReadRows reads rows from the first worksheet in path.
-func ReadRows(path string) ([][]string, error) { return poiimpl.ReadRows(path) }
+func ReadRows(path string, opts ...ReadOption) ([][]string, error) {
+	return poiimpl.ReadRows(path, opts...)
+}
 
 // ReadSheetRows reads rows from sheet in path.
 func ReadSheetRows(path, sheet string) ([][]string, error) {
@@ -31,22 +52,26 @@ func ReadSheetRows(path, sheet string) ([][]string, error) {
 }
 
 // ReadRowsFromReader reads rows from the first worksheet in r.
-func ReadRowsFromReader(r io.Reader) ([][]string, error) { return poiimpl.ReadRowsFromReader(r) }
+func ReadRowsFromReader(r io.Reader, opts ...ReadOption) ([][]string, error) {
+	return poiimpl.ReadRowsFromReader(r, opts...)
+}
 
 // WriteRows writes rows into path using the default worksheet name.
-func WriteRows(path string, rows [][]string) error { return poiimpl.WriteRows(path, rows) }
+func WriteRows(path string, rows [][]string, opts ...WriteOption) error {
+	return poiimpl.WriteRows(path, rows, opts...)
+}
 
 // WriteSheetRows writes rows into path using sheet.
-func WriteSheetRows(path, sheet string, rows [][]string) error {
-	return poiimpl.WriteSheetRows(path, sheet, rows)
+func WriteSheetRows(path, sheet string, rows [][]string, opts ...WriteOption) error {
+	return poiimpl.WriteSheetRows(path, sheet, rows, opts...)
 }
 
 // WriteSheets writes multiple worksheets into path.
-func WriteSheets(path string, sheets map[string][][]string) error {
-	return poiimpl.WriteSheets(path, sheets)
+func WriteSheets(path string, sheets map[string][][]string, opts ...WriteOption) error {
+	return poiimpl.WriteSheets(path, sheets, opts...)
 }
 
 // WriteRowsToBuffer writes rows into an in-memory XLSX workbook.
-func WriteRowsToBuffer(sheet string, rows [][]string) (*bytes.Buffer, error) {
-	return poiimpl.WriteRowsToBuffer(sheet, rows)
+func WriteRowsToBuffer(sheet string, rows [][]string, opts ...WriteOption) (*bytes.Buffer, error) {
+	return poiimpl.WriteRowsToBuffer(sheet, rows, opts...)
 }

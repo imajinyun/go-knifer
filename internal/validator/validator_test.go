@@ -9,7 +9,7 @@ func TestValidators(t *testing.T) {
 	if !IsMobile("13812345678") || IsMobile("12812345678") {
 		t.Fatalf("IsMobile failed")
 	}
-	if !IsURL("https://hutool.cn") || !IsURL("ftp://x") || IsURL("/relative/path") || IsURL(" https://hutool.cn") {
+	if !IsURL("https://example.com") || !IsURL("ftp://x") || IsURL("/relative/path") || IsURL(" https://example.com") {
 		t.Fatalf("IsURL failed")
 	}
 	if !IsIPv4("127.0.0.1") || IsIPv4("256.0.0.1") {

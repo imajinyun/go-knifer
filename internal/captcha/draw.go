@@ -9,7 +9,7 @@ import (
 	randutil "github.com/imajinyun/go-knifer/internal/rand"
 )
 
-// randomColor returns a random RGBA color, similar to hutool ImgUtil.randomColor.
+// randomColor returns a random RGBA color.
 func randomColor() color.RGBA {
 	return color.RGBA{
 		R: uint8(randutil.RandomInt(256)),

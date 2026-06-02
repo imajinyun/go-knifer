@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// Tests aligned with hutool-core RandomUtilTest.
+// Tests cover the utility toolkit-core RandomUtilTest.
 
 func TestRandomIntRange(t *testing.T) {
 	for i := 0; i < 100; i++ {

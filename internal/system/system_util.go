@@ -9,7 +9,7 @@ import (
 	"sync"
 )
 
-// 单例缓存，避免重复采集。
+// Singleton caches avoid repeated collection.
 var (
 	hostOnce    sync.Once
 	hostInfo    *HostInfo
@@ -23,63 +23,63 @@ var (
 	runtimeRef  *RuntimeInfo
 )
 
-// GetHostInfo 取得主机信息（单例）。
+// GetHostInfo returns cached host information.
 func GetHostInfo() *HostInfo {
 	hostOnce.Do(func() { hostInfo = NewHostInfo() })
 	return hostInfo
 }
 
-// GetOsInfo 取得 OS 信息（单例）。
+// GetOsInfo returns cached OS information.
 func GetOsInfo() *OsInfo {
 	osOnce.Do(func() { osInfo = NewOsInfo() })
 	return osInfo
 }
 
-// GetUserInfo 取得用户信息（单例）。
+// GetUserInfo returns cached user information.
 func GetUserInfo() *UserInfo {
 	userOnce.Do(func() { userInfo = NewUserInfo() })
 	return userInfo
 }
 
-// GetGoInfo 取得 Go 运行时元信息（单例）。
+// GetGoInfo returns cached Go runtime metadata.
 func GetGoInfo() *GoInfo {
 	goOnce.Do(func() { goInfo = NewGoInfo() })
 	return goInfo
 }
 
-// GetRuntimeInfo 取得运行时内存信息。每次调用都会刷新。
+// GetRuntimeInfo returns runtime memory information and refreshes it on each call.
 func GetRuntimeInfo() *RuntimeInfo {
 	runtimeOnce.Do(func() { runtimeRef = NewRuntimeInfo() })
 	return runtimeRef.Refresh()
 }
 
-// GetCurrentPID 返回当前进程 PID。
+// GetCurrentPID returns the current process PID.
 func GetCurrentPID() int {
 	return os.Getpid()
 }
 
-// GetTotalMemory 当前 Go 程序从 OS 申请的内存总量。
+// GetTotalMemory returns total memory requested from the OS by the current Go program.
 func GetTotalMemory() uint64 {
 	return GetRuntimeInfo().GetTotalMemory()
 }
 
-// GetFreeMemory 当前 Go 程序的空闲内存。
+// GetFreeMemory returns idle memory in the current Go program.
 func GetFreeMemory() uint64 {
 	return GetRuntimeInfo().GetFreeMemory()
 }
 
-// GetMaxMemory 当前 Go 程序的最大内存（系统内存上限）。
+// GetMaxMemory returns the detected memory upper bound for the current Go program.
 func GetMaxMemory() uint64 {
 	return GetRuntimeInfo().GetMaxMemory()
 }
 
-// GetTotalThreadCount 取得总协程数（对应 hutool 的总线程数）。
+// GetTotalThreadCount returns the total goroutine count.
 func GetTotalThreadCount() int {
 	return runtime.NumGoroutine()
 }
 
-// Get 通过 key 取得环境变量；若 quiet=false 且变量缺失，将打印警告信息到 stderr。
-// 与 hutool SystemUtil.get(key, quiet) 行为对应。
+// Get returns an environment variable by key.
+// If quiet is false and the variable is missing, it prints a warning to stderr.
 func Get(key string, quiet bool) string {
 	v, ok := os.LookupEnv(key)
 	if !ok && !quiet {
@@ -88,7 +88,7 @@ func Get(key string, quiet bool) string {
 	return v
 }
 
-// GetOrDefault 取得环境变量，若不存在或为空，返回 def。
+// GetOrDefault returns an environment variable, or def when it is missing or empty.
 func GetOrDefault(key, def string) string {
 	v, ok := os.LookupEnv(key)
 	if !ok || v == "" {
@@ -97,7 +97,7 @@ func GetOrDefault(key, def string) string {
 	return v
 }
 
-// GetInt 取得环境变量并转为 int，转换失败返回 def。
+// GetInt returns an environment variable as an int, or def on conversion failure.
 func GetInt(key string, def int) int {
 	v, ok := os.LookupEnv(key)
 	if !ok {
@@ -110,7 +110,7 @@ func GetInt(key string, def int) int {
 	return n
 }
 
-// GetBool 取得环境变量并转为 bool，转换失败返回 def。
+// GetBool returns an environment variable as a bool, or def on conversion failure.
 func GetBool(key string, def bool) bool {
 	v, ok := os.LookupEnv(key)
 	if !ok {
@@ -123,12 +123,12 @@ func GetBool(key string, def bool) bool {
 	return b
 }
 
-// DumpSystemInfo 将系统信息输出到 stdout，对应 hutool SystemUtil.dumpSystemInfo()。
+// DumpSystemInfo writes system information to stdout.
 func DumpSystemInfo() {
 	DumpSystemInfoTo(os.Stdout)
 }
 
-// DumpSystemInfoTo 将系统信息输出到指定 Writer。
+// DumpSystemInfoTo writes system information to the specified writer.
 func DumpSystemInfoTo(w io.Writer) {
 	const sep = "--------------\n"
 	_, _ = fmt.Fprint(w, sep)

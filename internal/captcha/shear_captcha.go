@@ -8,7 +8,7 @@ import (
 	randutil "github.com/imajinyun/go-knifer/internal/rand"
 )
 
-// ShearCaptcha mirrors hutool ShearCaptcha and applies distortion.
+// ShearCaptcha mirrors the utility toolkit ShearCaptcha and applies distortion.
 type ShearCaptcha struct {
 	AbstractCaptcha
 }

@@ -1,6 +1,6 @@
 package bloomfilter
 
-// BitMapBloomFilter is a Bloom filter composed from multiple filters, mirroring hutool BitMapBloomFilter.
+// BitMapBloomFilter is a Bloom filter composed from multiple filters.
 // It aggregates several BloomFilter instances and uses five different hash filters by default.
 type BitMapBloomFilter struct {
 	filters []BloomFilter
@@ -24,7 +24,7 @@ func NewBitMapBloomFilter(m int) *BitMapBloomFilter {
 }
 
 // NewBitMapBloomFilterWithFilters creates a BitMapBloomFilter with custom filters.
-// It keeps hutool-compatible m validation while replacing the default filter set.
+// It keeps the utility toolkit-compatible m validation while replacing the default filter set.
 func NewBitMapBloomFilterWithFilters(m int, filters ...BloomFilter) *BitMapBloomFilter {
 	b := NewBitMapBloomFilter(m)
 	if len(filters) > 0 {

@@ -1,6 +1,6 @@
 package maps
 
-// This file provides common collection helpers aligned with hutool-core
+// This file provides common collection helpers aligned with the utility toolkit-core
 // CollUtil, MapUtil, and ListUtil.
 
 // IsEmpty reports whether the map is empty.

@@ -2,7 +2,7 @@ package slice
 
 import "testing"
 
-// Tests aligned with hutool-core ArrayUtilTest.
+// Tests cover the utility toolkit-core ArrayUtilTest.
 
 func TestSliceBasic(t *testing.T) {
 	if !IsEmpty([]int{}) || IsEmpty([]int{1}) {

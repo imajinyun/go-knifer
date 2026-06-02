@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// Core scenarios from hutool-cache CacheTest.
+// Core scenarios from CacheTest.
 
 func TestFIFOCache(t *testing.T) {
 	var removedKey, removedValue string
@@ -122,7 +122,7 @@ func TestTimedCache(t *testing.T) {
 	}
 }
 
-// Mirrors hutool whenContainsKeyTimeout_shouldCallOnRemove.
+// Mirrors whenContainsKeyTimeout_shouldCallOnRemove.
 func TestContainsKeyExpiredOnRemove(t *testing.T) {
 	timeout := 50 * time.Millisecond
 	c := NewTimed[int, string](timeout)
@@ -140,7 +140,7 @@ func TestContainsKeyExpiredOnRemove(t *testing.T) {
 	}
 }
 
-// Mirrors hutool reentrantCache_clear_Method_Test.
+// Mirrors reentrantCache_clear_Method_Test.
 func TestLRUClearTriggersListener(t *testing.T) {
 	var removeCount int32
 	c := NewLRU[string, string](4)

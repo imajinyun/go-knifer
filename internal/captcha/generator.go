@@ -8,7 +8,7 @@ import (
 	randutil "github.com/imajinyun/go-knifer/internal/rand"
 )
 
-// CodeGenerator mirrors the CodeGenerator interface from hutool-captcha.
+// CodeGenerator mirrors the CodeGenerator interface from captcha.
 //
 //	Generate returns the raw captcha text that is rendered into the image.
 //	Verify   checks whether user input matches the raw text. Implementations may
@@ -20,7 +20,7 @@ type CodeGenerator interface {
 }
 
 // ---------------------------------------------------------------------------
-// RandomGenerator mirrors hutool RandomGenerator.
+// RandomGenerator mirrors RandomGenerator.
 // ---------------------------------------------------------------------------
 
 // RandomGenerator generates random character captchas.
@@ -68,15 +68,14 @@ func (g *RandomGenerator) Verify(code, userInput string) bool {
 }
 
 // ---------------------------------------------------------------------------
-// MathGenerator mirrors hutool MathGenerator.
+// MathGenerator mirrors the utility toolkit MathGenerator.
 // ---------------------------------------------------------------------------
-
 const mathOperators = "+-*"
 
 // MathGenerator generates expression captchas such as "12+3 =" and verifies
 // user input by evaluating the expression.
 type MathGenerator struct {
-	// NumberLength is the maximum digit count of operands; hutool defaults to 2.
+	// NumberLength is the maximum digit count of operands; the utility toolkit defaults to 2.
 	NumberLength int
 	// ResultHasNegativeNumber controls whether negative results are allowed.
 	ResultHasNegativeNumber bool

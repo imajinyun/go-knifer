@@ -1,11 +1,11 @@
 package bloomfilter
 
-// This file implements the subset of hutool HashUtil hash functions required by Bloom filters.
+// This file implements the subset of hash functions required by Bloom filters.
 // To keep behavior aligned with Java, all operations use int32 truncation semantics equivalent to Java int.
 
 // charsOf splits a string from a Java char perspective: ASCII maps directly to bytes,
 // while non-ASCII characters map approximately to Unicode code points.
-// This matches Java charAt for BMP characters and is sufficiently equivalent to hutool for Bloom filter usage.
+// This matches Java charAt for BMP characters and is sufficiently equivalent to the utility toolkit for Bloom filter usage.
 func charsOf(s string) []rune { return []rune(s) }
 
 // RsHash implements the RS algorithm.

@@ -10,7 +10,7 @@ import (
 	randutil "github.com/imajinyun/go-knifer/internal/rand"
 )
 
-// GifCaptcha mirrors hutool GifCaptcha and renders animated GIF captchas.
+// GifCaptcha mirrors the utility toolkit GifCaptcha and renders animated GIF captchas.
 //
 // Each frame highlights one character and draws the others in pale colors to
 // create a blinking effect.

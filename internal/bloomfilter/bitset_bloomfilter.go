@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-// BitSetBloomFilter is a fixed-size bitset based Bloom filter, mirroring hutool BitSetBloomFilter.
+// BitSetBloomFilter is a fixed-size bitset based Bloom filter.
 // Hash algorithms are used in a fixed order; only the algorithm count is configurable.
 type BitSetBloomFilter struct {
 	bits               []uint64 // Simulates BitSet.
@@ -112,7 +112,7 @@ func (b *BitSetBloomFilter) createHashes(str string, hashNumber int) []int32 {
 	return out
 }
 
-// bitSetHash matches hutool BitSetBloomFilter.hash.
+// bitSetHash matches the utility toolkit BitSetBloomFilter.hash.
 func bitSetHash(str string, k int) int32 {
 	switch k {
 	case 0:

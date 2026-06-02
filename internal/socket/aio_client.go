@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// AioClient is an AIO-style socket client aligned with hutool aio.AioClient.
+// AioClient is an AIO-style socket client aligned with the utility AIO AioClient.
 type AioClient struct {
 	session *AioSession
 }

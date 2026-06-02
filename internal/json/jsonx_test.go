@@ -3,6 +3,7 @@ package json
 import (
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestObjectOrderPreserved(t *testing.T) {
@@ -76,6 +77,31 @@ func TestNullHandling(t *testing.T) {
 	}
 	if obj.String() != `{"a":null}` {
 		t.Fatalf("got %s", obj.String())
+	}
+}
+
+func TestEncodeOptions(t *testing.T) {
+	obj := map[string]any{"a": nil, "b": 1}
+	out, err := ToJSONStr(obj, WithIgnoreNullValue(true))
+	if err != nil {
+		t.Fatalf("ToJSONStr: %v", err)
+	}
+	if out != `{"b":1}` {
+		t.Fatalf("ignore null output = %s", out)
+	}
+	out, err = ToJSONPrettyStr(map[string]any{"a": 1}, WithIndent(2))
+	if err != nil {
+		t.Fatalf("ToJSONPrettyStr: %v", err)
+	}
+	if !strings.Contains(out, "\n  \"a\": 1") {
+		t.Fatalf("pretty indent output = %s", out)
+	}
+	out, err = ToJSONStr(map[string]any{"t": time.Date(2026, 6, 2, 3, 4, 5, 0, time.UTC)}, WithDateFormat("2006-01-02"))
+	if err != nil {
+		t.Fatalf("ToJSONStr date: %v", err)
+	}
+	if !strings.Contains(out, "2026-06-02") {
+		t.Fatalf("date output = %s", out)
 	}
 }
 

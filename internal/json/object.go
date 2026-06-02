@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// JSONObject 对应 hutool 的 JSONObject，按插入顺序保留键。
+// JSONObject 对应 the utility JSONObject，按插入顺序保留键。
 type JSONObject struct {
 	cfg    *Config
 	keys   []string
@@ -107,7 +107,7 @@ func (o *JSONObject) Set(key string, value any) *JSONObject {
 	return o
 }
 
-// Put 与 Set 相同（兼容 hutool 命名）。
+// Put 与 Set 相同（兼容 the utility toolkit 命名）。
 func (o *JSONObject) Put(key string, value any) *JSONObject { return o.Set(key, value) }
 
 // Remove 删除键，返回是否删除成功。

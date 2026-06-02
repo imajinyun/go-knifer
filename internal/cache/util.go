@@ -2,8 +2,6 @@ package cache
 
 import "time"
 
-// Package-level constructors similar to hutool-cache CacheUtil.
-
 // NewFIFO creates a FIFO cache.
 func NewFIFO[K comparable, V any](capacity int) *FIFOCache[K, V] {
 	return NewFIFOCache[K, V](capacity)

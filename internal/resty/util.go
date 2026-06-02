@@ -61,7 +61,9 @@ func DownloadString(rawURL, customCharset string) string {
 }
 
 // DownloadFile downloads to a file, using URL or response headers for the file name when dest is a directory.
-func DownloadFile(rawURL, dest string) (int64, error) { return Get(rawURL).Execute().SaveAs(dest) }
+func DownloadFile(rawURL, dest string, opts ...SaveOption) (int64, error) {
+	return Get(rawURL).Execute().SaveAs(dest, opts...)
+}
 
 // Download downloads to a Writer.
 func Download(rawURL string, w io.Writer) (int64, error) { return Get(rawURL).Execute().WriteTo(w) }

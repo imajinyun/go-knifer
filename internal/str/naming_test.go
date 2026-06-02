@@ -2,7 +2,7 @@ package str
 
 import "testing"
 
-// Tests aligned with hutool-core NamingCaseTest.
+// Tests cover the utility toolkit-core NamingCaseTest.
 
 func TestNamingCase(t *testing.T) {
 	cases := []struct {

@@ -7,7 +7,7 @@ import (
 	"unicode"
 )
 
-// This file provides string helpers aligned with hutool-core StrUtil and CharSequenceUtil.
+// This file provides string helpers aligned with the utility toolkit-core StrUtil and CharSequenceUtil.
 
 var emojiPattern = regexp.MustCompile(`(?:[\x{1F1E6}-\x{1F1FF}]{2}|[#*0-9]\x{FE0F}?\x{20E3}|[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}])(?:\x{FE0F}|\x{200D}[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}]\x{FE0F}?)*`)
 
@@ -256,7 +256,7 @@ func Reverse(s string) string {
 	return string(rs)
 }
 
-// Format mimics hutool StrUtil.format by replacing {} placeholders in order.
+// Format mimics the utility toolkit StrUtil.format by replacing {} placeholders in order.
 //
 //	Format("name={}, age={}", "tom", 12) -> "name=tom, age=12"
 //

@@ -8,7 +8,7 @@ import (
 
 // JWT 表示一个 JWT 对象，由 Header + Payload + Signer 组成。
 //
-// 对应 hutool-jwt JWT。
+// 对应 the utility toolkit-jwt JWT。
 type JWT struct {
 	header  map[string]any
 	payload map[string]any
@@ -254,7 +254,7 @@ func (j *JWT) Verify() bool { return j.VerifyWith(j.signer) }
 
 // VerifyWith 使用指定 signer 校验。
 //
-// 行为对齐 hutool：
+// 行为对齐 the utility toolkit：
 //   - signer 为 nil 时，等价于 NoneSigner，
 //   - alg=none 但传入非 None signer 抛错（这里返回 false），
 //   - alg!=none 但传入 None signer 同样判为 false。

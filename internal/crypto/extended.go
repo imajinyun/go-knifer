@@ -204,29 +204,17 @@ func AESDecryptCTR(data, key, iv []byte) ([]byte, error) { return AESEncryptCTR(
 
 // AESEncryptCFB encrypts data using AES-CFB.
 func AESEncryptCFB(data, key, iv []byte) ([]byte, error) {
-	block, err := aesBlockWithIV(key, iv)
-	if err != nil {
-		return nil, err
-	}
-	out := make([]byte, len(data))
-	cipher.NewCFBEncrypter(block, iv).XORKeyStream(out, data)
-	return out, nil
+	return aesCFB(data, key, iv, false)
 }
 
 // AESDecryptCFB decrypts data using AES-CFB.
 func AESDecryptCFB(data, key, iv []byte) ([]byte, error) {
-	block, err := aesBlockWithIV(key, iv)
-	if err != nil {
-		return nil, err
-	}
-	out := make([]byte, len(data))
-	cipher.NewCFBDecrypter(block, iv).XORKeyStream(out, data)
-	return out, nil
+	return aesCFB(data, key, iv, true)
 }
 
 // AESEncryptOFB encrypts or decrypts data using AES-OFB.
 func AESEncryptOFB(data, key, iv []byte) ([]byte, error) {
-	return aesStream(data, key, iv, cipher.NewOFB)
+	return aesOFB(data, key, iv)
 }
 
 // AESDecryptOFB decrypts or encrypts data using AES-OFB.
@@ -428,6 +416,48 @@ func aesStream(data, key, iv []byte, newStream func(cipher.Block, []byte) cipher
 	}
 	out := make([]byte, len(data))
 	newStream(block, iv).XORKeyStream(out, data)
+	return out, nil
+}
+
+func aesCFB(data, key, iv []byte, decrypt bool) ([]byte, error) {
+	block, err := aesBlockWithIV(key, iv)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]byte, len(data))
+	feedback := append([]byte(nil), iv...)
+	stream := make([]byte, block.BlockSize())
+	for pos := 0; pos < len(data); pos += block.BlockSize() {
+		block.Encrypt(stream, feedback)
+		n := min(block.BlockSize(), len(data)-pos)
+		for i := 0; i < n; i++ {
+			out[pos+i] = data[pos+i] ^ stream[i]
+		}
+		if n == block.BlockSize() {
+			if decrypt {
+				copy(feedback, data[pos:pos+n])
+			} else {
+				copy(feedback, out[pos:pos+n])
+			}
+		}
+	}
+	return out, nil
+}
+
+func aesOFB(data, key, iv []byte) ([]byte, error) {
+	block, err := aesBlockWithIV(key, iv)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]byte, len(data))
+	feedback := append([]byte(nil), iv...)
+	for pos := 0; pos < len(data); pos += block.BlockSize() {
+		block.Encrypt(feedback, feedback)
+		n := min(block.BlockSize(), len(data)-pos)
+		for i := 0; i < n; i++ {
+			out[pos+i] = data[pos+i] ^ feedback[i]
+		}
+	}
 	return out, nil
 }
 

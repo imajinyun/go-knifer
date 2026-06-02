@@ -8,7 +8,7 @@ import (
 	randutil "github.com/imajinyun/go-knifer/internal/rand"
 )
 
-// LineCaptcha mirrors hutool LineCaptcha and uses interference lines.
+// LineCaptcha mirrors the utility toolkit LineCaptcha and uses interference lines.
 type LineCaptcha struct {
 	AbstractCaptcha
 }

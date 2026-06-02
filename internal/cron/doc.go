@@ -1,3 +1,3 @@
 // Package cron provides a cron-expression-based task scheduling framework
-// aligned with hutool-cron.
+// aligned with the utility toolkit-cron.
 package cron

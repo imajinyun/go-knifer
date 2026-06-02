@@ -2,7 +2,7 @@ package socket
 
 import "net"
 
-// ChannelHandler is aligned with hutool nio.ChannelHandler.
+// ChannelHandler is aligned with the utility NIO ChannelHandler.
 // Implement this interface to handle reads and writes for a Conn.
 type ChannelHandler interface {
 	Handle(conn net.Conn) error
@@ -14,7 +14,7 @@ type ChannelHandlerFunc func(conn net.Conn) error
 // Handle implements ChannelHandler.
 func (f ChannelHandlerFunc) Handle(conn net.Conn) error { return f(conn) }
 
-// Operation is aligned with hutool nio.Operation.
+// Operation is aligned with the utility NIO Operation.
 // Constants identify interesting event types and are mainly kept for semantic alignment.
 type Operation int
 

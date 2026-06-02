@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// This file provides random-value helpers aligned with hutool-core RandomUtil.
+// This file provides random-value helpers aligned with the utility toolkit-core RandomUtil.
 
 // Character set constants used by random string helpers.
 const (

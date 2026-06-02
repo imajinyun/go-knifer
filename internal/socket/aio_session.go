@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// AioSession represents one client connection, aligned with hutool aio.AioSession.
+// AioSession represents one client connection, aligned with the utility AIO AioSession.
 // It owns read/write buffers and triggers IoAction.DoAction via asynchronous callbacks.
 type AioSession struct {
 	conn        net.Conn
@@ -65,7 +65,7 @@ func (s *AioSession) RemoteAddress() net.Addr {
 	return GetRemoteAddress(s.conn)
 }
 
-// Read asynchronously reads once, equivalent to hutool's read().
+// Read asynchronously reads once, equivalent to the utility toolkit's read().
 // In Go this is implemented with a goroutine and a completion callback to IoAction.
 func (s *AioSession) Read() *AioSession {
 	if !s.IsOpen() {

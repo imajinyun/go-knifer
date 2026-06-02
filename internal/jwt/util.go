@@ -1,6 +1,6 @@
 package jwt
 
-// 包级便捷函数（对应 hutool-jwt JWTUtil）。
+// 包级便捷函数（对应 the utility toolkit-jwt JWTUtil）。
 
 // CreateToken 用 HS256 创建 token。
 func CreateToken(payload map[string]any, key []byte) (string, error) {

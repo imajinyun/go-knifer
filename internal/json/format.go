@@ -2,7 +2,7 @@ package json
 
 import "strings"
 
-// FormatJSONStr 对应 hutool 的 JSONStrFormatter.format，
+// FormatJSONStr 对应 the utility JSONStrFormatter.format，
 // 对原始 JSON 字符串进行格式化（4 空格缩进），不构造对象树。
 func FormatJSONStr(raw string) string {
 	const indentStr = "    "

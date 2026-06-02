@@ -11,7 +11,7 @@ import (
 type pruneStrategy[K comparable, V any] func(c *abstractCache[K, V]) int
 
 // abstractCache contains the shared implementation for cache variants, similar
-// to hutool-cache AbstractCache and ReentrantCache.
+// to the utility cache AbstractCache and ReentrantCache.
 //
 // A single mutex protects both the map/list structure and metadata updates.
 // Reads also take the lock because a successful get may refresh the last access

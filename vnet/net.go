@@ -3,6 +3,7 @@ package vnet
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"io/fs"
 	"math/big"
 	"mime/multipart"
 	stdnet "net"
@@ -34,6 +35,7 @@ type (
 	URLBuilder         = netimpl.URLBuilder
 	TLSConfigBuilder   = netimpl.TLSConfigBuilder
 	UploadSetting      = netimpl.UploadSetting
+	UploadSaveOption   = netimpl.UploadSaveOption
 	MultipartFormData  = netimpl.MultipartFormData
 	LocalPortGenerator = netimpl.LocalPortGenerator
 )
@@ -60,12 +62,15 @@ func CountByMaskBit(maskBit int, isAll bool) (uint64, error) {
 }
 func MaskByMaskBit(maskBit int) (string, error)         { return netimpl.MaskByMaskBit(maskBit) }
 func MaskByIPRange(fromIP, toIP string) (string, error) { return netimpl.MaskByIPRange(fromIP, toIP) }
+
 func CountByIPRange(fromIP, toIP string) (uint64, error) {
 	return netimpl.CountByIPRange(fromIP, toIP)
 }
-func IsMaskValid(mask string) bool                         { return netimpl.IsMaskValid(mask) }
-func IsMaskBitValid(maskBit int) bool                      { return netimpl.IsMaskBitValid(maskBit) }
+func IsMaskValid(mask string) bool    { return netimpl.IsMaskValid(mask) }
+func IsMaskBitValid(maskBit int) bool { return netimpl.IsMaskBitValid(maskBit) }
+
 func ListIPs(ipRange string, isAll bool) ([]string, error) { return netimpl.ListIPs(ipRange, isAll) }
+
 func ListIPCIDR(ip string, maskBit int, isAll bool) ([]string, error) {
 	return netimpl.ListIPCIDR(ip, maskBit, isAll)
 }
@@ -96,6 +101,7 @@ func IsValidPort(port int) bool                       { return netimpl.IsValidPo
 func IsUsableLocalPort(port int) bool                 { return netimpl.IsUsableLocalPort(port) }
 func GetUsableLocalPort() (int, error)                { return netimpl.GetUsableLocalPort() }
 func GetUsableLocalPortFrom(minPort int) (int, error) { return netimpl.GetUsableLocalPortFrom(minPort) }
+
 func GetUsableLocalPortInRange(minPort, maxPort int) (int, error) {
 	return netimpl.GetUsableLocalPortInRange(minPort, maxPort)
 }
@@ -112,6 +118,7 @@ func HideIPPartLong(ip uint32) string { return netimpl.HideIPPartLong(ip) }
 func BuildInetSocketAddress(host string, defaultPort int) (*stdnet.TCPAddr, error) {
 	return netimpl.BuildInetSocketAddress(host, defaultPort)
 }
+
 func CreateAddress(host string, port int) *stdnet.TCPAddr { return netimpl.CreateAddress(host, port) }
 func GetIPByHost(hostName string) string                  { return netimpl.GetIPByHost(hostName) }
 func GetNetworkInterface(name string) (*stdnet.Interface, error) {
@@ -134,6 +141,7 @@ func GetLocalhostStr() string                       { return netimpl.GetLocalhos
 func GetLocalhost() stdnet.IP                       { return netimpl.GetLocalhost() }
 func GetLocalHostName() string                      { return netimpl.GetLocalHostName() }
 func GetLocalMACAddress(separator ...string) string { return netimpl.GetLocalMACAddress(separator...) }
+
 func GetMACAddress(inetAddress stdnet.IP, separator ...string) string {
 	return netimpl.GetMACAddress(inetAddress, separator...)
 }
@@ -181,8 +189,20 @@ func ParseMultipartForm(r *http.Request, setting UploadSetting) (*MultipartFormD
 	return netimpl.ParseMultipartForm(r, setting)
 }
 
-func SaveUploadedFile(file *multipart.FileHeader, destPath string) error {
-	return netimpl.SaveUploadedFile(file, destPath)
+func WithUploadFilePerm(perm fs.FileMode) UploadSaveOption { return netimpl.WithUploadFilePerm(perm) }
+
+func WithUploadDirPerm(perm fs.FileMode) UploadSaveOption { return netimpl.WithUploadDirPerm(perm) }
+
+func WithUploadOverwrite(overwrite bool) UploadSaveOption {
+	return netimpl.WithUploadOverwrite(overwrite)
+}
+
+func WithUploadCreateParents(create bool) UploadSaveOption {
+	return netimpl.WithUploadCreateParents(create)
+}
+
+func SaveUploadedFile(file *multipart.FileHeader, destPath string, opts ...UploadSaveOption) error {
+	return netimpl.SaveUploadedFile(file, destPath, opts...)
 }
 
 func UploadFileName(file *multipart.FileHeader) string { return netimpl.UploadFileName(file) }

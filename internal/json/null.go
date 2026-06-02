@@ -1,6 +1,6 @@
 package json
 
-// jsonNull 对应 hutool 的 JSONNull，表示 JSON 中的 null。
+// jsonNull 对应 the utility JSONNull，表示 JSON 中的 null。
 type jsonNull struct{}
 
 // Null 是单例 JSON null。

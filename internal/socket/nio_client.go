@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 )
 
-// NioClient is an event-driven TCP client aligned with hutool nio.NioClient.
+// NioClient is an event-driven TCP client aligned with the utility NIO NioClient.
 type NioClient struct {
 	conn    net.Conn
 	handler ChannelHandler

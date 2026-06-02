@@ -1,6 +1,6 @@
 package log
 
-// Log 对应 hutool 的 Log 接口，提供统一的日志方法。
+// Log 对应 the utility Log 接口，提供统一的日志方法。
 //
 // 与 Java 不同，Go 中没有原生重载，因此采用 *f 后缀区分带格式化模板的方法（与 fmt.Sprintf 兼容）：
 //   - Trace(args ...any)        / Tracef(format string, args ...any)

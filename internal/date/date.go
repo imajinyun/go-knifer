@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// This file provides date and time helpers aligned with hutool-core DateUtil.
+// This file provides date and time helpers aligned with the utility toolkit-core DateUtil.
 
 // Common date/time layouts. Go layouts use the reference time 2006-01-02 15:04:05.
 const (

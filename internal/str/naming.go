@@ -5,7 +5,7 @@ import (
 	"unicode"
 )
 
-// This file provides naming-case conversion helpers aligned with hutool-core NamingCase.
+// This file provides naming-case conversion helpers aligned with the utility toolkit-core NamingCase.
 
 // ToCamelCase converts separators to lower camel case, for example hello_world -> helloWorld.
 func ToCamelCase(s string) string {

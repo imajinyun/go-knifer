@@ -1,7 +1,9 @@
 package vresty
 
 import (
+	"crypto/tls"
 	"io"
+	"io/fs"
 	"time"
 
 	restyimpl "github.com/imajinyun/go-knifer/internal/resty"
@@ -16,6 +18,9 @@ type RequestOption = restyimpl.RequestOption
 
 // Response wraps an HTTP response.
 type Response = restyimpl.HTTPResponse
+
+// SaveOption customizes response file saving.
+type SaveOption = restyimpl.SaveOption
 
 // Method represents an HTTP method.
 type Method = restyimpl.Method
@@ -102,6 +107,9 @@ func WithMaxRedirects(n int) RequestOption { return restyimpl.WithMaxRedirects(n
 // WithSkipTLSVerify sets per-request TLS verification behavior.
 func WithSkipTLSVerify(b bool) RequestOption { return restyimpl.WithSkipTLSVerify(b) }
 
+// WithTLSConfig sets a per-request TLS config.
+func WithTLSConfig(cfg *tls.Config) RequestOption { return restyimpl.WithTLSConfig(cfg) }
+
 // WithRestyClient sets a per-request resty client.
 func WithRestyClient(c *grestry.Client) RequestOption { return restyimpl.WithRestyClient(c) }
 
@@ -110,6 +118,27 @@ func WithUserAgent(ua string) RequestOption { return restyimpl.WithUserAgent(ua)
 
 // WithCookieDisabled sets per-request cookie management behavior.
 func WithCookieDisabled(disabled bool) RequestOption { return restyimpl.WithCookieDisabled(disabled) }
+
+// WithContentType sets a per-request Content-Type at construction time.
+func WithContentType(ct string) RequestOption { return restyimpl.WithContentType(ct) }
+
+// WithCharset sets a per-request charset at construction time.
+func WithCharset(charset string) RequestOption { return restyimpl.WithCharset(charset) }
+
+// WithSaveFilePerm sets the file permission used when creating the destination file.
+func WithSaveFilePerm(perm fs.FileMode) SaveOption { return restyimpl.WithSaveFilePerm(perm) }
+
+// WithSaveDirPerm sets the directory permission used when creating parent directories.
+func WithSaveDirPerm(perm fs.FileMode) SaveOption { return restyimpl.WithSaveDirPerm(perm) }
+
+// WithSaveOverwrite controls whether an existing destination file may be replaced.
+func WithSaveOverwrite(overwrite bool) SaveOption { return restyimpl.WithSaveOverwrite(overwrite) }
+
+// WithSaveCreateParents controls whether parent directories are created automatically.
+func WithSaveCreateParents(create bool) SaveOption { return restyimpl.WithSaveCreateParents(create) }
+
+// WithSaveDefaultFilename sets the fallback file name used when dest is a directory.
+func WithSaveDefaultFilename(name string) SaveOption { return restyimpl.WithSaveDefaultFilename(name) }
 
 // GetString sends a GET request and returns response body as string.
 func GetString(rawURL string) string { return restyimpl.GetString(rawURL) }
@@ -124,7 +153,9 @@ func PostJSON(rawURL, jsonStr string) string { return restyimpl.PostJSON(rawURL,
 func Download(rawURL string, w io.Writer) (int64, error) { return restyimpl.Download(rawURL, w) }
 
 // DownloadFile downloads rawURL to dest.
-func DownloadFile(rawURL, dest string) (int64, error) { return restyimpl.DownloadFile(rawURL, dest) }
+func DownloadFile(rawURL, dest string, opts ...SaveOption) (int64, error) {
+	return restyimpl.DownloadFile(rawURL, dest, opts...)
+}
 
 // DownloadBytes downloads and returns bytes.
 func DownloadBytes(rawURL string) []byte { return restyimpl.DownloadBytes(rawURL) }

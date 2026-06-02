@@ -2,7 +2,7 @@ package codec
 
 import "testing"
 
-// Tests aligned with hutool-core Base64Test, HexUtilTest, and URLUtilTest.
+// Tests cover the utility toolkit-core Base64Test, HexUtilTest, and URLUtilTest.
 
 func TestBase64(t *testing.T) {
 	src := "Hello, 世界"

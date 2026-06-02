@@ -1,6 +1,6 @@
 package cron
 
-// PartMatcher is the field matcher interface aligned with hutool PartMatcher.
+// PartMatcher is the field matcher interface aligned with the utility toolkit PartMatcher.
 type PartMatcher interface {
 	// Match reports whether the given value matches.
 	Match(v int) bool

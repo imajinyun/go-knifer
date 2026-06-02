@@ -10,7 +10,7 @@ const (
 	timerUnitMinute = int64(time.Minute / time.Millisecond)
 )
 
-// cronTimer is aligned with hutool CronTimer and triggers launchers by time unit.
+// cronTimer is aligned with the utility toolkit CronTimer and triggers launchers by time unit.
 type cronTimer struct {
 	scheduler *Scheduler
 	stop      atomic.Bool

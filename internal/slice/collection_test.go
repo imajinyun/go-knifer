@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// Tests aligned with hutool-core CollUtilTest and ListUtilTest.
+// Tests cover the utility toolkit-core CollUtilTest and ListUtilTest.
 
 func TestUnionIntersectionSubtract(t *testing.T) {
 	a := []int{1, 2, 3}

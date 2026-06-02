@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// ConsoleLog 对应 hutool 的 ConsoleLog，使用标准输出/错误打印日志。
+// ConsoleLog 对应 the utility ConsoleLog，使用标准输出/错误打印日志。
 //
 // 默认级别为 LevelDebug，可通过 SetConsoleLevel 全局调整。
 // 输出格式为：[date] [level] name: msg

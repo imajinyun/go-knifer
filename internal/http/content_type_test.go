@@ -2,7 +2,7 @@ package http
 
 import "testing"
 
-// Mirrors hutool-http ContentTypeTest.
+// Covers the utility toolkit-http ContentTypeTest.
 func TestContentTypeBuild(t *testing.T) {
 	got := ContentTypeJSON.WithCharset("UTF-8")
 	want := "application/json;charset=UTF-8"
@@ -19,7 +19,7 @@ func TestContentTypeBuildFunc(t *testing.T) {
 }
 
 func TestContentTypeGetWithLeadingSpace(t *testing.T) {
-	json := " {\n     \"name\": \"hutool\"\n }"
+	json := " {\n     \"name\": \"the utility toolkit\"\n }"
 	if got := GuessContentType(json); got != ContentTypeJSON {
 		t.Fatalf("GuessContentType = %v", got)
 	}

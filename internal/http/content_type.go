@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// ContentType defines common Content-Type values, aligned with hutool-http ContentType.
+// ContentType defines common Content-Type values, aligned with the utility toolkit-http ContentType.
 type ContentType string
 
 const (

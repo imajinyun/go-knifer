@@ -1,8 +1,11 @@
 package resty
 
 import (
+	"crypto/tls"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -139,5 +142,55 @@ func TestRequestOptionsOverrideGlobalDefaults(t *testing.T) {
 	}
 	if got := resp.Body(); got != "per-call:request-resty-agent" {
 		t.Fatalf("Body() = %q, want per-call options to override globals", got)
+	}
+}
+
+func TestRequestOptionContentTypeAndCharset(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(r.Header.Get("Content-Type")))
+	}))
+	defer srv.Close()
+
+	got := Post(srv.URL, WithCharset("GBK"), WithContentType("text/custom")).BodyString("hello").Execute().Body()
+	if got != "text/custom" {
+		t.Fatalf("Content-Type = %q, want text/custom", got)
+	}
+
+	got = Post(srv.URL, WithCharset("GBK")).BodyJSON(`{"ok":true}`).Execute().Body()
+	if got != "application/json;charset=GBK" {
+		t.Fatalf("JSON Content-Type = %q", got)
+	}
+}
+
+func TestRequestOptionTLSConfig(t *testing.T) {
+	c := Get("https://example.com", WithTLSConfig(&tls.Config{ServerName: "example.com"})).buildClient()
+	if c == nil {
+		t.Fatal("client is nil")
+	}
+}
+
+func TestSaveAsOptions(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("resty-save"))
+	}))
+	defer srv.Close()
+
+	dir := t.TempDir()
+	target := filepath.Join(dir, "out.txt")
+	if err := os.WriteFile(target, []byte("old"), 0o644); err != nil {
+		t.Fatalf("write old: %v", err)
+	}
+	if _, err := Get(srv.URL).Execute().SaveAs(target, WithSaveOverwrite(false)); err == nil {
+		t.Fatal("SaveAs overwrite false should fail")
+	}
+	if _, err := DownloadFile(srv.URL, target); err != nil {
+		t.Fatalf("DownloadFile overwrite default: %v", err)
+	}
+	data, err := os.ReadFile(target)
+	if err != nil {
+		t.Fatalf("read: %v", err)
+	}
+	if string(data) != "resty-save" {
+		t.Fatalf("content = %q", data)
 	}
 }

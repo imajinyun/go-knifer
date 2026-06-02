@@ -5,14 +5,14 @@ import (
 	"sync"
 )
 
-// GlobalHeaders maintains global default request headers, aligned with hutool-http GlobalHeaders.
+// GlobalHeaders maintains global default request headers, aligned with the utility toolkit-http GlobalHeaders.
 var (
 	globalHeadersMu sync.RWMutex
 	globalHeaders   = http.Header{}
 )
 
 func init() {
-	// Align with hutool defaults, excluding unsupported encodings.
+	// Align with the utility toolkit defaults, excluding unsupported encodings.
 	globalHeaders.Set(string(HeaderAccept), "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
 	globalHeaders.Set(string(HeaderAcceptEncoding), "gzip, deflate")
 	globalHeaders.Set(string(HeaderAcceptLanguage), "zh-CN,zh;q=0.8")

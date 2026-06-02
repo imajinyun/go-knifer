@@ -2,7 +2,7 @@ package http
 
 import "fmt"
 
-// HTTPError represents an error during HTTP operations, aligned with hutool-http HttpException.
+// HTTPError represents an error during HTTP operations, aligned with the utility toolkit-http HttpException.
 type HTTPError struct {
 	Msg   string
 	Cause error

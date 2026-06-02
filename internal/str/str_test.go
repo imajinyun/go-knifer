@@ -2,7 +2,7 @@ package str
 
 import "testing"
 
-// Tests aligned with hutool-core CharSequenceUtilTest and StrUtilTest.
+// Tests cover the utility toolkit-core CharSequenceUtilTest and StrUtilTest.
 
 func TestIsEmptyAndBlank(t *testing.T) {
 	if !IsEmpty("") || IsEmpty("a") {
@@ -26,10 +26,10 @@ func TestIsEmptyAndBlank(t *testing.T) {
 }
 
 func TestSubAndSlicing(t *testing.T) {
-	if got := Sub("hutool", 0, 3); got != "hut" {
+	if got := Sub("foobar", 0, 3); got != "foo" {
 		t.Fatalf("Sub: %q", got)
 	}
-	if got := Sub("hutool", -3, -1); got != "oo" {
+	if got := Sub("foobar", -3, -1); got != "ba" {
 		t.Fatalf("Sub negative: %q", got)
 	}
 	if got := SubBefore("a.b.c", ".", false); got != "a" {
@@ -87,13 +87,13 @@ func TestReverseAndContains(t *testing.T) {
 }
 
 func TestStartsEndsWith(t *testing.T) {
-	if !StartsWith("hutool", "hu") || StartsWith("hutool", "tool") {
+	if !StartsWith("foobar", "foo") || StartsWith("foobar", "bar") {
 		t.Fatalf("StartsWith failed")
 	}
-	if !EndsWith("hutool", "ool") || EndsWith("hutool", "hu") {
+	if !EndsWith("foobar", "bar") || EndsWith("foobar", "foo") {
 		t.Fatalf("EndsWith failed")
 	}
-	if !EqualsIgnoreCase("HUTOOL", "hutool") {
+	if !EqualsIgnoreCase("FOOBAR", "foobar") {
 		t.Fatalf("EqualsIgnoreCase failed")
 	}
 }

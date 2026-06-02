@@ -36,7 +36,7 @@ func writeAny(sb *strings.Builder, v any, indent, depth int) error {
 	case int64:
 		sb.WriteString(strconv.FormatInt(x, 10))
 	case float64:
-		// 与 hutool 一致：尽量使用最短形式。
+		// 与 the utility toolkit 一致：尽量使用最短形式。
 		s := strconv.FormatFloat(x, 'f', -1, 64)
 		sb.WriteString(s)
 	default:

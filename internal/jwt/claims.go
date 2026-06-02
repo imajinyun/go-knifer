@@ -1,6 +1,6 @@
 package jwt
 
-// 注册的标准 Header 字段名（对应 hutool-jwt JWTHeader）。
+// 注册的标准 Header 字段名（对应 the utility toolkit-jwt JWTHeader）。
 const (
 	HeaderAlgorithm   = "alg" // 加密算法（如 HS256）
 	HeaderType        = "typ" // 类型（一般为 JWT）
@@ -8,7 +8,7 @@ const (
 	HeaderKeyID       = "kid" // 密钥编号
 )
 
-// 注册的标准 Payload 字段名（对应 hutool-jwt RegisteredPayload）。
+// 注册的标准 Payload 字段名（对应 the utility toolkit-jwt RegisteredPayload）。
 const (
 	PayloadIssuer    = "iss" // 签发者
 	PayloadSubject   = "sub" // 面向用户

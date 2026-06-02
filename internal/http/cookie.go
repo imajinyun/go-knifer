@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-// GlobalCookie provides global cookie management, aligned with hutool-http GlobalCookieManager.
+// GlobalCookie provides global cookie management, aligned with the utility toolkit-http GlobalCookieManager.
 var (
 	cookieMu  sync.RWMutex
 	cookieJar http.CookieJar

@@ -5,6 +5,56 @@ import (
 	"strings"
 )
 
+type encodeConfig struct {
+	cfg    *Config
+	indent int
+}
+
+// EncodeOption customizes JSON serialization helpers.
+type EncodeOption func(*encodeConfig)
+
+func defaultEncodeConfig(indent int) encodeConfig {
+	return encodeConfig{cfg: NewConfig(), indent: indent}
+}
+
+// WithConfig sets the JSON config used by serialization helpers.
+func WithConfig(cfg *Config) EncodeOption {
+	return func(c *encodeConfig) {
+		if cfg != nil {
+			c.cfg = cfg
+		}
+	}
+}
+
+// WithIndent sets the indentation width. Use 0 for compact output.
+func WithIndent(indent int) EncodeOption { return func(c *encodeConfig) { c.indent = indent } }
+
+// WithIgnoreNullValue controls whether null values are ignored during serialization.
+func WithIgnoreNullValue(ignore bool) EncodeOption {
+	return func(c *encodeConfig) {
+		c.cfg = c.cfg.Clone()
+		c.cfg.IgnoreNullValue = ignore
+	}
+}
+
+// WithDateFormat sets the time layout used for time.Time values.
+func WithDateFormat(layout string) EncodeOption {
+	return func(c *encodeConfig) {
+		c.cfg = c.cfg.Clone()
+		c.cfg.DateFormat = layout
+	}
+}
+
+func applyEncodeOptions(defaultIndent int, opts []EncodeOption) encodeConfig {
+	cfg := defaultEncodeConfig(defaultIndent)
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	return cfg
+}
+
 // Parse 自动判断 JSON 类型：对象/数组/基础值。
 func Parse(src any) (any, error) { return ParseWithConfig(src, nil) }
 
@@ -55,21 +105,33 @@ func ParseArrayWithConfig(src any, cfg *Config) (*JSONArray, error) {
 }
 
 // ToJSONStr 紧凑序列化。
-func ToJSONStr(v any) (string, error) {
-	w := wrap(v, NewConfig())
-	return writeValue(w, 0)
+func ToJSONStr(v any, opts ...EncodeOption) (string, error) {
+	cfg := applyEncodeOptions(0, opts)
+	w := wrap(v, cfg.cfg)
+	return writeValue(w, cfg.indent)
 }
 
 // ToJSONPrettyStr 4 空格缩进序列化。
-func ToJSONPrettyStr(v any) (string, error) {
-	w := wrap(v, NewConfig())
-	return writeValue(w, 4)
+func ToJSONPrettyStr(v any, opts ...EncodeOption) (string, error) {
+	cfg := applyEncodeOptions(4, opts)
+	w := wrap(v, cfg.cfg)
+	return writeValue(w, cfg.indent)
 }
 
 // ToJSONStrIndent 自定义缩进序列化。
-func ToJSONStrIndent(v any, indent int) (string, error) {
-	w := wrap(v, NewConfig())
-	return writeValue(w, indent)
+func ToJSONStrIndent(v any, indent int, opts ...EncodeOption) (string, error) {
+	cfg := applyEncodeOptions(indent, opts)
+	w := wrap(v, cfg.cfg)
+	return writeValue(w, cfg.indent)
+}
+
+// ToJSONStrWithConfig serializes v using cfg.
+func ToJSONStrWithConfig(v any, cfg *Config) (string, error) { return ToJSONStr(v, WithConfig(cfg)) }
+
+// ToJSONPrettyStrWithConfig serializes v using cfg and cfg.IndentFactor.
+func ToJSONPrettyStrWithConfig(v any, cfg *Config) (string, error) {
+	cfg = configOrDefault(cfg)
+	return ToJSONPrettyStr(v, WithConfig(cfg), WithIndent(cfg.IndentFactor))
 }
 
 // IsJSON 检查字符串是否合法 JSON。

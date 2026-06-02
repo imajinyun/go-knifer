@@ -2,7 +2,7 @@ package bloomfilter
 
 import "fmt"
 
-// BloomFilter is the Bloom filter interface corresponding to hutool BloomFilter.
+// BloomFilter is the Bloom filter interface.
 type BloomFilter interface {
 	// Contains reports whether the string may exist in the filter.
 	Contains(str string) bool
@@ -13,14 +13,14 @@ type BloomFilter interface {
 // HashFunc calculates a hash value for FuncFilter.
 type HashFunc func(str string) int64
 
-// FuncFilter is a Bloom filter backed by a custom hash function, corresponding to hutool FuncFilter / AbstractFilter.
+// FuncFilter is a Bloom filter backed by a custom hash function.
 type FuncFilter struct {
 	bm       BitMap
 	size     int64
 	hashFunc HashFunc
 }
 
-// DefaultMachineNum is the default machine word size for FuncFilter, matching hutool's 32-bit default.
+// DefaultMachineNum is the default machine word size for FuncFilter.
 var DefaultMachineNum = Machine32
 
 // NewFuncFilter creates a FuncFilter with the default machine word size.

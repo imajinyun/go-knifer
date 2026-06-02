@@ -5,11 +5,11 @@ import (
 	"time"
 )
 
-// 对应 hutool-jwt JWTValidatorTest。
+// 对应 the utility toolkit-jwt JWTValidatorTest。
 
 // TestExpiredAt 已过期的 token 应返回校验错误。
 func TestExpiredAt(t *testing.T) {
-	// 与 hutool 测试同一 token，exp=1477592 已过期
+	// 与 the utility toolkit 测试同一 token，exp=1477592 已过期
 	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0Nzc1OTJ9.isvT0Pqx0yjnZk53mUFSeYFJLDs-Ls9IsNAm86gIdZo"
 	j, err := Of(token)
 	if err != nil {
@@ -92,7 +92,7 @@ func TestValidateAlgorithmMismatch(t *testing.T) {
 
 // TestValidateExpired 校验整体合法性时过期 token 返回 false（leeway=0）。
 func TestValidateExpired(t *testing.T) {
-	// 与 hutool 测试 validateTest 中相同
+	// 与 the utility toolkit 测试 validateTest 中相同
 	token := "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9." +
 		"eyJpc3MiOiJNb0xpIiwiZXhwIjoxNjI0OTU4MDk0NTI4LCJpYXQiOjE2MjQ5NTgwMzQ1MjAsInVzZXIiOiJ1c2VyIn0." +
 		"L0uB38p9sZrivbmP0VlDe--j_11YUXTu3TfHhfQhRKc"
@@ -100,8 +100,8 @@ func TestValidateExpired(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parse: %v", err)
 	}
-	// 注意 hutool 该 token 的 exp 字段单位实际上看似毫秒（1624958094528）。
-	// validate(0) 在 hutool 中返回 false，这里同样应不通过。
+	// 注意 the utility toolkit 该 token 的 exp 字段单位实际上看似毫秒（1624958094528）。
+	// validate(0) 在 the utility toolkit 中返回 false，这里同样应不通过。
 	if j.SetKey([]byte("1234567890")).Validate(0) {
 		t.Fatalf("expected validate=false")
 	}
@@ -112,7 +112,7 @@ func TestValidateDateExpired(t *testing.T) {
 	exp, _ := time.Parse("2006-01-02 15:04:05", "2021-10-13 09:59:00")
 	j := New().
 		SetPayload("id", 123).
-		SetPayload("username", "hutool").
+		SetPayload("username", "the utility toolkit").
 		SetExpiresAt(exp)
 	if err := ValidateDate(j, time.Now(), 0); err == nil {
 		t.Fatalf("expected expired error")

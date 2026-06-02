@@ -16,7 +16,7 @@ func (f CacheListenerFunc[K, V]) OnRemove(key K, value V) { f(key, value) }
 // Supplier creates a value when GetOrLoad observes a cache miss.
 type Supplier[V any] func() (V, error)
 
-// Cache defines the common cache operations, similar to hutool-cache Cache.
+// Cache defines the common cache operations.
 type Cache[K comparable, V any] interface {
 	// Capacity returns the maximum number of entries; 0 means unlimited.
 	Capacity() int

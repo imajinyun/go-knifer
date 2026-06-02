@@ -5,7 +5,7 @@ import (
 	"crypto/rsa"
 )
 
-// 对应 hutool-jwt JWTSignerUtil 的便捷工厂函数。
+// 对应 the utility toolkit-jwt JWTSignerUtil 的便捷工厂函数。
 // 在 Go 风格中以包级函数提供。
 
 // HS256 创建 HS256 签名器。
@@ -56,7 +56,7 @@ func ES512(priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey) JWTSigner {
 	return mustECDSA(AlgES512, priv, pub)
 }
 
-// None 返回无签名签名器（hutool JWTSignerUtil.none）。
+// None 返回无签名签名器（the utility toolkit JWTSignerUtil.none）。
 func None() JWTSigner { return NoneSigner() }
 
 func mustRSA(alg string, priv *rsa.PrivateKey, pub *rsa.PublicKey) JWTSigner {
