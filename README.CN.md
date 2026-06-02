@@ -60,6 +60,7 @@ text := vcrypto.MD5Hex("hello")
 | `vnum` | `github.com/imajinyun/go-knifer/vnum` | 数字工具：精确加减乘除、舍入模式、格式化、数字判断、不重复随机数、range、阶乘/组合数、最大公约数/最小公倍数、二进制转换、比较、解析、字节转换、表达式计算和奇偶判断。 |
 | `vrand` | `github.com/imajinyun/go-knifer/vrand` | 随机工具：整数、浮点、布尔、字节、字符串、数字字符串和随机元素。 |
 | `vid` | `github.com/imajinyun/go-knifer/vid` | ID 工具：random/simple/fast UUID、MongoDB 风格 ObjectId、Snowflake 生成器与单例 next-id、worker/datacenter id 推导和 NanoId。 |
+| `vident` | `github.com/imajinyun/go-knifer/vident` | 身份标识工具：中国大陆身份证 15/18 位转换、合法性校验、校验码、生日/年龄/性别提取、省市区编码解析、遮罩，以及港澳台证件校验。 |
 | `vhash` | `github.com/imajinyun/go-knifer/vhash` | 非加密 Hash 工具：Additive、FNV，以及一组经典字符串哈希（RS、JS、PJW、ELF、BKDR、SDBM、DJB、AP、HF、HFIP、TianL、Java 默认）。 |
 | `vvalidator` | `github.com/imajinyun/go-knifer/vvalidator` | 校验工具：邮箱、手机号、URL、IPv4、中文和数字字符串。 |
 | `vtpl` | `github.com/imajinyun/go-knifer/vtpl` | Go html/template 渲染工具。 |
@@ -106,6 +107,8 @@ facade 规则：
 - `vhttp` 是基于标准库的轻量 HTTP facade；`vresty` 是基于 Resty 的链式高级 HTTP client facade。两者都不再重复暴露 URL 工具：URL 转义、query 构建/解析、协议判断（`IsHTTP`/`IsHTTPS`、`EncodeQueryMap`、`DecodeQuery` 等）统一归 `vurl`。
 - `vdb` 负责基于 `database/sql` 的 SQL 数据库辅助能力；调用方继续通过 `*sql.DB` 和单次调用 options
   控制驱动和连接池。
+- `vid` 负责 UUID、Snowflake、ObjectId、NanoId 等生成型标识；`vident` 负责法定身份号码与地区证件解析，
+  例如中国大陆身份证和港澳台证件号。
 - `vcodec` 负责 Base64、Hex 等编码/解码算法；`vurl` 负责 URL 转义、URL/URI 解析、规范化、
   资源和协议语义。
 - `vjson` 负责 JSON 对象、数组、路径和轻量 XML adapter；`vxml` 负责 XML 解析、树访问、格式化、

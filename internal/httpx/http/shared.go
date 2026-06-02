@@ -1,4 +1,4 @@
-package resty
+package http
 
 import (
 	"github.com/imajinyun/go-knifer/internal/httpx/internal/shared"

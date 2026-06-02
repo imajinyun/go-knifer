@@ -202,6 +202,8 @@ func (r *HTTPResponse) SaveAs(dest string, opts ...SaveOption) (n int64, err err
 	if !cfg.overwrite {
 		flag |= os.O_EXCL
 	}
+	// #nosec G304 -- SaveAs intentionally writes to the caller-provided path after
+	// optional directory resolution; callers control the download destination.
 	f, err := os.OpenFile(target, flag, cfg.filePerm)
 	if err != nil {
 		return 0, NewHTTPError("create file failed", err)

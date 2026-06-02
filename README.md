@@ -60,6 +60,7 @@ The project follows an “internal implementation + public facade” layout: `in
 | `vnum` | `github.com/imajinyun/go-knifer/vnum` | Numeric helpers: precise arithmetic, rounding modes, formatting, number checks, random unique numbers, ranges, factorial/combinations, gcd/lcm, binary conversion, comparison, parsing, byte conversion, expression calculation, and odd/even checks. |
 | `vrand` | `github.com/imajinyun/go-knifer/vrand` | Random helpers: integers, floats, booleans, bytes, strings, numeric strings, and random element selection. |
 | `vid` | `github.com/imajinyun/go-knifer/vid` | ID helpers: random/simple/fast UUIDs, MongoDB-style ObjectId, Snowflake generators and singleton next-id helpers, worker/datacenter id derivation, and NanoId generation. |
+| `vident` | `github.com/imajinyun/go-knifer/vident` | Identity helpers: mainland China ID card 15/18-digit conversion, validation, check code, birthday/age/gender extraction, province/city/district code parsing, masking, and Hong Kong/Macau/Taiwan card validation. |
 | `vhash` | `github.com/imajinyun/go-knifer/vhash` | Non-cryptographic hash helpers: additive, FNV, and a set of classic string hashes (RS, JS, PJW, ELF, BKDR, SDBM, DJB, AP, HF, HFIP, TianL, Java default). |
 | `vvalidator` | `github.com/imajinyun/go-knifer/vvalidator` | Validation helpers: email, mobile, URL, IPv4, Chinese text, and number string checks. |
 | `vtpl` | `github.com/imajinyun/go-knifer/vtpl` | Go html/template rendering helpers. |
@@ -113,6 +114,9 @@ Domain boundary rules:
   `EncodeQueryMap`, `DecodeQuery`, etc.) live solely in `vurl`.
 - `vdb` owns SQL database helpers on top of `database/sql`; callers keep control
   of drivers and connection pools through `*sql.DB` and per-call options.
+- `vid` owns generated identifiers such as UUID, Snowflake, ObjectId, and
+  NanoId; `vident` owns legal identity numbers and regional card parsing such
+  as mainland China ID cards and Hong Kong/Macau/Taiwan card numbers.
 - `vcodec` owns encoding/decoding algorithms such as Base64 and Hex; `vurl`
   owns URL escaping, URL/URI parsing, normalization, resource, and scheme
   semantics.

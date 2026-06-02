@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	httpx "github.com/imajinyun/go-knifer/internal/http"
+	httpx "github.com/imajinyun/go-knifer/internal/httpx/http"
 )
 
 // Request is a chainable HTTP request builder.

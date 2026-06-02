@@ -6,7 +6,7 @@ import (
 	"io/fs"
 	"time"
 
-	restyimpl "github.com/imajinyun/go-knifer/internal/resty"
+	restyimpl "github.com/imajinyun/go-knifer/internal/httpx/resty"
 	grestry "resty.dev/v3"
 )
 

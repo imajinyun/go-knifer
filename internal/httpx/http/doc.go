@@ -2,7 +2,10 @@
 // Cookie, UserAgent, SimpleServer, and related utilities.
 //
 // This package is the standard-library based HTTP implementation for vhttp. Use
-// internal/resty through vresty when a Resty-based chainable client is desired.
+// internal/httpx/resty through vresty when a Resty-based chainable client is desired.
+//
+// Engine-agnostic protocol types (Method, Header, ContentType, HTTPError) are
+// re-exported from internal/httpx/internal/shared.
 //
 // Unlike the utility toolkit-http, this package wraps Go's standard net/http library and
 // provides a chainable API:
