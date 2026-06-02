@@ -39,9 +39,10 @@ import the public `v*` facade packages instead of importing from `internal/*`.
 
 ## Reserved packages
 
-`db`, `dfa`, and `poi` are intentional placeholders that document future domain
+`db` and `dfa` are intentional placeholders that document future domain
 ownership. They should not expose runtime APIs until the corresponding capability
-is implemented and reviewed.
+is implemented and reviewed. `poi` now owns office-document utilities and should
+remain focused on Excel, Word, and related document read/write helpers.
 
 ## Review checklist
 

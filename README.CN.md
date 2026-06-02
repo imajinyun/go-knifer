@@ -53,6 +53,7 @@ text := vhash.MD5Hex("hello")
 | `vver` | `github.com/imajinyun/go-knifer/vver` | 版本工具：版本号比较、大小关系判断、表达式匹配、闭区间范围和自定义多表达式分隔符。 |
 | `vref` | `github.com/imajinyun/go-knifer/vref` | 反射工具：字段查找与赋值、方法发现与调用、构造函数风格调用、类型/值工具和方法分类判断。 |
 | `vzip` | `github.com/imajinyun/go-knifer/vzip` | ZIP、gzip、zlib 工具：压缩包创建/解压、条目读取、遍历、追加、内存条目和流式压缩。 |
+| `vpoi` | `github.com/imajinyun/go-knifer/vpoi` | Office 文档工具：轻量 Excel XLSX 工作表列表、行读取、行写入、多工作表写入和内存工作簿创建。 |
 | `vdes` | `github.com/imajinyun/go-knifer/vdes` | 脱敏工具：姓名、证件号、电话、地址、邮箱、密码、车牌、银行卡、IP、护照号和信用代码遮罩。 |
 | `vnum` | `github.com/imajinyun/go-knifer/vnum` | 数字工具：精确加减乘除、舍入模式、格式化、数字判断、不重复随机数、range、阶乘/组合数、最大公约数/最小公倍数、二进制转换、比较、解析、字节转换、表达式计算和奇偶判断。 |
 | `vrand` | `github.com/imajinyun/go-knifer/vrand` | 随机工具：整数、浮点、布尔、字节、字符串、数字字符串和随机元素。 |
@@ -108,8 +109,8 @@ facade 规则：
 - `vobj` 是对象级便利 facade。新增具体领域逻辑应优先落到 `vstr`、`vslice`、`vmap`、`vser`、`vref`
   等明确领域包，只有在对象级聚合有价值时再由 `vobj` 做轻量包装。
 
-部分 `internal` 包，例如 `db`、`dfa`、`poi`，是有意保留的领域占位。它们用于说明未来能力归属，
-当前不提供运行时 API。
+部分 `internal` 包，例如 `db`、`dfa`，是有意保留的领域占位。它们用于说明未来能力归属，
+当前不提供运行时 API。Office 文档工具归属 `internal/poi`，并通过 `vpoi` 对外暴露。
 
 ## 🚀 安装
 
