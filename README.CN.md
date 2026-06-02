@@ -48,6 +48,7 @@ text := vhash.MD5Hex("hello")
 | `vfile` | `github.com/imajinyun/go-knifer/vfile` | 文件与 IO 工具：读写复制、按行读取、mkdir/touch/delete、文件名处理和静默关闭。 |
 | `vcodec` | `github.com/imajinyun/go-knifer/vcodec` | 编解码工具：Base64、URL-safe Base64、Hex 和 URL query 转义。 |
 | `vurl` | `github.com/imajinyun/go-knifer/vurl` | URL 与 URI 工具：解析、标准化、相对 URL 补全、query 编解码、Data URI 构造、协议判断和文件 URL 转换。 |
+| `vnet` | `github.com/imajinyun/go-knifer/vnet` | 网络工具：IPv4/IPv6 转换、CIDR/范围/掩码、本地端口、主机/网卡/MAC 查询、URL 百分号编码、TLS 配置和 multipart 表单辅助。 |
 | `vobj` | `github.com/imajinyun/go-knifer/vobj` | 对象工具：nil/空值判断、相等性、默认值、克隆/序列化、比较、类型检查和容器辅助。 |
 | `vser` | `github.com/imajinyun/go-knifer/vser` | 序列化工具：gob 编码/解码、泛型反序列化、深拷贝、类型注册和可选的解码类型校验。 |
 | `vver` | `github.com/imajinyun/go-knifer/vver` | 版本工具：版本号比较、大小关系判断、表达式匹配、闭区间范围和自定义多表达式分隔符。 |
@@ -299,6 +300,33 @@ func main() {
   fmt.Println(query)
   fmt.Println(vurl.IsWebURL(completed))
   fmt.Println(dataURI)
+}
+```
+
+### 网络与 IP 工具
+
+`vnet` 提供网络辅助能力，覆盖 IPv4/IPv6 转换、CIDR 与掩码计算、IP 范围展开、
+本地端口探测、主机/网卡/MAC 查询、URL 百分号编码、TLS client config 创建，
+以及 multipart 表单辅助。
+
+```go
+package main
+
+import (
+  "fmt"
+
+  "github.com/imajinyun/go-knifer/vnet"
+)
+
+func main() {
+  ipLong, _ := vnet.IPv4ToLong("127.0.0.1")
+  begin, _ := vnet.BeginIP("192.168.1.9", 24)
+  end, _ := vnet.EndIP("192.168.1.9", 24)
+
+  fmt.Println(ipLong, vnet.LongToIPv4(ipLong))
+  fmt.Println(begin, end, vnet.IsInRange("192.168.1.8", "192.168.1.0/24"))
+  fmt.Println(vnet.EncodePathSegment("a/b"))
+  fmt.Println(vnet.HideIPPart("192.168.1.8"))
 }
 ```
 

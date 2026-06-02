@@ -3,13 +3,13 @@ package validator
 import (
 	"regexp"
 
+	netimpl "github.com/imajinyun/go-knifer/internal/net"
 	urlimpl "github.com/imajinyun/go-knifer/internal/url"
 )
 
 var (
 	rxEmail   = regexp.MustCompile(`^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$`)
 	rxMobile  = regexp.MustCompile(`^1[3-9]\d{9}$`)
-	rxIPv4    = regexp.MustCompile(`^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$`)
 	rxChinese = regexp.MustCompile(`^[\p{Han}]+$`)
 	rxNumber  = regexp.MustCompile(`^-?\d+(\.\d+)?$`)
 )
@@ -24,7 +24,7 @@ func IsMobile(s string) bool { return rxMobile.MatchString(s) }
 func IsURL(s string) bool { return urlimpl.IsAbsoluteURL(s) }
 
 // IsIPv4 reports whether s is an IPv4 address.
-func IsIPv4(s string) bool { return rxIPv4.MatchString(s) }
+func IsIPv4(s string) bool { return netimpl.IsIPv4(s) }
 
 // IsChinese reports whether s consists only of Chinese Han characters.
 func IsChinese(s string) bool { return s != "" && rxChinese.MatchString(s) }

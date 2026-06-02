@@ -48,6 +48,7 @@ The project follows an “internal implementation + public facade” layout: `in
 | `vfile` | `github.com/imajinyun/go-knifer/vfile` | File and IO helpers: read/write/copy, lines, mkdir/touch/delete, filename helpers, and quiet close. |
 | `vcodec` | `github.com/imajinyun/go-knifer/vcodec` | Encoding helpers: Base64, URL-safe Base64, Hex, and URL query escaping. |
 | `vurl` | `github.com/imajinyun/go-knifer/vurl` | URL and URI helpers: parse, normalize, resolve relative URLs, query encode/decode, Data URI building, scheme checks, and file URL conversion. |
+| `vnet` | `github.com/imajinyun/go-knifer/vnet` | Network helpers: IPv4/IPv6 conversion, CIDR/range/mask utilities, local ports, host/interface/MAC lookup, URL percent encoding, TLS config, and multipart form helpers. |
 | `vobj` | `github.com/imajinyun/go-knifer/vobj` | Object helpers: nil/empty checks, equality, defaults, clone/serialization, comparison, type inspection, and container utilities. |
 | `vser` | `github.com/imajinyun/go-knifer/vser` | Serialization helpers: gob encode/decode, typed deserialization, deep clone, type registration, and optional decoded-type validation. |
 | `vver` | `github.com/imajinyun/go-knifer/vver` | Version helpers: version comparison, greater/less predicates, expression matching, inclusive ranges, and custom expression delimiters. |
@@ -312,6 +313,33 @@ func main() {
   fmt.Println(query)
   fmt.Println(vurl.IsWebURL(completed))
   fmt.Println(dataURI)
+}
+```
+
+### Network and IP helpers
+
+`vnet` provides network helpers for IPv4/IPv6 conversion, CIDR and mask
+calculation, IP range expansion, local port probing, host/interface/MAC lookup,
+URL percent encoding, TLS client config creation, and multipart form helpers.
+
+```go
+package main
+
+import (
+  "fmt"
+
+  "github.com/imajinyun/go-knifer/vnet"
+)
+
+func main() {
+  ipLong, _ := vnet.IPv4ToLong("127.0.0.1")
+  begin, _ := vnet.BeginIP("192.168.1.9", 24)
+  end, _ := vnet.EndIP("192.168.1.9", 24)
+
+  fmt.Println(ipLong, vnet.LongToIPv4(ipLong))
+  fmt.Println(begin, end, vnet.IsInRange("192.168.1.8", "192.168.1.0/24"))
+  fmt.Println(vnet.EncodePathSegment("a/b"))
+  fmt.Println(vnet.HideIPPart("192.168.1.8"))
 }
 ```
 
