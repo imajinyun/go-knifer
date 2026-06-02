@@ -36,6 +36,18 @@ const (
 	WarURLSeparator = urlimpl.WarURLSeparator
 )
 
+// URLBuilder builds URLs from scheme, host, path, query, and fragment parts.
+type URLBuilder = urlimpl.URLBuilder
+
+// NewURLBuilder creates an empty URL builder.
+func NewURLBuilder() *URLBuilder { return urlimpl.NewURLBuilder() }
+
+// NewHTTPURLBuilder creates an HTTP URL builder.
+func NewHTTPURLBuilder(host string) *URLBuilder { return urlimpl.NewHTTPURLBuilder(host) }
+
+// ParseURLBuilder parses raw into a URL builder.
+func ParseURLBuilder(raw string) (*URLBuilder, error) { return urlimpl.ParseURLBuilder(raw) }
+
 // Parse parses raw into a URL. Empty input returns nil without error.
 func Parse(raw string) (*url.URL, error) { return urlimpl.Parse(raw) }
 
@@ -78,6 +90,27 @@ func URLDecode(s string) (string, error) { return urlimpl.URLDecode(s) }
 func DecodePlus(s string, plusToSpace bool) (string, error) {
 	return urlimpl.DecodePlus(s, plusToSpace)
 }
+
+// DecodeForPath unescapes percent-encoded path text without converting plus signs to spaces.
+func DecodeForPath(s string) (string, error) { return urlimpl.DecodeForPath(s) }
+
+// EncodeAll percent-encodes every non-unreserved character.
+func EncodeAll(s string) string { return urlimpl.EncodeAll(s) }
+
+// EncodeQuery escapes text for query/form usage. Spaces are encoded as '+'.
+func EncodeQuery(s string) string { return urlimpl.EncodeQuery(s) }
+
+// EncodePathSegment escapes one path segment, including slash characters.
+func EncodePathSegment(s string) string { return urlimpl.EncodePathSegment(s) }
+
+// EncodePath escapes each path segment and keeps slash separators.
+func EncodePath(s string) string { return urlimpl.EncodePath(s) }
+
+// EncodeFragment escapes URL fragment text.
+func EncodeFragment(s string) string { return urlimpl.EncodeFragment(s) }
+
+// FormURLEncode escapes text for application/x-www-form-urlencoded usage.
+func FormURLEncode(s string) string { return urlimpl.FormURLEncode(s) }
 
 // Path returns the decoded path part of raw.
 func Path(raw string) (string, error) { return urlimpl.Path(raw) }

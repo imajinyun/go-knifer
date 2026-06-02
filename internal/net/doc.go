@@ -1,2 +1,4 @@
-// Package net provides network, IP, URL-encoding, TLS, and multipart helpers.
+// Package net provides network, IP, TLS, and multipart helpers.
+//
+// URL escaping and URL building live in internal/url (exposed via vurl).
 package net

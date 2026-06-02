@@ -47,8 +47,8 @@ The project follows an “internal implementation + public facade” layout: `in
 | `vdate` | `github.com/imajinyun/go-knifer/vdate` | Date/time helpers: common layouts, parse/format, begin/end of day/month/year, offsets, and comparisons. |
 | `vfile` | `github.com/imajinyun/go-knifer/vfile` | File and IO helpers: read/write/copy, lines, mkdir/touch/delete, filename helpers, and quiet close. |
 | `vcodec` | `github.com/imajinyun/go-knifer/vcodec` | Encoding helpers: Base64, URL-safe Base64, and Hex. |
-| `vurl` | `github.com/imajinyun/go-knifer/vurl` | URL and URI helpers: parse, normalize, resolve relative URLs, query encode/decode, URL encode/decode, Data URI building, scheme checks, and file URL conversion. |
-| `vnet` | `github.com/imajinyun/go-knifer/vnet` | Network helpers: IPv4/IPv6 conversion, CIDR/range/mask utilities, local ports, host/interface/MAC lookup, URL percent encoding, TLS config, and multipart form helpers. |
+| `vurl` | `github.com/imajinyun/go-knifer/vurl` | URL and URI helpers: parse, normalize, resolve relative URLs, query encode/decode, URL/path/fragment percent encoding, URL building, Data URI building, scheme checks, and file URL conversion. |
+| `vnet` | `github.com/imajinyun/go-knifer/vnet` | Network helpers: IPv4/IPv6 conversion, CIDR/range/mask utilities, local ports, host/interface/MAC lookup, TLS config, and multipart form helpers. |
 | `vobj` | `github.com/imajinyun/go-knifer/vobj` | Object helpers: nil/empty checks, equality, defaults, clone/serialization, comparison, type inspection, and container utilities. |
 | `vser` | `github.com/imajinyun/go-knifer/vser` | Serialization helpers: gob encode/decode, typed deserialization, deep clone, type registration, and optional decoded-type validation. |
 | `vver` | `github.com/imajinyun/go-knifer/vver` | Version helpers: version comparison, greater/less predicates, expression matching, inclusive ranges, and custom expression delimiters. |
@@ -297,8 +297,9 @@ _ = err
 
 ### URL and URI helpers
 
-`vurl` centralizes URL parsing, normalization, query string handling, scheme
-checks, Data URI building, and file URL conversion.
+`vurl` centralizes URL parsing, normalization, query string handling, percent
+encoding, URL building, scheme checks, Data URI building, and file URL
+conversion.
 
 ```go
 package main
@@ -314,12 +315,14 @@ func main() {
   completed, _ := vurl.Complete("https://example.com/base/", "next?id=1")
   query := vurl.BuildQuery(map[string]any{"lang": "go", "page": 1})
   dataURI := vurl.DataURIBase64("text/plain", "aGVsbG8=")
+  built := vurl.NewHTTPURLBuilder("example.com").AddPathSegment("a b").AddQuery("q", "go").Build()
 
   fmt.Println(normalized)
   fmt.Println(completed)
   fmt.Println(query)
   fmt.Println(vurl.IsWebURL(completed))
   fmt.Println(dataURI)
+  fmt.Println(built)
 }
 ```
 
@@ -327,7 +330,7 @@ func main() {
 
 `vnet` provides network helpers for IPv4/IPv6 conversion, CIDR and mask
 calculation, IP range expansion, local port probing, host/interface/MAC lookup,
-URL percent encoding, TLS client config creation, and multipart form helpers.
+TLS client config creation, and multipart form helpers.
 
 ```go
 package main
@@ -345,7 +348,6 @@ func main() {
 
   fmt.Println(ipLong, vnet.LongToIPv4(ipLong))
   fmt.Println(begin, end, vnet.IsInRange("192.168.1.8", "192.168.1.0/24"))
-  fmt.Println(vnet.EncodePathSegment("a/b"))
   fmt.Println(vnet.HideIPPart("192.168.1.8"))
 }
 ```

@@ -1,8 +1,7 @@
-package net
+package url
 
 import (
-	"fmt"
-	"net/url"
+	neturl "net/url"
 	"strconv"
 	"strings"
 )
@@ -13,13 +12,13 @@ type URLBuilder struct {
 	host     string
 	port     int
 	path     []string
-	query    url.Values
+	query    neturl.Values
 	fragment string
 	endSlash bool
 }
 
 // NewURLBuilder creates an empty URL builder.
-func NewURLBuilder() *URLBuilder { return &URLBuilder{port: -1, query: url.Values{}} }
+func NewURLBuilder() *URLBuilder { return &URLBuilder{port: -1, query: neturl.Values{}} }
 
 // NewHTTPURLBuilder creates an HTTP URL builder.
 func NewHTTPURLBuilder(host string) *URLBuilder {
@@ -28,7 +27,7 @@ func NewHTTPURLBuilder(host string) *URLBuilder {
 
 // ParseURLBuilder parses raw into a URL builder.
 func ParseURLBuilder(raw string) (*URLBuilder, error) {
-	u, err := url.Parse(raw)
+	u, err := neturl.Parse(raw)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +110,7 @@ func (b *URLBuilder) PathString() string { return buildPath(b.path, b.endSlash) 
 
 // SetQuery replaces the query from raw query text.
 func (b *URLBuilder) SetQuery(rawQuery string) *URLBuilder {
-	values, err := url.ParseQuery(strings.TrimPrefix(rawQuery, "?"))
+	values, err := neturl.ParseQuery(strings.TrimPrefix(rawQuery, "?"))
 	if err == nil {
 		b.query = values
 	}
@@ -121,14 +120,14 @@ func (b *URLBuilder) SetQuery(rawQuery string) *URLBuilder {
 // AddQuery adds a query parameter value.
 func (b *URLBuilder) AddQuery(key string, value any) *URLBuilder {
 	if b.query == nil {
-		b.query = url.Values{}
+		b.query = neturl.Values{}
 	}
-	b.query.Add(key, valueString(value))
+	b.query.Add(key, valueToString(value))
 	return b
 }
 
 // Query returns query values.
-func (b *URLBuilder) Query() url.Values { return b.query }
+func (b *URLBuilder) Query() neturl.Values { return b.query }
 
 // QueryString returns the encoded query string.
 func (b *URLBuilder) QueryString() string { return b.query.Encode() }
@@ -144,7 +143,7 @@ func (b *URLBuilder) FragmentEncoded() string { return EncodeFragment(b.fragment
 
 // Build returns the URL string.
 func (b *URLBuilder) Build() string {
-	u := &url.URL{Scheme: b.scheme, Host: b.Authority(), Path: "/" + strings.Join(b.path, "/"), RawQuery: b.query.Encode(), Fragment: b.fragment}
+	u := &neturl.URL{Scheme: b.scheme, Host: b.Authority(), Path: "/" + strings.Join(b.path, "/"), RawQuery: b.query.Encode(), Fragment: b.fragment}
 	if len(b.path) == 0 {
 		u.Path = ""
 	}
@@ -163,7 +162,7 @@ func splitPath(path string) []string {
 	}
 	parts := strings.Split(path, "/")
 	for i, part := range parts {
-		if decoded, err := url.PathUnescape(part); err == nil {
+		if decoded, err := neturl.PathUnescape(part); err == nil {
 			parts[i] = decoded
 		}
 	}
@@ -179,18 +178,11 @@ func buildPath(parts []string, endSlash bool) string {
 	}
 	escaped := make([]string, len(parts))
 	for i, part := range parts {
-		escaped[i] = url.PathEscape(part)
+		escaped[i] = neturl.PathEscape(part)
 	}
 	out := "/" + strings.Join(escaped, "/")
 	if endSlash && !strings.HasSuffix(out, "/") {
 		out += "/"
 	}
 	return out
-}
-
-func valueString(v any) string {
-	if v == nil {
-		return ""
-	}
-	return fmt.Sprint(v)
 }

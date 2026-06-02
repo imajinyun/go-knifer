@@ -54,25 +54,6 @@ func TestIPv6BigInt(t *testing.T) {
 	}
 }
 
-func TestEncodeAndURLBuilder(t *testing.T) {
-	if got := EncodePath("/a b/c+d"); got != "/a%20b/c+d" {
-		t.Fatalf("EncodePath = %q", got)
-	}
-	if got := EncodePathSegment("a/b"); got != "a%2Fb" {
-		t.Fatalf("EncodePathSegment = %q", got)
-	}
-	if got := EncodeQuery("a b+c"); got != "a+b%2Bc" {
-		t.Fatalf("EncodeQuery = %q", got)
-	}
-	if got, _ := DecodePlus("a+b%2Bc", false); got != "a+b+c" {
-		t.Fatalf("DecodePlus = %q", got)
-	}
-	url := NewHTTPURLBuilder("example.com").AddPathSegment("a b").AddQuery("q", "go net").SetFragment("top 1").Build()
-	if url != "http://example.com/a%20b?q=go+net#top%201" {
-		t.Fatalf("URLBuilder = %q", url)
-	}
-}
-
 func TestPortAndMiscHelpers(t *testing.T) {
 	if !IsValidPort(65535) || IsValidPort(70000) {
 		t.Fatal("IsValidPort failed")

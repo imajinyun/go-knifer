@@ -40,3 +40,22 @@ func TestFacadeChecksAndDataURI(t *testing.T) {
 		t.Fatalf("DataURI: %q", got)
 	}
 }
+
+func TestFacadeEncodeAndURLBuilder(t *testing.T) {
+	if got := vurl.EncodePath("/a b/c+d"); got != "/a%20b/c+d" {
+		t.Fatalf("EncodePath = %q", got)
+	}
+	if got := vurl.EncodePathSegment("a/b"); got != "a%2Fb" {
+		t.Fatalf("EncodePathSegment = %q", got)
+	}
+	if got := vurl.EncodeQuery("a b+c"); got != "a+b%2Bc" {
+		t.Fatalf("EncodeQuery = %q", got)
+	}
+	if got, _ := vurl.DecodeForPath("a+b%2Bc"); got != "a+b+c" {
+		t.Fatalf("DecodeForPath = %q", got)
+	}
+	built := vurl.NewHTTPURLBuilder("example.com").AddPathSegment("a b").AddQuery("q", "go net").SetFragment("top 1").Build()
+	if built != "http://example.com/a%20b?q=go+net#top%201" {
+		t.Fatalf("URLBuilder = %q", built)
+	}
+}

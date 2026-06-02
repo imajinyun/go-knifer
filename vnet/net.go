@@ -32,7 +32,6 @@ const (
 )
 
 type (
-	URLBuilder         = netimpl.URLBuilder
 	TLSConfigBuilder   = netimpl.TLSConfigBuilder
 	UploadSetting      = netimpl.UploadSetting
 	UploadSaveOption   = netimpl.UploadSaveOption
@@ -79,23 +78,6 @@ func MatchesWildcard(wildcard, ipAddress string) bool {
 	return netimpl.MatchesWildcard(wildcard, ipAddress)
 }
 func IsInRange(ip, cidr string) bool { return netimpl.IsInRange(ip, cidr) }
-
-func Decode(s string) (string, error)        { return netimpl.Decode(s) }
-func DecodeForPath(s string) (string, error) { return netimpl.DecodeForPath(s) }
-func DecodePlus(s string, plusToSpace bool) (string, error) {
-	return netimpl.DecodePlus(s, plusToSpace)
-}
-func EncodeAll(s string) string         { return netimpl.EncodeAll(s) }
-func Encode(s string) string            { return netimpl.Encode(s) }
-func EncodeQuery(s string) string       { return netimpl.EncodeQuery(s) }
-func EncodePathSegment(s string) string { return netimpl.EncodePathSegment(s) }
-func EncodePath(s string) string        { return netimpl.EncodePath(s) }
-func EncodeFragment(s string) string    { return netimpl.EncodeFragment(s) }
-func FormURLEncode(s string) string     { return netimpl.FormURLEncode(s) }
-
-func NewURLBuilder() *URLBuilder                      { return netimpl.NewURLBuilder() }
-func NewHTTPURLBuilder(host string) *URLBuilder       { return netimpl.NewHTTPURLBuilder(host) }
-func ParseURLBuilder(raw string) (*URLBuilder, error) { return netimpl.ParseURLBuilder(raw) }
 
 func IsValidPort(port int) bool                       { return netimpl.IsValidPort(port) }
 func IsUsableLocalPort(port int) bool                 { return netimpl.IsUsableLocalPort(port) }

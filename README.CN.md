@@ -47,8 +47,8 @@ text := vhash.MD5Hex("hello")
 | `vdate` | `github.com/imajinyun/go-knifer/vdate` | 日期时间工具：常用布局、解析/格式化、日/月/年起止、偏移和比较。 |
 | `vfile` | `github.com/imajinyun/go-knifer/vfile` | 文件与 IO 工具：读写复制、按行读取、mkdir/touch/delete、文件名处理和静默关闭。 |
 | `vcodec` | `github.com/imajinyun/go-knifer/vcodec` | 编解码工具：Base64、URL-safe Base64 和 Hex。 |
-| `vurl` | `github.com/imajinyun/go-knifer/vurl` | URL 与 URI 工具：解析、标准化、相对 URL 补全、query 编解码、URL 编解码、Data URI 构造、协议判断和文件 URL 转换。 |
-| `vnet` | `github.com/imajinyun/go-knifer/vnet` | 网络工具：IPv4/IPv6 转换、CIDR/范围/掩码、本地端口、主机/网卡/MAC 查询、URL 百分号编码、TLS 配置和 multipart 表单辅助。 |
+| `vurl` | `github.com/imajinyun/go-knifer/vurl` | URL 与 URI 工具：解析、标准化、相对 URL 补全、query 编解码、URL/路径/fragment 百分号编码、URL 构造、Data URI 构造、协议判断和文件 URL 转换。 |
+| `vnet` | `github.com/imajinyun/go-knifer/vnet` | 网络工具：IPv4/IPv6 转换、CIDR/范围/掩码、本地端口、主机/网卡/MAC 查询、TLS 配置和 multipart 表单辅助。 |
 | `vobj` | `github.com/imajinyun/go-knifer/vobj` | 对象工具：nil/空值判断、相等性、默认值、克隆/序列化、比较、类型检查和容器辅助。 |
 | `vser` | `github.com/imajinyun/go-knifer/vser` | 序列化工具：gob 编码/解码、泛型反序列化、深拷贝、类型注册和可选的解码类型校验。 |
 | `vver` | `github.com/imajinyun/go-knifer/vver` | 版本工具：版本号比较、大小关系判断、表达式匹配、闭区间范围和自定义多表达式分隔符。 |
@@ -284,8 +284,8 @@ _ = err
 
 ### URL 与 URI 工具
 
-`vurl` 集中提供 URL 解析、标准化、query 字符串处理、协议判断、Data URI 构造
-和文件 URL 转换等能力。
+`vurl` 集中提供 URL 解析、标准化、query 字符串处理、百分号编码、URL 构造、
+协议判断、Data URI 构造和文件 URL 转换等能力。
 
 ```go
 package main
@@ -301,19 +301,21 @@ func main() {
   completed, _ := vurl.Complete("https://example.com/base/", "next?id=1")
   query := vurl.BuildQuery(map[string]any{"lang": "go", "page": 1})
   dataURI := vurl.DataURIBase64("text/plain", "aGVsbG8=")
+  built := vurl.NewHTTPURLBuilder("example.com").AddPathSegment("a b").AddQuery("q", "go").Build()
 
   fmt.Println(normalized)
   fmt.Println(completed)
   fmt.Println(query)
   fmt.Println(vurl.IsWebURL(completed))
   fmt.Println(dataURI)
+  fmt.Println(built)
 }
 ```
 
 ### 网络与 IP 工具
 
 `vnet` 提供网络辅助能力，覆盖 IPv4/IPv6 转换、CIDR 与掩码计算、IP 范围展开、
-本地端口探测、主机/网卡/MAC 查询、URL 百分号编码、TLS client config 创建，
+本地端口探测、主机/网卡/MAC 查询、TLS client config 创建，
 以及 multipart 表单辅助。
 
 ```go
@@ -332,7 +334,6 @@ func main() {
 
   fmt.Println(ipLong, vnet.LongToIPv4(ipLong))
   fmt.Println(begin, end, vnet.IsInRange("192.168.1.8", "192.168.1.0/24"))
-  fmt.Println(vnet.EncodePathSegment("a/b"))
   fmt.Println(vnet.HideIPPart("192.168.1.8"))
 }
 ```
