@@ -168,6 +168,25 @@ Database helpers belong to `internal/db` and are exposed through `vdb`; DFA text
 matching belongs to `internal/dfa` and is exposed through `vdfa`; office-document
 helpers belong to `internal/poi` and are exposed through `vpoi`.
 
+### Error contract
+
+The root package `knifer` owns the cross-cutting error contract: the `ErrCode`
+classifier (`knifer.ErrCodeInvalidInput`, `ErrCodeNotFound`, `ErrCodeTimeout`,
+…), the unified `knifer.Error` type, and the `NewError` / `WrapError` / `Errorf`
+constructors. Subpackages that opt in return `*knifer.Error` and wrap the
+underlying cause, so callers can match by code while keeping the chain:
+
+```go
+if errors.Is(err, knifer.ErrCodeInvalidInput) { /* ... */ }
+```
+
+`vcrypto.ValidateAESKey` is a reference integration: its error matches both
+`knifer.ErrCodeInvalidInput` and `vcrypto.ErrInvalidKey`.
+
+The `vjwt`, `vjson`, and `vhttp`/`vresty` errors also participate: their errors
+match `knifer.ErrCodeInvalidInput` (vjwt, vjson) and `knifer.ErrCodeInternal`
+(vhttp/vresty) while preserving their own `*Error` types and cause chains.
+
 ## 🚀 Install
 
 Go 1.20 or later is required.

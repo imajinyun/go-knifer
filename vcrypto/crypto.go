@@ -6,11 +6,26 @@ import (
 	"crypto/x509"
 	"hash"
 
+	knifer "github.com/imajinyun/go-knifer"
 	cryptoimpl "github.com/imajinyun/go-knifer/internal/crypto"
 )
 
 // ErrInvalidKey indicates an invalid cryptographic key.
 var ErrInvalidKey = cryptoimpl.ErrInvalidKey
+
+// ValidateAESKey reports whether key is a valid AES key length (16, 24, or 32
+// bytes). On failure it returns a *knifer.Error classified as
+// knifer.ErrCodeInvalidInput while preserving ErrInvalidKey on the chain, so
+// callers may match either errors.Is(err, knifer.ErrCodeInvalidInput) or
+// errors.Is(err, vcrypto.ErrInvalidKey).
+func ValidateAESKey(key []byte) error {
+	switch len(key) {
+	case 16, 24, 32:
+		return nil
+	default:
+		return knifer.WrapError(knifer.ErrCodeInvalidInput, "aes key must be 16, 24, or 32 bytes", ErrInvalidKey)
+	}
+}
 
 // ErrInvalidIV indicates an invalid initialization vector.
 var ErrInvalidIV = cryptoimpl.ErrInvalidIV

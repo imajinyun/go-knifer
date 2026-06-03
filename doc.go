@@ -48,8 +48,17 @@
 // import "github.com/imajinyun/go-knifer/vxml"
 // import "github.com/imajinyun/go-knifer/vzip"
 //
-// Subpackages are independent from each other, and the root package does not
-// expose business APIs.
+// Subpackages are independent from each other. The root package exposes no
+// business APIs; it only defines the cross-cutting error contract (ErrCode,
+// Error and the New/Wrap/Errorf constructors) that subpackages may use to
+// classify failures consistently.
+//
+// Callers can match failures by code regardless of the originating subpackage:
+//
+//	if errors.Is(err, knifer.ErrCodeInvalidInput) { ... }
+//
+// Subpackages that participate should return *knifer.Error and wrap any
+// underlying cause so the standard error chain is preserved.
 //
 // The project follows an internal implementation plus public facade layout:
 // concrete implementations live in internal/* packages, while application code

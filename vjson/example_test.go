@@ -1,8 +1,10 @@
 package vjson_test
 
 import (
+	"errors"
 	"fmt"
 
+	"github.com/imajinyun/go-knifer"
 	"github.com/imajinyun/go-knifer/vjson"
 )
 
@@ -24,4 +26,10 @@ func ExampleGetByPath() {
 	root, _ := vjson.Parse(`{"user":{"name":"go"}}`)
 	fmt.Println(vjson.GetByPath(root, "user.name"))
 	// Output: go
+}
+
+func ExampleParseObj_error() {
+	_, err := vjson.ParseObj(`[1,2,3]`)
+	fmt.Println(errors.Is(err, knifer.ErrCodeInvalidInput))
+	// Output: true
 }

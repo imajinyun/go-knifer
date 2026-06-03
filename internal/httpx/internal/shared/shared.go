@@ -9,6 +9,8 @@ package shared
 import (
 	"fmt"
 	"strings"
+
+	knifer "github.com/imajinyun/go-knifer"
 )
 
 // Method represents an HTTP request method.
@@ -129,6 +131,7 @@ func GuessContentType(body string) ContentType {
 
 // HTTPError represents an error during HTTP operations.
 type HTTPError struct {
+	Code  knifer.ErrCode
 	Msg   string
 	Cause error
 }
@@ -144,12 +147,18 @@ func (e *HTTPError) Error() string {
 // Unwrap returns the underlying error.
 func (e *HTTPError) Unwrap() error { return e.Cause }
 
+// Is supports errors.Is(err, knifer.ErrCodeXxx) matching by error code.
+func (e *HTTPError) Is(target error) bool {
+	code, ok := target.(knifer.ErrCode)
+	return ok && e.Code == code
+}
+
 // NewHTTPError creates an HTTP error.
 func NewHTTPError(msg string, cause error) *HTTPError {
-	return &HTTPError{Msg: msg, Cause: cause}
+	return &HTTPError{Code: knifer.ErrCodeInternal, Msg: msg, Cause: cause}
 }
 
 // HTTPErrorf creates an HTTP error with a formatted message.
 func HTTPErrorf(format string, args ...any) *HTTPError {
-	return &HTTPError{Msg: fmt.Sprintf(format, args...)}
+	return &HTTPError{Code: knifer.ErrCodeInternal, Msg: fmt.Sprintf(format, args...)}
 }

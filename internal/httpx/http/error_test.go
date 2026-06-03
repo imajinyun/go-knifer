@@ -3,6 +3,8 @@ package http
 import (
 	"errors"
 	"testing"
+
+	knifer "github.com/imajinyun/go-knifer"
 )
 
 // Covers the utility toolkit-http HttpException related cases.
@@ -24,6 +26,15 @@ func TestHTTPErrorf(t *testing.T) {
 	}
 	if e.Unwrap() != nil {
 		t.Fatal("unwrap should be nil")
+	}
+}
+
+func TestHTTPErrorMatchesErrCode(t *testing.T) {
+	if !errors.Is(NewHTTPError("boom", nil), knifer.ErrCodeInternal) {
+		t.Fatal("NewHTTPError should match knifer.ErrCodeInternal")
+	}
+	if !errors.Is(HTTPErrorf("status %d", 500), knifer.ErrCodeInternal) {
+		t.Fatal("HTTPErrorf should match knifer.ErrCodeInternal")
 	}
 }
 

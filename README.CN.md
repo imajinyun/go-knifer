@@ -154,6 +154,24 @@ facade 规则：
 数据库工具归属 `internal/db`，并通过 `vdb` 对外暴露；DFA 文本匹配归属 `internal/dfa`，并通过
 `vdfa` 对外暴露；Office 文档工具归属 `internal/poi`，并通过 `vpoi` 对外暴露。
 
+### 错误契约
+
+根包 `knifer` 负责跨子包的统一错误契约：错误码分类 `ErrCode`（`knifer.ErrCodeInvalidInput`、
+`ErrCodeNotFound`、`ErrCodeTimeout` 等）、统一的 `knifer.Error` 类型，以及
+`NewError` / `WrapError` / `Errorf` 构造函数。接入的子包返回 `*knifer.Error` 并包裹底层 cause，
+调用方既能按错误码匹配，又能保留错误链：
+
+```go
+if errors.Is(err, knifer.ErrCodeInvalidInput) { /* ... */ }
+```
+
+`vcrypto.ValidateAESKey` 是参考接入示范：其错误同时匹配
+`knifer.ErrCodeInvalidInput` 与 `vcrypto.ErrInvalidKey`。
+
+`vjwt`、`vjson`、`vhttp`/`vresty` 也已接入：其错误分别匹配
+`knifer.ErrCodeInvalidInput`（vjwt、vjson）与 `knifer.ErrCodeInternal`（vhttp/vresty），
+同时保留各自的 `*Error` 类型与 cause 错误链。
+
 ## 🚀 安装
 
 项目要求 Go 1.20 或更高版本。
