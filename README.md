@@ -42,7 +42,7 @@ Not sure which package to import? Start from what you want to do:
 | --- | --- |
 | Trim, split, case-convert, or check blank strings | `vstr` |
 | Filter / map / dedup / paginate a slice | `vslice` |
-| Read keys/values, merge, or invert a map | `vmap` |
+| Create, query, transform, merge, diff, or sort maps | `vmap` |
 | Loosely convert `any` to int/float/bool/string | `vconv` |
 | Precise arithmetic, rounding, or evaluate an expression | `vnum` |
 | MD5/SHA/HMAC, AES/RSA, sign parameters | `vcrypto` |
@@ -73,7 +73,7 @@ The project follows an “internal implementation + public facade” layout: `in
 | --- | --- | --- |
 | `vstr` | `github.com/imajinyun/go-knifer/vstr` | String helpers: blank/empty checks, trimming, splitting, substring helpers, formatting, emoji helpers, naming conversion, defaults, HTML escaping, and rune checks (blank, letter, digit, ASCII, letter-or-digit). |
 | `vslice` | `github.com/imajinyun/go-knifer/vslice` | Slice helpers: contains/index, reverse, distinct, join, filter/map, sub-slice, concat, set-like operations, and paging. |
-| `vmap` | `github.com/imajinyun/go-knifer/vmap` | Map helpers: empty checks, keys, values, inverse, and merge. |
+| `vmap` | `github.com/imajinyun/go-knifer/vmap` | Map helpers: construction, empty checks, contains/get/find, keys/values and sorted views, map/filter/reject/partition, reduce/group/count, inverse, merge/merge-with-resolver, intersect/diff/symmetric diff, pick/omit, update/clone, and equality checks. |
 | `vconv` | `github.com/imajinyun/go-knifer/vconv` | Permissive type conversion: string, int, int64, float64, bool, bytes, and default-value variants. |
 | `vdate` | `github.com/imajinyun/go-knifer/vdate` | Date/time helpers: common layouts, parse/format, begin/end of day/month/year, offsets, and comparisons. |
 | `vfile` | `github.com/imajinyun/go-knifer/vfile` | File and IO helpers: read/write/copy, lines, mkdir/touch/delete, filename helpers, and quiet close. |
@@ -439,6 +439,34 @@ func main() {
   fmt.Println(vobj.DefaultIfNil(&name, "default"))
   fmt.Println(vobj.Contains(cloned.Tags, "go"))
   fmt.Println(vobj.TypeName(profile))
+}
+```
+
+### Map helpers
+
+`vmap` provides generic helpers for common map operations. It returns non-nil
+maps for constructors and pure helpers, keeps input maps unmodified unless the
+function is explicitly in-place (`Clear`, `Update`), and supports both
+last-write-wins merging and custom conflict resolution.
+
+```go
+package main
+
+import (
+  "fmt"
+
+  "github.com/imajinyun/go-knifer/vmap"
+)
+
+func main() {
+  base := vmap.Of[string, int]("a", 1, "b", 2)
+  merged := vmap.Merge(base, map[string]int{"b": 20, "c": 3})
+  evens := vmap.FilterValues(merged, func(v int) bool { return v%2 == 0 })
+  grouped := vmap.GroupBy([]string{"go", "git", "java"}, func(s string) byte { return s[0] })
+
+  fmt.Println(vmap.SortedKeys(merged))
+  fmt.Println(evens)
+  fmt.Println(grouped['g'])
 }
 ```
 

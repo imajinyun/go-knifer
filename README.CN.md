@@ -42,7 +42,7 @@ text := vcrypto.MD5Hex("hello")
 | --- | --- |
 | 裁剪、切分、命名转换、判空字符串 | `vstr` |
 | 对切片做过滤 / 映射 / 去重 / 分页 | `vslice` |
-| 读取 keys/values、合并、反转 map | `vmap` |
+| 创建、查询、转换、合并、差集或排序 map | `vmap` |
 | 把 `any` 宽松转成 int/float/bool/string | `vconv` |
 | 精确运算、舍入、表达式计算 | `vnum` |
 | MD5/SHA/HMAC、AES/RSA、参数签名 | `vcrypto` |
@@ -73,7 +73,7 @@ text := vcrypto.MD5Hex("hello")
 | --- | --- | --- |
 | `vstr` | `github.com/imajinyun/go-knifer/vstr` | 字符串工具：空白判断、裁剪、切分、截取、格式化、emoji、命名转换、默认值、HTML 转义，以及字符判断（空白、字母、数字、ASCII、字母或数字）。 |
 | `vslice` | `github.com/imajinyun/go-knifer/vslice` | Slice 工具：包含/索引、反转、去重、拼接、过滤/映射、截取、合并、集合操作和分页。 |
-| `vmap` | `github.com/imajinyun/go-knifer/vmap` | Map 工具：空判断、keys、values、反转和合并。 |
+| `vmap` | `github.com/imajinyun/go-knifer/vmap` | Map 工具：构造、空判断、contains/get/find、keys/values 与排序视图、map/filter/reject/partition、reduce/group/count、反转、合并/自定义冲突合并、交集/差集/对称差集、pick/omit、update/clone 和相等性判断。 |
 | `vconv` | `github.com/imajinyun/go-knifer/vconv` | 宽松类型转换：string、int、int64、float64、bool、bytes 及默认值版本。 |
 | `vdate` | `github.com/imajinyun/go-knifer/vdate` | 日期时间工具：常用布局、解析/格式化、日/月/年起止、偏移和比较。 |
 | `vfile` | `github.com/imajinyun/go-knifer/vfile` | 文件与 IO 工具：读写复制、按行读取、mkdir/touch/delete、文件名处理和静默关闭。 |
@@ -419,6 +419,33 @@ func main() {
   fmt.Println(vobj.DefaultIfNil(&name, "default"))
   fmt.Println(vobj.Contains(cloned.Tags, "go"))
   fmt.Println(vobj.TypeName(profile))
+}
+```
+
+### Map 工具
+
+`vmap` 提供泛型 map 常用操作。构造函数和纯函数会返回非 nil map，且不会修改输入 map；只有
+`Clear`、`Update` 这类显式原地操作会修改调用方传入的 map。合并场景同时支持后者覆盖前者的
+`Merge`，以及自定义冲突处理的 `MergeFunc`。
+
+```go
+package main
+
+import (
+  "fmt"
+
+  "github.com/imajinyun/go-knifer/vmap"
+)
+
+func main() {
+  base := vmap.Of[string, int]("a", 1, "b", 2)
+  merged := vmap.Merge(base, map[string]int{"b": 20, "c": 3})
+  evens := vmap.FilterValues(merged, func(v int) bool { return v%2 == 0 })
+  grouped := vmap.GroupBy([]string{"go", "git", "java"}, func(s string) byte { return s[0] })
+
+  fmt.Println(vmap.SortedKeys(merged))
+  fmt.Println(evens)
+  fmt.Println(grouped['g'])
 }
 ```
 

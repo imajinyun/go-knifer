@@ -1,52 +1,88 @@
 // Package knifer is the root package of the go-knifer utility toolkit.
 //
-// This module is split into multiple public subpackages by domain.
-// Import only the packages you need:
+// This module is split into 46 public subpackages by domain. Import only the
+// packages you need. The subpackages are grouped below for navigation:
 //
-// import "github.com/imajinyun/go-knifer/vbean"
-// import "github.com/imajinyun/go-knifer/vblf"
-// import "github.com/imajinyun/go-knifer/vbool"
-// import "github.com/imajinyun/go-knifer/vcache"
-// import "github.com/imajinyun/go-knifer/vcaptcha"
-// import "github.com/imajinyun/go-knifer/vcodec"
-// import "github.com/imajinyun/go-knifer/vconf"
-// import "github.com/imajinyun/go-knifer/vconv"
-// import "github.com/imajinyun/go-knifer/vcrypto"
-// import "github.com/imajinyun/go-knifer/vdate"
-// import "github.com/imajinyun/go-knifer/vdb"
-// import "github.com/imajinyun/go-knifer/vdes"
-// import "github.com/imajinyun/go-knifer/vdfa"
-// import "github.com/imajinyun/go-knifer/verr"
-// import "github.com/imajinyun/go-knifer/vfile"
-// import "github.com/imajinyun/go-knifer/vhash"
-// import "github.com/imajinyun/go-knifer/vhttp"
-// import "github.com/imajinyun/go-knifer/vid"
-// import "github.com/imajinyun/go-knifer/vident"
-// import "github.com/imajinyun/go-knifer/vjob"
-// import "github.com/imajinyun/go-knifer/vjson"
-// import "github.com/imajinyun/go-knifer/vjwt"
-// import "github.com/imajinyun/go-knifer/vlog"
-// import "github.com/imajinyun/go-knifer/vmap"
-// import "github.com/imajinyun/go-knifer/vnet"
-// import "github.com/imajinyun/go-knifer/vnum"
-// import "github.com/imajinyun/go-knifer/vstr"
-// import "github.com/imajinyun/go-knifer/vobj"
-// import "github.com/imajinyun/go-knifer/vpoi"
-// import "github.com/imajinyun/go-knifer/vrand"
-// import "github.com/imajinyun/go-knifer/vref"
-// import "github.com/imajinyun/go-knifer/vregex"
-// import "github.com/imajinyun/go-knifer/vresty"
-// import "github.com/imajinyun/go-knifer/vsem"
-// import "github.com/imajinyun/go-knifer/vset"
-// import "github.com/imajinyun/go-knifer/vstk"
-// import "github.com/imajinyun/go-knifer/vslice"
-// import "github.com/imajinyun/go-knifer/vstr"
-// import "github.com/imajinyun/go-knifer/vsys"
-// import "github.com/imajinyun/go-knifer/vtpl"
-// import "github.com/imajinyun/go-knifer/vurl"
-// import "github.com/imajinyun/go-knifer/vver"
-// import "github.com/imajinyun/go-knifer/vxml"
-// import "github.com/imajinyun/go-knifer/vzip"
+// String & text:
+//
+//	vstr    strings (blank checks, case, substring, naming, runes)
+//	vregex  regular expressions
+//	vtpl    html/template rendering (TemPLate)
+//	vurl    URL/URI parsing, escaping, query building
+//
+// Collections & data structures:
+//
+//	vslice  slices
+//	vmap    maps
+//	vset    sets
+//	vobj    object-level helpers
+//	vblf    bloom filters (BLoom Filter)
+//	vcache  generic caches (FIFO/LRU/LFU/Timed)
+//	vbean   struct/map mapping and copying
+//
+// Primitives & conversion:
+//
+//	vbool   booleans
+//	vnum    numeric helpers
+//	vconv   permissive type conversion
+//	vdate   date/time
+//	vref    reflection
+//
+// Encoding & serialization:
+//
+//	vcodec  Base64/Hex
+//	vjson   JSON
+//	vxml    XML
+//	vser    gob serialization (SERialize)
+//	vhash   non-cryptographic hashes
+//
+// Networking & communication:
+//
+//	vhttp   standard-library HTTP client/server
+//	vresty  Resty-based HTTP client
+//	vskt    sockets (SocKeT)
+//	vnet    IP/port/interface utilities
+//
+// Security & matching:
+//
+//	vcrypto cryptography and digests
+//	vjwt    JWT sign/verify
+//	vdes    data desensitization (DESensitize)
+//	vcaptcha image captchas
+//	vdfa    DFA word-tree text matching
+//
+// Tasks & concurrency:
+//
+//	vjob    job orchestration
+//	vcron   cron scheduling
+//	vsem    semaphores (SEMaphore)
+//	vrand   randomness
+//
+// IO & files:
+//
+//	vfile   file and IO helpers
+//	vzip    archive/compression
+//	vpoi    office documents (Excel)
+//
+// Runtime & system:
+//
+//	vsys    system information (SYStem)
+//	vlog    logging
+//	verr    error handling, panic recovery, stacks (errx)
+//	vconf   configuration
+//
+// Identity & misc:
+//
+//	vid     generated IDs (UUID/Snowflake/ObjectId/NanoId)
+//	vident  legal identity numbers (ID cards)
+//	vvalidator  value validators
+//	vver    version comparison (VERsion)
+//	vdb     database/sql helpers
+//
+// Example:
+//
+//	import "github.com/imajinyun/go-knifer/vstr"
+//	import "github.com/imajinyun/go-knifer/vhttp"
 //
 // Subpackages are independent from each other. The root package exposes no
 // business APIs; it only defines the cross-cutting error contract (ErrCode,

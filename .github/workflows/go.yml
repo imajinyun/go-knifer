@@ -28,6 +28,9 @@ jobs:
       - name: Vet
         run: go vet ./...
 
+      - name: Architecture check
+        run: bash bin/check_arch.sh
+
       - name: Test
         run: go test -race -coverprofile=coverage.out ./...
 

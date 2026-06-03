@@ -1,5 +1,5 @@
 // Package vskt provides public APIs for socket utilities.
 //
-// This package only acts as a facade. Concrete implementations live in the
-// corresponding internal subpackage.
+// Abbreviation: vskt stands for "SocKeT". This package only acts as a facade.
+// Concrete implementations live in internal/socket.
 package vskt
