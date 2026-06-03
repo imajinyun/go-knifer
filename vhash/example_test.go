@@ -1,0 +1,23 @@
+package vhash_test
+
+import (
+	"fmt"
+
+	"github.com/imajinyun/go-knifer/vhash"
+)
+
+func ExampleAdditiveHash() {
+	fmt.Println(vhash.AdditiveHash("abc", 31))
+	// Output: 18
+}
+
+func ExampleJavaDefaultHash() {
+	// Equivalent to Java String.hashCode.
+	fmt.Println(vhash.JavaDefaultHash("a"))
+	// Output: 97
+}
+
+func ExampleBkdrHash() {
+	fmt.Println(vhash.BkdrHash("a"))
+	// Output: 97
+}

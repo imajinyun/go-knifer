@@ -34,6 +34,37 @@ text := vcrypto.MD5Hex("hello")
 
 This style of utility wrapping reduces repeated code, avoids hidden risks from copy-paste snippets, and keeps the same scenarios represented by consistent APIs across a team.
 
+## 🧭 Find by scenario
+
+Not sure which package to import? Start from what you want to do:
+
+| I want to… | Use |
+| --- | --- |
+| Trim, split, case-convert, or check blank strings | `vstr` |
+| Filter / map / dedup / paginate a slice | `vslice` |
+| Read keys/values, merge, or invert a map | `vmap` |
+| Loosely convert `any` to int/float/bool/string | `vconv` |
+| Precise arithmetic, rounding, or evaluate an expression | `vnum` |
+| MD5/SHA/HMAC, AES/RSA, sign parameters | `vcrypto` |
+| Non-cryptographic hashes (FNV, BKDR, …) | `vhash` |
+| Encode/parse URLs, build/parse query strings | `vurl` |
+| Base64 / Hex encode-decode | `vcodec` |
+| Build/parse JSON, path get/put, JSON↔XML | `vjson` |
+| Parse, build, or navigate XML | `vxml` |
+| Generate UUID / Snowflake / NanoId | `vid` |
+| Validate or parse ID-card numbers | `vident` |
+| Read/write files, paths, copy, mkdir | `vfile` |
+| Format/parse dates, offsets, day ranges | `vdate` |
+| Send HTTP requests (standard library) | `vhttp` |
+| Send HTTP requests (Resty-based) | `vresty` |
+| Validate email/mobile/IP, etc. | `vvalidator` |
+| Mask sensitive data | `vdes` |
+| JWT sign/verify | `vjwt` |
+| Schedule cron tasks | `vcron` |
+| Cache with FIFO/LRU/LFU/TTL | `vcache` |
+
+For the full list, see the module matrix below.
+
 ## 🧩 Module
 
 The project follows an “internal implementation + public facade” layout: `internal/*` contains concrete implementations, while `v*` packages expose stable public APIs.
@@ -72,6 +103,7 @@ The project follows an “internal implementation + public facade” layout: `in
 | `vcron` | `github.com/imajinyun/go-knifer/vcron` | Cron expression parsing and task scheduling, including both default and custom schedulers. |
 | `vcrypto` | `github.com/imajinyun/go-knifer/vcrypto` | Cryptography and digests: MD5/SHA, HMAC, PBKDF2, parameter signing, random bytes, AES CBC/ECB/CTR/CFB/OFB/GCM, DES/3DES, RC4, Vigenere, XXTEA, RSA OAEP/PKCS#1/PSS, PEM, and X.509 certificate helpers. |
 | `vdb` | `github.com/imajinyun/go-knifer/vdb` | Database helpers built on database/sql: SQL execution, named parameters, entities, conditions, query builders, transactions, pagination, and lightweight metadata lookup. |
+| `vdfa` | `github.com/imajinyun/go-knifer/vdfa` | DFA word-tree matching: stop-rune filtering, first/all matches, dense and greedy match modes, found-word metadata, package-level matcher helpers, and text replacement. |
 | `vhttp` | `github.com/imajinyun/go-knifer/vhttp` | Chainable HTTP client, downloads, per-call request options, BasicAuth, User-Agent parsing, and a simple server helper. |
 | `vresty` | `github.com/imajinyun/go-knifer/vresty` | Resty v3 based HTTP facade: chainable requests, JSON/form/multipart bodies, per-call request options, downloads, and lightweight response helpers. |
 | `vjson` | `github.com/imajinyun/go-knifer/vjson` | Ordered JSON objects/arrays, JSON parsing and formatting, path-based get/put, bean/list conversion, and XML/JSON conversion. |
@@ -114,6 +146,9 @@ Domain boundary rules:
   `EncodeQueryMap`, `DecodeQuery`, etc.) live solely in `vurl`.
 - `vdb` owns SQL database helpers on top of `database/sql`; callers keep control
   of drivers and connection pools through `*sql.DB` and per-call options.
+- `vdfa` owns DFA word-tree matching, stop-rune filtering, dense/greedy match
+  modes, found-word metadata, and text replacement. Generic string helpers
+  should not absorb dictionary-matching logic.
 - `vid` owns generated identifiers such as UUID, Snowflake, ObjectId, and
   NanoId; `vident` owns legal identity numbers and regional card parsing such
   as mainland China ID cards and Hong Kong/Macau/Taiwan card numbers.
@@ -129,11 +164,9 @@ Domain boundary rules:
   implemented first in clear packages such as `vstr`, `vslice`, `vmap`, `vser`,
   or `vref`, then wrapped by `vobj` only when a broad object helper is useful.
 
-Some `internal` packages, such as `dfa`, are intentionally reserved
-placeholders. They document future domain ownership and currently do not provide
-runtime APIs. Database helpers belong to `internal/db` and are exposed through
-`vdb`; office-document helpers belong to `internal/poi` and are exposed through
-`vpoi`.
+Database helpers belong to `internal/db` and are exposed through `vdb`; DFA text
+matching belongs to `internal/dfa` and is exposed through `vdfa`; office-document
+helpers belong to `internal/poi` and are exposed through `vpoi`.
 
 ## 🚀 Install
 

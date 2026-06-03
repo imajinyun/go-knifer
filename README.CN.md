@@ -34,6 +34,37 @@ text := vcrypto.MD5Hex("hello")
 
 这类封装能减少重复代码、降低复制粘贴带来的隐患，也让团队内相同场景使用一致的 API。
 
+## 🧭 按场景查找
+
+不确定该引入哪个包？从你要做的事出发：
+
+| 我想…… | 使用 |
+| --- | --- |
+| 裁剪、切分、命名转换、判空字符串 | `vstr` |
+| 对切片做过滤 / 映射 / 去重 / 分页 | `vslice` |
+| 读取 keys/values、合并、反转 map | `vmap` |
+| 把 `any` 宽松转成 int/float/bool/string | `vconv` |
+| 精确运算、舍入、表达式计算 | `vnum` |
+| MD5/SHA/HMAC、AES/RSA、参数签名 | `vcrypto` |
+| 非加密哈希（FNV、BKDR 等） | `vhash` |
+| URL 编解码、query 构建/解析 | `vurl` |
+| Base64 / Hex 编解码 | `vcodec` |
+| 构建/解析 JSON、路径读写、JSON↔XML | `vjson` |
+| 解析、构建、遍历 XML | `vxml` |
+| 生成 UUID / Snowflake / NanoId | `vid` |
+| 校验或解析身份证号 | `vident` |
+| 读写文件、路径、复制、建目录 | `vfile` |
+| 日期格式化/解析、偏移、天数区间 | `vdate` |
+| 发起 HTTP 请求（标准库） | `vhttp` |
+| 发起 HTTP 请求（基于 Resty） | `vresty` |
+| 校验邮箱/手机号/IP 等 | `vvalidator` |
+| 敏感数据脱敏 | `vdes` |
+| JWT 签发/校验 | `vjwt` |
+| 定时任务调度 | `vcron` |
+| FIFO/LRU/LFU/TTL 缓存 | `vcache` |
+
+完整清单见下方模块矩阵。
+
 ## 🧩 模块
 
 当前项目采用“内部实现 + 对外 facade”的组织方式：`internal/*` 保存具体实现，`v*` 包提供稳定、可导入的公共 API。
@@ -72,6 +103,7 @@ text := vcrypto.MD5Hex("hello")
 | `vcron` | `github.com/imajinyun/go-knifer/vcron` | Cron 表达式解析与任务调度，支持默认调度器和自定义调度器。 |
 | `vcrypto` | `github.com/imajinyun/go-knifer/vcrypto` | 加密与摘要：MD5/SHA、HMAC、PBKDF2、参数签名、随机字节、AES CBC/ECB/CTR/CFB/OFB/GCM、DES/3DES、RC4、Vigenere、XXTEA、RSA OAEP/PKCS#1/PSS、PEM 与 X.509 证书工具。 |
 | `vdb` | `github.com/imajinyun/go-knifer/vdb` | 基于 database/sql 的数据库工具：SQL 执行、命名参数、Entity、条件、查询构造器、事务、分页和轻量元信息查询。 |
+| `vdfa` | `github.com/imajinyun/go-knifer/vdfa` | DFA 词树匹配：停顿字符过滤、首个/全部匹配、密集/贪婪匹配、命中词位置元信息、包级匹配器和文本替换。 |
 | `vhttp` | `github.com/imajinyun/go-knifer/vhttp` | 链式 HTTP 客户端、下载、单次请求 options、BasicAuth、User-Agent 解析、简易服务端。 |
 | `vresty` | `github.com/imajinyun/go-knifer/vresty` | 基于 Resty v3 的 HTTP facade：链式请求、JSON/form/multipart 请求体、单次请求 options、下载与轻量响应工具。 |
 | `vjson` | `github.com/imajinyun/go-knifer/vjson` | 有序 JSON 对象/数组、JSON 解析与格式化、路径表达式读写、Bean/List 转换、XML/JSON 转换。 |
@@ -107,6 +139,7 @@ facade 规则：
 - `vhttp` 是基于标准库的轻量 HTTP facade；`vresty` 是基于 Resty 的链式高级 HTTP client facade。两者都不再重复暴露 URL 工具：URL 转义、query 构建/解析、协议判断（`IsHTTP`/`IsHTTPS`、`EncodeQueryMap`、`DecodeQuery` 等）统一归 `vurl`。
 - `vdb` 负责基于 `database/sql` 的 SQL 数据库辅助能力；调用方继续通过 `*sql.DB` 和单次调用 options
   控制驱动和连接池。
+- `vdfa` 负责 DFA 词树匹配、停顿字符过滤、密集/贪婪匹配、命中词位置元信息和文本替换；通用字符串工具不承载词典匹配逻辑。
 - `vid` 负责 UUID、Snowflake、ObjectId、NanoId 等生成型标识；`vident` 负责法定身份号码与地区证件解析，
   例如中国大陆身份证和港澳台证件号。
 - `vcodec` 负责 Base64、Hex 等编码/解码算法；`vurl` 负责 URL 转义、URL/URI 解析、规范化、
@@ -118,9 +151,8 @@ facade 规则：
 - `vobj` 是对象级便利 facade。新增具体领域逻辑应优先落到 `vstr`、`vslice`、`vmap`、`vser`、`vref`
   等明确领域包，只有在对象级聚合有价值时再由 `vobj` 做轻量包装。
 
-部分 `internal` 包，例如 `dfa`，是有意保留的领域占位。它们用于说明未来能力归属，
-当前不提供运行时 API。数据库工具归属 `internal/db`，并通过 `vdb` 对外暴露；Office 文档工具归属
-`internal/poi`，并通过 `vpoi` 对外暴露。
+数据库工具归属 `internal/db`，并通过 `vdb` 对外暴露；DFA 文本匹配归属 `internal/dfa`，并通过
+`vdfa` 对外暴露；Office 文档工具归属 `internal/poi`，并通过 `vpoi` 对外暴露。
 
 ## 🚀 安装
 

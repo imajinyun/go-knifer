@@ -15,6 +15,7 @@
 // import "github.com/imajinyun/go-knifer/vdate"
 // import "github.com/imajinyun/go-knifer/vdb"
 // import "github.com/imajinyun/go-knifer/vdes"
+// import "github.com/imajinyun/go-knifer/vdfa"
 // import "github.com/imajinyun/go-knifer/verr"
 // import "github.com/imajinyun/go-knifer/vfile"
 // import "github.com/imajinyun/go-knifer/vhash"

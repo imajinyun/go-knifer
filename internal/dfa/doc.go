@@ -1,6 +1,5 @@
-// Package dfa is reserved for future DFA-based text matching utilities.
+// Package dfa provides deterministic-finite-automaton text matching utilities.
 //
-// This package intentionally contains no runtime API yet. When implemented, it
-// should own deterministic-finite-automaton matching and sensitive-word
-// filtering capabilities instead of placing them in generic string helpers.
+// It owns word-tree construction, stop-rune filtering, dense and greedy match
+// modes, found-word metadata, and text replacement helpers.
 package dfa
