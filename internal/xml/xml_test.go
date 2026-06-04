@@ -9,6 +9,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	knifer "github.com/imajinyun/go-knifer"
 )
 
 type sampleBean struct {
@@ -80,9 +82,8 @@ func TestReadVariantsSAXXPathAndFile(t *testing.T) {
 	if err != nil || ElementText(fromReader.Root, "b") != "2" {
 		t.Fatalf("ReadXMLReader doc=%#v err=%v", fromReader, err)
 	}
-	if _, err := ParseXML(`<root><unclosed></root>`); err == nil {
-		t.Fatal("ParseXML malformed content should return error")
-	}
+	_, err = ParseXML(`<root><unclosed></root>`)
+	assertXMLInvalidInput(t, err)
 	if _, err := ReadXML(""); err == nil {
 		t.Fatal("ReadXML empty path should return error")
 	}
@@ -103,6 +104,7 @@ func TestReadVariantsSAXXPathAndFile(t *testing.T) {
 	if err := ReadBySAX(strings.NewReader(`<root/>`), func(stdxml.Token) error { return handlerErr }); !errors.Is(err, handlerErr) {
 		t.Fatalf("ReadBySAX handler err = %v", err)
 	}
+	assertXMLInvalidInput(t, ReadBySAX(strings.NewReader(`<root>`), func(stdxml.Token) error { return nil }))
 
 	tmp := t.TempDir() + "/x.xml"
 	if err := os.WriteFile(tmp, []byte(`<root><a>1</a><a>2</a></root>`), 0o600); err != nil {
@@ -140,6 +142,35 @@ func TestReadVariantsSAXXPathAndFile(t *testing.T) {
 	var out strings.Builder
 	if err := TransformWith(strings.NewReader(`<root><a>1</a></root>`), &out, WithOmitDeclaration(true)); err != nil || out.String() != `<root><a>1</a></root>` {
 		t.Fatalf("TransformWith = %q, %v", out.String(), err)
+	}
+}
+
+func TestXMLErrorContract(t *testing.T) {
+	_, err := ParseXML("")
+	assertXMLInvalidInput(t, err)
+
+	assertXMLInvalidInput(t, WriteTo(nil, CreateXMLWithRoot("root")))
+	assertXMLInvalidInput(t, WriteTo(&strings.Builder{}, "unsupported"))
+
+	var dst struct {
+		Root struct {
+			Value int `json:"value"`
+		} `json:"root"`
+	}
+	assertXMLInvalidInput(t, XMLToBean(`<root><value>not-int</value></root>`, &dst))
+}
+
+func assertXMLInvalidInput(t *testing.T, err error) {
+	t.Helper()
+	if err == nil {
+		t.Fatalf("err = nil, want %s", knifer.ErrCodeInvalidInput)
+	}
+	if !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("errors.Is(%v, %s) = false", err, knifer.ErrCodeInvalidInput)
+	}
+	got, ok := knifer.CodeOf(err)
+	if !ok || got != knifer.ErrCodeInvalidInput {
+		t.Fatalf("CodeOf(%v) = %q, %v; want %q, true", err, got, ok, knifer.ErrCodeInvalidInput)
 	}
 }
 

@@ -2,10 +2,12 @@ package vzip_test
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
 
+	knifer "github.com/imajinyun/go-knifer"
 	"github.com/imajinyun/go-knifer/vzip"
 )
 
@@ -50,5 +52,23 @@ func TestFacadeZipAndCompression(t *testing.T) {
 	out, err = vzip.Unzlib(zlibBytes)
 	if err != nil || !bytes.Equal(out, dataBytes) {
 		t.Fatalf("Unzlib: %q %v", out, err)
+	}
+}
+
+func TestFacadeZipErrorContract(t *testing.T) {
+	_, err := vzip.GetStream(nil)
+	if err == nil {
+		t.Fatal("GetStream(nil) error = nil, want invalid input")
+	}
+	if !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("errors.Is(err, ErrCodeInvalidInput) = false: %v", err)
+	}
+	code, ok := knifer.CodeOf(err)
+	if !ok || code != knifer.ErrCodeInvalidInput {
+		t.Fatalf("CodeOf(err) = %q, %v; want invalid input", code, ok)
+	}
+	var zipErr *vzip.Error
+	if !errors.As(err, &zipErr) {
+		t.Fatalf("errors.As(err, *vzip.Error) = false: %v", err)
 	}
 }

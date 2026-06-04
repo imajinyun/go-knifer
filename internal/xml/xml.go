@@ -205,7 +205,7 @@ func readXMLReader(r io.Reader, cfg parseConfig) (*Document, error) {
 			break
 		}
 		if err != nil {
-			return nil, fmt.Errorf("vxml: decode token: %w", err)
+			return nil, wrapInvalidInput("vxml: decode token", err)
 		}
 		switch t := tok.(type) {
 		case stdxml.StartElement:
@@ -224,7 +224,7 @@ func readXMLReader(r io.Reader, cfg parseConfig) (*Document, error) {
 			stack = append(stack, ele)
 		case stdxml.EndElement:
 			if len(stack) == 0 {
-				return nil, fmt.Errorf("vxml: unexpected closing tag: %s", t.Name.Local)
+				return nil, invalidInputf("vxml: unexpected closing tag: %s", t.Name.Local)
 			}
 			stack = stack[:len(stack)-1]
 		case stdxml.CharData:
@@ -234,7 +234,7 @@ func readXMLReader(r io.Reader, cfg parseConfig) (*Document, error) {
 		}
 	}
 	if root == nil {
-		return nil, errors.New("vxml: root element not found")
+		return nil, invalidInputf("vxml: root element not found")
 	}
 	return &Document{Root: root}, nil
 }
@@ -251,7 +251,7 @@ func ReadBySAX(r io.Reader, handler TokenHandler) error {
 			return nil
 		}
 		if err != nil {
-			return fmt.Errorf("vxml: sax decode: %w", err)
+			return wrapInvalidInput("vxml: sax decode", err)
 		}
 		if err := handler(tok); err != nil {
 			return err
@@ -281,7 +281,7 @@ func ReadBySAXFile(path string, handler TokenHandler) (err error) {
 // WriteTo serializes a document or element to writer.
 func WriteTo(w io.Writer, v any, opts ...WriteOption) error {
 	if w == nil {
-		return errors.New("vxml: nil writer")
+		return invalidInputf("vxml: nil writer")
 	}
 	return writeWithConfig(w, v, applyWrite(opts))
 }
@@ -608,10 +608,10 @@ func XMLNodeToMapInto(node *Element, result map[string]any) map[string]any {
 func mapToBean(m map[string]any, dst any) error {
 	data, err := json.Marshal(m)
 	if err != nil {
-		return fmt.Errorf("vxml: encode intermediate: %w", err)
+		return wrapInternal("vxml: encode intermediate", err)
 	}
 	if err := json.Unmarshal(data, dst); err != nil {
-		return fmt.Errorf("vxml: decode into dst: %w", err)
+		return wrapInvalidInput("vxml: decode into dst", err)
 	}
 	return nil
 }
@@ -676,7 +676,7 @@ func writeWithConfig(w io.Writer, v any, cfg writeConfig) error {
 	}
 	ele := elementOf(v)
 	if ele == nil {
-		return errors.New("vxml: unsupported node")
+		return invalidInputf("vxml: unsupported node")
 	}
 	return writeElement(w, ele, cfg.indent, 0)
 }

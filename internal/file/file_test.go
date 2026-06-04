@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	knifer "github.com/imajinyun/go-knifer"
 )
 
 // Tests cover the utility toolkit-core IoUtilTest, FileUtilTest, and FileNameUtilTest.
@@ -107,6 +109,8 @@ func TestFileCopy(t *testing.T) {
 	if got != "hello" {
 		t.Fatalf("copy content: %q", got)
 	}
+	missingErr := FileCopy(filepath.Join(dir, "missing.txt"), filepath.Join(dir, "unused.txt"))
+	assertFileCode(t, missingErr, knifer.ErrCodeInvalidInput)
 }
 
 func TestWriteOptions(t *testing.T) {
@@ -125,10 +129,11 @@ func TestWriteOptions(t *testing.T) {
 	if err := FileWriteString(path, "second", WithOverwrite(false)); !errors.Is(err, os.ErrExist) {
 		t.Fatalf("overwrite false error = %v, want exists", err)
 	}
-	missingParent := filepath.Join(dir, "missing", "b.txt")
-	if err := FileWriteString(missingParent, "x", WithCreateParents(false)); err == nil {
-		t.Fatal("write without parent creation should fail")
+	if err := FileWriteString(path, "second", WithOverwrite(false)); !errors.Is(err, knifer.ErrCodeInternal) {
+		t.Fatalf("overwrite false code = %v, want internal", err)
 	}
+	missingParent := filepath.Join(dir, "missing", "b.txt")
+	assertFileCode(t, FileWriteString(missingParent, "x", WithCreateParents(false)), knifer.ErrCodeNotFound)
 }
 
 func TestMkdirAndCopyOptions(t *testing.T) {
@@ -154,6 +159,23 @@ func TestMkdirAndCopyOptions(t *testing.T) {
 	}
 	if err := FileCopy(src, dst, WithOverwrite(false)); !errors.Is(err, os.ErrExist) {
 		t.Fatalf("copy overwrite false error = %v, want exists", err)
+	}
+	if err := FileCopy(src, dst, WithOverwrite(false)); !errors.Is(err, knifer.ErrCodeInternal) {
+		t.Fatalf("copy overwrite false code = %v, want internal", err)
+	}
+}
+
+func assertFileCode(t *testing.T, err error, code knifer.ErrCode) {
+	t.Helper()
+	if err == nil {
+		t.Fatalf("err = nil, want %s", code)
+	}
+	if !errors.Is(err, code) {
+		t.Fatalf("errors.Is(%v, %s) = false", err, code)
+	}
+	got, ok := knifer.CodeOf(err)
+	if !ok || got != code {
+		t.Fatalf("CodeOf(%v) = %q, %v; want %q, true", err, got, ok, code)
 	}
 }
 

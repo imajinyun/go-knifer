@@ -13,6 +13,9 @@ type WriteOption = fileimpl.WriteOption
 // DirOption customizes directory helpers.
 type DirOption = fileimpl.DirOption
 
+// Error is the file module error type.
+type Error = fileimpl.FileError
+
 // WithFilePerm sets the file permission used when creating files.
 func WithFilePerm(perm fs.FileMode) WriteOption { return fileimpl.WithFilePerm(perm) }
 

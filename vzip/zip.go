@@ -20,6 +20,9 @@ type Writer = zipimpl.Writer
 // Reader is a ZIP archive reader.
 type Reader = zipimpl.Reader
 
+// Error is the ZIP module error type.
+type Error = zipimpl.ZipError
+
 // EntryData represents in-memory content to add into a ZIP archive.
 type EntryData = zipimpl.EntryData
 

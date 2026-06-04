@@ -6,7 +6,6 @@ import (
 	"compress/flate"
 	"compress/gzip"
 	"compress/zlib"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -51,7 +50,7 @@ func NewWriter(out io.Writer) *archivezip.Writer { return archivezip.NewWriter(o
 // GetStream returns a reader for entry.
 func GetStream(entry *archivezip.File) (io.ReadCloser, error) {
 	if entry == nil {
-		return nil, fmt.Errorf("zip entry is nil")
+		return nil, invalidInputf("zip entry is nil")
 	}
 	return entry.Open()
 }
@@ -236,7 +235,7 @@ func UnzipReaderTo(r *archivezip.Reader, destDir string) error {
 // UnzipReaderToLimit extracts archive reader contents into destDir and optionally limits total size.
 func UnzipReaderToLimit(r *archivezip.Reader, destDir string, limit int64) error {
 	if r == nil {
-		return fmt.Errorf("zip reader is nil")
+		return invalidInputf("zip reader is nil")
 	}
 	if err := os.MkdirAll(destDir, 0o750); err != nil {
 		return err
@@ -245,15 +244,15 @@ func UnzipReaderToLimit(r *archivezip.Reader, destDir string, limit int64) error
 	for _, f := range r.File {
 		if limit > 0 {
 			if f.UncompressedSize64 > uint64(maxInt64) {
-				return fmt.Errorf("uncompressed size exceeds int64 limit")
+				return invalidInputf("uncompressed size exceeds int64 limit")
 			}
 			size := int64(f.UncompressedSize64) // #nosec G115 -- guarded by the maxInt64 check above.
 			if total > maxInt64-size {
-				return fmt.Errorf("uncompressed size exceeds int64 limit")
+				return invalidInputf("uncompressed size exceeds int64 limit")
 			}
 			total += size
 			if total > limit {
-				return fmt.Errorf("uncompressed size exceeds limit")
+				return invalidInputf("uncompressed size exceeds limit")
 			}
 		}
 		if err := extractFile(f, destDir); err != nil {
@@ -280,7 +279,7 @@ func Get(zipFile, name string) (io.ReadCloser, error) {
 		}
 	}
 	_ = r.Close()
-	return nil, os.ErrNotExist
+	return nil, notFound("zip entry not found: "+name, os.ErrNotExist)
 }
 
 // GetBytes returns the content of the named entry in zipFile.
@@ -666,11 +665,11 @@ func copyExistingEntry(zw *archivezip.Writer, f *archivezip.File) error {
 
 func cleanEntryName(name string) (string, error) {
 	if name == "" || filepath.IsAbs(name) {
-		return "", fmt.Errorf("invalid zip entry name %q", name)
+		return "", invalidInputf("invalid zip entry name %q", name)
 	}
 	cleaned := filepath.ToSlash(filepath.Clean(name))
 	if cleaned == "." || strings.HasPrefix(cleaned, "../") || cleaned == ".." || strings.HasPrefix(cleaned, "/") {
-		return "", fmt.Errorf("invalid zip entry name %q", name)
+		return "", invalidInputf("invalid zip entry name %q", name)
 	}
 	return cleaned, nil
 }
@@ -694,7 +693,7 @@ func safeZipTarget(destDir, name string) (string, error) {
 		return "", err
 	}
 	if rel == ".." || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
-		return "", fmt.Errorf("invalid zip entry name %q", name)
+		return "", invalidInputf("invalid zip entry name %q", name)
 	}
 	return target, nil
 }
@@ -702,7 +701,7 @@ func safeZipTarget(destDir, name string) (string, error) {
 func validateZipTarget(zipFile string, srcFiles ...string) error {
 	info, err := os.Stat(zipFile)
 	if err == nil && info.IsDir() {
-		return fmt.Errorf("zip file %q must not be a directory", zipFile)
+		return invalidInputf("zip file %q must not be a directory", zipFile)
 	}
 	zipAbs, err := filepath.Abs(zipFile)
 	if err != nil {
@@ -729,7 +728,7 @@ func validateZipTarget(zipFile string, srcFiles ...string) error {
 			return err
 		}
 		if rel == "." || (!strings.HasPrefix(rel, "..") && rel != "") {
-			return fmt.Errorf("zip file path %q must not be inside source directory %q", zipFile, src)
+			return invalidInputf("zip file path %q must not be inside source directory %q", zipFile, src)
 		}
 	}
 	return nil

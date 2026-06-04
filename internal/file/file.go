@@ -4,8 +4,6 @@ package file
 import (
 	"bufio"
 	"bytes"
-	"errors"
-	"fmt"
 	"io"
 	"io/fs"
 	"os"
@@ -138,19 +136,25 @@ func IsDirectory(path string) bool {
 func FileReadString(path string) (string, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
-		return "", err
+		return "", wrapFileIO("read file "+path, err)
 	}
 	return string(b), nil
 }
 
 // FileReadBytes reads all bytes from a file.
-func FileReadBytes(path string) ([]byte, error) { return os.ReadFile(path) }
+func FileReadBytes(path string) ([]byte, error) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return nil, wrapFileIO("read file "+path, err)
+	}
+	return b, nil
+}
 
 // FileReadLines reads all lines from a file.
 func FileReadLines(path string) ([]string, error) {
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return nil, wrapFileIO("open file "+path, err)
 	}
 	defer CloseQuietly(f)
 	return ReadLines(f)
@@ -186,11 +190,11 @@ func FileAppendString(path, content string, opts ...WriteOption) error {
 	}
 	f, err := os.OpenFile(path, flag, cfg.filePerm)
 	if err != nil {
-		return err
+		return wrapFileIO("open file "+path, err)
 	}
 	defer CloseQuietly(f)
 	_, err = f.WriteString(content)
-	return err
+	return wrapFileIO("append file "+path, err)
 }
 
 // Mkdir creates a directory tree. Empty and current-directory paths are treated as no-ops.
@@ -199,7 +203,7 @@ func Mkdir(dir string, opts ...DirOption) error {
 		return nil
 	}
 	cfg := applyDirOptions(opts)
-	return os.MkdirAll(dir, cfg.dirPerm)
+	return wrapFileIO("create directory "+dir, os.MkdirAll(dir, cfg.dirPerm))
 }
 
 // Touch creates an empty file when it does not exist.
@@ -213,9 +217,9 @@ func Touch(path string, opts ...WriteOption) error {
 	}
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, cfg.filePerm)
 	if err != nil {
-		return err
+		return wrapFileIO("touch file "+path, err)
 	}
-	return f.Close()
+	return wrapFileIO("close file "+path, f.Close())
 }
 
 // Del removes a file or directory recursively. Missing paths are treated as success.
@@ -223,13 +227,13 @@ func Del(path string) error {
 	if !FileExists(path) {
 		return nil
 	}
-	return os.RemoveAll(path)
+	return wrapFileIO("delete "+path, os.RemoveAll(path))
 }
 
 // FileCopy copies a file and overwrites the destination when it already exists.
 func FileCopy(src, dst string, opts ...WriteOption) error {
 	if !IsFile(src) {
-		return errors.New("source is not a file: " + src)
+		return invalidInputf("source is not a file: %s", src)
 	}
 	cfg := applyWriteOptions(opts)
 	if err := ensureWriteParent(dst, cfg); err != nil {
@@ -237,7 +241,7 @@ func FileCopy(src, dst string, opts ...WriteOption) error {
 	}
 	in, err := os.Open(src)
 	if err != nil {
-		return err
+		return wrapFileIO("open source file "+src, err)
 	}
 	defer CloseQuietly(in)
 	flag := os.O_CREATE | os.O_WRONLY | os.O_TRUNC
@@ -246,11 +250,11 @@ func FileCopy(src, dst string, opts ...WriteOption) error {
 	}
 	out, err := os.OpenFile(dst, flag, cfg.filePerm)
 	if err != nil {
-		return err
+		return wrapFileIO("open destination file "+dst, err)
 	}
 	defer CloseQuietly(out)
 	_, err = io.Copy(out, in)
-	return err
+	return wrapFileIO("copy file "+src+" to "+dst, err)
 }
 
 func ensureWriteParent(path string, cfg writeConfig) error {
@@ -263,7 +267,7 @@ func ensureWriteParent(path string, cfg writeConfig) error {
 func writeFile(path string, data []byte, flag int, perm fs.FileMode) error {
 	f, err := os.OpenFile(path, flag, perm)
 	if err != nil {
-		return err
+		return wrapFileIO("open file "+path, err)
 	}
 	defer CloseQuietly(f)
 	n, err := f.Write(data)
@@ -274,7 +278,7 @@ func writeFile(path string, data []byte, flag int, perm fs.FileMode) error {
 		err = err1
 	}
 	if err != nil {
-		return fmt.Errorf("write file %s: %w", path, err)
+		return wrapFileIO("write file "+path, err)
 	}
 	return nil
 }

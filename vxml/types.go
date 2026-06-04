@@ -19,6 +19,7 @@ const (
 type (
 	Document       = xmlimpl.Document
 	Element        = xmlimpl.Element
+	Error          = xmlimpl.XMLError
 	TokenHandler   = xmlimpl.TokenHandler
 	NamespaceCache = xmlimpl.NamespaceCache
 	ParseOption    = xmlimpl.ParseOption

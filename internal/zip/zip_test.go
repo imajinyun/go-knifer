@@ -3,11 +3,14 @@ package zip
 import (
 	archivezip "archive/zip"
 	"bytes"
+	"errors"
 	"os"
 	"path/filepath"
 	"reflect"
 	"sort"
 	"testing"
+
+	knifer "github.com/imajinyun/go-knifer"
 )
 
 func TestZipFilesUnzipGetAndList(t *testing.T) {
@@ -76,8 +79,11 @@ func TestZipEntriesAppendReadAndLimit(t *testing.T) {
 	if !seen["a.txt"] || !seen["b.txt"] {
 		t.Fatalf("seen: %#v", seen)
 	}
-	if err := UnzipToLimit(archive, filepath.Join(tmp, "limited"), 1); err == nil {
-		t.Fatal("expected size limit error")
+	assertZipCode(t, UnzipToLimit(archive, filepath.Join(tmp, "limited"), 1), knifer.ErrCodeInvalidInput)
+	_, err := Get(archive, "missing.txt")
+	assertZipCode(t, err, knifer.ErrCodeNotFound)
+	if !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("missing entry error should preserve os.ErrNotExist: %v", err)
 	}
 }
 
@@ -119,7 +125,29 @@ func TestUnzipRejectsPathTraversal(t *testing.T) {
 	if err := os.WriteFile(archive, buf.Bytes(), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := UnzipTo(archive, filepath.Join(tmp, "dest")); err == nil {
-		t.Fatal("expected path traversal error")
+	assertZipCode(t, UnzipTo(archive, filepath.Join(tmp, "dest")), knifer.ErrCodeInvalidInput)
+}
+
+func TestZipErrorContract(t *testing.T) {
+	_, err := GetStream(nil)
+	assertZipCode(t, err, knifer.ErrCodeInvalidInput)
+	assertZipCode(t, UnzipReaderToLimit(nil, t.TempDir(), -1), knifer.ErrCodeInvalidInput)
+
+	var buf bytes.Buffer
+	err = ZipEntriesToWriter(&buf, EntryData{Name: "../evil.txt", Data: []byte("bad")})
+	assertZipCode(t, err, knifer.ErrCodeInvalidInput)
+}
+
+func assertZipCode(t *testing.T, err error, code knifer.ErrCode) {
+	t.Helper()
+	if err == nil {
+		t.Fatalf("err = nil, want %s", code)
+	}
+	if !errors.Is(err, code) {
+		t.Fatalf("errors.Is(%v, %s) = false", err, code)
+	}
+	got, ok := knifer.CodeOf(err)
+	if !ok || got != code {
+		t.Fatalf("CodeOf(%v) = %q, %v; want %q, true", err, got, ok, code)
 	}
 }

@@ -2,16 +2,37 @@ package vxml
 
 import (
 	stdxml "encoding/xml"
+	"errors"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
+
+	knifer "github.com/imajinyun/go-knifer"
 )
 
 type facadeBean struct {
 	Name  string  `xml:"name" json:"name"`
 	Age   int     `xml:"age" json:"age"`
 	Empty *string `xml:"empty" json:"empty"`
+}
+
+func TestFacadeXMLErrorContract(t *testing.T) {
+	_, err := ParseXML(`<root><unclosed></root>`)
+	if err == nil {
+		t.Fatal("ParseXML() error = nil, want invalid input")
+	}
+	if !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("errors.Is(err, ErrCodeInvalidInput) = false: %v", err)
+	}
+	code, ok := knifer.CodeOf(err)
+	if !ok || code != knifer.ErrCodeInvalidInput {
+		t.Fatalf("CodeOf(err) = %q, %v; want invalid input", code, ok)
+	}
+	var xmlErr *Error
+	if !errors.As(err, &xmlErr) {
+		t.Fatalf("errors.As(err, *vxml.Error) = false: %v", err)
+	}
 }
 
 func TestFacadeXMLUtilities(t *testing.T) {
