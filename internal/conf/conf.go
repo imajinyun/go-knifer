@@ -5,9 +5,11 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const defaultGroup = ""
@@ -26,9 +28,18 @@ func New() *Conf {
 func Load(path string) (*Conf, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
+		return nil, wrapConfigIO("read config file "+path, err)
+	}
+	return ParseByExt(path, b)
+}
+
+// LoadProfile loads a configuration file and applies profile-specific overrides.
+func LoadProfile(path, profile string) (*Conf, error) {
+	c, err := Load(path)
+	if err != nil {
 		return nil, err
 	}
-	return ParseBytes(b)
+	return c.ApplyProfile(profile), nil
 }
 
 // Parse 解析 setting/properties 文本内容。Parse parses setting/properties content.
@@ -53,59 +64,26 @@ func ParseBytes(content []byte) (*Conf, error) {
 		}
 		idx := strings.IndexAny(line, "=:")
 		if idx < 0 {
-			return nil, fmt.Errorf("invalid setting line %d: %s", lineNo, line)
+			return nil, invalidInputf("invalid setting line %d: %s", lineNo, line)
 		}
 		key := strings.TrimSpace(line[:idx])
 		value := strings.TrimSpace(line[idx+1:])
 		if key == "" {
-			return nil, fmt.Errorf("empty setting key at line %d", lineNo)
+			return nil, invalidInputf("empty setting key at line %d", lineNo)
 		}
 		s.SetByGroup(group, key, unquote(value))
 	}
 	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-	return s, nil
-}
-
-// ParseYAML 将简单 YAML 子集解析为分组配置。ParseYAML parses a small YAML subset into grouped configuration.
-func ParseYAML(content string) (*Conf, error) {
-	s := New()
-	group := defaultGroup
-	scanner := bufio.NewScanner(strings.NewReader(content))
-	lineNo := 0
-	for scanner.Scan() {
-		lineNo++
-		raw := scanner.Text()
-		line := strings.TrimSpace(raw)
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-		indent := len(raw) - len(strings.TrimLeft(raw, " \t"))
-		idx := strings.Index(line, ":")
-		if idx < 0 {
-			return nil, fmt.Errorf("invalid yaml line %d: %s", lineNo, line)
-		}
-		key := strings.TrimSpace(line[:idx])
-		value := strings.TrimSpace(line[idx+1:])
-		if value == "" && indent == 0 {
-			group = key
-			s.ensureGroup(group)
-			continue
-		}
-		if indent == 0 {
-			group = defaultGroup
-		}
-		s.SetByGroup(group, key, unquote(value))
-	}
-	if err := scanner.Err(); err != nil {
-		return nil, err
+		return nil, wrapConfigParse("scan setting content", err)
 	}
 	return s, nil
 }
 
 // Get 从默认分组获取配置值。Get returns a value from the default group.
 func (s *Conf) Get(key string) string { return s.GetByGroup(defaultGroup, key) }
+
+// GetExpanded returns a value from default group after variable expansion.
+func (s *Conf) GetExpanded(key string) string { return s.GetByGroupExpanded(defaultGroup, key) }
 
 // GetOrDefault 从默认分组获取配置值，不存在时返回 def。GetOrDefault returns a value from the default group or def when absent.
 func (s *Conf) GetOrDefault(key, def string) string {
@@ -119,6 +97,15 @@ func (s *Conf) GetOrDefault(key, def string) string {
 func (s *Conf) GetByGroup(group, key string) string {
 	v, _ := s.Lookup(group, key)
 	return v
+}
+
+// GetByGroupExpanded returns a grouped value after variable expansion.
+func (s *Conf) GetByGroupExpanded(group, key string) string {
+	v, ok := s.Lookup(group, key)
+	if !ok {
+		return ""
+	}
+	return s.expandValue(group, v, map[string]bool{})
 }
 
 // Lookup 获取指定分组中的配置值并返回是否存在。Lookup returns a grouped value and whether it exists.
@@ -211,6 +198,106 @@ func (s *Conf) ToMap() map[string]map[string]string {
 	return out
 }
 
+// Expand returns a copy with ${key}, ${group.key}, ${ENV:NAME}, and ${key:default} placeholders resolved.
+func (s *Conf) Expand() *Conf {
+	out := New()
+	if s == nil || s.data == nil {
+		return out
+	}
+	for group, m := range s.data {
+		for key, value := range m {
+			out.SetByGroup(group, key, s.expandValue(group, value, map[string]bool{group + "." + key: true}))
+		}
+	}
+	return out
+}
+
+// ApplyProfile overlays groups named profile.<profile> and profile.<profile>.<group>.
+func (s *Conf) ApplyProfile(profile string) *Conf {
+	out := New()
+	if s == nil || s.data == nil {
+		return out
+	}
+	profile = strings.TrimSpace(profile)
+	prefix := "profile." + profile
+	for group, m := range s.data {
+		if profile != "" && (group == prefix || strings.HasPrefix(group, prefix+".")) {
+			continue
+		}
+		for k, v := range m {
+			out.SetByGroup(group, k, v)
+		}
+	}
+	if profile == "" {
+		return out
+	}
+	for group, m := range s.data {
+		if group != prefix && !strings.HasPrefix(group, prefix+".") {
+			continue
+		}
+		targetGroup := defaultGroup
+		if strings.HasPrefix(group, prefix+".") {
+			targetGroup = strings.TrimPrefix(group, prefix+".")
+		}
+		for k, v := range m {
+			out.SetByGroup(targetGroup, k, v)
+		}
+	}
+	return out
+}
+
+// Bind fills dst from the default group using conf tags or field names.
+func (s *Conf) Bind(dst any) error { return s.BindGroup(defaultGroup, dst) }
+
+// BindGroup fills dst from a group using conf tags or field names.
+func (s *Conf) BindGroup(group string, dst any) error {
+	rv := reflect.ValueOf(dst)
+	if rv.Kind() != reflect.Pointer || rv.IsNil() {
+		return invalidInputf("bind target must be a non-nil pointer")
+	}
+	rv = rv.Elem()
+	if rv.Kind() != reflect.Struct {
+		return invalidInputf("bind target must point to a struct")
+	}
+	return s.bindStruct(group, "", rv)
+}
+
+// Watch polls path and calls onChange after successful reloads. The returned function stops watching.
+func Watch(path string, interval time.Duration, onChange func(*Conf, error)) (func(), error) {
+	if interval <= 0 {
+		interval = time.Second
+	}
+	info, err := os.Stat(path)
+	if err != nil {
+		return nil, wrapConfigIO("stat config file "+path, err)
+	}
+	stop := make(chan struct{})
+	done := make(chan struct{})
+	go func(lastMod time.Time, lastSize int64) {
+		defer close(done)
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				current, statErr := os.Stat(path)
+				if statErr != nil {
+					onChange(nil, wrapConfigIO("stat config file "+path, statErr))
+					continue
+				}
+				if current.ModTime().Equal(lastMod) && current.Size() == lastSize {
+					continue
+				}
+				lastMod, lastSize = current.ModTime(), current.Size()
+				onChange(Load(path))
+			case <-stop:
+				return
+			}
+		}
+	}(info.ModTime(), info.Size())
+	return func() { close(stop); <-done }, nil
+}
+
 func (s *Conf) ensureGroup(group string) {
 	if s.data == nil {
 		s.data = map[string]map[string]string{}
@@ -218,6 +305,140 @@ func (s *Conf) ensureGroup(group string) {
 	if _, ok := s.data[group]; !ok {
 		s.data[group] = map[string]string{}
 	}
+}
+
+func (s *Conf) bindStruct(group, prefix string, rv reflect.Value) error {
+	rt := rv.Type()
+	for i := 0; i < rt.NumField(); i++ {
+		field := rt.Field(i)
+		if field.PkgPath != "" {
+			continue
+		}
+		name, skip := confFieldName(field)
+		if skip {
+			continue
+		}
+		key := name
+		if prefix != "" {
+			key = prefix + "." + name
+		}
+		fv := rv.Field(i)
+		if fv.Kind() == reflect.Struct && !field.Anonymous && field.Type != reflect.TypeOf(time.Time{}) {
+			if err := s.bindStruct(group, key, fv); err != nil {
+				return err
+			}
+			continue
+		}
+		value, ok := s.Lookup(group, key)
+		if !ok {
+			continue
+		}
+		if err := setReflectValue(fv, value); err != nil {
+			return invalidInputf("bind %s: %s", key, err.Error())
+		}
+	}
+	return nil
+}
+
+func confFieldName(field reflect.StructField) (string, bool) {
+	tag := field.Tag.Get("conf")
+	if tag == "-" {
+		return "", true
+	}
+	if tag != "" {
+		return strings.Split(tag, ",")[0], false
+	}
+	return strings.ToLower(field.Name), false
+}
+
+func setReflectValue(v reflect.Value, text string) error {
+	if !v.CanSet() {
+		return nil
+	}
+	switch v.Kind() {
+	case reflect.String:
+		v.SetString(text)
+	case reflect.Bool:
+		b, err := strconv.ParseBool(text)
+		if err != nil {
+			return err
+		}
+		v.SetBool(b)
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		n, err := strconv.ParseInt(text, 10, v.Type().Bits())
+		if err != nil {
+			return err
+		}
+		v.SetInt(n)
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		n, err := strconv.ParseUint(text, 10, v.Type().Bits())
+		if err != nil {
+			return err
+		}
+		v.SetUint(n)
+	case reflect.Float32, reflect.Float64:
+		f, err := strconv.ParseFloat(text, v.Type().Bits())
+		if err != nil {
+			return err
+		}
+		v.SetFloat(f)
+	case reflect.Slice:
+		parts := splitList(text)
+		slice := reflect.MakeSlice(v.Type(), 0, len(parts))
+		for _, part := range parts {
+			elem := reflect.New(v.Type().Elem()).Elem()
+			if err := setReflectValue(elem, part); err != nil {
+				return err
+			}
+			slice = reflect.Append(slice, elem)
+		}
+		v.Set(slice)
+	default:
+		return fmt.Errorf("unsupported field type %s", v.Type())
+	}
+	return nil
+}
+
+func splitList(text string) []string {
+	if strings.TrimSpace(text) == "" {
+		return nil
+	}
+	parts := strings.Split(text, ",")
+	for i := range parts {
+		parts[i] = strings.TrimSpace(parts[i])
+	}
+	return parts
+}
+
+func (s *Conf) expandValue(group, value string, seen map[string]bool) string {
+	return os.Expand(value, func(name string) string {
+		if strings.HasPrefix(name, "ENV:") {
+			return os.Getenv(strings.TrimPrefix(name, "ENV:"))
+		}
+		key, fallback, hasFallback := strings.Cut(name, ":")
+		lookupGroup := group
+		lookupKey := key
+		if dot := strings.Index(key, "."); dot > 0 {
+			lookupGroup, lookupKey = key[:dot], key[dot+1:]
+		}
+		seenKey := lookupGroup + "." + lookupKey
+		if seen[seenKey] {
+			if hasFallback {
+				return fallback
+			}
+			return ""
+		}
+		v, ok := s.Lookup(lookupGroup, lookupKey)
+		if !ok {
+			if hasFallback {
+				return fallback
+			}
+			return ""
+		}
+		seen[seenKey] = true
+		defer delete(seen, seenKey)
+		return s.expandValue(lookupGroup, v, seen)
+	})
 }
 
 func unquote(s string) string {
