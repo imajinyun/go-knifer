@@ -19,6 +19,11 @@ func CreateLineCaptcha(width, height int) *LineCaptcha {
 	return captcha.CreateLineCaptcha(width, height)
 }
 
+// CreateLineCaptchaWithOptions delegates to the internal captcha implementation.
+func CreateLineCaptchaWithOptions(width, height int, opts ...CaptchaOption) *LineCaptcha {
+	return captcha.CreateLineCaptchaWithOptions(width, height, opts...)
+}
+
 // CreateLineCaptchaWith delegates to the internal captcha implementation.
 func CreateLineCaptchaWith(width, height, codeCount, lineCount int) *LineCaptcha {
 	return captcha.CreateLineCaptchaWith(width, height, codeCount, lineCount)
@@ -32,6 +37,11 @@ func CreateLineCaptchaByGenerator(width, height int, generator CodeGenerator, li
 // CreateCircleCaptcha delegates to the internal captcha implementation.
 func CreateCircleCaptcha(width, height int) *CircleCaptcha {
 	return captcha.CreateCircleCaptcha(width, height)
+}
+
+// CreateCircleCaptchaWithOptions delegates to the internal captcha implementation.
+func CreateCircleCaptchaWithOptions(width, height int, opts ...CaptchaOption) *CircleCaptcha {
+	return captcha.CreateCircleCaptchaWithOptions(width, height, opts...)
 }
 
 // CreateCircleCaptchaWith delegates to the internal captcha implementation.
@@ -49,6 +59,11 @@ func CreateShearCaptcha(width, height int) *ShearCaptcha {
 	return captcha.CreateShearCaptcha(width, height)
 }
 
+// CreateShearCaptchaWithOptions delegates to the internal captcha implementation.
+func CreateShearCaptchaWithOptions(width, height int, opts ...CaptchaOption) *ShearCaptcha {
+	return captcha.CreateShearCaptchaWithOptions(width, height, opts...)
+}
+
 // CreateShearCaptchaWith delegates to the internal captcha implementation.
 func CreateShearCaptchaWith(width, height, codeCount, thickness int) *ShearCaptcha {
 	return captcha.CreateShearCaptchaWith(width, height, codeCount, thickness)
@@ -62,6 +77,11 @@ func CreateShearCaptchaByGenerator(width, height int, generator CodeGenerator, t
 // CreateGifCaptcha delegates to the internal captcha implementation.
 func CreateGifCaptcha(width, height int) *GifCaptcha {
 	return captcha.CreateGifCaptcha(width, height)
+}
+
+// CreateGifCaptchaWithOptions delegates to the internal captcha implementation.
+func CreateGifCaptchaWithOptions(width, height int, opts ...CaptchaOption) *GifCaptcha {
+	return captcha.CreateGifCaptchaWithOptions(width, height, opts...)
 }
 
 // CreateGifCaptchaWith delegates to the internal captcha implementation.

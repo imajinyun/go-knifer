@@ -14,6 +14,9 @@ type Config = jsonx.Config
 // EncodeOption customizes JSON serialization helpers.
 type EncodeOption = jsonx.EncodeOption
 
+// FormatOption customizes raw JSON string formatting.
+type FormatOption = jsonx.FormatOption
+
 // Error is the JSON module error type.
 type Error = jsonx.JSONError
 
@@ -51,6 +54,15 @@ func WithIgnoreNullValue(ignore bool) EncodeOption { return jsonx.WithIgnoreNull
 // WithDateFormat sets the time layout used for time.Time values.
 func WithDateFormat(layout string) EncodeOption { return jsonx.WithDateFormat(layout) }
 
+// WithFormatIndent sets the indentation string used by FormatWithOptions.
+func WithFormatIndent(indent string) FormatOption { return jsonx.WithFormatIndent(indent) }
+
+// WithFormatIndentWidth sets indentation to n spaces.
+func WithFormatIndentWidth(n int) FormatOption { return jsonx.WithFormatIndentWidth(n) }
+
+// WithFormatSpaceAfterKey controls whether a space is written after ':'.
+func WithFormatSpaceAfterKey(space bool) FormatOption { return jsonx.WithFormatSpaceAfterKey(space) }
+
 // IsNull reports whether v is nil or JSON null.
 func IsNull(v any) bool { return jsonx.IsNull(v) }
 
@@ -86,6 +98,11 @@ func ToPrettyStrWithConfig(v any, cfg *Config) (string, error) {
 
 // Format formats raw JSON string.
 func Format(raw string) string { return jsonx.FormatJSONStr(raw) }
+
+// FormatWithOptions formats raw JSON string with custom formatting options.
+func FormatWithOptions(raw string, opts ...FormatOption) string {
+	return jsonx.FormatJSONStrWithOptions(raw, opts...)
+}
 
 // IsJSON reports whether s is valid JSON.
 func IsJSON(s string) bool { return jsonx.IsJSON(s) }

@@ -18,6 +18,13 @@ func NewCircleCaptcha(width, height int) *CircleCaptcha {
 	return NewCircleCaptchaWith(width, height, 5, 15)
 }
 
+// NewCircleCaptchaWithOptions creates a circle captcha customized by options.
+func NewCircleCaptchaWithOptions(width, height int, opts ...CaptchaOption) *CircleCaptcha {
+	c := NewCircleCaptcha(width, height)
+	applyCaptchaOptions(&c.AbstractCaptcha, opts)
+	return c
+}
+
 // NewCircleCaptchaWith creates a captcha with custom character and circle counts.
 func NewCircleCaptchaWith(width, height, codeCount, circleCount int) *CircleCaptcha {
 	c := &CircleCaptcha{}

@@ -42,17 +42,21 @@ var (
 )
 
 type readConfig struct {
-	sheet string
+	sheet       string
+	openOptions []excelize.Options
 }
 
 // ReadOption customizes Excel read helpers.
 type ReadOption func(*readConfig)
 
 type writeConfig struct {
-	sheet    string
-	startRow int
-	startCol int
-	dirPerm  fs.FileMode
+	sheet       string
+	startRow    int
+	startCol    int
+	dirPerm     fs.FileMode
+	filePerm    fs.FileMode
+	overwrite   bool
+	saveOptions []excelize.Options
 }
 
 // WriteOption customizes Excel write helpers.
@@ -61,11 +65,16 @@ type WriteOption func(*writeConfig)
 func defaultReadConfig() readConfig { return readConfig{} }
 
 func defaultWriteConfig() writeConfig {
-	return writeConfig{sheet: DefaultSheetName, startRow: 1, startCol: 1, dirPerm: 0o750}
+	return writeConfig{sheet: DefaultSheetName, startRow: 1, startCol: 1, dirPerm: 0o750, filePerm: 0o644, overwrite: true}
 }
 
 // WithReadSheet selects the worksheet read by read helpers.
 func WithReadSheet(sheet string) ReadOption { return func(c *readConfig) { c.sheet = sheet } }
+
+// WithOpenOptions sets excelize options used when opening workbooks.
+func WithOpenOptions(opts ...excelize.Options) ReadOption {
+	return func(c *readConfig) { c.openOptions = append([]excelize.Options(nil), opts...) }
+}
 
 // WithWriteSheet selects the worksheet written by write helpers.
 func WithWriteSheet(sheet string) WriteOption { return func(c *writeConfig) { c.sheet = sheet } }
@@ -84,6 +93,19 @@ func WithStartCell(row, col int) WriteOption {
 
 // WithDirPerm sets the parent-directory permission used when saving workbooks.
 func WithDirPerm(perm fs.FileMode) WriteOption { return func(c *writeConfig) { c.dirPerm = perm } }
+
+// WithFilePerm sets the file permission after saving workbooks.
+func WithFilePerm(perm fs.FileMode) WriteOption { return func(c *writeConfig) { c.filePerm = perm } }
+
+// WithOverwrite controls whether an existing workbook may be replaced.
+func WithOverwrite(overwrite bool) WriteOption {
+	return func(c *writeConfig) { c.overwrite = overwrite }
+}
+
+// WithSaveOptions sets excelize options used when saving workbooks.
+func WithSaveOptions(opts ...excelize.Options) WriteOption {
+	return func(c *writeConfig) { c.saveOptions = append([]excelize.Options(nil), opts...) }
+}
 
 func applyReadOptions(opts []ReadOption) readConfig {
 	cfg := defaultReadConfig()
@@ -117,12 +139,13 @@ func SheetNames(path string) ([]string, error) {
 
 // ReadRows reads rows from the first worksheet in path.
 func ReadRows(path string, opts ...ReadOption) ([][]string, error) {
-	f, err := excelize.OpenFile(path)
+	cfg := applyReadOptions(opts)
+	f, err := excelize.OpenFile(path, cfg.openOptions...)
 	if err != nil {
 		return nil, err
 	}
 	defer func() { _ = f.Close() }()
-	return readRowsWithConfig(f, applyReadOptions(opts))
+	return readRowsWithConfig(f, cfg)
 }
 
 // ReadSheetRows reads rows from sheet in path.
@@ -137,12 +160,13 @@ func ReadSheetRows(path, sheet string) ([][]string, error) {
 
 // ReadRowsFromReader reads rows from the first worksheet in r.
 func ReadRowsFromReader(r io.Reader, opts ...ReadOption) ([][]string, error) {
-	f, err := excelize.OpenReader(r)
+	cfg := applyReadOptions(opts)
+	f, err := excelize.OpenReader(r, cfg.openOptions...)
 	if err != nil {
 		return nil, err
 	}
 	defer func() { _ = f.Close() }()
-	return readRowsWithConfig(f, applyReadOptions(opts))
+	return readRowsWithConfig(f, cfg)
 }
 
 // WriteRows writes rows into path using the default worksheet name.
@@ -172,7 +196,7 @@ func writeRows(path string, rows [][]string, cfg writeConfig) error {
 	if err := ensureParentDir(path, cfg.dirPerm); err != nil {
 		return err
 	}
-	return f.SaveAs(path)
+	return saveWorkbook(f, path, cfg)
 }
 
 // WriteSheets writes multiple worksheets into path.
@@ -185,7 +209,7 @@ func WriteSheets(path string, sheets map[string][][]string, opts ...WriteOption)
 		if err := ensureParentDir(path, cfg.dirPerm); err != nil {
 			return err
 		}
-		return f.SaveAs(path)
+		return saveWorkbook(f, path, cfg)
 	}
 
 	first := true
@@ -208,7 +232,7 @@ func WriteSheets(path string, sheets map[string][][]string, opts ...WriteOption)
 	if err := ensureParentDir(path, cfg.dirPerm); err != nil {
 		return err
 	}
-	return f.SaveAs(path)
+	return saveWorkbook(f, path, cfg)
 }
 
 // WriteRowsToBuffer writes rows into an in-memory XLSX workbook.
@@ -289,4 +313,21 @@ func ensureParentDir(path string, perm fs.FileMode) error {
 		return nil
 	}
 	return os.MkdirAll(dir, perm)
+}
+
+func saveWorkbook(f *excelize.File, path string, cfg writeConfig) error {
+	if !cfg.overwrite {
+		if _, err := os.Stat(path); err == nil {
+			return fmt.Errorf("poi: file already exists: %s", path)
+		} else if !os.IsNotExist(err) {
+			return err
+		}
+	}
+	if err := f.SaveAs(path, cfg.saveOptions...); err != nil {
+		return err
+	}
+	if cfg.filePerm != 0 {
+		return os.Chmod(path, cfg.filePerm)
+	}
+	return nil
 }

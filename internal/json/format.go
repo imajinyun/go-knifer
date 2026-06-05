@@ -2,10 +2,53 @@ package json
 
 import "strings"
 
+type formatConfig struct {
+	indent        string
+	spaceAfterKey bool
+}
+
+// FormatOption customizes raw JSON string formatting.
+type FormatOption func(*formatConfig)
+
+// WithFormatIndent sets the indentation string used by FormatJSONStrWithOptions.
+func WithFormatIndent(indent string) FormatOption {
+	return func(c *formatConfig) { c.indent = indent }
+}
+
+// WithFormatIndentWidth sets indentation to n spaces.
+func WithFormatIndentWidth(n int) FormatOption {
+	return func(c *formatConfig) {
+		if n < 0 {
+			n = 0
+		}
+		c.indent = strings.Repeat(" ", n)
+	}
+}
+
+// WithFormatSpaceAfterKey controls whether a space is written after ':'.
+func WithFormatSpaceAfterKey(space bool) FormatOption {
+	return func(c *formatConfig) { c.spaceAfterKey = space }
+}
+
+func applyFormatOptions(opts []FormatOption) formatConfig {
+	cfg := formatConfig{indent: "    ", spaceAfterKey: true}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	return cfg
+}
+
 // FormatJSONStr 对应 the utility JSONStrFormatter.format，
 // 对原始 JSON 字符串进行格式化（4 空格缩进），不构造对象树。
 func FormatJSONStr(raw string) string {
-	const indentStr = "    "
+	return FormatJSONStrWithOptions(raw)
+}
+
+// FormatJSONStrWithOptions formats raw JSON using custom formatting options.
+func FormatJSONStrWithOptions(raw string, opts ...FormatOption) string {
+	cfg := applyFormatOptions(opts)
 	var sb strings.Builder
 	level := 0
 	inString := false
@@ -13,7 +56,7 @@ func FormatJSONStr(raw string) string {
 
 	writeIndent := func() {
 		for i := 0; i < level; i++ {
-			sb.WriteString(indentStr)
+			sb.WriteString(cfg.indent)
 		}
 	}
 
@@ -61,7 +104,9 @@ func FormatJSONStr(raw string) string {
 			writeIndent()
 		case ':':
 			sb.WriteByte(c)
-			sb.WriteByte(' ')
+			if cfg.spaceAfterKey {
+				sb.WriteByte(' ')
+			}
 		case ' ', '\t', '\n', '\r':
 			// 忽略原有空白
 		default:

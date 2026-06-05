@@ -9,6 +9,11 @@ func CreateLineCaptcha(width, height int) *LineCaptcha {
 	return NewLineCaptcha(width, height)
 }
 
+// CreateLineCaptchaWithOptions creates a line captcha customized by options.
+func CreateLineCaptchaWithOptions(width, height int, opts ...CaptchaOption) *LineCaptcha {
+	return NewLineCaptchaWithOptions(width, height, opts...)
+}
+
 // CreateLineCaptchaWith creates a line captcha with custom options.
 func CreateLineCaptchaWith(width, height, codeCount, lineCount int) *LineCaptcha {
 	return NewLineCaptchaWith(width, height, codeCount, lineCount)
@@ -27,6 +32,11 @@ func CreateLineCaptchaByGenerator(width, height int, generator CodeGenerator, li
 // CreateCircleCaptcha creates a circle captcha with 5 characters and 15 circles by default.
 func CreateCircleCaptcha(width, height int) *CircleCaptcha {
 	return NewCircleCaptcha(width, height)
+}
+
+// CreateCircleCaptchaWithOptions creates a circle captcha customized by options.
+func CreateCircleCaptchaWithOptions(width, height int, opts ...CaptchaOption) *CircleCaptcha {
+	return NewCircleCaptchaWithOptions(width, height, opts...)
 }
 
 // CreateCircleCaptchaWith creates a circle captcha with custom options.
@@ -49,6 +59,11 @@ func CreateShearCaptcha(width, height int) *ShearCaptcha {
 	return NewShearCaptcha(width, height)
 }
 
+// CreateShearCaptchaWithOptions creates a shear captcha customized by options.
+func CreateShearCaptchaWithOptions(width, height int, opts ...CaptchaOption) *ShearCaptcha {
+	return NewShearCaptchaWithOptions(width, height, opts...)
+}
+
 // CreateShearCaptchaWith creates a shear captcha with custom options.
 func CreateShearCaptchaWith(width, height, codeCount, thickness int) *ShearCaptcha {
 	return NewShearCaptchaWith(width, height, codeCount, thickness)
@@ -67,6 +82,11 @@ func CreateShearCaptchaByGenerator(width, height int, generator CodeGenerator, t
 // CreateGifCaptcha creates an animated GIF captcha with 5 characters by default.
 func CreateGifCaptcha(width, height int) *GifCaptcha {
 	return NewGifCaptcha(width, height)
+}
+
+// CreateGifCaptchaWithOptions creates an animated GIF captcha customized by options.
+func CreateGifCaptchaWithOptions(width, height int, opts ...CaptchaOption) *GifCaptcha {
+	return NewGifCaptchaWithOptions(width, height, opts...)
 }
 
 // CreateGifCaptchaWith creates an animated GIF captcha with a custom character count.

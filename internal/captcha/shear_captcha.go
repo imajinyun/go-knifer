@@ -18,6 +18,13 @@ func NewShearCaptcha(width, height int) *ShearCaptcha {
 	return NewShearCaptchaWith(width, height, 5, 4)
 }
 
+// NewShearCaptchaWithOptions creates a shear captcha customized by options.
+func NewShearCaptchaWithOptions(width, height int, opts ...CaptchaOption) *ShearCaptcha {
+	c := NewShearCaptcha(width, height)
+	applyCaptchaOptions(&c.AbstractCaptcha, opts)
+	return c
+}
+
 // NewShearCaptchaWith creates a captcha with custom character count and line width.
 func NewShearCaptchaWith(width, height, codeCount, thickness int) *ShearCaptcha {
 	c := &ShearCaptcha{}

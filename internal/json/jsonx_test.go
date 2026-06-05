@@ -68,6 +68,10 @@ func TestFormatJSONStr(t *testing.T) {
 	if !strings.Contains(out, "\n") {
 		t.Fatalf("expect formatted: %q", out)
 	}
+	custom := FormatJSONStrWithOptions(in, WithFormatIndentWidth(2), WithFormatSpaceAfterKey(false))
+	if !strings.Contains(custom, "\n  \"a\":1") {
+		t.Fatalf("custom format = %q", custom)
+	}
 }
 
 func TestNullHandling(t *testing.T) {

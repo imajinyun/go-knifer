@@ -10,7 +10,9 @@ import (
 	"fmt"
 	"html"
 	"io"
+	"io/fs"
 	"os"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"sort"
@@ -78,10 +80,14 @@ type ParseOption func(*parseConfig)
 
 type parseConfig struct {
 	namespaceAware bool
+	strict         bool
+	charsetReader  func(charset string, input io.Reader) (io.Reader, error)
+	entity         map[string]string
+	maxBytes       int64
 }
 
 func defaultParseConfig() parseConfig {
-	return parseConfig{namespaceAware: true}
+	return parseConfig{namespaceAware: true, strict: true}
 }
 
 func applyParse(opts []ParseOption) parseConfig {
@@ -99,6 +105,26 @@ func WithNamespaceAware(b bool) ParseOption {
 	return func(c *parseConfig) { c.namespaceAware = b }
 }
 
+// WithStrict controls XML decoder strict mode.
+func WithStrict(b bool) ParseOption {
+	return func(c *parseConfig) { c.strict = b }
+}
+
+// WithCharsetReader sets the charset reader used by the XML decoder.
+func WithCharsetReader(reader func(charset string, input io.Reader) (io.Reader, error)) ParseOption {
+	return func(c *parseConfig) { c.charsetReader = reader }
+}
+
+// WithEntity sets custom XML decoder entity replacements.
+func WithEntity(entity map[string]string) ParseOption {
+	return func(c *parseConfig) { c.entity = entity }
+}
+
+// WithMaxBytes bounds XML input read from readers and files. Non-positive values mean unlimited.
+func WithMaxBytes(maxBytes int64) ParseOption {
+	return func(c *parseConfig) { c.maxBytes = maxBytes }
+}
+
 // ---------------------------------------------------------------------------
 // Write options
 // ---------------------------------------------------------------------------
@@ -113,10 +139,14 @@ type writeConfig struct {
 	ignoreNullFields   bool
 	rootName           string
 	namespace          string
+	filePerm           fs.FileMode
+	dirPerm            fs.FileMode
+	overwrite          bool
+	createParents      bool
 }
 
 func defaultWriteConfig() writeConfig {
-	return writeConfig{charset: DefaultCharset}
+	return writeConfig{charset: DefaultCharset, filePerm: 0o644, dirPerm: 0o750, overwrite: true, createParents: true}
 }
 
 func applyWrite(opts []WriteOption) writeConfig {
@@ -155,6 +185,22 @@ func WithRootName(s string) WriteOption { return func(c *writeConfig) { c.rootNa
 // WithNamespace sets the xmlns attribute on the synthesized root element.
 func WithNamespace(s string) WriteOption { return func(c *writeConfig) { c.namespace = s } }
 
+// WithFilePerm sets the file permission used by WriteFile.
+func WithFilePerm(perm fs.FileMode) WriteOption { return func(c *writeConfig) { c.filePerm = perm } }
+
+// WithDirPerm sets the parent-directory permission used by WriteFile.
+func WithDirPerm(perm fs.FileMode) WriteOption { return func(c *writeConfig) { c.dirPerm = perm } }
+
+// WithOverwrite controls whether WriteFile may replace an existing file.
+func WithOverwrite(overwrite bool) WriteOption {
+	return func(c *writeConfig) { c.overwrite = overwrite }
+}
+
+// WithCreateParents controls whether WriteFile creates parent directories.
+func WithCreateParents(create bool) WriteOption {
+	return func(c *writeConfig) { c.createParents = create }
+}
+
 // ---------------------------------------------------------------------------
 // Reading
 // ---------------------------------------------------------------------------
@@ -170,12 +216,12 @@ func ReadXML(pathOrContent string, opts ...ParseOption) (*Document, error) {
 
 // ReadXMLFile parses an XML file.
 func ReadXMLFile(path string, opts ...ParseOption) (*Document, error) {
-	// #nosec G304 -- SDK file helper intentionally reads the caller-provided XML path.
-	data, err := os.ReadFile(path)
+	f, err := os.Open(path) // #nosec G304 -- SDK file helper intentionally reads the caller-provided XML path.
 	if err != nil {
 		return nil, err
 	}
-	return ReadXMLBytes(data, opts...)
+	defer func() { _ = f.Close() }()
+	return ReadXMLReader(f, opts...)
 }
 
 // ReadXMLBytes parses XML bytes.
@@ -194,7 +240,13 @@ func ParseXML(xmlStr string, opts ...ParseOption) (*Document, error) {
 }
 
 func readXMLReader(r io.Reader, cfg parseConfig) (*Document, error) {
+	if cfg.maxBytes > 0 {
+		r = io.LimitReader(r, cfg.maxBytes)
+	}
 	dec := stdxml.NewDecoder(r)
+	dec.Strict = cfg.strict
+	dec.CharsetReader = cfg.charsetReader
+	dec.Entity = cfg.entity
 	var (
 		stack []*Element
 		root  *Element
@@ -297,8 +349,18 @@ func MarshalString(v any, opts ...WriteOption) (string, error) {
 
 // WriteFile writes a document or element to path.
 func WriteFile(path string, v any, opts ...WriteOption) (err error) {
+	cfg := applyWrite(opts)
+	if cfg.createParents {
+		if err := os.MkdirAll(filepath.Dir(path), cfg.dirPerm); err != nil {
+			return err
+		}
+	}
+	flag := os.O_CREATE | os.O_WRONLY | os.O_TRUNC
+	if !cfg.overwrite {
+		flag |= os.O_EXCL
+	}
 	// #nosec G304 -- SDK file helper intentionally creates the caller-provided XML path.
-	f, err := os.Create(path)
+	f, err := os.OpenFile(path, flag, cfg.filePerm)
 	if err != nil {
 		return err
 	}
@@ -307,7 +369,7 @@ func WriteFile(path string, v any, opts ...WriteOption) (err error) {
 			err = closeErr
 		}
 	}()
-	return WriteTo(f, v, opts...)
+	return writeWithConfig(f, v, cfg)
 }
 
 // MarshalMap serializes map data to an XML string.

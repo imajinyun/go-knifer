@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"image/color"
 	"io"
+	"io/fs"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -40,6 +42,118 @@ type AbstractCaptcha struct {
 	generator CodeGenerator
 	code      string
 	imgBytes  []byte
+}
+
+type captchaConfig struct {
+	generator      CodeGenerator
+	background     color.Color
+	fontSize       float64
+	interfereCount int
+	setInterfere   bool
+	gifRepeat      int
+	setGIFRepeat   bool
+	gifDelay       int
+	setGIFDelay    bool
+}
+
+// CaptchaOption customizes captcha construction.
+type CaptchaOption func(*captchaConfig)
+
+// WithGenerator sets the captcha code generator.
+func WithGenerator(generator CodeGenerator) CaptchaOption {
+	return func(c *captchaConfig) { c.generator = generator }
+}
+
+// WithBackground sets the captcha background color.
+func WithBackground(background color.Color) CaptchaOption {
+	return func(c *captchaConfig) { c.background = background }
+}
+
+// WithFontSize sets the font size ratio against captcha height.
+func WithFontSize(fontSize float64) CaptchaOption {
+	return func(c *captchaConfig) { c.fontSize = fontSize }
+}
+
+// WithInterfereCount sets the number of interference elements.
+func WithInterfereCount(count int) CaptchaOption {
+	return func(c *captchaConfig) {
+		c.interfereCount = count
+		c.setInterfere = true
+	}
+}
+
+// WithGIFRepeat sets the animated GIF repeat count.
+func WithGIFRepeat(repeat int) CaptchaOption {
+	return func(c *captchaConfig) {
+		c.gifRepeat = repeat
+		c.setGIFRepeat = true
+	}
+}
+
+// WithGIFDelay sets the animated GIF frame delay in 1/100 second units.
+func WithGIFDelay(delay int) CaptchaOption {
+	return func(c *captchaConfig) {
+		c.gifDelay = delay
+		c.setGIFDelay = true
+	}
+}
+
+func applyCaptchaOptions(c *AbstractCaptcha, opts []CaptchaOption) captchaConfig {
+	cfg := captchaConfig{}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.generator != nil {
+		c.SetGenerator(cfg.generator)
+	}
+	if cfg.background != nil {
+		c.SetBackground(cfg.background)
+	}
+	if cfg.fontSize > 0 {
+		c.FontSize = cfg.fontSize
+	}
+	if cfg.setInterfere {
+		c.InterfereCount = cfg.interfereCount
+	}
+	return cfg
+}
+
+type writeConfig struct {
+	filePerm      fs.FileMode
+	dirPerm       fs.FileMode
+	overwrite     bool
+	createParents bool
+}
+
+// WriteOption customizes captcha file output.
+type WriteOption func(*writeConfig)
+
+// WithFilePerm sets the file permission used by WriteToFileWithOptions.
+func WithFilePerm(perm fs.FileMode) WriteOption { return func(c *writeConfig) { c.filePerm = perm } }
+
+// WithDirPerm sets the parent directory permission used by WriteToFileWithOptions.
+func WithDirPerm(perm fs.FileMode) WriteOption { return func(c *writeConfig) { c.dirPerm = perm } }
+
+// WithOverwrite controls whether WriteToFileWithOptions may replace an existing file.
+func WithOverwrite(overwrite bool) WriteOption {
+	return func(c *writeConfig) { c.overwrite = overwrite }
+}
+
+// WithCreateParents controls whether WriteToFileWithOptions creates parent directories.
+func WithCreateParents(create bool) WriteOption {
+	return func(c *writeConfig) { c.createParents = create }
+}
+
+func applyWriteOptions(opts []WriteOption) writeConfig {
+	cfg := writeConfig{filePerm: 0o644, dirPerm: 0o750, overwrite: true, createParents: true}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	return cfg
 }
 
 // Code returns the current captcha text.
@@ -80,11 +194,32 @@ func (a *AbstractCaptcha) Write(w io.Writer) error {
 
 // WriteToFile writes the image to a file.
 func (a *AbstractCaptcha) WriteToFile(path string) error {
+	return a.WriteToFileWithOptions(path)
+}
+
+// WriteToFileWithOptions writes the image to a file with custom filesystem options.
+func (a *AbstractCaptcha) WriteToFileWithOptions(path string, opts ...WriteOption) error {
 	b := a.getImageBytes()
 	if len(b) == 0 {
 		return fmt.Errorf("gkcaptcha: empty image, call CreateCode first")
 	}
-	return os.WriteFile(path, b, 0o644)
+	cfg := applyWriteOptions(opts)
+	if cfg.createParents {
+		if err := os.MkdirAll(filepath.Dir(path), cfg.dirPerm); err != nil {
+			return err
+		}
+	}
+	flag := os.O_CREATE | os.O_WRONLY | os.O_TRUNC
+	if !cfg.overwrite {
+		flag |= os.O_EXCL
+	}
+	f, err := os.OpenFile(path, flag, cfg.filePerm) // #nosec G304 -- caller controls destination path.
+	if err != nil {
+		return err
+	}
+	defer func() { _ = f.Close() }()
+	_, err = f.Write(b)
+	return err
 }
 
 // Generator returns the underlying CodeGenerator.

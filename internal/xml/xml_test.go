@@ -280,12 +280,18 @@ func TestPerCallOptionsAndWriteErrors(t *testing.T) {
 	if err := WriteFile(tmp, doc, WithOmitDeclaration(true)); err != nil {
 		t.Fatalf("WriteFile failed: %v", err)
 	}
+	if err := WriteFile(tmp, doc, WithOmitDeclaration(true), WithOverwrite(false)); err == nil {
+		t.Fatalf("WriteFile should reject overwrite when disabled")
+	}
 	written, err := os.ReadFile(tmp)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(string(written), `<a>1</a>`) {
 		t.Fatalf("WriteFile content = %q", written)
+	}
+	if _, err := ReadXMLReader(strings.NewReader(`<root><a>1</a></root>`), WithMaxBytes(8)); err == nil {
+		t.Fatalf("ReadXMLReader should fail when max bytes truncates input")
 	}
 }
 

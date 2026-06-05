@@ -18,6 +18,13 @@ func NewLineCaptcha(width, height int) *LineCaptcha {
 	return NewLineCaptchaWith(width, height, 5, 150)
 }
 
+// NewLineCaptchaWithOptions creates a line captcha customized by options.
+func NewLineCaptchaWithOptions(width, height int, opts ...CaptchaOption) *LineCaptcha {
+	c := NewLineCaptcha(width, height)
+	applyCaptchaOptions(&c.AbstractCaptcha, opts)
+	return c
+}
+
 // NewLineCaptchaWith creates a captcha with custom character and line counts.
 func NewLineCaptchaWith(width, height, codeCount, lineCount int) *LineCaptcha {
 	c := &LineCaptcha{}

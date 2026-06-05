@@ -2,12 +2,20 @@ package captcha
 
 import (
 	"bytes"
+	"image/color"
 	"image/gif"
 	"image/png"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
 )
+
+type fixedGenerator struct{ code string }
+
+func (g fixedGenerator) Generate() string { return g.code }
+
+func (g fixedGenerator) Verify(code, userInput string) bool { return code == userInput }
 
 // ---------------------------------------------------------------------------
 // Generator tests.
@@ -127,6 +135,30 @@ func TestGifCaptcha(t *testing.T) {
 	}
 	if len(g.Image) != len(c.Code()) {
 		t.Fatalf("frames=%d, want %d", len(g.Image), len(c.Code()))
+	}
+}
+
+func TestCaptchaOptionsAndWriteOptions(t *testing.T) {
+	c := NewLineCaptchaWithOptions(100, 40,
+		WithGenerator(fixedGenerator{code: "ABCD"}),
+		WithBackground(color.Black),
+		WithInterfereCount(0),
+	)
+	c.CreateCode()
+	if c.Code() != "ABCD" || !c.Verify("ABCD") || c.Verify("abcd") {
+		t.Fatalf("custom generator not applied: code=%q", c.Code())
+	}
+	path := filepath.Join(t.TempDir(), "nested", "captcha.png")
+	if err := c.WriteToFileWithOptions(path, WithFilePerm(0o600), WithDirPerm(0o700)); err != nil {
+		t.Fatalf("WriteToFileWithOptions: %v", err)
+	}
+	if err := c.WriteToFileWithOptions(path, WithOverwrite(false)); err == nil {
+		t.Fatal("WriteToFileWithOptions should reject overwrite when disabled")
+	}
+
+	g := NewGifCaptchaWithOptions(100, 40, WithGenerator(fixedGenerator{code: "XYZ"}), WithGIFRepeat(1), WithGIFDelay(5))
+	if g.Repeat != 1 || g.Delay != 5 || g.Code() != "XYZ" {
+		t.Fatalf("gif options not applied: repeat=%d delay=%d code=%q", g.Repeat, g.Delay, g.Code())
 	}
 }
 

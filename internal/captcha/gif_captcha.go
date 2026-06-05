@@ -28,6 +28,19 @@ func NewGifCaptcha(width, height int) *GifCaptcha {
 	return NewGifCaptchaWith(width, height, 5)
 }
 
+// NewGifCaptchaWithOptions creates a GIF captcha customized by options.
+func NewGifCaptchaWithOptions(width, height int, opts ...CaptchaOption) *GifCaptcha {
+	c := NewGifCaptcha(width, height)
+	cfg := applyCaptchaOptions(&c.AbstractCaptcha, opts)
+	if cfg.setGIFRepeat {
+		c.Repeat = cfg.gifRepeat
+	}
+	if cfg.setGIFDelay {
+		c.Delay = cfg.gifDelay
+	}
+	return c
+}
+
 // NewGifCaptchaWith creates a captcha with a custom character count.
 func NewGifCaptchaWith(width, height, codeCount int) *GifCaptcha {
 	c := &GifCaptcha{}

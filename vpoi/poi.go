@@ -6,6 +6,7 @@ import (
 	"io/fs"
 
 	poiimpl "github.com/imajinyun/go-knifer/internal/poi"
+	"github.com/xuri/excelize/v2"
 )
 
 // ReadOption customizes Excel read helpers.
@@ -17,6 +18,9 @@ type WriteOption = poiimpl.WriteOption
 // WithReadSheet selects the worksheet read by read helpers.
 func WithReadSheet(sheet string) ReadOption { return poiimpl.WithReadSheet(sheet) }
 
+// WithOpenOptions sets excelize options used when opening workbooks.
+func WithOpenOptions(opts ...excelize.Options) ReadOption { return poiimpl.WithOpenOptions(opts...) }
+
 // WithWriteSheet selects the worksheet written by write helpers.
 func WithWriteSheet(sheet string) WriteOption { return poiimpl.WithWriteSheet(sheet) }
 
@@ -25,6 +29,15 @@ func WithStartCell(row, col int) WriteOption { return poiimpl.WithStartCell(row,
 
 // WithDirPerm sets the parent-directory permission used when saving workbooks.
 func WithDirPerm(perm fs.FileMode) WriteOption { return poiimpl.WithDirPerm(perm) }
+
+// WithFilePerm sets the file permission after saving workbooks.
+func WithFilePerm(perm fs.FileMode) WriteOption { return poiimpl.WithFilePerm(perm) }
+
+// WithOverwrite controls whether an existing workbook may be replaced.
+func WithOverwrite(overwrite bool) WriteOption { return poiimpl.WithOverwrite(overwrite) }
+
+// WithSaveOptions sets excelize options used when saving workbooks.
+func WithSaveOptions(opts ...excelize.Options) WriteOption { return poiimpl.WithSaveOptions(opts...) }
 
 const (
 	// DefaultSheetName is the default worksheet name used for read/write helpers.

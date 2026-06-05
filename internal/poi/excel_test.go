@@ -91,8 +91,11 @@ func TestRowsBufferRoundTrip(t *testing.T) {
 func TestReadWriteOptions(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "book.xlsx")
 	rows := [][]string{{"name", "score"}, {"go", "100"}}
-	if err := WriteRows(path, rows, WithWriteSheet("Data"), WithStartCell(2, 3)); err != nil {
+	if err := WriteRows(path, rows, WithWriteSheet("Data"), WithStartCell(2, 3), WithFilePerm(0o600)); err != nil {
 		t.Fatalf("WriteRows with options: %v", err)
+	}
+	if err := WriteRows(path, rows, WithWriteSheet("Data"), WithOverwrite(false)); err == nil {
+		t.Fatalf("WriteRows should reject overwrite when disabled")
 	}
 	got, err := ReadRows(path, WithReadSheet("Data"))
 	if err != nil {
