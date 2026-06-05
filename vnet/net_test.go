@@ -1,13 +1,38 @@
 package vnet_test
 
 import (
+	"bytes"
+	"context"
+	"io"
+	"mime/multipart"
 	stdnet "net"
+	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/imajinyun/go-knifer/vnet"
 )
+
+type recordingDialer struct {
+	network string
+	address string
+	data    chan []byte
+}
+
+func (d *recordingDialer) DialContext(_ context.Context, network, address string) (stdnet.Conn, error) {
+	d.network = network
+	d.address = address
+	client, server := stdnet.Pipe()
+	go func() {
+		defer func() { _ = server.Close() }()
+		payload, _ := io.ReadAll(server)
+		d.data <- payload
+	}()
+	return client, nil
+}
 
 func TestVNetFacade(t *testing.T) {
 	v, err := vnet.IPv4ToLong("127.0.0.1")
@@ -73,4 +98,91 @@ func TestVNetFacadeOptions(t *testing.T) {
 	if err != nil || len(dns) == 0 {
 		t.Fatalf("GetDNSInfoWithOptions = %v, %v; want at least one A record", dns, err)
 	}
+}
+
+func TestVNetConnectOptionsFacade(t *testing.T) {
+	dialer := &recordingDialer{data: make(chan []byte, 1)}
+	conn, err := vnet.ConnectWithOptions("example.com", 8080,
+		vnet.WithConnectNetwork("tcp4"),
+		vnet.WithConnectTimeout(time.Second),
+		vnet.WithConnectDialer(dialer),
+	)
+	if err != nil {
+		t.Fatalf("ConnectWithOptions: %v", err)
+	}
+	_ = conn.Close()
+	if dialer.network != "tcp4" || dialer.address != "example.com:8080" {
+		t.Fatalf("dial target = %s %s", dialer.network, dialer.address)
+	}
+
+	dialer = &recordingDialer{data: make(chan []byte, 1)}
+	if err := vnet.NetCatWithOptions("127.0.0.1", 1234, []byte("hello"), vnet.WithConnectDialer(dialer)); err != nil {
+		t.Fatalf("NetCatWithOptions: %v", err)
+	}
+	if got := string(<-dialer.data); got != "hello" {
+		t.Fatalf("NetCatWithOptions wrote %q", got)
+	}
+
+	addr := &stdnet.TCPAddr{IP: stdnet.ParseIP("127.0.0.1"), Port: 4321}
+	dialer = &recordingDialer{data: make(chan []byte, 1)}
+	if !vnet.IsOpenWithOptions(addr, vnet.WithConnectDialer(dialer)) {
+		t.Fatal("IsOpenWithOptions should report true")
+	}
+}
+
+func TestVNetUploadSaveOptionsFacade(t *testing.T) {
+	req := multipartRequest(t, "avatar", "a.txt", "hello")
+	form, err := vnet.ParseMultipartForm(req, vnet.NewUploadSetting())
+	if err != nil {
+		t.Fatalf("ParseMultipartForm: %v", err)
+	}
+	file := form.GetFile("avatar")
+	if file == nil {
+		t.Fatal("uploaded file is nil")
+	}
+	if vnet.UploadFileName(file) != "a.txt" || vnet.UploadFileSize(file) != int64(len("hello")) || vnet.UploadFileContentType(file) == "" {
+		t.Fatalf("upload metadata = name:%q size:%d type:%q", vnet.UploadFileName(file), vnet.UploadFileSize(file), vnet.UploadFileContentType(file))
+	}
+
+	dir := t.TempDir()
+	dest := filepath.Join(dir, "nested", "a.txt")
+	if err := vnet.SaveUploadedFile(file, dest, vnet.WithUploadFilePerm(0o600), vnet.WithUploadDirPerm(0o700)); err != nil {
+		t.Fatalf("SaveUploadedFile: %v", err)
+	}
+	info, err := os.Stat(dest)
+	if err != nil {
+		t.Fatalf("stat saved file: %v", err)
+	}
+	if info.Mode().Perm() != 0o600 {
+		t.Fatalf("saved file perm = %v", info.Mode().Perm())
+	}
+	if err := vnet.SaveUploadedFile(file, dest, vnet.WithUploadOverwrite(false)); err == nil {
+		t.Fatal("SaveUploadedFile should reject overwrite when disabled")
+	}
+	missingParent := filepath.Join(dir, "missing", "b.txt")
+	if err := vnet.SaveUploadedFile(file, missingParent, vnet.WithUploadCreateParents(false)); err == nil {
+		t.Fatal("SaveUploadedFile should reject missing parent when parent creation is disabled")
+	}
+}
+
+func multipartRequest(t *testing.T, field, filename, content string) *http.Request {
+	t.Helper()
+	body := &bytes.Buffer{}
+	w := multipart.NewWriter(body)
+	part, err := w.CreateFormFile(field, filename)
+	if err != nil {
+		t.Fatalf("create form file: %v", err)
+	}
+	if _, err := part.Write([]byte(content)); err != nil {
+		t.Fatalf("write form file: %v", err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatalf("close multipart writer: %v", err)
+	}
+	req, err := http.NewRequest(http.MethodPost, "/upload", body)
+	if err != nil {
+		t.Fatalf("new request: %v", err)
+	}
+	req.Header.Set("Content-Type", w.FormDataContentType())
+	return req
 }

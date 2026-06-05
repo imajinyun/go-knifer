@@ -2,7 +2,9 @@ package net
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
+	"io"
 	"math/big"
 	"mime/multipart"
 	stdnet "net"
@@ -12,6 +14,28 @@ import (
 	"testing"
 	"time"
 )
+
+type recordingDialer struct {
+	network string
+	address string
+	err     error
+	data    chan []byte
+}
+
+func (d *recordingDialer) DialContext(_ context.Context, network, address string) (stdnet.Conn, error) {
+	d.network = network
+	d.address = address
+	if d.err != nil {
+		return nil, d.err
+	}
+	client, server := stdnet.Pipe()
+	go func() {
+		defer func() { _ = server.Close() }()
+		payload, _ := io.ReadAll(server)
+		d.data <- payload
+	}()
+	return client, nil
+}
 
 func TestIPv4Helpers(t *testing.T) {
 	v, err := IPv4ToLong("127.0.0.1")
@@ -123,6 +147,42 @@ func TestPingWithOptions(t *testing.T) {
 		t.Fatal("PingWithOptions failed to reach local listener")
 	}
 	<-done
+}
+
+func TestConnectHelpersWithOptionsUseDialerNetworkAndTimeout(t *testing.T) {
+	dialer := &recordingDialer{data: make(chan []byte, 1)}
+	conn, err := ConnectWithOptions("example.com", 8080,
+		WithConnectNetwork("tcp4"),
+		WithConnectTimeout(time.Second),
+		WithConnectDialer(dialer),
+	)
+	if err != nil {
+		t.Fatalf("ConnectWithOptions: %v", err)
+	}
+	_ = conn.Close()
+	if dialer.network != "tcp4" || dialer.address != "example.com:8080" {
+		t.Fatalf("dial target = %s %s", dialer.network, dialer.address)
+	}
+
+	dialer = &recordingDialer{data: make(chan []byte, 1)}
+	if err := NetCatWithOptions("127.0.0.1", 1234, []byte("hello"), WithConnectDialer(dialer)); err != nil {
+		t.Fatalf("NetCatWithOptions: %v", err)
+	}
+	if got := string(<-dialer.data); got != "hello" {
+		t.Fatalf("NetCatWithOptions wrote %q", got)
+	}
+	if dialer.network != "tcp" || dialer.address != "127.0.0.1:1234" {
+		t.Fatalf("netcat dial target = %s %s", dialer.network, dialer.address)
+	}
+
+	addr := &stdnet.TCPAddr{IP: stdnet.ParseIP("127.0.0.1"), Port: 4321}
+	dialer = &recordingDialer{data: make(chan []byte, 1)}
+	if !IsOpenWithOptions(addr, WithConnectDialer(dialer), WithConnectNetwork("tcp4")) {
+		t.Fatal("IsOpenWithOptions should report true for successful dialer")
+	}
+	if dialer.network != "tcp4" || dialer.address != addr.String() {
+		t.Fatalf("is-open dial target = %s %s", dialer.network, dialer.address)
+	}
 }
 
 func TestResolveWithOptions(t *testing.T) {

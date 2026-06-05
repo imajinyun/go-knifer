@@ -22,6 +22,7 @@ const (
 type (
 	TLSConfigBuilder   = netimpl.TLSConfigBuilder
 	Dialer             = netimpl.Dialer
+	ConnectOption      = netimpl.ConnectOption
 	PingOption         = netimpl.PingOption
 	ResolveOption      = netimpl.ResolveOption
 	PortOption         = netimpl.PortOption

@@ -94,7 +94,7 @@ func TestFacadeZipOptions(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GzipString: %v", err)
 	}
-	if _, err := vzip.UnGzipWithOptions([]byte(gz), vzip.WithMaxBytes(4)); err == nil {
+	if _, err := vzip.UnGzipWithOptions(gz, vzip.WithMaxBytes(4)); err == nil {
 		t.Fatal("UnGzipWithOptions should reject content larger than max bytes")
 	}
 	zlibBytes, err := vzip.Zlib([]byte("hello"))

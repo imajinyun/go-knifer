@@ -32,8 +32,18 @@ type pingConfig struct {
 	dialer  Dialer
 }
 
+type connectConfig struct {
+	ctx     context.Context
+	timeout time.Duration
+	network string
+	dialer  Dialer
+}
+
 // PingOption customizes PingWithOptions.
 type PingOption func(*pingConfig)
+
+// ConnectOption customizes ConnectWithOptions, NetCatWithOptions, and IsOpenWithOptions.
+type ConnectOption func(*connectConfig)
 
 // WithPingContext sets the context used by PingWithOptions.
 func WithPingContext(ctx context.Context) PingOption { return func(c *pingConfig) { c.ctx = ctx } }
@@ -53,6 +63,24 @@ func WithPingNetwork(network string) PingOption { return func(c *pingConfig) { c
 
 // WithPingDialer sets the dialer used by PingWithOptions.
 func WithPingDialer(d Dialer) PingOption { return func(c *pingConfig) { c.dialer = d } }
+
+// WithConnectContext sets the context used by connection helpers.
+func WithConnectContext(ctx context.Context) ConnectOption {
+	return func(c *connectConfig) { c.ctx = ctx }
+}
+
+// WithConnectTimeout bounds connection attempts made by connection helpers.
+func WithConnectTimeout(timeout time.Duration) ConnectOption {
+	return func(c *connectConfig) { c.timeout = timeout }
+}
+
+// WithConnectNetwork sets the network used by connection helpers, such as tcp, tcp4, or tcp6.
+func WithConnectNetwork(network string) ConnectOption {
+	return func(c *connectConfig) { c.network = network }
+}
+
+// WithConnectDialer sets the dialer used by connection helpers.
+func WithConnectDialer(d Dialer) ConnectOption { return func(c *connectConfig) { c.dialer = d } }
 
 func applyPingOptions(opts []PingOption) pingConfig {
 	cfg := pingConfig{
@@ -83,6 +111,30 @@ func applyPingOptions(opts []PingOption) pingConfig {
 		cfg.dialer = &stdnet.Dialer{Timeout: cfg.timeout}
 	}
 	return cfg
+}
+
+func applyConnectOptions(opts []ConnectOption) (connectConfig, context.CancelFunc) {
+	cfg := connectConfig{ctx: context.Background(), network: "tcp"}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.ctx == nil {
+		cfg.ctx = context.Background()
+	}
+	cancel := func() {}
+	if cfg.timeout > 0 {
+		cfg.ctx, cancel = context.WithTimeout(cfg.ctx, cfg.timeout)
+	}
+	cfg.network = strings.TrimSpace(cfg.network)
+	if cfg.network == "" {
+		cfg.network = "tcp"
+	}
+	if cfg.dialer == nil {
+		cfg.dialer = &stdnet.Dialer{}
+	}
+	return cfg, cancel
 }
 
 type resolveConfig struct {
@@ -486,7 +538,12 @@ func GetLocalHardwareAddress() stdnet.HardwareAddr {
 
 // NetCat sends data to host:port over TCP.
 func NetCat(host string, port int, data []byte, timeout time.Duration) error {
-	conn, err := stdnet.DialTimeout("tcp", stdnet.JoinHostPort(host, strconvPort(port)), timeout)
+	return NetCatWithOptions(host, port, data, WithConnectTimeout(timeout))
+}
+
+// NetCatWithOptions sends data to host:port using custom connection options.
+func NetCatWithOptions(host string, port int, data []byte, opts ...ConnectOption) error {
+	conn, err := ConnectWithOptions(host, port, opts...)
 	if err != nil {
 		return err
 	}
@@ -524,10 +581,17 @@ func PingWithOptions(ip string, opts ...PingOption) bool {
 
 // IsOpen reports whether address can be opened within timeout.
 func IsOpen(address *stdnet.TCPAddr, timeout time.Duration) bool {
+	return IsOpenWithOptions(address, WithConnectTimeout(timeout))
+}
+
+// IsOpenWithOptions reports whether address can be opened with custom connection options.
+func IsOpenWithOptions(address *stdnet.TCPAddr, opts ...ConnectOption) bool {
 	if address == nil {
 		return false
 	}
-	conn, err := stdnet.DialTimeout("tcp", address.String(), timeout)
+	cfg, cancel := applyConnectOptions(opts)
+	defer cancel()
+	conn, err := cfg.dialer.DialContext(cfg.ctx, cfg.network, address.String())
 	if err != nil {
 		return false
 	}
@@ -623,11 +687,15 @@ func GetDNSInfoWithOptions(hostName string, opts ...ResolveOption) ([]string, er
 
 // Connect opens a TCP connection to host:port.
 func Connect(hostname string, port int, timeout time.Duration) (stdnet.Conn, error) {
+	return ConnectWithOptions(hostname, port, WithConnectTimeout(timeout))
+}
+
+// ConnectWithOptions opens a connection to host:port using custom connection options.
+func ConnectWithOptions(hostname string, port int, opts ...ConnectOption) (stdnet.Conn, error) {
+	cfg, cancel := applyConnectOptions(opts)
+	defer cancel()
 	addr := stdnet.JoinHostPort(hostname, strconvPort(port))
-	if timeout > 0 {
-		return stdnet.DialTimeout("tcp", addr, timeout)
-	}
-	return stdnet.Dial("tcp", addr)
+	return cfg.dialer.DialContext(cfg.ctx, cfg.network, addr)
 }
 
 // GetRemoteAddress returns conn's remote address string.

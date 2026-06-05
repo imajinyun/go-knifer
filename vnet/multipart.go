@@ -8,32 +8,42 @@ import (
 	netimpl "github.com/imajinyun/go-knifer/internal/net"
 )
 
+// NewUploadSetting returns a default upload setting.
 func NewUploadSetting() UploadSetting { return netimpl.NewUploadSetting() }
 
+// ParseMultipartForm parses multipart/form-data from an HTTP request.
 func ParseMultipartForm(r *http.Request, setting UploadSetting) (*MultipartFormData, error) {
 	return netimpl.ParseMultipartForm(r, setting)
 }
 
+// WithUploadFilePerm sets the file permission used when creating the destination file.
 func WithUploadFilePerm(perm fs.FileMode) UploadSaveOption { return netimpl.WithUploadFilePerm(perm) }
 
+// WithUploadDirPerm sets the directory permission used when creating parent directories.
 func WithUploadDirPerm(perm fs.FileMode) UploadSaveOption { return netimpl.WithUploadDirPerm(perm) }
 
+// WithUploadOverwrite controls whether an existing destination file may be replaced.
 func WithUploadOverwrite(overwrite bool) UploadSaveOption {
 	return netimpl.WithUploadOverwrite(overwrite)
 }
 
+// WithUploadCreateParents controls whether parent directories are created automatically.
 func WithUploadCreateParents(create bool) UploadSaveOption {
 	return netimpl.WithUploadCreateParents(create)
 }
 
+// SaveUploadedFile saves file to destPath.
 func SaveUploadedFile(file *multipart.FileHeader, destPath string, opts ...UploadSaveOption) error {
 	return netimpl.SaveUploadedFile(file, destPath, opts...)
 }
 
+// UploadFileName returns the uploaded file name.
 func UploadFileName(file *multipart.FileHeader) string { return netimpl.UploadFileName(file) }
 
+// UploadFileSize returns the uploaded file size.
 func UploadFileSize(file *multipart.FileHeader) int64 { return netimpl.UploadFileSize(file) }
 
+// UploadFileContentType returns the uploaded file content type header.
 func UploadFileContentType(file *multipart.FileHeader) string {
 	return netimpl.UploadFileContentType(file)
 }

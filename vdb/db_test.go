@@ -1,11 +1,47 @@
 package vdb
 
 import (
+	"database/sql"
+	"database/sql/driver"
 	"errors"
+	"io"
 	"testing"
+	"time"
 
 	knifer "github.com/imajinyun/go-knifer"
 )
+
+func init() {
+	sql.Register("vdb_pool_test", poolTestDriver{})
+}
+
+type poolTestDriver struct{}
+
+func (poolTestDriver) Open(string) (driver.Conn, error) { return poolTestConn{}, nil }
+
+type poolTestConn struct{}
+
+func (poolTestConn) Prepare(string) (driver.Stmt, error) { return poolTestStmt{}, nil }
+func (poolTestConn) Close() error                        { return nil }
+func (poolTestConn) Begin() (driver.Tx, error)           { return poolTestTx{}, nil }
+
+type poolTestStmt struct{}
+
+func (poolTestStmt) Close() error                               { return nil }
+func (poolTestStmt) NumInput() int                              { return -1 }
+func (poolTestStmt) Exec([]driver.Value) (driver.Result, error) { return driver.RowsAffected(0), nil }
+func (poolTestStmt) Query([]driver.Value) (driver.Rows, error)  { return poolTestRows{}, nil }
+
+type poolTestRows struct{}
+
+func (poolTestRows) Columns() []string         { return []string{"id"} }
+func (poolTestRows) Close() error              { return nil }
+func (poolTestRows) Next([]driver.Value) error { return io.EOF }
+
+type poolTestTx struct{}
+
+func (poolTestTx) Commit() error   { return nil }
+func (poolTestTx) Rollback() error { return nil }
 
 func TestFacadeBuilder(t *testing.T) {
 	sqlText, args, err := NewBuilder(WithDialect(DialectPostgres), WithWrapper(WrapperForDialect(DialectPostgres))).
@@ -67,5 +103,46 @@ func TestFacadeDBErrorContract(t *testing.T) {
 	var dbErr *DBError
 	if !errors.As(err, &dbErr) {
 		t.Fatalf("errors.As(err, *DBError) = false: %v", err)
+	}
+}
+
+func TestFacadePoolOptionsApplyToWrappedDB(t *testing.T) {
+	sqlDB, err := sql.Open("vdb_pool_test", "")
+	if err != nil {
+		t.Fatalf("sql.Open: %v", err)
+	}
+	defer func() { _ = sqlDB.Close() }()
+
+	db := Use(sqlDB,
+		WithMaxOpenConns(7),
+		WithMaxIdleConns(3),
+		WithConnMaxLifetime(2*time.Minute),
+		WithConnMaxIdleTime(time.Minute),
+	)
+	if db.SQLDB() != sqlDB {
+		t.Fatal("Use should preserve the wrapped *sql.DB")
+	}
+	stats := sqlDB.Stats()
+	if stats.MaxOpenConnections != 7 {
+		t.Fatalf("MaxOpenConnections = %d", stats.MaxOpenConnections)
+	}
+	if got := sqlDB.Stats().MaxOpenConnections; got != db.SQLDB().Stats().MaxOpenConnections {
+		t.Fatalf("wrapped DB stats mismatch = %d", got)
+	}
+}
+
+func TestFacadePoolOptionsApplyWhenOpeningDB(t *testing.T) {
+	db, err := Open("vdb_pool_test", "", WithMaxOpenConns(5), WithMaxIdleConns(2))
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	defer func() { _ = db.Close() }()
+
+	stats := db.SQLDB().Stats()
+	if stats.MaxOpenConnections != 5 {
+		t.Fatalf("MaxOpenConnections = %d", stats.MaxOpenConnections)
+	}
+	if db.Dialect() != DialectQuestion {
+		t.Fatalf("Dialect = %q", db.Dialect())
 	}
 }
