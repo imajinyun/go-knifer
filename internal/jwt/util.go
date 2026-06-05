@@ -2,6 +2,50 @@ package jwt
 
 // 包级便捷函数（对应 the utility toolkit-jwt JWTUtil）。
 
+type tokenConfig struct {
+	headers map[string]any
+	payload map[string]any
+	key     []byte
+	alg     string
+	signer  JWTSigner
+}
+
+// TokenOption customizes CreateTokenWithOptions.
+type TokenOption func(*tokenConfig)
+
+// WithTokenHeaders sets JWT header fields for CreateTokenWithOptions.
+func WithTokenHeaders(headers map[string]any) TokenOption {
+	return func(c *tokenConfig) { c.headers = headers }
+}
+
+// WithTokenPayload sets JWT payload fields for CreateTokenWithOptions.
+func WithTokenPayload(payload map[string]any) TokenOption {
+	return func(c *tokenConfig) { c.payload = payload }
+}
+
+// WithTokenKey sets the HMAC key used by CreateTokenWithOptions.
+func WithTokenKey(key []byte) TokenOption {
+	return func(c *tokenConfig) { c.key = append([]byte(nil), key...) }
+}
+
+// WithTokenAlgorithm sets the HMAC algorithm used by CreateTokenWithOptions.
+func WithTokenAlgorithm(algorithm string) TokenOption {
+	return func(c *tokenConfig) { c.alg = algorithm }
+}
+
+// WithTokenSigner sets the signer used by CreateTokenWithOptions and takes precedence over key/algorithm options.
+func WithTokenSigner(signer JWTSigner) TokenOption { return func(c *tokenConfig) { c.signer = signer } }
+
+func applyTokenOptions(opts []TokenOption) tokenConfig {
+	cfg := tokenConfig{}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	return cfg
+}
+
 // CreateToken 用 HS256 创建 token。
 func CreateToken(payload map[string]any, key []byte) (string, error) {
 	return CreateTokenWithHeaders(nil, payload, key)
@@ -36,6 +80,22 @@ func CreateTokenWithSigner(payload map[string]any, signer JWTSigner) (string, er
 func CreateTokenWithHeadersAndSigner(headers, payload map[string]any, signer JWTSigner) (string, error) {
 	j := New().AddHeaders(headers).AddPayloads(payload).SetSigner(signer)
 	return j.Sign()
+}
+
+// CreateTokenWithOptions creates a token from functional options and avoids adding more overload variants.
+func CreateTokenWithOptions(opts ...TokenOption) (string, error) {
+	cfg := applyTokenOptions(opts)
+	j := New().AddHeaders(cfg.headers).AddPayloads(cfg.payload)
+	if cfg.signer != nil {
+		return j.SetSigner(cfg.signer).Sign()
+	}
+	if cfg.alg != "" {
+		if err := j.SetKeyWithAlgorithm(cfg.key, cfg.alg); err != nil {
+			return "", err
+		}
+		return j.Sign()
+	}
+	return j.SetKey(cfg.key).Sign()
 }
 
 // ParseToken 解析 token。

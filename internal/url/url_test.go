@@ -37,6 +37,9 @@ func TestNormalizeAndComplete(t *testing.T) {
 	if got != "http://example.com/dir/a.html" {
 		t.Fatalf("Complete got %q", got)
 	}
+	if got := NormalizeUsingOptions("example.com//a b", WithDefaultScheme("https"), WithEncodePath(true), WithReplaceSlash(true)); got != "https://example.com/a%20b" {
+		t.Fatalf("NormalizeUsingOptions: %q", got)
+	}
 }
 
 func TestOpenAndContentLengthWithOptions(t *testing.T) {
@@ -133,6 +136,9 @@ func TestEncodeAndURLBuilder(t *testing.T) {
 	}
 	if got, _ := DecodePlus("a+b%2Bc", false); got != "a+b+c" {
 		t.Fatalf("DecodePlus = %q", got)
+	}
+	if got, _ := DecodeWithOptions("a+b%2Bc", WithPlusAsSpace(false)); got != "a+b+c" {
+		t.Fatalf("DecodeWithOptions = %q", got)
 	}
 	built := NewHTTPURLBuilder("example.com").AddPathSegment("a b").AddQuery("q", "go net").SetFragment("top 1").Build()
 	if built != "http://example.com/a%20b?q=go+net#top%201" {

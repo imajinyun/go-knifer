@@ -44,6 +44,12 @@ func WithOverwrite(overwrite bool) ArchiveOption { return zipimpl.WithOverwrite(
 // WithPreserveMode controls whether extracted files keep mode bits from the archive.
 func WithPreserveMode(preserve bool) ArchiveOption { return zipimpl.WithPreserveMode(preserve) }
 
+// WithSourceDir controls whether source directory names are included in newly created ZIP archives.
+func WithSourceDir(withSrcDir bool) ArchiveOption { return zipimpl.WithSourceDir(withSrcDir) }
+
+// WithFileFilter sets the source path filter used by newly created ZIP archives.
+func WithFileFilter(filter FileFilter) ArchiveOption { return zipimpl.WithFileFilter(filter) }
+
 // WithCompressionMethod sets the ZIP compression method used for newly created entries.
 func WithCompressionMethod(method uint16) ArchiveOption { return zipimpl.WithCompressionMethod(method) }
 
@@ -80,7 +86,12 @@ func ZipFiles(dest string, withSrcDir bool, srcFiles ...string) error {
 
 // ZipFilesWithOptions creates a ZIP archive from source files or directories with per-call options.
 func ZipFilesWithOptions(dest string, withSrcDir bool, srcFiles []string, opts ...ArchiveOption) error {
-	return zipimpl.ZipFilesWithOptions(dest, withSrcDir, srcFiles, opts...)
+	return zipimpl.ZipFilesWithOptions(dest, srcFiles, append([]ArchiveOption{zipimpl.WithSourceDir(withSrcDir)}, opts...)...)
+}
+
+// ZipFilesUsingOptions creates a ZIP archive from source files or directories using only functional options.
+func ZipFilesUsingOptions(dest string, srcFiles []string, opts ...ArchiveOption) error {
+	return zipimpl.ZipFilesWithOptions(dest, srcFiles, opts...)
 }
 
 // ZipFilesFilter creates a ZIP archive and filters source paths.
@@ -100,7 +111,12 @@ func ZipToWriter(out io.Writer, withSrcDir bool, filter FileFilter, srcFiles ...
 
 // ZipToWriterWithOptions writes source files or directories into out as a ZIP archive with per-call options.
 func ZipToWriterWithOptions(out io.Writer, withSrcDir bool, filter FileFilter, srcFiles []string, opts ...ArchiveOption) error {
-	return zipimpl.ZipToWriterWithOptions(out, withSrcDir, filter, srcFiles, opts...)
+	return zipimpl.ZipToWriterWithOptions(out, srcFiles, append([]ArchiveOption{zipimpl.WithSourceDir(withSrcDir), zipimpl.WithFileFilter(filter)}, opts...)...)
+}
+
+// ZipToWriterUsingOptions writes source files or directories into out using only functional options.
+func ZipToWriterUsingOptions(out io.Writer, srcFiles []string, opts ...ArchiveOption) error {
+	return zipimpl.ZipToWriterWithOptions(out, srcFiles, opts...)
 }
 
 // ZipData creates or overwrites zipFile and adds one text entry.

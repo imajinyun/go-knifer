@@ -115,6 +115,10 @@ func applyResourceOptions(opts []ResourceOption) resourceConfig {
 
 type normalizeConfig struct {
 	defaultScheme string
+	encodePath    bool
+	replaceSlash  bool
+	setEncodePath bool
+	setReplace    bool
 }
 
 // NormalizeOption customizes URL normalization.
@@ -123,6 +127,22 @@ type NormalizeOption func(*normalizeConfig)
 // WithDefaultScheme sets the scheme used when NormalizeWithOptions receives a URL without scheme.
 func WithDefaultScheme(scheme string) NormalizeOption {
 	return func(c *normalizeConfig) { c.defaultScheme = scheme }
+}
+
+// WithEncodePath controls whether NormalizeUsingOptions escapes the normalized path.
+func WithEncodePath(encode bool) NormalizeOption {
+	return func(c *normalizeConfig) {
+		c.encodePath = encode
+		c.setEncodePath = true
+	}
+}
+
+// WithReplaceSlash controls whether NormalizeUsingOptions collapses repeated slashes in the path.
+func WithReplaceSlash(replace bool) NormalizeOption {
+	return func(c *normalizeConfig) {
+		c.replaceSlash = replace
+		c.setReplace = true
+	}
 }
 
 func applyNormalizeOptions(opts []NormalizeOption) normalizeConfig {
@@ -256,7 +276,35 @@ func URLDecode(s string) (string, error) { return Decode(s) }
 
 // DecodePlus unescapes percent-encoded text and controls whether plus signs become spaces.
 func DecodePlus(s string, plusToSpace bool) (string, error) {
-	if plusToSpace {
+	return DecodeWithOptions(s, WithPlusAsSpace(plusToSpace))
+}
+
+type decodeConfig struct {
+	plusToSpace bool
+}
+
+// DecodeOption customizes DecodeWithOptions.
+type DecodeOption func(*decodeConfig)
+
+// WithPlusAsSpace controls whether plus signs are decoded as spaces.
+func WithPlusAsSpace(plusToSpace bool) DecodeOption {
+	return func(c *decodeConfig) { c.plusToSpace = plusToSpace }
+}
+
+func applyDecodeOptions(opts []DecodeOption) decodeConfig {
+	cfg := decodeConfig{plusToSpace: true}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	return cfg
+}
+
+// DecodeWithOptions unescapes percent-encoded text with custom decoding behavior.
+func DecodeWithOptions(s string, opts ...DecodeOption) (string, error) {
+	cfg := applyDecodeOptions(opts)
+	if cfg.plusToSpace {
 		return neturl.QueryUnescape(s)
 	}
 	return neturl.PathUnescape(strings.ReplaceAll(s, "+", "%2B"))
@@ -416,10 +464,26 @@ func Normalize(raw string, encodePath, replaceSlash bool) string {
 
 // NormalizeWithOptions normalizes a URL string with per-call options.
 func NormalizeWithOptions(raw string, encodePath, replaceSlash bool, opts ...NormalizeOption) string {
+	return normalize(raw, encodePath, replaceSlash, opts...)
+}
+
+// NormalizeUsingOptions normalizes a URL string using only functional options for optional behavior.
+func NormalizeUsingOptions(raw string, opts ...NormalizeOption) string {
+	cfg := applyNormalizeOptions(opts)
+	return normalize(raw, cfg.encodePath, cfg.replaceSlash, opts...)
+}
+
+func normalize(raw string, encodePath, replaceSlash bool, opts ...NormalizeOption) string {
 	if strings.TrimSpace(raw) == "" {
 		return raw
 	}
 	cfg := applyNormalizeOptions(opts)
+	if cfg.setEncodePath {
+		encodePath = cfg.encodePath
+	}
+	if cfg.setReplace {
+		replaceSlash = cfg.replaceSlash
+	}
 	sep := strings.Index(raw, "://")
 	protocol := cfg.defaultScheme + "://"
 	body := raw

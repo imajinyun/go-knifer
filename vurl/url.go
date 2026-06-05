@@ -48,6 +48,9 @@ type ResourceOption = urlimpl.ResourceOption
 // NormalizeOption customizes URL normalization.
 type NormalizeOption = urlimpl.NormalizeOption
 
+// DecodeOption customizes DecodeWithOptions.
+type DecodeOption = urlimpl.DecodeOption
+
 // NewURLBuilder creates an empty URL builder.
 func NewURLBuilder() *URLBuilder { return urlimpl.NewURLBuilder() }
 
@@ -71,6 +74,15 @@ func WithCheckStatus(check bool) ResourceOption { return urlimpl.WithCheckStatus
 
 // WithDefaultScheme sets the scheme used when NormalizeWithOptions receives a URL without scheme.
 func WithDefaultScheme(scheme string) NormalizeOption { return urlimpl.WithDefaultScheme(scheme) }
+
+// WithEncodePath controls whether NormalizeUsingOptions escapes the normalized path.
+func WithEncodePath(encode bool) NormalizeOption { return urlimpl.WithEncodePath(encode) }
+
+// WithReplaceSlash controls whether NormalizeUsingOptions collapses repeated slashes in the path.
+func WithReplaceSlash(replace bool) NormalizeOption { return urlimpl.WithReplaceSlash(replace) }
+
+// WithPlusAsSpace controls whether plus signs are decoded as spaces.
+func WithPlusAsSpace(plusToSpace bool) DecodeOption { return urlimpl.WithPlusAsSpace(plusToSpace) }
 
 // NewHTTPURLBuilder creates an HTTP URL builder.
 func NewHTTPURLBuilder(host string) *URLBuilder { return urlimpl.NewHTTPURLBuilder(host) }
@@ -119,6 +131,11 @@ func URLDecode(s string) (string, error) { return urlimpl.URLDecode(s) }
 // DecodePlus unescapes percent-encoded text and controls whether plus signs become spaces.
 func DecodePlus(s string, plusToSpace bool) (string, error) {
 	return urlimpl.DecodePlus(s, plusToSpace)
+}
+
+// DecodeWithOptions unescapes percent-encoded text with custom decoding behavior.
+func DecodeWithOptions(s string, opts ...DecodeOption) (string, error) {
+	return urlimpl.DecodeWithOptions(s, opts...)
 }
 
 // DecodeForPath unescapes percent-encoded path text without converting plus signs to spaces.
@@ -192,6 +209,11 @@ func Normalize(raw string, encodePath, replaceSlash bool) string {
 // NormalizeWithOptions normalizes a URL string with per-call options.
 func NormalizeWithOptions(raw string, encodePath, replaceSlash bool, opts ...NormalizeOption) string {
 	return urlimpl.NormalizeWithOptions(raw, encodePath, replaceSlash, opts...)
+}
+
+// NormalizeUsingOptions normalizes a URL string using only functional options for optional behavior.
+func NormalizeUsingOptions(raw string, opts ...NormalizeOption) string {
+	return urlimpl.NormalizeUsingOptions(raw, opts...)
 }
 
 // BuildQuery converts a map to a URL query string.

@@ -56,6 +56,26 @@ func CreateTokenWithHeadersAndSigner(headers, payload map[string]any, signer JWT
 	return jwtimpl.CreateTokenWithHeadersAndSigner(headers, payload, signer)
 }
 
+// WithTokenHeaders sets JWT header fields for CreateTokenWithOptions.
+func WithTokenHeaders(headers map[string]any) TokenOption { return jwtimpl.WithTokenHeaders(headers) }
+
+// WithTokenPayload sets JWT payload fields for CreateTokenWithOptions.
+func WithTokenPayload(payload map[string]any) TokenOption { return jwtimpl.WithTokenPayload(payload) }
+
+// WithTokenKey sets the HMAC key used by CreateTokenWithOptions.
+func WithTokenKey(key []byte) TokenOption { return jwtimpl.WithTokenKey(key) }
+
+// WithTokenAlgorithm sets the HMAC algorithm used by CreateTokenWithOptions.
+func WithTokenAlgorithm(algorithm string) TokenOption { return jwtimpl.WithTokenAlgorithm(algorithm) }
+
+// WithTokenSigner sets the signer used by CreateTokenWithOptions and takes precedence over key/algorithm options.
+func WithTokenSigner(signer JWTSigner) TokenOption { return jwtimpl.WithTokenSigner(signer) }
+
+// CreateTokenWithOptions creates a token from functional options and avoids adding more overload variants.
+func CreateTokenWithOptions(opts ...TokenOption) (string, error) {
+	return jwtimpl.CreateTokenWithOptions(opts...)
+}
+
 // ParseToken delegates to the internal jwt implementation.
 func ParseToken(token string) (*JWT, error) {
 	return jwtimpl.ParseToken(token)

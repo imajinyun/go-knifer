@@ -11,6 +11,9 @@ type JWTSigner = jwtimpl.JWTSigner
 // JWTValidator validates JWT claims.
 type JWTValidator = jwtimpl.JWTValidator
 
+// TokenOption customizes CreateTokenWithOptions.
+type TokenOption = jwtimpl.TokenOption
+
 // JWTError is the JWT module error type.
 type JWTError = jwtimpl.JWTError
 

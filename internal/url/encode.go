@@ -6,7 +6,7 @@ import (
 )
 
 // DecodeForPath unescapes percent-encoded path text without converting plus signs to spaces.
-func DecodeForPath(s string) (string, error) { return DecodePlus(s, false) }
+func DecodeForPath(s string) (string, error) { return DecodeWithOptions(s, WithPlusAsSpace(false)) }
 
 // EncodeAll percent-encodes every non-unreserved character.
 func EncodeAll(s string) string { return encodeWith(s, isUnreserved, false) }

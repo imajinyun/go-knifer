@@ -57,6 +57,9 @@ func TestFacadeEncodeAndURLBuilder(t *testing.T) {
 	if got, _ := vurl.DecodeForPath("a+b%2Bc"); got != "a+b+c" {
 		t.Fatalf("DecodeForPath = %q", got)
 	}
+	if got, _ := vurl.DecodeWithOptions("a+b%2Bc", vurl.WithPlusAsSpace(false)); got != "a+b+c" {
+		t.Fatalf("DecodeWithOptions = %q", got)
+	}
 	built := vurl.NewHTTPURLBuilder("example.com").AddPathSegment("a b").AddQuery("q", "go net").SetFragment("top 1").Build()
 	if built != "http://example.com/a%20b?q=go+net#top%201" {
 		t.Fatalf("URLBuilder = %q", built)
@@ -96,5 +99,9 @@ func TestFacadeNormalizeWithOptions(t *testing.T) {
 	got := vurl.NormalizeWithOptions("example.com/a b", true, false, vurl.WithDefaultScheme("https"))
 	if got != "https://example.com/a%20b" {
 		t.Fatalf("NormalizeWithOptions = %q", got)
+	}
+	got = vurl.NormalizeUsingOptions("example.com//a b", vurl.WithDefaultScheme("https"), vurl.WithEncodePath(true), vurl.WithReplaceSlash(true))
+	if got != "https://example.com/a%20b" {
+		t.Fatalf("NormalizeUsingOptions = %q", got)
 	}
 }

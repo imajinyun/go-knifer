@@ -46,6 +46,10 @@ type archiveConfig struct {
 	filePerm          os.FileMode
 	overwrite         bool
 	preserveMode      bool
+	withSrcDir        bool
+	setWithSrcDir     bool
+	filter            FileFilter
+	setFilter         bool
 	compressionMethod uint16
 	compressionLevel  int
 	maxBytes          int64
@@ -81,6 +85,22 @@ func WithOverwrite(overwrite bool) ArchiveOption {
 // WithPreserveMode controls whether extracted files keep mode bits from the archive.
 func WithPreserveMode(preserve bool) ArchiveOption {
 	return func(c *archiveConfig) { c.preserveMode = preserve }
+}
+
+// WithSourceDir controls whether source directory names are included in newly created ZIP archives.
+func WithSourceDir(withSrcDir bool) ArchiveOption {
+	return func(c *archiveConfig) {
+		c.withSrcDir = withSrcDir
+		c.setWithSrcDir = true
+	}
+}
+
+// WithFileFilter sets the source path filter used by newly created ZIP archives.
+func WithFileFilter(filter FileFilter) ArchiveOption {
+	return func(c *archiveConfig) {
+		c.filter = filter
+		c.setFilter = true
+	}
 }
 
 // WithCompressionMethod sets the ZIP compression method used for newly created entries.
@@ -139,17 +159,17 @@ func Zip(srcPath string) (string, error) {
 
 // ZipTo creates an archive at zipPath from srcPath.
 func ZipTo(srcPath, zipPath string, withSrcDir bool) error {
-	return ZipFiles(zipPath, withSrcDir, srcPath)
+	return ZipFilesWithOptions(zipPath, []string{srcPath}, WithSourceDir(withSrcDir))
 }
 
 // ZipFiles creates a ZIP archive from source files or directories.
 func ZipFiles(dest string, withSrcDir bool, srcFiles ...string) (err error) {
-	return ZipFilesFilter(dest, withSrcDir, nil, srcFiles...)
+	return ZipFilesWithOptions(dest, srcFiles, WithSourceDir(withSrcDir))
 }
 
 // ZipFilesWithOptions creates a ZIP archive from source files or directories with per-call options.
-func ZipFilesWithOptions(dest string, withSrcDir bool, srcFiles []string, opts ...ArchiveOption) (err error) {
-	return ZipFilesFilterWithOptions(dest, withSrcDir, nil, srcFiles, opts...)
+func ZipFilesWithOptions(dest string, srcFiles []string, opts ...ArchiveOption) (err error) {
+	return ZipFilesFilterWithOptions(dest, false, nil, srcFiles, opts...)
 }
 
 // ZipFilesFilter creates a ZIP archive and filters source paths.
@@ -160,6 +180,12 @@ func ZipFilesFilter(dest string, withSrcDir bool, filter FileFilter, srcFiles ..
 // ZipFilesFilterWithOptions creates a ZIP archive with source filtering and per-call options.
 func ZipFilesFilterWithOptions(dest string, withSrcDir bool, filter FileFilter, srcFiles []string, opts ...ArchiveOption) (err error) {
 	cfg := applyArchiveOptions(opts)
+	if cfg.setWithSrcDir {
+		withSrcDir = cfg.withSrcDir
+	}
+	if cfg.setFilter {
+		filter = cfg.filter
+	}
 	if err := validateZipTarget(dest, srcFiles...); err != nil {
 		return err
 	}
@@ -181,17 +207,20 @@ func ZipFilesFilterWithOptions(dest string, withSrcDir bool, filter FileFilter, 
 			err = closeErr
 		}
 	}()
-	return ZipToWriterWithOptions(out, withSrcDir, filter, srcFiles, opts...)
+	writerOpts := append([]ArchiveOption{WithSourceDir(withSrcDir), WithFileFilter(filter)}, opts...)
+	return ZipToWriterWithOptions(out, srcFiles, writerOpts...)
 }
 
 // ZipToWriter writes source files or directories into out as a ZIP archive.
 func ZipToWriter(out io.Writer, withSrcDir bool, filter FileFilter, srcFiles ...string) (err error) {
-	return ZipToWriterWithOptions(out, withSrcDir, filter, srcFiles)
+	return ZipToWriterWithOptions(out, srcFiles, WithSourceDir(withSrcDir), WithFileFilter(filter))
 }
 
 // ZipToWriterWithOptions writes source files or directories into out as a ZIP archive with per-call options.
-func ZipToWriterWithOptions(out io.Writer, withSrcDir bool, filter FileFilter, srcFiles []string, opts ...ArchiveOption) (err error) {
+func ZipToWriterWithOptions(out io.Writer, srcFiles []string, opts ...ArchiveOption) (err error) {
 	cfg := applyArchiveOptions(opts)
+	withSrcDir := cfg.withSrcDir
+	filter := cfg.filter
 	zw := archivezip.NewWriter(out)
 	if cfg.compressionMethod == archivezip.Deflate && cfg.compressionLevel != flate.DefaultCompression {
 		zw.RegisterCompressor(archivezip.Deflate, func(w io.Writer) (io.WriteCloser, error) {

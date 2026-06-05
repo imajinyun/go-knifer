@@ -119,6 +119,43 @@ func TestVerifyMismatchKey(t *testing.T) {
 	}
 }
 
+func TestCreateTokenWithOptions(t *testing.T) {
+	key := []byte("secret")
+	tok, err := CreateTokenWithOptions(
+		WithTokenHeaders(map[string]any{HeaderKeyID: "kid-1"}),
+		WithTokenPayload(map[string]any{PayloadSubject: "alice"}),
+		WithTokenKey(key),
+		WithTokenAlgorithm(AlgHS384),
+	)
+	if err != nil {
+		t.Fatalf("CreateTokenWithOptions: %v", err)
+	}
+	parsed, err := Of(tok)
+	if err != nil {
+		t.Fatalf("parse token: %v", err)
+	}
+	if parsed.Header(HeaderKeyID) != "kid-1" || parsed.Payload(PayloadSubject) != "alice" {
+		t.Fatalf("claims = headers:%#v payload:%#v", parsed.Headers(), parsed.Payloads())
+	}
+	if parsed.Algorithm() != AlgHS384 {
+		t.Fatalf("alg = %q", parsed.Algorithm())
+	}
+	if err := parsed.SetKeyStrict(key); err != nil {
+		t.Fatalf("SetKeyStrict: %v", err)
+	}
+	if !parsed.Verify() {
+		t.Fatal("strict verification failed")
+	}
+
+	noneToken, err := CreateTokenWithOptions(WithTokenPayload(map[string]any{"scope": "public"}), WithTokenSigner(NoneSigner()))
+	if err != nil {
+		t.Fatalf("CreateTokenWithOptions with signer: %v", err)
+	}
+	if !strings.HasSuffix(noneToken, ".") {
+		t.Fatalf("none token should have empty signature: %q", noneToken)
+	}
+}
+
 func TestAlgMismatch(t *testing.T) {
 	// alg=none 时使用非 None signer 应失败
 	tok, _ := New().SetSigner(NoneSigner()).SetPayload("a", 1).Sign()
