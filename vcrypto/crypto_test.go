@@ -3,6 +3,8 @@ package vcrypto_test
 import (
 	"bytes"
 	stdcrypto "crypto"
+	"crypto/rsa"
+	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -102,6 +104,18 @@ func TestAESRoundTripAndErrors(t *testing.T) {
 	}
 	if !bytes.Equal(out, plain) {
 		t.Fatalf("AESDecryptGCM() = %q", out)
+	}
+	customNonce := []byte("1234567890123456")
+	cipherText, err = vcrypto.AESEncryptGCMWithOptions(plain, key, customNonce, []byte("aad"), vcrypto.WithGCMNonceSize(len(customNonce)))
+	if err != nil {
+		t.Fatalf("AESEncryptGCMWithOptions() error = %v", err)
+	}
+	out, err = vcrypto.AESDecryptGCMWithOptions(cipherText, key, customNonce, []byte("aad"), vcrypto.WithGCMNonceSize(len(customNonce)))
+	if err != nil {
+		t.Fatalf("AESDecryptGCMWithOptions() error = %v", err)
+	}
+	if !bytes.Equal(out, plain) {
+		t.Fatalf("AESDecryptGCMWithOptions() = %q", out)
 	}
 }
 
@@ -289,6 +303,25 @@ func TestRSAAndPEM(t *testing.T) {
 	}
 	if err := vcrypto.RSAVerifyPSS(pub, stdcrypto.SHA256, digest[:], pssSig); err != nil {
 		t.Fatal(err)
+	}
+	pssOptions := &rsa.PSSOptions{SaltLength: rsa.PSSSaltLengthEqualsHash, Hash: stdcrypto.SHA256}
+	pssSig, err = vcrypto.RSASignPSSWithOptions(parsedPriv, stdcrypto.SHA256, digest[:], vcrypto.WithRSAPSSOptions(pssOptions))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := vcrypto.RSAVerifyPSSWithOptions(pub, stdcrypto.SHA256, digest[:], pssSig, vcrypto.WithRSAPSSOptions(pssOptions)); err != nil {
+		t.Fatal(err)
+	}
+	oaepSHA1, err := vcrypto.RSAEncryptOAEPWithOptions(plain, pub, []byte("label"), vcrypto.WithRSAOAEPHash(sha1.New))
+	if err != nil {
+		t.Fatal(err)
+	}
+	oaepOut, err := vcrypto.RSADecryptOAEPWithOptions(oaepSHA1, parsedPriv, []byte("label"), vcrypto.WithRSAOAEPHash(sha1.New))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(oaepOut, plain) {
+		t.Fatalf("RSADecryptOAEPWithOptions() = %q", oaepOut)
 	}
 	quickSig, err := vcrypto.SignSHA256WithRSA(plain, parsedPriv)
 	if err != nil {

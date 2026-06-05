@@ -5,36 +5,114 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
+	"hash"
+	"io"
 )
+
+type rsaConfig struct {
+	random     io.Reader
+	oaepHash   func() hash.Hash
+	pssOptions *rsa.PSSOptions
+}
+
+// RSAOption customizes RSA helper behavior.
+type RSAOption func(*rsaConfig)
+
+// WithRSARandomReader sets the entropy source used by RSA helpers.
+func WithRSARandomReader(reader io.Reader) RSAOption {
+	return func(c *rsaConfig) { c.random = reader }
+}
+
+// WithRSAOAEPHash sets the hash function used by RSA-OAEP helpers.
+func WithRSAOAEPHash(newHash func() hash.Hash) RSAOption {
+	return func(c *rsaConfig) { c.oaepHash = newHash }
+}
+
+// WithRSAPSSOptions sets the PSS options used by RSA-PSS sign and verify helpers.
+func WithRSAPSSOptions(opts *rsa.PSSOptions) RSAOption {
+	return func(c *rsaConfig) { c.pssOptions = opts }
+}
+
+func applyRSAOptions(opts ...RSAOption) rsaConfig {
+	cfg := rsaConfig{random: rand.Reader, oaepHash: sha256.New}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.random == nil {
+		cfg.random = rand.Reader
+	}
+	if cfg.oaepHash == nil {
+		cfg.oaepHash = sha256.New
+	}
+	return cfg
+}
 
 // GenerateRSAKey generates an RSA private key.
 func GenerateRSAKey(bits int) (*rsa.PrivateKey, error) {
-	return rsa.GenerateKey(rand.Reader, bits)
+	return GenerateRSAKeyWithOptions(bits)
+}
+
+// GenerateRSAKeyWithOptions generates an RSA private key with options.
+func GenerateRSAKeyWithOptions(bits int, opts ...RSAOption) (*rsa.PrivateKey, error) {
+	cfg := applyRSAOptions(opts...)
+	return rsa.GenerateKey(cfg.random, bits)
 }
 
 // RSAEncryptOAEP encrypts data using RSA-OAEP with SHA-256.
 func RSAEncryptOAEP(plain []byte, pub *rsa.PublicKey, label []byte) ([]byte, error) {
-	return rsa.EncryptOAEP(sha256.New(), rand.Reader, pub, plain, label)
+	return RSAEncryptOAEPWithOptions(plain, pub, label)
+}
+
+// RSAEncryptOAEPWithOptions encrypts data using RSA-OAEP with options.
+func RSAEncryptOAEPWithOptions(plain []byte, pub *rsa.PublicKey, label []byte, opts ...RSAOption) ([]byte, error) {
+	cfg := applyRSAOptions(opts...)
+	return rsa.EncryptOAEP(cfg.oaepHash(), cfg.random, pub, plain, label)
 }
 
 // RSADecryptOAEP decrypts data using RSA-OAEP with SHA-256.
 func RSADecryptOAEP(cipherText []byte, priv *rsa.PrivateKey, label []byte) ([]byte, error) {
-	return rsa.DecryptOAEP(sha256.New(), rand.Reader, priv, cipherText, label)
+	return RSADecryptOAEPWithOptions(cipherText, priv, label)
+}
+
+// RSADecryptOAEPWithOptions decrypts data using RSA-OAEP with options.
+func RSADecryptOAEPWithOptions(cipherText []byte, priv *rsa.PrivateKey, label []byte, opts ...RSAOption) ([]byte, error) {
+	cfg := applyRSAOptions(opts...)
+	return rsa.DecryptOAEP(cfg.oaepHash(), cfg.random, priv, cipherText, label)
 }
 
 // RSAEncryptPKCS1v15 encrypts data using RSA PKCS#1 v1.5 padding.
 func RSAEncryptPKCS1v15(plain []byte, pub *rsa.PublicKey) ([]byte, error) {
-	return rsa.EncryptPKCS1v15(rand.Reader, pub, plain)
+	return RSAEncryptPKCS1v15WithOptions(plain, pub)
+}
+
+// RSAEncryptPKCS1v15WithOptions encrypts data using RSA PKCS#1 v1.5 padding with options.
+func RSAEncryptPKCS1v15WithOptions(plain []byte, pub *rsa.PublicKey, opts ...RSAOption) ([]byte, error) {
+	cfg := applyRSAOptions(opts...)
+	return rsa.EncryptPKCS1v15(cfg.random, pub, plain)
 }
 
 // RSADecryptPKCS1v15 decrypts data using RSA PKCS#1 v1.5 padding.
 func RSADecryptPKCS1v15(cipherText []byte, priv *rsa.PrivateKey) ([]byte, error) {
-	return rsa.DecryptPKCS1v15(rand.Reader, priv, cipherText)
+	return RSADecryptPKCS1v15WithOptions(cipherText, priv)
+}
+
+// RSADecryptPKCS1v15WithOptions decrypts data using RSA PKCS#1 v1.5 padding with options.
+func RSADecryptPKCS1v15WithOptions(cipherText []byte, priv *rsa.PrivateKey, opts ...RSAOption) ([]byte, error) {
+	cfg := applyRSAOptions(opts...)
+	return rsa.DecryptPKCS1v15(cfg.random, priv, cipherText)
 }
 
 // RSASignPKCS1v15 signs digest using RSA PKCS#1 v1.5.
 func RSASignPKCS1v15(priv *rsa.PrivateKey, hash stdcrypto.Hash, digest []byte) ([]byte, error) {
-	return rsa.SignPKCS1v15(rand.Reader, priv, hash, digest)
+	return RSASignPKCS1v15WithOptions(priv, hash, digest)
+}
+
+// RSASignPKCS1v15WithOptions signs digest using RSA PKCS#1 v1.5 with options.
+func RSASignPKCS1v15WithOptions(priv *rsa.PrivateKey, hash stdcrypto.Hash, digest []byte, opts ...RSAOption) ([]byte, error) {
+	cfg := applyRSAOptions(opts...)
+	return rsa.SignPKCS1v15(cfg.random, priv, hash, digest)
 }
 
 // RSAVerifyPKCS1v15 verifies an RSA PKCS#1 v1.5 signature.
@@ -44,12 +122,24 @@ func RSAVerifyPKCS1v15(pub *rsa.PublicKey, hash stdcrypto.Hash, digest, sig []by
 
 // RSASignPSS signs digest using RSA-PSS.
 func RSASignPSS(priv *rsa.PrivateKey, hash stdcrypto.Hash, digest []byte) ([]byte, error) {
-	return rsa.SignPSS(rand.Reader, priv, hash, digest, nil)
+	return RSASignPSSWithOptions(priv, hash, digest)
+}
+
+// RSASignPSSWithOptions signs digest using RSA-PSS with options.
+func RSASignPSSWithOptions(priv *rsa.PrivateKey, hash stdcrypto.Hash, digest []byte, opts ...RSAOption) ([]byte, error) {
+	cfg := applyRSAOptions(opts...)
+	return rsa.SignPSS(cfg.random, priv, hash, digest, cfg.pssOptions)
 }
 
 // RSAVerifyPSS verifies an RSA-PSS signature.
 func RSAVerifyPSS(pub *rsa.PublicKey, hash stdcrypto.Hash, digest, sig []byte) error {
-	return rsa.VerifyPSS(pub, hash, digest, sig, nil)
+	return RSAVerifyPSSWithOptions(pub, hash, digest, sig)
+}
+
+// RSAVerifyPSSWithOptions verifies an RSA-PSS signature with options.
+func RSAVerifyPSSWithOptions(pub *rsa.PublicKey, hash stdcrypto.Hash, digest, sig []byte, opts ...RSAOption) error {
+	cfg := applyRSAOptions(opts...)
+	return rsa.VerifyPSS(pub, hash, digest, sig, cfg.pssOptions)
 }
 
 // SignSHA256WithRSA signs data using SHA256withRSA.

@@ -70,6 +70,31 @@ func NewSocketConfigWithOptions(opts ...ConfigOption) *SocketConfig {
 	return cfg
 }
 
+func newConcurrencyLimiter(cfg *SocketConfig) chan struct{} {
+	if cfg == nil || cfg.ThreadPoolSize <= 0 {
+		return nil
+	}
+	return make(chan struct{}, cfg.ThreadPoolSize)
+}
+
+func acquireConcurrencySlot(limiter chan struct{}, done <-chan struct{}) bool {
+	if limiter == nil {
+		return true
+	}
+	select {
+	case limiter <- struct{}{}:
+		return true
+	case <-done:
+		return false
+	}
+}
+
+func releaseConcurrencySlot(limiter chan struct{}) {
+	if limiter != nil {
+		<-limiter
+	}
+}
+
 // SetThreadPoolSize sets the thread-pool size.
 func (c *SocketConfig) SetThreadPoolSize(n int) *SocketConfig {
 	c.ThreadPoolSize = n

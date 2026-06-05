@@ -13,6 +13,9 @@ type NioServer struct {
 	listener net.Listener
 	handler  ChannelHandler
 	addr     *net.TCPAddr
+	config   *SocketConfig
+	limiter  chan struct{}
+	done     chan struct{}
 
 	closed atomic.Bool
 	wg     sync.WaitGroup
@@ -21,15 +24,28 @@ type NioServer struct {
 
 // NewNioServer creates and initializes a server on the given port.
 func NewNioServer(port int) (*NioServer, error) {
-	return NewNioServerAddr(&net.TCPAddr{Port: port})
+	return NewNioServerWithConfig(port, NewSocketConfig())
+}
+
+// NewNioServerWithConfig creates and initializes a server on the given port with config.
+func NewNioServerWithConfig(port int, cfg *SocketConfig) (*NioServer, error) {
+	return NewNioServerAddrWithConfig(&net.TCPAddr{Port: port}, cfg)
 }
 
 // NewNioServerAddr creates a server from the specified address.
 func NewNioServerAddr(addr *net.TCPAddr) (*NioServer, error) {
+	return NewNioServerAddrWithConfig(addr, NewSocketConfig())
+}
+
+// NewNioServerAddrWithConfig creates a server from the specified address and configuration.
+func NewNioServerAddrWithConfig(addr *net.TCPAddr, cfg *SocketConfig) (*NioServer, error) {
 	if addr == nil {
 		return nil, NewSocketErrorMsg("address must not be nil")
 	}
-	s := &NioServer{addr: addr}
+	if cfg == nil {
+		cfg = NewSocketConfig()
+	}
+	s := &NioServer{addr: addr, config: cfg, limiter: newConcurrencyLimiter(cfg), done: make(chan struct{})}
 	if err := s.init(addr); err != nil {
 		return nil, err
 	}
@@ -65,6 +81,9 @@ func (s *NioServer) LocalAddr() net.Addr {
 	return s.listener.Addr()
 }
 
+// Config returns the configuration.
+func (s *NioServer) Config() *SocketConfig { return s.config }
+
 // Start begins listening and blocks the current goroutine.
 func (s *NioServer) Start() {
 	s.Listen()
@@ -99,13 +118,19 @@ func (s *NioServer) ListenAsync() <-chan struct{} {
 
 // handleAccept handles read events from a connection in a new goroutine.
 func (s *NioServer) handleAccept(conn net.Conn) {
+	if s.handler == nil {
+		_ = conn.Close()
+		return
+	}
+	if !acquireConcurrencySlot(s.limiter, s.done) {
+		_ = conn.Close()
+		return
+	}
 	s.wg.Add(1)
 	go func() {
 		defer s.wg.Done()
+		defer releaseConcurrencySlot(s.limiter)
 		defer func() { _ = conn.Close() }()
-		if s.handler == nil {
-			return
-		}
 		for {
 			if s.closed.Load() {
 				return
@@ -126,6 +151,7 @@ func (s *NioServer) Close() error {
 	if s.closed.Swap(true) {
 		return nil
 	}
+	close(s.done)
 	if s.listener != nil {
 		_ = s.listener.Close()
 	}

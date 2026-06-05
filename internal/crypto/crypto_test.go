@@ -110,6 +110,19 @@ func TestAESCBCAndGCM(t *testing.T) {
 	if !bytes.Equal(out, plain) {
 		t.Fatalf("AESDecryptGCM() = %q", out)
 	}
+
+	customNonce := []byte("1234567890123456")
+	cipherText, err = AESEncryptGCMWithOptions(plain, key, customNonce, []byte("aad"), WithGCMNonceSize(len(customNonce)))
+	if err != nil {
+		t.Fatalf("AESEncryptGCMWithOptions() error = %v", err)
+	}
+	out, err = AESDecryptGCMWithOptions(cipherText, key, customNonce, []byte("aad"), WithGCMNonceSize(len(customNonce)))
+	if err != nil {
+		t.Fatalf("AESDecryptGCMWithOptions() error = %v", err)
+	}
+	if !bytes.Equal(out, plain) {
+		t.Fatalf("AESDecryptGCMWithOptions() = %q", out)
+	}
 }
 
 func TestSymmetricModesRoundTrip(t *testing.T) {
@@ -303,6 +316,25 @@ func TestRSAPKCS1PSSAndCertificate(t *testing.T) {
 	}
 	if err := RSAVerifyPSS(&priv.PublicKey, stdcrypto.SHA256, digest[:], pssSig); err != nil {
 		t.Fatal(err)
+	}
+	pssOptions := &rsa.PSSOptions{SaltLength: rsa.PSSSaltLengthEqualsHash, Hash: stdcrypto.SHA256}
+	pssSig, err = RSASignPSSWithOptions(priv, stdcrypto.SHA256, digest[:], WithRSAPSSOptions(pssOptions))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := RSAVerifyPSSWithOptions(&priv.PublicKey, stdcrypto.SHA256, digest[:], pssSig, WithRSAPSSOptions(pssOptions)); err != nil {
+		t.Fatal(err)
+	}
+	oaepSHA1, err := RSAEncryptOAEPWithOptions(plain, &priv.PublicKey, []byte("label"), WithRSAOAEPHash(sha1.New))
+	if err != nil {
+		t.Fatal(err)
+	}
+	oaepOut, err := RSADecryptOAEPWithOptions(oaepSHA1, priv, []byte("label"), WithRSAOAEPHash(sha1.New))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(oaepOut, plain) {
+		t.Fatalf("RSADecryptOAEPWithOptions() = %q", oaepOut)
 	}
 	quickSig, err := SignSHA256WithRSA(plain, priv)
 	if err != nil {

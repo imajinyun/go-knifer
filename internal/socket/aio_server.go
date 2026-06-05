@@ -14,6 +14,8 @@ type AioServer struct {
 	listener net.Listener
 	ioAction IoAction[*bytes.Buffer]
 	config   *SocketConfig
+	limiter  chan struct{}
+	done     chan struct{}
 
 	closed atomic.Bool
 	wg     sync.WaitGroup
@@ -33,7 +35,7 @@ func NewAioServerAddr(addr *net.TCPAddr, cfg *SocketConfig) (*AioServer, error) 
 	if cfg == nil {
 		cfg = NewSocketConfig()
 	}
-	s := &AioServer{config: cfg}
+	s := &AioServer{config: cfg, limiter: newConcurrencyLimiter(cfg), done: make(chan struct{})}
 	if err := s.init(addr); err != nil {
 		return nil, err
 	}
@@ -112,14 +114,21 @@ func (s *AioServer) handleAccept(conn net.Conn) {
 		_ = conn.Close()
 		return
 	}
-	session := NewAioSession(conn, s.ioAction, s.config)
-	// Trigger Accept synchronously.
-	s.ioAction.Accept(session)
-
+	if !acquireConcurrencySlot(s.limiter, s.done) {
+		_ = conn.Close()
+		return
+	}
 	s.wg.Add(1)
 	go func() {
 		defer s.wg.Done()
+		defer releaseConcurrencySlot(s.limiter)
+
+		session := NewAioSession(conn, s.ioAction, s.config)
 		defer func() { _ = session.Close() }()
+		// Trigger Accept after the connection obtains a handler slot so ThreadPoolSize
+		// limits both accept callbacks and read callbacks.
+		s.ioAction.Accept(session)
+
 		// Keep reading to simulate chained AIO callbacks.
 		for session.IsOpen() && !s.closed.Load() {
 			if !session.doRead() {
@@ -136,6 +145,7 @@ func (s *AioServer) Close() error {
 	if s.closed.Swap(true) {
 		return nil
 	}
+	close(s.done)
 	if s.listener != nil {
 		_ = s.listener.Close()
 	}

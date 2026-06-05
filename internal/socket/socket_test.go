@@ -1,9 +1,11 @@
 package socket
 
 import (
+	"context"
 	"errors"
 	"net"
 	"runtime"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -15,6 +17,34 @@ func closeAndReport(t *testing.T, closeFn func() error) {
 	if err := closeFn(); err != nil {
 		t.Errorf("close failed: %v", err)
 	}
+}
+
+func waitForInt32(t *testing.T, get func() int32, want int32) {
+	t.Helper()
+	deadline := time.Now().Add(time.Second)
+	for time.Now().Before(deadline) {
+		if get() >= want {
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	t.Fatalf("value = %d, want %d", get(), want)
+}
+
+type fakeDialer struct {
+	calls   atomic.Int32
+	network string
+	address string
+	server  net.Conn
+}
+
+func (d *fakeDialer) DialContext(ctx context.Context, network, address string) (net.Conn, error) {
+	d.calls.Add(1)
+	d.network = network
+	d.address = address
+	client, server := net.Pipe()
+	d.server = server
+	return client, nil
 }
 
 func TestSocketConfigDefaults(t *testing.T) {
@@ -97,6 +127,52 @@ func TestSocketConnectWithOptions(t *testing.T) {
 		t.Fatalf("ConnectWithOptions failed: %v", err)
 	}
 	defer closeAndReport(t, conn.Close)
+}
+
+func TestSocketConnectOptionsUseDialerAndContext(t *testing.T) {
+	dialer := &fakeDialer{}
+	conn, err := ConnectWithOptions("example.com", 443, WithConnectNetwork("tcp4"), WithConnectDialer(dialer))
+	if err != nil {
+		t.Fatalf("ConnectWithOptions with fake dialer failed: %v", err)
+	}
+	defer closeAndReport(t, conn.Close)
+	defer closeAndReport(t, dialer.server.Close)
+	if dialer.calls.Load() != 1 || dialer.network != "tcp4" || dialer.address != "example.com:443" {
+		t.Fatalf("dialer call = (%d, %q, %q), want (1, tcp4, example.com:443)", dialer.calls.Load(), dialer.network, dialer.address)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if _, err := ConnectWithOptions("127.0.0.1", 1, WithConnectContext(ctx)); err == nil {
+		t.Fatal("ConnectWithOptions with canceled context error = nil")
+	}
+}
+
+func TestSocketAddrChannelAndAioClientOptions(t *testing.T) {
+	dialer := &fakeDialer{}
+	addr := &net.TCPAddr{IP: net.ParseIP("127.0.0.1"), Port: 1234}
+	conn, err := ConnectAddrWithOptions(addr, WithConnectDialer(dialer))
+	if err != nil {
+		t.Fatalf("ConnectAddrWithOptions failed: %v", err)
+	}
+	closeAndReport(t, conn.Close)
+	closeAndReport(t, dialer.server.Close)
+
+	dialer = &fakeDialer{}
+	conn, err = ChannelUtilDialWithOptions(addr, WithConnectDialer(dialer))
+	if err != nil {
+		t.Fatalf("ChannelUtilDialWithOptions failed: %v", err)
+	}
+	closeAndReport(t, conn.Close)
+	closeAndReport(t, dialer.server.Close)
+
+	dialer = &fakeDialer{}
+	client, err := NewAioClientWithOptions(addr, &echoIoAction{}, WithConnectDialer(dialer))
+	if err != nil {
+		t.Fatalf("NewAioClientWithOptions failed: %v", err)
+	}
+	closeAndReport(t, client.Close)
+	closeAndReport(t, dialer.server.Close)
 }
 
 func TestSocketRuntimeError(t *testing.T) {

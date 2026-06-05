@@ -1,12 +1,30 @@
 package vskt_test
 
 import (
+	"context"
 	"net"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/imajinyun/go-knifer/vskt"
 )
+
+type facadeFakeDialer struct {
+	calls   atomic.Int32
+	network string
+	address string
+	server  net.Conn
+}
+
+func (d *facadeFakeDialer) DialContext(ctx context.Context, network, address string) (net.Conn, error) {
+	d.calls.Add(1)
+	d.network = network
+	d.address = address
+	client, server := net.Pipe()
+	d.server = server
+	return client, nil
+}
 
 func TestFacadeSocketConfig(t *testing.T) {
 	cfg := vskt.NewSocketConfig()
@@ -52,6 +70,36 @@ func TestFacadeSocketConnectWithOptions(t *testing.T) {
 	if !vskt.SocketIsConnected(conn) {
 		t.Fatal("SocketConnectWithOptions should return a connected socket")
 	}
+}
+
+func TestFacadeSocketConnectOptionVariants(t *testing.T) {
+	addr := &net.TCPAddr{IP: net.ParseIP("127.0.0.1"), Port: 1234}
+	dialer := &facadeFakeDialer{}
+	conn, err := vskt.SocketConnectAddrWithOptions(addr, vskt.WithConnectDialer(dialer), vskt.WithConnectNetwork("tcp4"))
+	if err != nil {
+		t.Fatalf("SocketConnectAddrWithOptions failed: %v", err)
+	}
+	_ = conn.Close()
+	_ = dialer.server.Close()
+	if dialer.calls.Load() != 1 || dialer.network != "tcp4" || dialer.address != "127.0.0.1:1234" {
+		t.Fatalf("dialer call = (%d, %q, %q)", dialer.calls.Load(), dialer.network, dialer.address)
+	}
+
+	dialer = &facadeFakeDialer{}
+	conn, err = vskt.ChannelDialWithOptions(addr, vskt.WithConnectDialer(dialer))
+	if err != nil {
+		t.Fatalf("ChannelDialWithOptions failed: %v", err)
+	}
+	_ = conn.Close()
+	_ = dialer.server.Close()
+
+	dialer = &facadeFakeDialer{}
+	client, err := vskt.NewAioClientWithOptions(addr, &vskt.SimpleIoAction{}, vskt.WithConnectDialer(dialer))
+	if err != nil {
+		t.Fatalf("NewAioClientWithOptions failed: %v", err)
+	}
+	_ = client.Close()
+	_ = dialer.server.Close()
 }
 
 func TestFacadeSocketIsConnected(t *testing.T) {

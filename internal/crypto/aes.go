@@ -3,7 +3,45 @@ package crypto
 import (
 	"crypto/aes"
 	"crypto/cipher"
+	"errors"
 )
+
+type aesGCMConfig struct {
+	nonceSize int
+	tagSize   int
+}
+
+// AESGCMOption customizes AES-GCM helper behavior.
+type AESGCMOption func(*aesGCMConfig)
+
+// WithGCMNonceSize sets a custom nonce size for AES-GCM helpers.
+func WithGCMNonceSize(size int) AESGCMOption {
+	return func(c *aesGCMConfig) { c.nonceSize = size }
+}
+
+// WithGCMTagSize sets a custom tag size for AES-GCM helpers.
+func WithGCMTagSize(size int) AESGCMOption {
+	return func(c *aesGCMConfig) { c.tagSize = size }
+}
+
+func newGCM(block cipher.Block, opts ...AESGCMOption) (cipher.AEAD, error) {
+	cfg := aesGCMConfig{}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.nonceSize > 0 && cfg.tagSize > 0 {
+		return nil, errors.New("crypto: cannot set both GCM nonce size and tag size")
+	}
+	if cfg.nonceSize > 0 {
+		return cipher.NewGCMWithNonceSize(block, cfg.nonceSize)
+	}
+	if cfg.tagSize > 0 {
+		return cipher.NewGCMWithTagSize(block, cfg.tagSize)
+	}
+	return cipher.NewGCM(block)
+}
 
 // AESEncryptCBC encrypts plain data using AES-CBC with PKCS#7 padding.
 func AESEncryptCBC(plain, key, iv []byte) ([]byte, error) {
@@ -69,11 +107,16 @@ func AESDecryptOFB(data, key, iv []byte) ([]byte, error) { return AESEncryptOFB(
 
 // AESEncryptGCM encrypts plain data using AES-GCM.
 func AESEncryptGCM(plain, key, nonce, additionalData []byte) ([]byte, error) {
+	return AESEncryptGCMWithOptions(plain, key, nonce, additionalData)
+}
+
+// AESEncryptGCMWithOptions encrypts plain data using AES-GCM with options.
+func AESEncryptGCMWithOptions(plain, key, nonce, additionalData []byte, opts ...AESGCMOption) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
 	}
-	gcm, err := cipher.NewGCM(block)
+	gcm, err := newGCM(block, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -85,11 +128,16 @@ func AESEncryptGCM(plain, key, nonce, additionalData []byte) ([]byte, error) {
 
 // AESDecryptGCM decrypts AES-GCM data.
 func AESDecryptGCM(cipherText, key, nonce, additionalData []byte) ([]byte, error) {
+	return AESDecryptGCMWithOptions(cipherText, key, nonce, additionalData)
+}
+
+// AESDecryptGCMWithOptions decrypts AES-GCM data with options.
+func AESDecryptGCMWithOptions(cipherText, key, nonce, additionalData []byte, opts ...AESGCMOption) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
 	}
-	gcm, err := cipher.NewGCM(block)
+	gcm, err := newGCM(block, opts...)
 	if err != nil {
 		return nil, err
 	}

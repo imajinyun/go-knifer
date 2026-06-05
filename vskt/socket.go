@@ -105,28 +105,38 @@ const (
 // NewSocketConfig creates a default socket config.
 func NewSocketConfig() *SocketConfig { return socketx.NewSocketConfig() }
 
+// WithThreadPoolSize sets the configured server handler concurrency limit.
 func WithThreadPoolSize(n int) ConfigOption { return socketx.WithThreadPoolSize(n) }
 
+// WithReadTimeout sets the read timeout in milliseconds.
 func WithReadTimeout(ms int64) ConfigOption { return socketx.WithReadTimeout(ms) }
 
+// WithWriteTimeout sets the write timeout in milliseconds.
 func WithWriteTimeout(ms int64) ConfigOption { return socketx.WithWriteTimeout(ms) }
 
+// WithReadBufferSize sets the read buffer size.
 func WithReadBufferSize(n int) ConfigOption { return socketx.WithReadBufferSize(n) }
 
+// WithWriteBufferSize sets the write buffer size.
 func WithWriteBufferSize(n int) ConfigOption { return socketx.WithWriteBufferSize(n) }
 
+// NewSocketConfigWithOptions creates a socket config customized by options.
 func NewSocketConfigWithOptions(opts ...ConfigOption) *SocketConfig {
 	return socketx.NewSocketConfigWithOptions(opts...)
 }
 
+// WithConnectContext sets the context used while dialing.
 func WithConnectContext(ctx context.Context) ConnectOption { return socketx.WithConnectContext(ctx) }
 
+// WithConnectTimeout sets the dial timeout.
 func WithConnectTimeout(timeout time.Duration) ConnectOption {
 	return socketx.WithConnectTimeout(timeout)
 }
 
+// WithConnectNetwork sets the network used for dialing, such as tcp, tcp4, or tcp6.
 func WithConnectNetwork(network string) ConnectOption { return socketx.WithConnectNetwork(network) }
 
+// WithConnectDialer sets the dialer used by connection helpers.
 func WithConnectDialer(dialer Dialer) ConnectOption { return socketx.WithConnectDialer(dialer) }
 
 // SocketConnect connects to host:port with timeout.
@@ -134,6 +144,7 @@ func SocketConnect(hostname string, port int, timeout time.Duration) (net.Conn, 
 	return socketx.Connect(hostname, port, timeout)
 }
 
+// SocketConnectWithOptions connects to host:port with custom dial options.
 func SocketConnectWithOptions(hostname string, port int, opts ...ConnectOption) (net.Conn, error) {
 	return socketx.ConnectWithOptions(hostname, port, opts...)
 }
@@ -143,6 +154,7 @@ func SocketConnectAddr(addr *net.TCPAddr, timeout time.Duration) (net.Conn, erro
 	return socketx.ConnectAddr(addr, timeout)
 }
 
+// SocketConnectAddrWithOptions connects to addr with custom dial options.
 func SocketConnectAddrWithOptions(addr *net.TCPAddr, opts ...ConnectOption) (net.Conn, error) {
 	return socketx.ConnectAddrWithOptions(addr, opts...)
 }
@@ -158,6 +170,7 @@ func ChannelDial(addr *net.TCPAddr, timeout time.Duration) (net.Conn, error) {
 	return socketx.ChannelUtilDial(addr, timeout)
 }
 
+// ChannelDialWithOptions dials addr with custom dial options.
 func ChannelDialWithOptions(addr *net.TCPAddr, opts ...ConnectOption) (net.Conn, error) {
 	return socketx.ChannelUtilDialWithOptions(addr, opts...)
 }
@@ -165,8 +178,18 @@ func ChannelDialWithOptions(addr *net.TCPAddr, opts ...ConnectOption) (net.Conn,
 // NewNioServer creates a NIO-style TCP server on port.
 func NewNioServer(port int) (*NioServer, error) { return socketx.NewNioServer(port) }
 
+// NewNioServerWithConfig creates a NIO-style TCP server on port with config.
+func NewNioServerWithConfig(port int, cfg *SocketConfig) (*NioServer, error) {
+	return socketx.NewNioServerWithConfig(port, cfg)
+}
+
 // NewNioServerAddr creates a NIO-style TCP server at addr.
 func NewNioServerAddr(addr *net.TCPAddr) (*NioServer, error) { return socketx.NewNioServerAddr(addr) }
+
+// NewNioServerAddrWithConfig creates a NIO-style TCP server at addr with config.
+func NewNioServerAddrWithConfig(addr *net.TCPAddr, cfg *SocketConfig) (*NioServer, error) {
+	return socketx.NewNioServerAddrWithConfig(addr, cfg)
+}
 
 // NewNioClient creates a NIO-style TCP client.
 func NewNioClient(host string, port int) (*NioClient, error) { return socketx.NewNioClient(host, port) }
@@ -187,6 +210,7 @@ func NewAioClient(addr *net.TCPAddr, action IoAction[*bytes.Buffer]) (*AioClient
 	return socketx.NewAioClient(addr, action)
 }
 
+// NewAioClientWithOptions creates an AIO-style TCP client with custom dial options.
 func NewAioClientWithOptions(addr *net.TCPAddr, action IoAction[*bytes.Buffer], opts ...ConnectOption) (*AioClient, error) {
 	return socketx.NewAioClientWithOptions(addr, action, opts...)
 }

@@ -2,6 +2,15 @@ package vcrypto
 
 import cryptoimpl "github.com/imajinyun/go-knifer/internal/crypto"
 
+// AESGCMOption customizes AES-GCM helper behavior.
+type AESGCMOption = cryptoimpl.AESGCMOption
+
+// WithGCMNonceSize sets a custom nonce size for AES-GCM helpers.
+func WithGCMNonceSize(size int) AESGCMOption { return cryptoimpl.WithGCMNonceSize(size) }
+
+// WithGCMTagSize sets a custom tag size for AES-GCM helpers.
+func WithGCMTagSize(size int) AESGCMOption { return cryptoimpl.WithGCMTagSize(size) }
+
 // AESEncryptCBC encrypts plain data using AES-CBC with PKCS#7 padding.
 func AESEncryptCBC(plain, key, iv []byte) ([]byte, error) {
 	return cryptoimpl.AESEncryptCBC(plain, key, iv)
@@ -55,7 +64,17 @@ func AESEncryptGCM(plain, key, nonce, additionalData []byte) ([]byte, error) {
 	return cryptoimpl.AESEncryptGCM(plain, key, nonce, additionalData)
 }
 
+// AESEncryptGCMWithOptions encrypts plain data using AES-GCM with options.
+func AESEncryptGCMWithOptions(plain, key, nonce, additionalData []byte, opts ...AESGCMOption) ([]byte, error) {
+	return cryptoimpl.AESEncryptGCMWithOptions(plain, key, nonce, additionalData, opts...)
+}
+
 // AESDecryptGCM decrypts AES-GCM data.
 func AESDecryptGCM(cipherText, key, nonce, additionalData []byte) ([]byte, error) {
 	return cryptoimpl.AESDecryptGCM(cipherText, key, nonce, additionalData)
+}
+
+// AESDecryptGCMWithOptions decrypts AES-GCM data with options.
+func AESDecryptGCMWithOptions(cipherText, key, nonce, additionalData []byte, opts ...AESGCMOption) ([]byte, error) {
+	return cryptoimpl.AESDecryptGCMWithOptions(cipherText, key, nonce, additionalData, opts...)
 }
