@@ -1,8 +1,11 @@
 package vbean_test
 
 import (
+	"errors"
+	"strconv"
 	"testing"
 
+	knifer "github.com/imajinyun/go-knifer"
 	"github.com/imajinyun/go-knifer/vbean"
 )
 
@@ -33,5 +36,36 @@ func TestFacadeToMap(t *testing.T) {
 	}
 	if got["name"] != "bob" || got["age"] != "20" {
 		t.Fatalf("map = %#v", got)
+	}
+}
+
+func TestFacadeBeanErrorContract(t *testing.T) {
+	_, err := vbean.ToMap(nil)
+	assertFacadeBeanCode(t, err, knifer.ErrCodeInvalidInput)
+
+	var dst userModel
+	err = vbean.CopyProperties(map[string]any{"age": "not-a-number"}, &dst)
+	assertFacadeBeanCode(t, err, knifer.ErrCodeInvalidInput)
+	var numErr *strconv.NumError
+	if !errors.As(err, &numErr) {
+		t.Fatalf("CopyProperties should preserve strconv.NumError cause: %v", err)
+	}
+}
+
+func assertFacadeBeanCode(t *testing.T, err error, code knifer.ErrCode) {
+	t.Helper()
+	if err == nil {
+		t.Fatalf("err = nil, want %s", code)
+	}
+	if !errors.Is(err, code) {
+		t.Fatalf("errors.Is(%v, %s) = false", err, code)
+	}
+	got, ok := knifer.CodeOf(err)
+	if !ok || got != code {
+		t.Fatalf("CodeOf(%v) = %q, %v; want %q, true", err, got, ok, code)
+	}
+	var beanErr *vbean.Error
+	if !errors.As(err, &beanErr) {
+		t.Fatalf("errors.As(err, *vbean.Error) = false: %v", err)
 	}
 }

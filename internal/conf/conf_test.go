@@ -1,7 +1,10 @@
 package conf
 
 import (
+	"encoding/base64"
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -236,6 +239,177 @@ func TestWatchReloadsOnChange(t *testing.T) {
 		}
 	case <-time.After(time.Second):
 		t.Fatal("watch did not report change")
+	}
+}
+
+func TestLoadWithOptionsIncludesMergeDecryptAndSchema(t *testing.T) {
+	dir := t.TempDir()
+	common := filepath.Join(dir, "common.setting")
+	main := filepath.Join(dir, "main.setting")
+	secret := base64.StdEncoding.EncodeToString([]byte("s3cr3t"))
+	if err := os.WriteFile(common, []byte("name=common\n[server]\nhost=127.0.0.1"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(main, []byte("include=common.setting\nname=main\nsecret=ENC(base64:"+secret+")\n[server]\nport=8080"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	c, err := LoadWithOptions(main, LoadOptions{AllowInclude: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := c.Get("name"); got != "main" {
+		t.Fatalf("merged name = %q", got)
+	}
+	if got := c.Get("secret"); got != "s3cr3t" {
+		t.Fatalf("decrypted secret = %q", got)
+	}
+	if got := c.GetByGroup("server", "host"); got != "127.0.0.1" {
+		t.Fatalf("included server.host = %q", got)
+	}
+	if _, ok := c.Lookup("", "include"); ok {
+		t.Fatal("include key should be removed after loading")
+	}
+	if err := c.ValidateSchema(Schema{Fields: []FieldRule{
+		{Key: "name", Required: true, Type: TypeString},
+		{Group: "server", Key: "port", Required: true, Type: TypeInt},
+		{Group: "server", Key: "host", Required: true},
+	}}); err != nil {
+		t.Fatalf("ValidateSchema() error = %v", err)
+	}
+	if err := c.ValidateSchema(Schema{Fields: []FieldRule{{Group: "server", Key: "debug", Required: true}}}); err == nil {
+		t.Fatal("ValidateSchema() missing required error = nil")
+	}
+}
+
+func TestLoadFilesAndApplyDefaults(t *testing.T) {
+	dir := t.TempDir()
+	base := filepath.Join(dir, "base.setting")
+	override := filepath.Join(dir, "override.toml")
+	if err := os.WriteFile(base, []byte("name=base\nmode=dev"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(override, []byte("name='override'\n[server]\nport=9090"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	c, err := LoadFiles(base, override)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := c.Get("name"); got != "override" {
+		t.Fatalf("LoadFiles merged name = %q", got)
+	}
+	withDefaults := c.ApplyDefaults(Schema{Fields: []FieldRule{{Key: "region", Default: "cn"}}})
+	if got := withDefaults.Get("region"); got != "cn" {
+		t.Fatalf("ApplyDefaults region = %q", got)
+	}
+}
+
+func TestParseTOMLNestedDottedKeys(t *testing.T) {
+	c, err := ParseTOML(`
+title = "demo"
+[database]
+ports = [8000, 8001, 8002]
+enabled = true
+connection.max = 5000
+[servers.alpha]
+ip = "10.0.0.1"
+`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := c.GetByGroup("database", "ports"); got != "8000,8001,8002" {
+		t.Fatalf("database.ports = %q", got)
+	}
+	if got := c.GetByGroup("database.connection", "max"); got != "5000" {
+		t.Fatalf("database.connection.max = %q", got)
+	}
+	if got := c.GetByGroup("servers.alpha", "ip"); got != "10.0.0.1" {
+		t.Fatalf("servers.alpha.ip = %q", got)
+	}
+}
+
+func TestLoadRemoteWithOptions(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("app:\n  name: remote"))
+	}))
+	defer server.Close()
+	c, err := LoadRemoteWithOptions(server.URL+"/app.yaml", LoadOptions{Timeout: time.Second})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := c.GetByGroup("app", "name"); got != "remote" {
+		t.Fatalf("remote app.name = %q", got)
+	}
+}
+
+func TestSchemaFromStructAndValidateStruct(t *testing.T) {
+	type appConfig struct {
+		Name string `conf:"name,required"`
+		Port int    `conf:"port,required,int"`
+		Mode string `conf:"mode,default=dev,choices=dev|prod"`
+	}
+	c := New()
+	c.Set("name", "demo")
+	c.Set("port", "8080")
+	c.Set("mode", "dev")
+	if err := c.ValidateStruct(appConfig{}); err != nil {
+		t.Fatalf("ValidateStruct() error = %v", err)
+	}
+	schema, err := SchemaFromStruct(appConfig{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(schema.Fields) != 3 {
+		t.Fatalf("SchemaFromStruct fields = %d", len(schema.Fields))
+	}
+}
+
+func TestWatchWithOptionsCompareContentAndEvent(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "app.setting")
+	if err := os.WriteFile(path, []byte("name=one"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	changes := make(chan string, 1)
+	events := make(chan WatchEvent, 1)
+	stop, err := WatchWithOptions(path, WatchOptions{
+		Interval:       10 * time.Millisecond,
+		Debounce:       5 * time.Millisecond,
+		CompareContent: true,
+		OnEvent: func(event WatchEvent) {
+			events <- event
+		},
+	}, func(c *Conf, err error) {
+		if err != nil {
+			changes <- "err:" + err.Error()
+			return
+		}
+		changes <- c.Get("name")
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer stop()
+
+	time.Sleep(20 * time.Millisecond)
+	if err := os.WriteFile(path, []byte("name=two"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case got := <-changes:
+		if got != "two" {
+			t.Fatalf("watch change = %q", got)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("watch did not report change")
+	}
+	select {
+	case event := <-events:
+		if event.Path != path || event.Size == 0 {
+			t.Fatalf("watch event = %#v", event)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("watch did not report event")
 	}
 }
 

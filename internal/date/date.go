@@ -2,7 +2,6 @@
 package date
 
 import (
-	"errors"
 	"strings"
 	"time"
 )
@@ -48,7 +47,7 @@ func FormatTimeOnly(t time.Time) string { return t.Format(NormTimePattern) }
 func ParseDate(s string) (time.Time, error) {
 	s = strings.TrimSpace(s)
 	if s == "" {
-		return time.Time{}, errors.New("empty date string")
+		return time.Time{}, invalidDateInputf("empty date string")
 	}
 	patterns := []string{
 		NormPattern,
@@ -68,12 +67,16 @@ func ParseDate(s string) (time.Time, error) {
 			return t, nil
 		}
 	}
-	return time.Time{}, errors.New("unsupported date format: " + s)
+	return time.Time{}, invalidDateInputf("unsupported date format: %s", s)
 }
 
 // ParseDateLayout parses s with the specified Go layout in the local time zone.
 func ParseDateLayout(s, layout string) (time.Time, error) {
-	return time.ParseInLocation(layout, s, time.Local)
+	t, err := time.ParseInLocation(layout, s, time.Local)
+	if err != nil {
+		return time.Time{}, wrapDateParse("parse date with layout", err)
+	}
+	return t, nil
 }
 
 // BeginOfDay returns midnight at the beginning of t's day.

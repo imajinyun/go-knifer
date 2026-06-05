@@ -1,6 +1,12 @@
 package bean
 
-import "testing"
+import (
+	"errors"
+	"strconv"
+	"testing"
+
+	knifer "github.com/imajinyun/go-knifer"
+)
 
 type embeddedProfile struct {
 	Trace string `bean:"trace_id"`
@@ -74,5 +80,43 @@ func TestWeaklyTypedDisabled(t *testing.T) {
 	err := CopyProperties(map[string]any{"age": "42"}, &dst, WithWeaklyTyped(false))
 	if err == nil {
 		t.Fatal("expected strict assignment error")
+	}
+}
+
+func TestBeanErrorContract(t *testing.T) {
+	_, err := ToMap(nil)
+	assertBeanInvalidInput(t, err)
+
+	err = FillMap(sourceProfile{}, nil)
+	assertBeanInvalidInput(t, err)
+
+	var dst targetProfile
+	err = CopyProperties(map[string]any{"age": "not-a-number"}, &dst)
+	assertBeanInvalidInput(t, err)
+	var numErr *strconv.NumError
+	if !errors.As(err, &numErr) {
+		t.Fatalf("CopyProperties should preserve strconv.NumError cause: %v", err)
+	}
+
+	err = CopyProperties(map[string]any{"age": "42"}, &dst, WithWeaklyTyped(false))
+	assertBeanInvalidInput(t, err)
+}
+
+func assertBeanInvalidInput(t *testing.T, err error) {
+	t.Helper()
+	const code = knifer.ErrCodeInvalidInput
+	if err == nil {
+		t.Fatalf("err = nil, want %s", code)
+	}
+	if !errors.Is(err, code) {
+		t.Fatalf("errors.Is(%v, %s) = false", err, code)
+	}
+	got, ok := knifer.CodeOf(err)
+	if !ok || got != code {
+		t.Fatalf("CodeOf(%v) = %q, %v; want %q, true", err, got, ok, code)
+	}
+	var beanErr *BeanError
+	if !errors.As(err, &beanErr) {
+		t.Fatalf("errors.As(err, *BeanError) = false: %v", err)
 	}
 }

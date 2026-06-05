@@ -314,14 +314,8 @@ func (s *Conf) bindStruct(group, prefix string, rv reflect.Value) error {
 }
 
 func confFieldName(field reflect.StructField) (string, bool) {
-	tag := field.Tag.Get("conf")
-	if tag == "-" {
-		return "", true
-	}
-	if tag != "" {
-		return strings.Split(tag, ",")[0], false
-	}
-	return strings.ToLower(field.Name), false
+	name, _, skip := parseConfTag(field)
+	return name, skip
 }
 
 func setReflectValue(v reflect.Value, text string) error {

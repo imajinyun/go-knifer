@@ -1,80 +1,80 @@
 package conf
 
 import (
-	"bufio"
+	"fmt"
+	"strconv"
 	"strings"
+
+	toml "github.com/pelletier/go-toml/v2"
 )
 
-// ParseTOML parses common TOML key-value and section syntax into grouped configuration.
+// ParseTOML parses TOML into grouped configuration.
 func ParseTOML(content string) (*Conf, error) {
+	var root map[string]any
+	if err := toml.Unmarshal([]byte(content), &root); err != nil {
+		return nil, wrapConfigParse("parse toml content", err)
+	}
 	c := New()
-	group := defaultGroup
-	scanner := bufio.NewScanner(strings.NewReader(content))
-	lineNo := 0
-	for scanner.Scan() {
-		lineNo++
-		line := strings.TrimSpace(stripInlineComment(scanner.Text()))
-		if line == "" {
-			continue
-		}
-		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
-			group = strings.TrimSpace(line[1 : len(line)-1])
-			if group == "" || strings.HasPrefix(group, "[") || strings.HasSuffix(group, "]") {
-				return nil, invalidInputf("invalid toml section at line %d: %s", lineNo, line)
-			}
-			c.ensureGroup(group)
-			continue
-		}
-		idx := strings.Index(line, "=")
-		if idx < 0 {
-			return nil, invalidInputf("invalid toml line %d: %s", lineNo, line)
-		}
-		key := strings.TrimSpace(line[:idx])
-		value := strings.TrimSpace(line[idx+1:])
-		if key == "" {
-			return nil, invalidInputf("empty toml key at line %d", lineNo)
-		}
-		c.SetByGroup(group, strings.Trim(key, `"'`), normalizeScalar(value))
-	}
-	if err := scanner.Err(); err != nil {
-		return nil, wrapConfigParse("scan toml content", err)
-	}
+	flattenTOMLMap(c, nil, root)
 	return c, nil
 }
 
-func stripInlineComment(line string) string {
-	inSingle, inDouble := false, false
-	for i, r := range line {
-		switch r {
-		case '\'':
-			if !inDouble {
-				inSingle = !inSingle
+func flattenTOMLMap(c *Conf, path []string, values map[string]any) {
+	for key, child := range values {
+		switch v := child.(type) {
+		case map[string]any:
+			flattenTOMLMap(c, appendPath(path, key), v)
+		case []any:
+			if flattenTOMLArrayTables(c, appendPath(path, key), v) {
+				continue
 			}
-		case '"':
-			if !inSingle {
-				inDouble = !inDouble
-			}
-		case '#':
-			if !inSingle && !inDouble {
-				return line[:i]
-			}
+			c.SetByGroup(tomlGroup(path), key, joinTOMLArray(v))
+		default:
+			c.SetByGroup(tomlGroup(path), key, tomlScalarString(v))
 		}
 	}
-	return line
 }
 
-func normalizeScalar(value string) string {
-	value = strings.TrimSpace(value)
-	if strings.HasPrefix(value, "[") && strings.HasSuffix(value, "]") {
-		inner := strings.TrimSpace(value[1 : len(value)-1])
-		if inner == "" {
-			return ""
-		}
-		parts := strings.Split(inner, ",")
-		for i := range parts {
-			parts[i] = normalizeScalar(parts[i])
-		}
-		return strings.Join(parts, ",")
+func flattenTOMLArrayTables(c *Conf, path []string, values []any) bool {
+	if len(values) == 0 {
+		return false
 	}
-	return unquote(value)
+	for i, item := range values {
+		m, ok := item.(map[string]any)
+		if !ok {
+			return false
+		}
+		flattenTOMLMap(c, appendPath(path, strconv.Itoa(i)), m)
+	}
+	return true
+}
+
+func appendPath(path []string, part string) []string {
+	next := make([]string, 0, len(path)+1)
+	next = append(next, path...)
+	next = append(next, part)
+	return next
+}
+
+func tomlGroup(path []string) string { return strings.Join(path, ".") }
+
+func joinTOMLArray(values []any) string {
+	parts := make([]string, 0, len(values))
+	for _, value := range values {
+		parts = append(parts, tomlScalarString(value))
+	}
+	return strings.Join(parts, ",")
+}
+
+func tomlScalarString(value any) string {
+	switch v := value.(type) {
+	case nil:
+		return ""
+	case string:
+		return v
+	case fmt.Stringer:
+		return v.String()
+	default:
+		return fmt.Sprint(v)
+	}
 }

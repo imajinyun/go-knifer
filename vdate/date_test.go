@@ -1,8 +1,11 @@
 package vdate
 
 import (
+	"errors"
 	"testing"
 	"time"
+
+	knifer "github.com/imajinyun/go-knifer"
 )
 
 func TestDateFacade(t *testing.T) {
@@ -36,5 +39,34 @@ func TestDateFacade(t *testing.T) {
 	}
 	if BetweenDays(base, base.Add(48*time.Hour)) != 2 || !IsSameDay(base, base.Add(time.Hour)) {
 		t.Fatal("comparison failed")
+	}
+}
+
+func TestDateFacadeErrorContract(t *testing.T) {
+	_, err := Parse("")
+	assertFacadeDateCode(t, err, knifer.ErrCodeInvalidInput)
+
+	_, err = Parse("not-a-date")
+	assertFacadeDateCode(t, err, knifer.ErrCodeInvalidInput)
+
+	_, err = ParseLayout("2026-06-05", "bad-layout")
+	assertFacadeDateCode(t, err, knifer.ErrCodeInvalidInput)
+}
+
+func assertFacadeDateCode(t *testing.T, err error, code knifer.ErrCode) {
+	t.Helper()
+	if err == nil {
+		t.Fatalf("err = nil, want %s", code)
+	}
+	if !errors.Is(err, code) {
+		t.Fatalf("errors.Is(%v, %s) = false", err, code)
+	}
+	got, ok := knifer.CodeOf(err)
+	if !ok || got != code {
+		t.Fatalf("CodeOf(%v) = %q, %v; want %q, true", err, got, ok, code)
+	}
+	var dateErr *Error
+	if !errors.As(err, &dateErr) {
+		t.Fatalf("errors.As(err, *vdate.Error) = false: %v", err)
 	}
 }

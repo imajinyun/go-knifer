@@ -1,6 +1,12 @@
 package codec
 
-import "testing"
+import (
+	"encoding/base64"
+	"errors"
+	"testing"
+
+	knifer "github.com/imajinyun/go-knifer"
+)
 
 func TestBase64(t *testing.T) {
 	src := "Hello, 世界"
@@ -33,5 +39,42 @@ func TestHex(t *testing.T) {
 	got, err := HexDecodeStr("4142")
 	if err != nil || got != "AB" {
 		t.Fatalf("HexDecode: %v %q", err, got)
+	}
+}
+
+func TestCodecErrorContract(t *testing.T) {
+	_, err := Base64Decode("invalid!")
+	assertCodecInvalidInput(t, err)
+	var corrupt base64.CorruptInputError
+	if !errors.As(err, &corrupt) {
+		t.Fatalf("Base64Decode should preserve corrupt input cause: %v", err)
+	}
+
+	_, err = Base64URLDecode("invalid!")
+	assertCodecInvalidInput(t, err)
+
+	_, err = HexDecode("xyz")
+	assertCodecInvalidInput(t, err)
+
+	_, err = HexDecodeStr("xyz")
+	assertCodecInvalidInput(t, err)
+}
+
+func assertCodecInvalidInput(t *testing.T, err error) {
+	t.Helper()
+	const code = knifer.ErrCodeInvalidInput
+	if err == nil {
+		t.Fatalf("err = nil, want %s", code)
+	}
+	if !errors.Is(err, code) {
+		t.Fatalf("errors.Is(%v, %s) = false", err, code)
+	}
+	got, ok := knifer.CodeOf(err)
+	if !ok || got != code {
+		t.Fatalf("CodeOf(%v) = %q, %v; want %q, true", err, got, ok, code)
+	}
+	var codecErr *CodecError
+	if !errors.As(err, &codecErr) {
+		t.Fatalf("errors.As(err, *CodecError) = false: %v", err)
 	}
 }

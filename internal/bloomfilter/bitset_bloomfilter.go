@@ -50,7 +50,7 @@ func (b *BitSetBloomFilter) getBit(pos int) bool {
 func (b *BitSetBloomFilter) InitFromFile(path string) error {
 	f, err := os.Open(path)
 	if err != nil {
-		return err
+		return wrapBloomFilterIO("open bloom filter file "+path, err)
 	}
 	defer func() { _ = f.Close() }()
 	r := bufio.NewReader(f)
@@ -67,7 +67,7 @@ func (b *BitSetBloomFilter) InitFromFile(path string) error {
 			if err == io.EOF {
 				return nil
 			}
-			return err
+			return wrapBloomFilterIO("read bloom filter file "+path, err)
 		}
 	}
 }

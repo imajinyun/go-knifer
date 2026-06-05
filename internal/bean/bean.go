@@ -64,7 +64,7 @@ func ToMap(src any, opts ...Option) (map[string]any, error) {
 // FillMap copies properties from src into dst.
 func FillMap(src any, dst map[string]any, opts ...Option) error {
 	if dst == nil {
-		return fmt.Errorf("bean: dst map is nil")
+		return invalidBeanInputf("bean: dst map is nil")
 	}
 	cfg := applyOptions(opts...)
 	props, err := collectProperties(src, cfg)
@@ -90,18 +90,18 @@ func Copy(src any, dst any, opts ...Option) error { return CopyProperties(src, d
 func CopyProperties(src any, dst any, opts ...Option) error {
 	cfg := applyOptions(opts...)
 	if dst == nil {
-		return fmt.Errorf("bean: dst is nil")
+		return invalidBeanInputf("bean: dst is nil")
 	}
 	if m, ok := dst.(map[string]any); ok {
 		return FillMap(src, m, opts...)
 	}
 	dv := reflect.ValueOf(dst)
 	if dv.Kind() != reflect.Pointer || dv.IsNil() {
-		return fmt.Errorf("bean: dst must be a non-nil pointer or map[string]any")
+		return invalidBeanInputf("bean: dst must be a non-nil pointer or map[string]any")
 	}
 	dv = indirect(dv)
 	if !dv.IsValid() || dv.Kind() != reflect.Struct {
-		return fmt.Errorf("bean: dst must point to struct")
+		return invalidBeanInputf("bean: dst must point to struct")
 	}
 	props, err := collectProperties(src, cfg)
 	if err != nil {
@@ -118,7 +118,7 @@ func CopyProperties(src any, dst any, opts ...Option) error {
 			continue
 		}
 		if err := assignValue(fv, prop.value, cfg); err != nil {
-			return fmt.Errorf("bean: set field %s: %w", field.goName, err)
+			return wrapBeanInput("bean: set field "+field.goName, err)
 		}
 	}
 	return nil
@@ -149,11 +149,11 @@ func applyOptions(opts ...Option) Options {
 
 func collectProperties(src any, cfg Options) ([]property, error) {
 	if src == nil {
-		return nil, fmt.Errorf("bean: src is nil")
+		return nil, invalidBeanInputf("bean: src is nil")
 	}
 	sv := indirect(reflect.ValueOf(src))
 	if !sv.IsValid() {
-		return nil, fmt.Errorf("bean: src is nil")
+		return nil, invalidBeanInputf("bean: src is nil")
 	}
 	switch sv.Kind() {
 	case reflect.Map:
@@ -161,7 +161,7 @@ func collectProperties(src any, cfg Options) ([]property, error) {
 	case reflect.Struct:
 		return structProperties(sv, cfg), nil
 	default:
-		return nil, fmt.Errorf("bean: unsupported src kind %s", sv.Kind())
+		return nil, invalidBeanInputf("bean: unsupported src kind %s", sv.Kind())
 	}
 }
 

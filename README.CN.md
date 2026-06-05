@@ -170,10 +170,11 @@ if code, ok := knifer.CodeOf(err); ok { /* ... */ }
 `vcrypto` 是参考接入示范：校验错误同时匹配 `knifer.ErrCodeInvalidInput` 与既有的
 `vcrypto.ErrInvalidKey` / `ErrInvalidIV` / `ErrInvalidCipherText` 哨兵。
 
-`vjwt`、`vjson`、`vcron`、`vjob`、`vpoi`、`vsem`、`verr`、`vhttp`/`vresty` 也已接入：其错误分别匹配
-`knifer.ErrCodeInvalidInput`（vjwt、vjson、vcron、vjob、vpoi 空 sheet 名、vsem 非法权重）、
-`knifer.ErrCodeNotFound`（vpoi 无 sheet）、`knifer.ErrCodeUnsupported`（vsem 已关闭）与
-`knifer.ErrCodeInternal`（vhttp/vresty、vskt、verr recover 到的 panic），
+`vjwt`、`vjson`、`vcron`、`vjob`、`vpoi`、`vcodec`、`vdate`、`vbean`、`vsem`、`verr`、
+`vhttp`/`vresty` 也已接入：其错误分别匹配 `knifer.ErrCodeInvalidInput`（vjwt、vjson、
+vcron、vjob、vpoi 空 sheet 名、vcodec 解码失败、vdate 解析失败、vbean 映射/转换失败、vsem 非法权重）、
+`knifer.ErrCodeNotFound`（vpoi 无 sheet、vblf 初始化文件不存在）、`knifer.ErrCodeUnsupported`（vsem 已关闭）与
+`knifer.ErrCodeInternal`（vhttp/vresty、vskt、vblf 读取失败、verr recover 到的 panic），
 同时保留各自的 error 类型、哨兵与 cause 错误链。
 
 ## 🚀 安装

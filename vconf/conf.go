@@ -12,11 +12,50 @@ type Conf = confimpl.Conf
 // Error is the configuration module error type.
 type Error = confimpl.ConfError
 
+type (
+	LoadOptions  = confimpl.LoadOptions
+	DecryptFunc  = confimpl.DecryptFunc
+	FieldRule    = confimpl.FieldRule
+	Schema       = confimpl.Schema
+	WatchOptions = confimpl.WatchOptions
+	WatchEvent   = confimpl.WatchEvent
+)
+
+const (
+	TypeString = confimpl.TypeString
+	TypeBool   = confimpl.TypeBool
+	TypeInt    = confimpl.TypeInt
+	TypeFloat  = confimpl.TypeFloat
+	TypeList   = confimpl.TypeList
+)
+
 // New creates an empty Conf.
 func New() *Conf { return confimpl.New() }
 
 // Load 读取并解析 setting/properties 配置文件。Load reads and parses a setting/properties file.
 func Load(path string) (*Conf, error) { return confimpl.Load(path) }
+
+func LoadWithOptions(path string, opts LoadOptions) (*Conf, error) {
+	return confimpl.LoadWithOptions(path, opts)
+}
+
+func LoadFiles(paths ...string) (*Conf, error) { return confimpl.LoadFiles(paths...) }
+
+func LoadFilesWithOptions(opts LoadOptions, paths ...string) (*Conf, error) {
+	return confimpl.LoadFilesWithOptions(opts, paths...)
+}
+
+func LoadRemote(rawURL string) (*Conf, error) { return confimpl.LoadRemote(rawURL) }
+
+func LoadRemoteWithOptions(rawURL string, opts LoadOptions) (*Conf, error) {
+	return confimpl.LoadRemoteWithOptions(rawURL, opts)
+}
+
+func Merge(configs ...*Conf) *Conf { return confimpl.Merge(configs...) }
+
+func Base64Decrypt(cipherText string) (string, error) { return confimpl.Base64Decrypt(cipherText) }
+
+func SchemaFromStruct(dst any) (Schema, error) { return confimpl.SchemaFromStruct(dst) }
 
 // LoadProfile loads a configuration file and applies profile-specific overrides.
 func LoadProfile(path, profile string) (*Conf, error) { return confimpl.LoadProfile(path, profile) }
@@ -44,4 +83,8 @@ func ParseTOML(content string) (*Conf, error) { return confimpl.ParseTOML(conten
 // Watch polls path and calls onChange after successful reloads.
 func Watch(path string, interval time.Duration, onChange func(*Conf, error)) (func(), error) {
 	return confimpl.Watch(path, interval, onChange)
+}
+
+func WatchWithOptions(path string, opts WatchOptions, onChange func(*Conf, error)) (func(), error) {
+	return confimpl.WatchWithOptions(path, opts, onChange)
 }

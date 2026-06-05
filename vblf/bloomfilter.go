@@ -26,6 +26,9 @@ type IntMap = bloomfilter.IntMap
 // LongMap is a long bitmap implementation.
 type LongMap = bloomfilter.LongMap
 
+// Error is the code-aware error type returned by bloom filter helpers.
+type Error = bloomfilter.BloomFilterError
+
 const (
 	// BloomMachine32 uses 32-bit bitmap words.
 	BloomMachine32 = bloomfilter.Machine32

@@ -8,6 +8,9 @@ type Option = beanimpl.Option
 // Options controls struct/map property mapping.
 type Options = beanimpl.Options
 
+// Error is the code-aware error type returned by bean helpers.
+type Error = beanimpl.BeanError
+
 // NewOptions returns default mapping options.
 func NewOptions() Options { return beanimpl.NewOptions() }
 

@@ -2,6 +2,9 @@ package vcodec
 
 import codecimpl "github.com/imajinyun/go-knifer/internal/codec"
 
+// Error is the codec module error type.
+type Error = codecimpl.CodecError
+
 func Base64Encode(data []byte) string          { return codecimpl.Base64Encode(data) }
 func Base64EncodeStr(s string) string          { return codecimpl.Base64EncodeStr(s) }
 func Base64Decode(s string) ([]byte, error)    { return codecimpl.Base64Decode(s) }
