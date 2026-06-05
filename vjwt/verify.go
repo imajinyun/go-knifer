@@ -14,7 +14,7 @@ func VerifyJWTWithSigner(token string, signer JWTSigner) bool {
 	return jwtimpl.VerifyWithSigner(token, signer)
 }
 
-// Verify delegates to the internal jwt implementation.
+// Verify verifies a token using an HMAC key.
 func Verify(token string, key []byte) bool {
 	return jwtimpl.Verify(token, key)
 }
@@ -24,12 +24,12 @@ func VerifyStrict(token string, key []byte) bool {
 	return jwtimpl.VerifyStrict(token, key)
 }
 
-// VerifyWithSigner delegates to the internal jwt implementation.
+// VerifyWithSigner verifies a token using signer.
 func VerifyWithSigner(token string, signer JWTSigner) bool {
 	return jwtimpl.VerifyWithSigner(token, signer)
 }
 
-// ValidateAlgorithm delegates to the internal jwt implementation.
+// ValidateAlgorithm checks whether token's alg header matches signer.
 func ValidateAlgorithm(token string, signer JWTSigner) error {
 	return jwtimpl.ValidateAlgorithm(token, signer)
 }
@@ -39,7 +39,7 @@ func ValidateJWTDate(j *JWT, now time.Time, leeway int64) error {
 	return jwtimpl.ValidateDate(j, now, leeway)
 }
 
-// ValidateDate delegates to the internal jwt implementation.
+// ValidateDate validates time based JWT claims.
 func ValidateDate(j *JWT, now time.Time, leeway int64) error {
 	return jwtimpl.ValidateDate(j, now, leeway)
 }

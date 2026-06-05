@@ -38,112 +38,112 @@ func JWTSignerES256(priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey) JWTSigner {
 // JWTSignerNone creates a none signer.
 func JWTSignerNone() JWTSigner { return jwtimpl.None() }
 
-// NoneSigner delegates to the internal jwt implementation.
+// NoneSigner returns a signer for the none algorithm.
 func NoneSigner() JWTSigner {
 	return jwtimpl.NoneSigner()
 }
 
-// IsNoneAlg delegates to the internal jwt implementation.
+// IsNoneAlg reports whether alg is the none algorithm.
 func IsNoneAlg(alg string) bool {
 	return jwtimpl.IsNoneAlg(alg)
 }
 
-// NewHMACSigner delegates to the internal jwt implementation.
+// NewHMACSigner creates an HMAC signer for HS256, HS384, or HS512.
 func NewHMACSigner(algorithm string, key []byte) (JWTSigner, error) {
 	return jwtimpl.NewHMACSigner(algorithm, key)
 }
 
-// MustHMACSigner delegates to the internal jwt implementation.
+// MustHMACSigner creates an HMAC signer and panics on invalid algorithms.
 func MustHMACSigner(algorithm string, key []byte) JWTSigner {
 	return jwtimpl.MustHMACSigner(algorithm, key)
 }
 
-// CreateSigner delegates to the internal jwt implementation.
+// CreateSigner creates an HMAC or none signer from algorithm ID.
 func CreateSigner(algorithmID string, key []byte) (JWTSigner, error) {
 	return jwtimpl.CreateSigner(algorithmID, key)
 }
 
-// AlgorithmName delegates to the internal jwt implementation.
+// AlgorithmName returns the standard cryptographic algorithm name for a JWT algorithm ID.
 func AlgorithmName(idOrAlgorithm string) string {
 	return jwtimpl.AlgorithmName(idOrAlgorithm)
 }
 
-// NewRSASigner delegates to the internal jwt implementation.
+// NewRSASigner creates an RSA signer for RS256, RS384, or RS512.
 func NewRSASigner(algorithm string, priv *rsa.PrivateKey, pub *rsa.PublicKey) (JWTSigner, error) {
 	return jwtimpl.NewRSASigner(algorithm, priv, pub)
 }
 
-// NewRSAPSSSigner delegates to the internal jwt implementation.
+// NewRSAPSSSigner creates an RSA-PSS signer for PS256, PS384, or PS512.
 func NewRSAPSSSigner(algorithm string, priv *rsa.PrivateKey, pub *rsa.PublicKey) (JWTSigner, error) {
 	return jwtimpl.NewRSAPSSSigner(algorithm, priv, pub)
 }
 
-// NewECDSASigner delegates to the internal jwt implementation.
+// NewECDSASigner creates an ECDSA signer for ES256, ES384, or ES512.
 func NewECDSASigner(algorithm string, priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey) (JWTSigner, error) {
 	return jwtimpl.NewECDSASigner(algorithm, priv, pub)
 }
 
-// HS256 delegates to the internal jwt implementation.
+// HS256 creates an HS256 signer.
 func HS256(key []byte) JWTSigner {
 	return jwtimpl.HS256(key)
 }
 
-// HS384 delegates to the internal jwt implementation.
+// HS384 creates an HS384 signer.
 func HS384(key []byte) JWTSigner {
 	return jwtimpl.HS384(key)
 }
 
-// HS512 delegates to the internal jwt implementation.
+// HS512 creates an HS512 signer.
 func HS512(key []byte) JWTSigner {
 	return jwtimpl.HS512(key)
 }
 
-// RS256 delegates to the internal jwt implementation.
+// RS256 creates an RS256 signer.
 func RS256(priv *rsa.PrivateKey, pub *rsa.PublicKey) JWTSigner {
 	return jwtimpl.RS256(priv, pub)
 }
 
-// RS384 delegates to the internal jwt implementation.
+// RS384 creates an RS384 signer.
 func RS384(priv *rsa.PrivateKey, pub *rsa.PublicKey) JWTSigner {
 	return jwtimpl.RS384(priv, pub)
 }
 
-// RS512 delegates to the internal jwt implementation.
+// RS512 creates an RS512 signer.
 func RS512(priv *rsa.PrivateKey, pub *rsa.PublicKey) JWTSigner {
 	return jwtimpl.RS512(priv, pub)
 }
 
-// PS256 delegates to the internal jwt implementation.
+// PS256 creates a PS256 signer.
 func PS256(priv *rsa.PrivateKey, pub *rsa.PublicKey) JWTSigner {
 	return jwtimpl.PS256(priv, pub)
 }
 
-// PS384 delegates to the internal jwt implementation.
+// PS384 creates a PS384 signer.
 func PS384(priv *rsa.PrivateKey, pub *rsa.PublicKey) JWTSigner {
 	return jwtimpl.PS384(priv, pub)
 }
 
-// PS512 delegates to the internal jwt implementation.
+// PS512 creates a PS512 signer.
 func PS512(priv *rsa.PrivateKey, pub *rsa.PublicKey) JWTSigner {
 	return jwtimpl.PS512(priv, pub)
 }
 
-// ES256 delegates to the internal jwt implementation.
+// ES256 creates an ES256 signer.
 func ES256(priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey) JWTSigner {
 	return jwtimpl.ES256(priv, pub)
 }
 
-// ES384 delegates to the internal jwt implementation.
+// ES384 creates an ES384 signer.
 func ES384(priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey) JWTSigner {
 	return jwtimpl.ES384(priv, pub)
 }
 
-// ES512 delegates to the internal jwt implementation.
+// ES512 creates an ES512 signer.
 func ES512(priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey) JWTSigner {
 	return jwtimpl.ES512(priv, pub)
 }
 
-// None delegates to the internal jwt implementation.
+// None returns a signer for the none algorithm.
 func None() JWTSigner {
 	return jwtimpl.None()
 }

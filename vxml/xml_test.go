@@ -3,6 +3,7 @@ package vxml
 import (
 	stdxml "encoding/xml"
 	"errors"
+	"io"
 	"os"
 	"reflect"
 	"strings"
@@ -137,6 +138,16 @@ func TestFacadeSAXTransformWriteAndFormat(t *testing.T) {
 	if err != nil || string(data) != `<root/>` {
 		t.Fatalf("WriteFile facade content=%q err=%v", data, err)
 	}
+	if err := WriteFile(writePath, CreateXMLWithRoot("root"), WithOverwrite(false)); err == nil {
+		t.Fatal("WriteFile should reject overwrite when disabled")
+	}
+	missingParent := t.TempDir() + "/missing/out.xml"
+	if err := WriteFile(missingParent, CreateXMLWithRoot("root"), WithCreateParents(false)); err == nil {
+		t.Fatal("WriteFile should reject missing parent when parent creation is disabled")
+	}
+	if err := WriteTo(io.Discard, "unsupported"); err == nil {
+		t.Fatal("WriteTo should reject unsupported values")
+	}
 }
 
 func TestFacadeMapBeanXPathAndNamespace(t *testing.T) {
@@ -184,5 +195,41 @@ func TestFacadeMapBeanXPathAndNamespace(t *testing.T) {
 	cache := NewNamespaceCache(doc)
 	if cache.NamespaceURI("") != "urn:default" || cache.NamespaceURI("p") != "urn:p" || cache.PrefixOf("urn:p") != "p" {
 		t.Fatalf("namespace cache facade = %#v", cache)
+	}
+	if (*NamespaceCache)(nil).NamespaceURI("p") != "" || (*NamespaceCache)(nil).PrefixOf("urn:p") != "" {
+		t.Fatal("nil namespace cache should return empty values")
+	}
+}
+
+func TestFacadeElementAppendAndGuards(t *testing.T) {
+	if CreateXML().Root != nil || IsElement(nil) || GetRootElement(nil) != nil || GetOwnerDocument(nil) != nil {
+		t.Fatal("guard helpers failed")
+	}
+	doc := CreateXMLWithRoot("root")
+	Append(doc.Root, map[string]any{"items": []int{1, 2}, "nested": map[string]any{"ok": true}})
+	out, err := MarshalString(doc, WithOmitDeclaration(true))
+	if err != nil || !strings.Contains(out, `<items>1</items><items>2</items>`) || !strings.Contains(out, `<ok>true</ok>`) {
+		t.Fatalf("Append map/slice facade = %q, %v", out, err)
+	}
+	sliceDoc := CreateXMLWithRoot("root")
+	Append(sliceDoc.Root, []string{"a", "b"})
+	sliceOut, err := MarshalString(sliceDoc, WithOmitDeclaration(true))
+	if err != nil || sliceOut != `<root><element>a</element><element>b</element></root>` {
+		t.Fatalf("Append slice facade = %q, %v", sliceOut, err)
+	}
+	if AppendChild(nil, "x") != nil || AppendText(nil, "x") != nil {
+		t.Fatal("nil append helpers should return nil")
+	}
+	if got := AppendText(CreateXMLWithRoot("r").Root, nil); got == nil || got.Text != "" {
+		t.Fatalf("AppendText nil facade = %#v", got)
+	}
+	if child := AppendChild(doc.Root, "withNS", "urn:child"); child == nil || child.Attr[0].Value != "urn:child" {
+		t.Fatalf("AppendChild namespace facade = %#v", child)
+	}
+	if got := ElementText(doc.Root, "missing", "default"); got != "default" {
+		t.Fatalf("ElementText default facade = %q", got)
+	}
+	if got := TransElements([]*Element{nil, doc.Root}); len(got) != 1 || got[0] != doc.Root {
+		t.Fatalf("TransElements facade = %#v", got)
 	}
 }

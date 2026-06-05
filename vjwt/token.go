@@ -11,7 +11,7 @@ func ParseJWT(token string) (*JWT, error) { return jwtimpl.ParseToken(token) }
 // JWTOf parses a token string.
 func JWTOf(token string) (*JWT, error) { return jwtimpl.Of(token) }
 
-// New delegates to the internal jwt implementation.
+// New creates a new JWT object.
 func New() *JWT {
 	return jwtimpl.New()
 }
@@ -26,12 +26,12 @@ func CreateJWTTokenWithSigner(payload map[string]any, signer JWTSigner) (string,
 	return jwtimpl.CreateTokenWithSigner(payload, signer)
 }
 
-// CreateToken delegates to the internal jwt implementation.
+// CreateToken creates an HS256 token from payload and HMAC key.
 func CreateToken(payload map[string]any, key []byte) (string, error) {
 	return jwtimpl.CreateToken(payload, key)
 }
 
-// CreateTokenWithHeaders delegates to the internal jwt implementation.
+// CreateTokenWithHeaders creates an HS256 token with custom headers, payload, and HMAC key.
 func CreateTokenWithHeaders(headers, payload map[string]any, key []byte) (string, error) {
 	return jwtimpl.CreateTokenWithHeaders(headers, payload, key)
 }
@@ -46,12 +46,12 @@ func CreateTokenWithHeadersAndAlgorithm(headers, payload map[string]any, key []b
 	return jwtimpl.CreateTokenWithHeadersAndAlgorithm(headers, payload, key, algorithm)
 }
 
-// CreateTokenWithSigner delegates to the internal jwt implementation.
+// CreateTokenWithSigner creates a token from payload using signer.
 func CreateTokenWithSigner(payload map[string]any, signer JWTSigner) (string, error) {
 	return jwtimpl.CreateTokenWithSigner(payload, signer)
 }
 
-// CreateTokenWithHeadersAndSigner delegates to the internal jwt implementation.
+// CreateTokenWithHeadersAndSigner creates a token with custom headers and signer.
 func CreateTokenWithHeadersAndSigner(headers, payload map[string]any, signer JWTSigner) (string, error) {
 	return jwtimpl.CreateTokenWithHeadersAndSigner(headers, payload, signer)
 }
@@ -76,17 +76,17 @@ func CreateTokenWithOptions(opts ...TokenOption) (string, error) {
 	return jwtimpl.CreateTokenWithOptions(opts...)
 }
 
-// ParseToken delegates to the internal jwt implementation.
+// ParseToken parses a token string.
 func ParseToken(token string) (*JWT, error) {
 	return jwtimpl.ParseToken(token)
 }
 
-// OfValidator delegates to the internal jwt implementation.
+// OfValidator creates a validator from token string.
 func OfValidator(token string) *JWTValidator {
 	return jwtimpl.OfValidator(token)
 }
 
-// OfValidatorJWT delegates to the internal jwt implementation.
+// OfValidatorJWT creates a validator from an existing JWT object.
 func OfValidatorJWT(j *JWT) *JWTValidator {
 	return jwtimpl.OfValidatorJWT(j)
 }
