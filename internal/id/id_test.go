@@ -1,8 +1,11 @@
 package id
 
 import (
+	"bytes"
+	"encoding/hex"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestSimpleUUID(t *testing.T) {
@@ -100,5 +103,34 @@ func TestWorkerAndDatacenterID(t *testing.T) {
 	}
 	if worker := GetWorkerID(1, 31); worker < 0 || worker > 31 {
 		t.Fatalf("worker id out of range: %d", worker)
+	}
+}
+
+func TestIDOptions(t *testing.T) {
+	reader := bytes.NewReader(bytes.Repeat([]byte{0x11}, 32))
+	u := SimpleUUIDWithOptions(WithRandomReader(reader))
+	if len(u) != 32 || u[12] != '4' || u[16] != '9' {
+		t.Fatalf("SimpleUUIDWithOptions format: %s", u)
+	}
+
+	obj := ObjectIdWithOptions(
+		WithObjectIDTimeFunc(func() time.Time { return time.Unix(1, 0) }),
+		WithObjectIDRandomReader(bytes.NewReader([]byte{1, 2, 3, 4, 5})),
+		WithObjectIDCounter(func() uint32 { return 0xabcdef }),
+	)
+	if obj != "000000010102030405abcdef" {
+		t.Fatalf("ObjectIdWithOptions = %s", obj)
+	}
+	if _, err := hex.DecodeString(obj); err != nil {
+		t.Fatalf("ObjectIdWithOptions is not hex: %v", err)
+	}
+
+	nid := NanoIdWithOptions(
+		WithNanoIDLength(5),
+		WithNanoIDAlphabet("ab"),
+		WithNanoIDRandomReader(bytes.NewReader([]byte{0, 1, 0, 1, 1})),
+	)
+	if nid != "ababb" {
+		t.Fatalf("NanoIdWithOptions = %q", nid)
 	}
 }

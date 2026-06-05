@@ -19,10 +19,43 @@ type Scheduler struct {
 
 	// executor controls goroutine usage for task execution and may be replaced with a concurrency-limited executor.
 	executor func(func())
+	idFunc   func() string
+}
+
+// SchedulerOption customizes scheduler construction.
+type SchedulerOption func(*Scheduler)
+
+// WithLocation sets the scheduler time zone.
+func WithLocation(loc *time.Location) SchedulerOption {
+	return func(s *Scheduler) { s.SetTimeZone(loc) }
+}
+
+// WithMatchSecond sets whether cron expressions match seconds.
+func WithMatchSecond(matchSecond bool) SchedulerOption {
+	return func(s *Scheduler) { s.SetMatchSecond(matchSecond) }
+}
+
+// WithExecutor sets the function used to execute scheduled tasks.
+func WithExecutor(exec func(func())) SchedulerOption {
+	return func(s *Scheduler) { s.SetExecutor(exec) }
+}
+
+// WithIDGenerator sets the task id generator used by Schedule and ScheduleFunc.
+func WithIDGenerator(idFunc func() string) SchedulerOption {
+	return func(s *Scheduler) {
+		if idFunc != nil {
+			s.idFunc = idFunc
+		}
+	}
 }
 
 // NewScheduler creates a Scheduler.
 func NewScheduler() *Scheduler {
+	return NewSchedulerWithOptions()
+}
+
+// NewSchedulerWithOptions creates a Scheduler customized by options.
+func NewSchedulerWithOptions(opts ...SchedulerOption) *Scheduler {
 	s := &Scheduler{
 		config:    NewConfig(),
 		taskTable: NewTaskTable(),
@@ -31,6 +64,12 @@ func NewScheduler() *Scheduler {
 	s.executorMgr = newTaskExecutorManager(s)
 	s.listenerMgr = newListenerManager()
 	s.executor = func(fn func()) { go fn() }
+	s.idFunc = generateID
+	for _, opt := range opts {
+		if opt != nil {
+			opt(s)
+		}
+	}
 	return s
 }
 
@@ -77,7 +116,7 @@ func (s *Scheduler) RemoveListener(l TaskListener) *Scheduler {
 
 // Schedule registers a task with an expression, generates an id automatically, and returns it.
 func (s *Scheduler) Schedule(pattern string, task Task) (string, error) {
-	id := generateID()
+	id := s.idFunc()
 	if err := s.ScheduleWithID(id, pattern, task); err != nil {
 		return "", err
 	}

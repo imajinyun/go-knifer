@@ -1,6 +1,10 @@
 package vcron
 
-import "github.com/imajinyun/go-knifer/internal/cron"
+import (
+	"time"
+
+	"github.com/imajinyun/go-knifer/internal/cron"
+)
 
 // CronConfig configures a scheduler.
 type CronConfig = cron.Config
@@ -19,6 +23,9 @@ type Pattern = cron.Pattern
 
 // Scheduler schedules cron tasks.
 type Scheduler = cron.Scheduler
+
+// SchedulerOption customizes scheduler construction.
+type SchedulerOption = cron.SchedulerOption
 
 // CronTask is a scheduled task entry.
 type CronTask = cron.CronTask
@@ -59,8 +66,30 @@ func MustNewCronPattern(expr string) *CronPattern { return cron.MustNewPattern(e
 // NewScheduler creates a cron scheduler.
 func NewScheduler() *Scheduler { return cron.NewScheduler() }
 
+// WithLocation sets the scheduler time zone.
+func WithLocation(loc *time.Location) SchedulerOption { return cron.WithLocation(loc) }
+
+// WithMatchSecond sets whether cron expressions match seconds.
+func WithMatchSecond(matchSecond bool) SchedulerOption { return cron.WithMatchSecond(matchSecond) }
+
+// WithExecutor sets the function used to execute scheduled tasks.
+func WithExecutor(exec func(func())) SchedulerOption { return cron.WithExecutor(exec) }
+
+// WithIDGenerator sets the task id generator used by Schedule and ScheduleFunc.
+func WithIDGenerator(idFunc func() string) SchedulerOption { return cron.WithIDGenerator(idFunc) }
+
+// NewSchedulerWithOptions creates a cron scheduler customized by options.
+func NewSchedulerWithOptions(opts ...SchedulerOption) *Scheduler {
+	return cron.NewSchedulerWithOptions(opts...)
+}
+
 // DefaultScheduler returns the package-level scheduler.
 func DefaultScheduler() *Scheduler { return cron.DefaultScheduler() }
+
+// ConfigureDefaultScheduler replaces the package-level scheduler with one created from options.
+func ConfigureDefaultScheduler(opts ...SchedulerOption) *Scheduler {
+	return cron.ConfigureDefaultScheduler(opts...)
+}
 
 // CronSchedule schedules a task on the default scheduler.
 func CronSchedule(pattern string, task Task) (string, error) { return cron.Schedule(pattern, task) }

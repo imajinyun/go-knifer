@@ -13,6 +13,17 @@ func DefaultScheduler() *Scheduler {
 	return defaultScheduler
 }
 
+// ConfigureDefaultScheduler replaces the package-level scheduler with one created from options.
+func ConfigureDefaultScheduler(opts ...SchedulerOption) *Scheduler {
+	defaultMu.Lock()
+	defer defaultMu.Unlock()
+	if defaultScheduler != nil && defaultScheduler.IsStarted() {
+		defaultScheduler.Stop()
+	}
+	defaultScheduler = NewSchedulerWithOptions(opts...)
+	return defaultScheduler
+}
+
 // SetMatchSecond sets whether the package-level scheduler matches seconds.
 func SetMatchSecond(b bool) {
 	defaultScheduler.SetMatchSecond(b)

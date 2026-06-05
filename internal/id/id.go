@@ -6,10 +6,12 @@ import (
 	"encoding/hex"
 	"fmt"
 	"hash/fnv"
+	"io"
 	mathrand "math/rand"
 	"net"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -38,11 +40,131 @@ var (
 	defaultSnowflake atomic.Value
 )
 
+type randomConfig struct {
+	reader io.Reader
+}
+
+// RandomOption customizes random-byte based ID helpers.
+type RandomOption func(*randomConfig)
+
+// WithRandomReader sets the random source used by ID helpers.
+func WithRandomReader(reader io.Reader) RandomOption {
+	return func(c *randomConfig) { c.reader = reader }
+}
+
+func applyRandomOptions(opts []RandomOption) randomConfig {
+	cfg := randomConfig{reader: cryptorand.Reader}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.reader == nil {
+		cfg.reader = cryptorand.Reader
+	}
+	return cfg
+}
+
+type objectIDConfig struct {
+	randomConfig
+	now     func() time.Time
+	counter func() uint32
+}
+
+// ObjectIDOption customizes ObjectIdWithOptions.
+type ObjectIDOption func(*objectIDConfig)
+
+// WithObjectIDRandomReader sets the random source used by ObjectIdWithOptions.
+func WithObjectIDRandomReader(reader io.Reader) ObjectIDOption {
+	return func(c *objectIDConfig) { c.reader = reader }
+}
+
+// WithObjectIDTimeFunc sets the time source used by ObjectIdWithOptions.
+func WithObjectIDTimeFunc(now func() time.Time) ObjectIDOption {
+	return func(c *objectIDConfig) { c.now = now }
+}
+
+// WithObjectIDCounter sets the counter source used by ObjectIdWithOptions.
+func WithObjectIDCounter(counter func() uint32) ObjectIDOption {
+	return func(c *objectIDConfig) { c.counter = counter }
+}
+
+func applyObjectIDOptions(opts []ObjectIDOption) objectIDConfig {
+	cfg := objectIDConfig{randomConfig: randomConfig{reader: cryptorand.Reader}, now: time.Now, counter: nextCounter}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.reader == nil {
+		cfg.reader = cryptorand.Reader
+	}
+	if cfg.now == nil {
+		cfg.now = time.Now
+	}
+	if cfg.counter == nil {
+		cfg.counter = nextCounter
+	}
+	return cfg
+}
+
+type nanoIDConfig struct {
+	randomConfig
+	alphabet string
+	length   int
+}
+
+// NanoIDOption customizes NanoIdWithOptions.
+type NanoIDOption func(*nanoIDConfig)
+
+// WithNanoIDRandomReader sets the random source used by NanoIdWithOptions.
+func WithNanoIDRandomReader(reader io.Reader) NanoIDOption {
+	return func(c *nanoIDConfig) { c.reader = reader }
+}
+
+// WithNanoIDAlphabet sets the alphabet used by NanoIdWithOptions.
+func WithNanoIDAlphabet(alphabet string) NanoIDOption {
+	return func(c *nanoIDConfig) { c.alphabet = alphabet }
+}
+
+// WithNanoIDLength sets the generated ID length used by NanoIdWithOptions.
+func WithNanoIDLength(length int) NanoIDOption {
+	return func(c *nanoIDConfig) { c.length = length }
+}
+
+func applyNanoIDOptions(opts []NanoIDOption) nanoIDConfig {
+	cfg := nanoIDConfig{randomConfig: randomConfig{reader: cryptorand.Reader}, alphabet: nanoIDAlphabet, length: 21}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.reader == nil {
+		cfg.reader = cryptorand.Reader
+	}
+	if cfg.alphabet == "" {
+		cfg.alphabet = nanoIDAlphabet
+	}
+	return cfg
+}
+
 // RandomUUID returns a standard random UUID string in 8-4-4-4-12 format.
 func RandomUUID() string { return formatUUID(randomUUIDBytes(), false) }
 
+// RandomUUIDWithOptions returns a standard random UUID string using custom random options.
+func RandomUUIDWithOptions(opts ...RandomOption) string {
+	cfg := applyRandomOptions(opts)
+	return formatUUID(randomUUIDBytesFrom(cfg.reader), false)
+}
+
 // SimpleUUID returns a 32-character UUID without hyphens.
 func SimpleUUID() string { return formatUUID(randomUUIDBytes(), true) }
+
+// SimpleUUIDWithOptions returns a 32-character UUID without hyphens using custom random options.
+func SimpleUUIDWithOptions(opts ...RandomOption) string {
+	cfg := applyRandomOptions(opts)
+	return formatUUID(randomUUIDBytesFrom(cfg.reader), true)
+}
 
 // FastUUID returns a standard random UUID string.
 // Go uses crypto/rand directly here; the name is kept as a convenient alias.
@@ -53,8 +175,12 @@ func FastUUID() string { return RandomUUID() }
 func FastSimpleUUID() string { return SimpleUUID() }
 
 func randomUUIDBytes() []byte {
+	return randomUUIDBytesFrom(cryptorand.Reader)
+}
+
+func randomUUIDBytesFrom(reader io.Reader) []byte {
 	b := make([]byte, 16)
-	fillRandomBytes(b)
+	fillRandomBytesFrom(reader, b)
 	// version 4 / variant
 	b[6] = (b[6] & 0x0f) | 0x40
 	b[8] = (b[8] & 0x3f) | 0x80
@@ -72,10 +198,16 @@ func formatUUID(b []byte, simple bool) string {
 // ObjectId returns a MongoDB-style 12-byte object id encoded as 24 hex characters.
 // Layout: 4-byte Unix timestamp in seconds, 5 random bytes, and a 3-byte counter.
 func ObjectId() string {
-	now := uint32(time.Now().Unix()) // #nosec G115 -- ObjectId timestamp is intentionally stored in 4 bytes.
+	return ObjectIdWithOptions()
+}
+
+// ObjectIdWithOptions returns a MongoDB-style object id with custom generation options.
+func ObjectIdWithOptions(opts ...ObjectIDOption) string {
+	cfg := applyObjectIDOptions(opts)
+	now := uint32(cfg.now().Unix()) // #nosec G115 -- ObjectId timestamp is intentionally stored in 4 bytes.
 	rnd := make([]byte, 5)
-	fillRandomBytes(rnd)
-	c := nextCounter()
+	fillRandomBytesFrom(cfg.reader, rnd)
+	c := cfg.counter()
 	b := make([]byte, 12)
 	binary.BigEndian.PutUint32(b[0:4], now)
 	copy(b[4:9], rnd)
@@ -215,17 +347,30 @@ func NanoId() string { return NanoIdN(21) }
 
 // NanoIdN returns a NanoId with the specified length.
 func NanoIdN(n int) string {
+	return NanoIdWithOptions(WithNanoIDLength(n))
+}
+
+// NanoIdWithOptions returns a NanoId using custom generation options.
+func NanoIdWithOptions(opts ...NanoIDOption) string {
+	cfg := applyNanoIDOptions(opts)
+	n := cfg.length
 	if n <= 0 {
 		return ""
 	}
-	mask := byte(63) // alphabet length is 64.
+	if len(cfg.alphabet) == 1 {
+		return strings.Repeat(cfg.alphabet, n)
+	}
+	mask := byte(nextPowerOfTwo(len(cfg.alphabet)) - 1)
 	step := (n*8 + 7) / 8
 	out := make([]byte, 0, n)
 	buf := make([]byte, step)
 	for {
-		fillRandomBytes(buf)
+		fillRandomBytesFrom(cfg.reader, buf)
 		for i := 0; i < step && len(out) < n; i++ {
-			out = append(out, nanoIDAlphabet[buf[i]&mask])
+			idx := int(buf[i] & mask)
+			if idx < len(cfg.alphabet) {
+				out = append(out, cfg.alphabet[idx])
+			}
 		}
 		if len(out) >= n {
 			break
@@ -240,14 +385,25 @@ func GetSnowflakeNextID() int64 { return GetSnowflake().NextID() }
 // GetSnowflakeNextIDStr returns the next ID string from the default singleton Snowflake generator.
 func GetSnowflakeNextIDStr() string { return GetSnowflake().NextIDStr() }
 
-func fillRandomBytes(buf []byte) {
-	if _, err := cryptorand.Read(buf); err != nil {
+func fillRandomBytesFrom(reader io.Reader, buf []byte) {
+	if _, err := io.ReadFull(reader, buf); err != nil {
 		defaultRandMu.Lock()
 		defer defaultRandMu.Unlock()
 		for i := range buf {
 			buf[i] = byte(defaultRand.Intn(256)) // #nosec G115 -- Intn(256) always fits in byte.
 		}
 	}
+}
+
+func nextPowerOfTwo(n int) int {
+	if n <= 1 {
+		return 1
+	}
+	p := 1
+	for p < n {
+		p <<= 1
+	}
+	return p
 }
 
 func normalizeSnowflakeID(id, max int64) int64 {

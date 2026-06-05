@@ -29,6 +29,13 @@ func TestGetStackTraceAndFormatting(t *testing.T) {
 	}
 }
 
+func TestGetStackTraceWithOptions(t *testing.T) {
+	stack := GetStackTraceWithOptions(WithStackSkip(0), WithStackDepth(2))
+	if len(stack) == 0 || len(stack) > 2 {
+		t.Fatalf("GetStackTraceWithOptions len = %d", len(stack))
+	}
+}
+
 func TestFrameFormatting(t *testing.T) {
 	stack := GetStackTrace(0)
 	frame := stack[0]

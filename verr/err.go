@@ -2,6 +2,7 @@ package verr
 
 import (
 	"context"
+	"io"
 
 	"github.com/sirupsen/logrus"
 
@@ -31,6 +32,12 @@ type Frame = errimpl.Frame
 // StackTrace is a stack of frames from innermost to outermost.
 type StackTrace = errimpl.StackTrace
 
+// StackTraceOption customizes stack trace capture.
+type StackTraceOption = errimpl.StackTraceOption
+
+// InitOption customizes logrus/Sentry initialization.
+type InitOption = errimpl.InitOption
+
 // Collector runs functions, recovers panics, logs failures, and aggregates errors.
 type Collector = errimpl.Collector
 
@@ -52,6 +59,22 @@ func MustExit(ctx context.Context, err error) { errimpl.MustExit(ctx, err) }
 // Init configures logrus output and optional Sentry forwarding.
 func Init(sentryDSN string) { errimpl.Init(sentryDSN) }
 
+func WithSentryDSN(dsn string) InitOption { return errimpl.WithSentryDSN(dsn) }
+
+func WithSentryEnvKey(key string) InitOption { return errimpl.WithSentryEnvKey(key) }
+
+func WithLogOutput(output io.Writer) InitOption { return errimpl.WithLogOutput(output) }
+
+func WithLogFormatter(formatter logrus.Formatter) InitOption {
+	return errimpl.WithLogFormatter(formatter)
+}
+
+func WithReportCaller(reportCaller bool) InitOption { return errimpl.WithReportCaller(reportCaller) }
+
+func WithSentryLevels(levels ...logrus.Level) InitOption { return errimpl.WithSentryLevels(levels...) }
+
+func InitWithOptions(opts ...InitOption) { errimpl.InitWithOptions(opts...) }
+
 // Wrap creates a recoverable function wrapper.
 func Wrap(f func() error) *Wrapper { return errimpl.Wrap(f) }
 
@@ -67,6 +90,14 @@ func RecoverWithoutError(f func(), format string, args ...any) error {
 
 // GetStackTrace captures the current goroutine stack trace.
 func GetStackTrace(skip int) StackTrace { return errimpl.GetStackTrace(skip) }
+
+func WithStackSkip(skip int) StackTraceOption { return errimpl.WithStackSkip(skip) }
+
+func WithStackDepth(depth int) StackTraceOption { return errimpl.WithStackDepth(depth) }
+
+func GetStackTraceWithOptions(opts ...StackTraceOption) StackTrace {
+	return errimpl.GetStackTraceWithOptions(opts...)
+}
 
 // WithLevel sets the log level used for recovered or returned errors.
 func WithLevel(c *Collector, level logrus.Level) *Collector { return c.WithLevel(level) }

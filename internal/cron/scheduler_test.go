@@ -117,3 +117,31 @@ func TestSchedulerStartTwice(t *testing.T) {
 		t.Fatalf("expect error on second start")
 	}
 }
+
+func TestSchedulerOptions(t *testing.T) {
+	loc := time.FixedZone("test", 8*3600)
+	var submitted atomic.Int32
+	s := NewSchedulerWithOptions(
+		WithLocation(loc),
+		WithMatchSecond(true),
+		WithIDGenerator(func() string { return "custom-id" }),
+		WithExecutor(func(fn func()) {
+			submitted.Add(1)
+			fn()
+		}),
+	)
+	if s.Config().Location != loc || !s.IsMatchSecond() {
+		t.Fatalf("scheduler options not applied: %#v", s.Config())
+	}
+	id, err := s.ScheduleFunc("* * * * * *", func() {})
+	if err != nil {
+		t.Fatalf("schedule with custom id: %v", err)
+	}
+	if id != "custom-id" {
+		t.Fatalf("custom id = %q", id)
+	}
+	s.submit(func() {})
+	if submitted.Load() != 1 {
+		t.Fatalf("custom executor not used")
+	}
+}

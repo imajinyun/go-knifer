@@ -34,6 +34,20 @@ func TestSocketConfigDefaults(t *testing.T) {
 	}
 }
 
+func TestSocketConfigOptions(t *testing.T) {
+	cfg := NewSocketConfigWithOptions(
+		WithThreadPoolSize(2),
+		WithReadTimeout(100),
+		WithWriteTimeout(200),
+		WithReadBufferSize(64),
+		WithWriteBufferSize(128),
+	)
+	if cfg.ThreadPoolSize != 2 || cfg.ReadTimeout != 100 || cfg.WriteTimeout != 200 ||
+		cfg.ReadBufferSize != 64 || cfg.WriteBufferSize != 128 {
+		t.Fatalf("NewSocketConfigWithOptions not applied: %+v", cfg)
+	}
+}
+
 func TestSocketUtilConnect(t *testing.T) {
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
@@ -61,6 +75,28 @@ func TestSocketUtilConnect(t *testing.T) {
 	if GetRemoteAddress(conn) == nil {
 		t.Errorf("GetRemoteAddress 不应返回 nil")
 	}
+}
+
+func TestSocketConnectWithOptions(t *testing.T) {
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer closeAndReport(t, ln.Close)
+
+	go func() {
+		c, _ := ln.Accept()
+		if c != nil {
+			_ = c.Close()
+		}
+	}()
+
+	addr := ln.Addr().(*net.TCPAddr)
+	conn, err := ConnectWithOptions("127.0.0.1", addr.Port, WithConnectTimeout(time.Second), WithConnectNetwork("tcp"))
+	if err != nil {
+		t.Fatalf("ConnectWithOptions failed: %v", err)
+	}
+	defer closeAndReport(t, conn.Close)
 }
 
 func TestSocketRuntimeError(t *testing.T) {

@@ -2,14 +2,25 @@ package vskt
 
 import (
 	"bytes"
+	"context"
 	"net"
 	"time"
 
+	netimpl "github.com/imajinyun/go-knifer/internal/net"
 	socketx "github.com/imajinyun/go-knifer/internal/socket"
 )
 
 // SocketConfig configures socket clients and servers.
 type SocketConfig = socketx.SocketConfig
+
+// ConfigOption customizes SocketConfig creation.
+type ConfigOption = socketx.ConfigOption
+
+// ConnectOption customizes socket connection helpers.
+type ConnectOption = socketx.ConnectOption
+
+// Dialer is the minimal interface used by socket connection helpers.
+type Dialer = netimpl.Dialer
 
 // SocketRuntimeError is the socket runtime error type.
 type SocketRuntimeError = socketx.SocketRuntimeError
@@ -94,14 +105,46 @@ const (
 // NewSocketConfig creates a default socket config.
 func NewSocketConfig() *SocketConfig { return socketx.NewSocketConfig() }
 
+func WithThreadPoolSize(n int) ConfigOption { return socketx.WithThreadPoolSize(n) }
+
+func WithReadTimeout(ms int64) ConfigOption { return socketx.WithReadTimeout(ms) }
+
+func WithWriteTimeout(ms int64) ConfigOption { return socketx.WithWriteTimeout(ms) }
+
+func WithReadBufferSize(n int) ConfigOption { return socketx.WithReadBufferSize(n) }
+
+func WithWriteBufferSize(n int) ConfigOption { return socketx.WithWriteBufferSize(n) }
+
+func NewSocketConfigWithOptions(opts ...ConfigOption) *SocketConfig {
+	return socketx.NewSocketConfigWithOptions(opts...)
+}
+
+func WithConnectContext(ctx context.Context) ConnectOption { return socketx.WithConnectContext(ctx) }
+
+func WithConnectTimeout(timeout time.Duration) ConnectOption {
+	return socketx.WithConnectTimeout(timeout)
+}
+
+func WithConnectNetwork(network string) ConnectOption { return socketx.WithConnectNetwork(network) }
+
+func WithConnectDialer(dialer Dialer) ConnectOption { return socketx.WithConnectDialer(dialer) }
+
 // SocketConnect connects to host:port with timeout.
 func SocketConnect(hostname string, port int, timeout time.Duration) (net.Conn, error) {
 	return socketx.Connect(hostname, port, timeout)
 }
 
+func SocketConnectWithOptions(hostname string, port int, opts ...ConnectOption) (net.Conn, error) {
+	return socketx.ConnectWithOptions(hostname, port, opts...)
+}
+
 // SocketConnectAddr connects to addr with timeout.
 func SocketConnectAddr(addr *net.TCPAddr, timeout time.Duration) (net.Conn, error) {
 	return socketx.ConnectAddr(addr, timeout)
+}
+
+func SocketConnectAddrWithOptions(addr *net.TCPAddr, opts ...ConnectOption) (net.Conn, error) {
+	return socketx.ConnectAddrWithOptions(addr, opts...)
 }
 
 // SocketRemoteAddress returns the remote address for conn.
@@ -113,6 +156,10 @@ func SocketIsConnected(conn net.Conn) bool { return socketx.IsConnected(conn) }
 // ChannelDial dials addr with timeout.
 func ChannelDial(addr *net.TCPAddr, timeout time.Duration) (net.Conn, error) {
 	return socketx.ChannelUtilDial(addr, timeout)
+}
+
+func ChannelDialWithOptions(addr *net.TCPAddr, opts ...ConnectOption) (net.Conn, error) {
+	return socketx.ChannelUtilDialWithOptions(addr, opts...)
 }
 
 // NewNioServer creates a NIO-style TCP server on port.
@@ -138,6 +185,10 @@ func NewAioServerAddr(addr *net.TCPAddr, cfg *SocketConfig) (*AioServer, error) 
 // NewAioClient creates an AIO-style TCP client.
 func NewAioClient(addr *net.TCPAddr, action IoAction[*bytes.Buffer]) (*AioClient, error) {
 	return socketx.NewAioClient(addr, action)
+}
+
+func NewAioClientWithOptions(addr *net.TCPAddr, action IoAction[*bytes.Buffer], opts ...ConnectOption) (*AioClient, error) {
+	return socketx.NewAioClientWithOptions(addr, action, opts...)
 }
 
 // NewAioClientWithConfig creates an AIO-style TCP client with config.

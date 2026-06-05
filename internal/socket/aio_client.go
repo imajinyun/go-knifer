@@ -13,26 +13,40 @@ type AioClient struct {
 
 // NewAioClient creates an AioClient with the default configuration.
 func NewAioClient(addr *net.TCPAddr, action IoAction[*bytes.Buffer]) (*AioClient, error) {
-	return NewAioClientWithConfig(addr, action, NewSocketConfig())
+	return NewAioClientWithOptions(addr, action)
+}
+
+// NewAioClientWithOptions creates an AIO client with custom socket and dial options.
+func NewAioClientWithOptions(addr *net.TCPAddr, action IoAction[*bytes.Buffer], opts ...ConnectOption) (*AioClient, error) {
+	return newAioClient(addr, action, NewSocketConfig(), opts...)
 }
 
 // NewAioClientWithConfig creates a client from an address, IO action, and configuration.
 func NewAioClientWithConfig(addr *net.TCPAddr, action IoAction[*bytes.Buffer], cfg *SocketConfig) (*AioClient, error) {
+	return newAioClient(addr, action, cfg, WithConnectTimeout(time.Duration(normalizeSocketConfig(cfg).WriteTimeout)*time.Millisecond))
+}
+
+func newAioClient(addr *net.TCPAddr, action IoAction[*bytes.Buffer], cfg *SocketConfig, opts ...ConnectOption) (*AioClient, error) {
 	if addr == nil {
 		return nil, NewSocketErrorMsg("address must not be nil")
 	}
 	if action == nil {
 		return nil, NewSocketErrorMsg("ioAction must not be nil")
 	}
-	if cfg == nil {
-		cfg = NewSocketConfig()
-	}
-	conn, err := dialAio(addr, cfg)
+	cfg = normalizeSocketConfig(cfg)
+	conn, err := dialAio(addr, cfg, opts...)
 	if err != nil {
 		return nil, err
 	}
 	c := NewAioClientWithConn(conn, action, cfg)
 	return c, nil
+}
+
+func normalizeSocketConfig(cfg *SocketConfig) *SocketConfig {
+	if cfg == nil {
+		return NewSocketConfig()
+	}
+	return cfg
 }
 
 // NewAioClientWithConn creates a client from an established connection.
@@ -85,7 +99,9 @@ func (c *AioClient) Close() error {
 }
 
 // dialAio creates the connection using the write timeout from the configuration.
-func dialAio(addr *net.TCPAddr, cfg *SocketConfig) (net.Conn, error) {
-	timeout := time.Duration(cfg.WriteTimeout) * time.Millisecond
-	return ChannelUtilDial(addr, timeout)
+func dialAio(addr *net.TCPAddr, cfg *SocketConfig, opts ...ConnectOption) (net.Conn, error) {
+	if len(opts) == 0 {
+		opts = append(opts, WithConnectTimeout(time.Duration(cfg.WriteTimeout)*time.Millisecond))
+	}
+	return ChannelUtilDialWithOptions(addr, opts...)
 }

@@ -9,6 +9,40 @@ import (
 	"strings"
 )
 
+type stackTraceConfig struct {
+	skip  int
+	depth int
+}
+
+// StackTraceOption customizes stack trace capture.
+type StackTraceOption func(*stackTraceConfig)
+
+// WithStackSkip sets the number of caller frames to skip.
+func WithStackSkip(skip int) StackTraceOption {
+	return func(c *stackTraceConfig) { c.skip = skip }
+}
+
+// WithStackDepth sets the maximum number of stack frames to capture.
+func WithStackDepth(depth int) StackTraceOption {
+	return func(c *stackTraceConfig) { c.depth = depth }
+}
+
+func applyStackTraceOptions(skip int, opts []StackTraceOption) stackTraceConfig {
+	cfg := stackTraceConfig{skip: skip, depth: 32}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.skip < 0 {
+		cfg.skip = 0
+	}
+	if cfg.depth <= 0 {
+		cfg.depth = 32
+	}
+	return cfg
+}
+
 // WithStackTrace is implemented by errors that expose structured stack frames.
 type WithStackTrace interface {
 	StackTrace() StackTrace
@@ -106,11 +140,14 @@ func (st StackTrace) formatSlice(s fmt.State, verb rune) {
 
 // GetStackTrace captures the current goroutine stack trace.
 func GetStackTrace(skip int) StackTrace {
-	if skip < 0 {
-		skip = 0
-	}
-	pcs := make([]uintptr, 32)
-	n := runtime.Callers(skip, pcs)
+	return GetStackTraceWithOptions(WithStackSkip(skip))
+}
+
+// GetStackTraceWithOptions captures the current goroutine stack trace with custom options.
+func GetStackTraceWithOptions(opts ...StackTraceOption) StackTrace {
+	cfg := applyStackTraceOptions(0, opts)
+	pcs := make([]uintptr, cfg.depth)
+	n := runtime.Callers(cfg.skip, pcs)
 	stack := make(StackTrace, n)
 	for idx, frame := range pcs[:n] {
 		stack[idx] = Frame(frame)

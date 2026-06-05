@@ -22,13 +22,52 @@ type SocketConfig struct {
 	WriteBufferSize int
 }
 
+// ConfigOption customizes SocketConfig creation.
+type ConfigOption func(*SocketConfig)
+
+// WithThreadPoolSize sets the configured thread-pool/concurrency size.
+func WithThreadPoolSize(n int) ConfigOption {
+	return func(c *SocketConfig) { c.ThreadPoolSize = n }
+}
+
+// WithReadTimeout sets the read timeout in milliseconds.
+func WithReadTimeout(ms int64) ConfigOption {
+	return func(c *SocketConfig) { c.ReadTimeout = ms }
+}
+
+// WithWriteTimeout sets the write timeout in milliseconds.
+func WithWriteTimeout(ms int64) ConfigOption {
+	return func(c *SocketConfig) { c.WriteTimeout = ms }
+}
+
+// WithReadBufferSize sets the read buffer size.
+func WithReadBufferSize(n int) ConfigOption {
+	return func(c *SocketConfig) { c.ReadBufferSize = n }
+}
+
+// WithWriteBufferSize sets the write buffer size.
+func WithWriteBufferSize(n int) ConfigOption {
+	return func(c *SocketConfig) { c.WriteBufferSize = n }
+}
+
 // NewSocketConfig creates the default configuration.
 func NewSocketConfig() *SocketConfig {
-	return &SocketConfig{
+	return NewSocketConfigWithOptions()
+}
+
+// NewSocketConfigWithOptions creates a socket config customized by options.
+func NewSocketConfigWithOptions(opts ...ConfigOption) *SocketConfig {
+	cfg := &SocketConfig{
 		ThreadPoolSize:  runtime.NumCPU(),
 		ReadBufferSize:  DefaultBufferSize,
 		WriteBufferSize: DefaultBufferSize,
 	}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(cfg)
+		}
+	}
+	return cfg
 }
 
 // SetThreadPoolSize sets the thread-pool size.
