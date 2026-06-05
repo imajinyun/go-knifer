@@ -1,7 +1,7 @@
 # Contributing to go-knifer
 
 Thanks for contributing! go-knifer is a large, multi-domain Go utility library
-(40+ public subpackages). To keep it consistent and maintainable at this scale,
+(45 public subpackages). To keep it consistent and maintainable at this scale,
 please follow the conventions below. Most of them are enforced by CI
 (`go vet`, `golangci-lint`, and `bin/check_arch.sh`).
 
@@ -55,6 +55,7 @@ please follow the conventions below. Most of them are enforced by CI
 | Public | Full domain | internal |
 | --- | --- | --- |
 | vblf | bloomfilter | internal/bloomfilter |
+| vident | identity | internal/identity |
 | vmask | data masking (desensitization) | internal/mask |
 | verr | errx (extended error) | internal/errx |
 | vsem | semaphore | internal/semaphore |
@@ -62,6 +63,7 @@ please follow the conventions below. Most of them are enforced by CI
 | vskt | socket | internal/socket |
 | vsys | system | internal/system |
 | vtpl | template | internal/template |
+| vvalid | validator / validation | internal/validator |
 | vver | version | internal/version |
 
 ## Package placement
