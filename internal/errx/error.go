@@ -6,6 +6,7 @@ import (
 	"runtime/debug"
 
 	"github.com/hashicorp/go-multierror"
+	knifer "github.com/imajinyun/go-knifer"
 )
 
 // WithStack is implemented by errors that can expose a string stack trace.
@@ -20,6 +21,17 @@ type PanicError struct {
 	Value      any
 	Cause      error
 	StackTrace StackTrace
+}
+
+// ErrorCode returns the go-knifer error code for a recovered panic.
+func (e *PanicError) ErrorCode() knifer.ErrCode {
+	if e == nil {
+		return ""
+	}
+	if code, ok := knifer.CodeOf(e.Cause); ok {
+		return code
+	}
+	return knifer.ErrCodeInternal
 }
 
 // Error returns the recovered panic value as an error message.
@@ -39,6 +51,15 @@ func (e *PanicError) Unwrap() error {
 		return nil
 	}
 	return e.Cause
+}
+
+// Is supports errors.Is(err, knifer.ErrCodeXxx) matching by error code.
+func (e *PanicError) Is(target error) bool {
+	if e == nil || target == nil {
+		return false
+	}
+	code, ok := target.(knifer.ErrCode)
+	return ok && e.ErrorCode() == code
 }
 
 // Stack returns the stack captured when the panic was recovered.

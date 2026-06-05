@@ -5,6 +5,8 @@ import (
 	"errors"
 	"testing"
 	"time"
+
+	knifer "github.com/imajinyun/go-knifer"
 )
 
 func TestAcquireTryAcquireRelease(t *testing.T) {
@@ -122,9 +124,17 @@ func TestInvalidInputsAndPanics(t *testing.T) {
 	var nilCtx context.Context
 	if err := sem.Acquire(nilCtx, 0); !errors.Is(err, ErrInvalidWeight) {
 		t.Fatalf("Acquire(0) = %v, want ErrInvalidWeight", err)
+	} else if !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("Acquire(0) = %v, want ErrCodeInvalidInput", err)
 	}
 	if err := sem.Acquire(nilCtx, 2); !errors.Is(err, ErrInvalidWeight) {
 		t.Fatalf("Acquire(2) = %v, want ErrInvalidWeight", err)
+	}
+	if code, ok := knifer.CodeOf(ErrReleaseTooMany); !ok || code != knifer.ErrCodeInvalidInput {
+		t.Fatalf("CodeOf(ErrReleaseTooMany) = %q, %v; want invalid input", code, ok)
+	}
+	if code, ok := knifer.CodeOf(ErrClosed); !ok || code != knifer.ErrCodeUnsupported {
+		t.Fatalf("CodeOf(ErrClosed) = %q, %v; want unsupported", code, ok)
 	}
 	if sem.TryAcquire(0) || sem.TryAcquire(2) {
 		t.Fatal("TryAcquire() should reject invalid weights")

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	knifer "github.com/imajinyun/go-knifer"
 	"github.com/imajinyun/go-knifer/verr"
 )
 
@@ -29,6 +30,12 @@ func TestRecoverFacadeConvertsPanic(t *testing.T) {
 	var pe *verr.PanicError
 	if !errors.As(got, &pe) || pe.Stack() == "" {
 		t.Fatalf("Recover() = %T stack=%q, want PanicError with stack", got, pe.Stack())
+	}
+	if !errors.Is(got, knifer.ErrCodeInternal) {
+		t.Fatalf("Recover() = %v, want ErrCodeInternal", got)
+	}
+	if code, ok := knifer.CodeOf(got); !ok || code != knifer.ErrCodeInternal {
+		t.Fatalf("CodeOf(Recover()) = %q, %v; want internal", code, ok)
 	}
 }
 

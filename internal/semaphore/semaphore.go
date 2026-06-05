@@ -3,16 +3,34 @@ package semaphore
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 	"sync/atomic"
+
+	knifer "github.com/imajinyun/go-knifer"
 )
 
+type sentinel struct {
+	code knifer.ErrCode
+	msg  string
+}
+
+func (e *sentinel) Error() string { return e.msg }
+
+func (e *sentinel) ErrorCode() knifer.ErrCode { return e.code }
+
+func (e *sentinel) Is(target error) bool {
+	if e == target {
+		return true
+	}
+	code, ok := target.(knifer.ErrCode)
+	return ok && e.code == code
+}
+
 var (
-	ErrInvalidWeight  = errors.New("semaphore: invalid weight")
-	ErrReleaseTooMany = errors.New("semaphore: release more than acquired")
-	ErrClosed         = errors.New("semaphore: closed")
+	ErrInvalidWeight  error = &sentinel{code: knifer.ErrCodeInvalidInput, msg: "semaphore: invalid weight"}
+	ErrReleaseTooMany error = &sentinel{code: knifer.ErrCodeInvalidInput, msg: "semaphore: release more than acquired"}
+	ErrClosed         error = &sentinel{code: knifer.ErrCodeUnsupported, msg: "semaphore: closed"}
 )
 
 // Semaphore is a weighted, cancellable, and closeable counting semaphore.

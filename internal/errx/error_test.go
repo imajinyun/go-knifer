@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-multierror"
+	knifer "github.com/imajinyun/go-knifer"
 )
 
 type stackError struct{ stack string }
@@ -68,12 +69,22 @@ func TestPanicErrorPreservesErrorValues(t *testing.T) {
 	}
 	if got := panicError("panic string"); got == nil || got.Error() != "panic string" {
 		t.Fatalf("panicError(string) = %v, want converted error", got)
+	} else if !errors.Is(got, knifer.ErrCodeInternal) {
+		t.Fatalf("panicError(string) = %v, want ErrCodeInternal", got)
+	}
+
+	coded := panicError(knifer.NewError(knifer.ErrCodeInvalidInput, "bad input"))
+	if !errors.Is(coded, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("panicError(coded error) = %v, want ErrCodeInvalidInput", coded)
+	}
+	if code, ok := knifer.CodeOf(coded); !ok || code != knifer.ErrCodeInvalidInput {
+		t.Fatalf("CodeOf(panicError(coded error)) = %q, %v; want invalid input", code, ok)
 	}
 }
 
 func TestPanicErrorNilReceiver(t *testing.T) {
 	var pe *PanicError
-	if pe.Error() != "<nil>" || pe.Unwrap() != nil || pe.Stack() != "" {
+	if pe.Error() != "<nil>" || pe.Unwrap() != nil || pe.Stack() != "" || pe.ErrorCode() != "" {
 		t.Fatalf("nil PanicError methods returned unexpected values")
 	}
 }

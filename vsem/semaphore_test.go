@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	knifer "github.com/imajinyun/go-knifer"
 	"github.com/imajinyun/go-knifer/vsem"
 )
 
@@ -34,6 +35,8 @@ func TestVSemFacadeErrors(t *testing.T) {
 	sem := vsem.New(1)
 	if err := sem.Acquire(context.Background(), 2); !errors.Is(err, vsem.ErrInvalidWeight) {
 		t.Fatalf("Acquire(2) = %v, want ErrInvalidWeight", err)
+	} else if !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("Acquire(2) = %v, want ErrCodeInvalidInput", err)
 	}
 
 	if err := sem.Acquire(context.Background(), 1); err != nil {
@@ -48,5 +51,10 @@ func TestVSemFacadeErrors(t *testing.T) {
 	sem.Release(1)
 	if err := sem.Acquire(context.Background(), 1); !errors.Is(err, vsem.ErrClosed) {
 		t.Fatalf("Acquire() after Close() = %v, want ErrClosed", err)
+	} else if !errors.Is(err, knifer.ErrCodeUnsupported) {
+		t.Fatalf("Acquire() after Close() = %v, want ErrCodeUnsupported", err)
+	}
+	if code, ok := knifer.CodeOf(vsem.ErrInvalidWeight); !ok || code != knifer.ErrCodeInvalidInput {
+		t.Fatalf("CodeOf(ErrInvalidWeight) = %q, %v; want invalid input", code, ok)
 	}
 }

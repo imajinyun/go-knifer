@@ -24,13 +24,9 @@ func New() *Conf {
 	return &Conf{data: map[string]map[string]string{defaultGroup: {}}}
 }
 
-// Load 读取并解析 setting/properties 配置文件。Load reads and parses a setting/properties file.
+// Load 读取并解析配置文件。Load reads and parses a configuration file.
 func Load(path string) (*Conf, error) {
-	b, err := os.ReadFile(path)
-	if err != nil {
-		return nil, wrapConfigIO("read config file "+path, err)
-	}
-	return ParseByExt(path, b)
+	return LoadWithOptions(path, LoadOptions{})
 }
 
 // LoadProfile loads a configuration file and applies profile-specific overrides.
@@ -156,6 +152,19 @@ func (s *Conf) SetByGroup(group, key, value string) {
 	s.data[group][key] = value
 }
 
+// Delete removes a value from the default group.
+func (s *Conf) Delete(key string) { s.DeleteByGroup(defaultGroup, key) }
+
+// DeleteByGroup removes a value from a group.
+func (s *Conf) DeleteByGroup(group, key string) {
+	if s == nil || s.data == nil {
+		return
+	}
+	if m, ok := s.data[group]; ok {
+		delete(m, key)
+	}
+}
+
 // Groups 返回全部分组名称。Groups returns all group names.
 func (s *Conf) Groups() []string {
 	if s == nil || s.data == nil {
@@ -260,42 +269,6 @@ func (s *Conf) BindGroup(group string, dst any) error {
 		return invalidInputf("bind target must point to a struct")
 	}
 	return s.bindStruct(group, "", rv)
-}
-
-// Watch polls path and calls onChange after successful reloads. The returned function stops watching.
-func Watch(path string, interval time.Duration, onChange func(*Conf, error)) (func(), error) {
-	if interval <= 0 {
-		interval = time.Second
-	}
-	info, err := os.Stat(path)
-	if err != nil {
-		return nil, wrapConfigIO("stat config file "+path, err)
-	}
-	stop := make(chan struct{})
-	done := make(chan struct{})
-	go func(lastMod time.Time, lastSize int64) {
-		defer close(done)
-		ticker := time.NewTicker(interval)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-ticker.C:
-				current, statErr := os.Stat(path)
-				if statErr != nil {
-					onChange(nil, wrapConfigIO("stat config file "+path, statErr))
-					continue
-				}
-				if current.ModTime().Equal(lastMod) && current.Size() == lastSize {
-					continue
-				}
-				lastMod, lastSize = current.ModTime(), current.Size()
-				onChange(Load(path))
-			case <-stop:
-				return
-			}
-		}
-	}(info.ModTime(), info.Size())
-	return func() { close(stop); <-done }, nil
 }
 
 func (s *Conf) ensureGroup(group string) {

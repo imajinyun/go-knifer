@@ -189,11 +189,13 @@ if code, ok := knifer.CodeOf(err); ok { /* ... */ }
 `knifer.ErrCodeInvalidInput` and the existing `vcrypto.ErrInvalidKey` /
 `ErrInvalidIV` / `ErrInvalidCipherText` sentinels.
 
-The `vjwt`, `vjson`, `vcron`, `vjob`, `vpoi`, and `vhttp`/`vresty` errors also
-participate: their errors match `knifer.ErrCodeInvalidInput` (vjwt, vjson,
-vcron, vjob, vpoi empty sheet name), `knifer.ErrCodeNotFound` (vpoi no sheet),
-or `knifer.ErrCodeInternal` (vhttp/vresty and vskt) while preserving their own
-error types, sentinels, and cause chains.
+The `vjwt`, `vjson`, `vcron`, `vjob`, `vpoi`, `vsem`, `verr`, and
+`vhttp`/`vresty` errors also participate: their errors match
+`knifer.ErrCodeInvalidInput` (vjwt, vjson, vcron, vjob, vpoi empty sheet name,
+vsem invalid weights), `knifer.ErrCodeNotFound` (vpoi no sheet),
+`knifer.ErrCodeUnsupported` (vsem closed semaphore), or
+`knifer.ErrCodeInternal` (vhttp/vresty, vskt, and recovered panics from verr)
+while preserving their own error types, sentinels, and cause chains.
 
 ## 🚀 Install
 
