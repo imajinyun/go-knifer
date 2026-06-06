@@ -2,6 +2,7 @@ package system
 
 import (
 	"bytes"
+	"net"
 	"os"
 	"os/user"
 	"runtime"
@@ -19,6 +20,26 @@ func TestHostInfo(t *testing.T) {
 	}
 	if !strings.Contains(h.String(), "Host Name:") {
 		t.Errorf("HostInfo.String 缺少 caption: %s", h.String())
+	}
+}
+
+func TestHostInfoWithOptions(t *testing.T) {
+	_, ipNet, err := net.ParseCIDR("10.0.0.2/24")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ipNet.IP = net.ParseIP("10.0.0.2")
+	h := NewHostInfoWithOptions(
+		WithHostNameFunc(func() (string, error) { return "option-host", nil }),
+		WithHostInterfaceAddrsFunc(func() ([]net.Addr, error) { return []net.Addr{ipNet}, nil }),
+	)
+	if h.GetName() != "option-host" || h.GetAddress() != "10.0.0.2" {
+		t.Fatalf("NewHostInfoWithOptions = %#v", h)
+	}
+
+	h = GetHostInfoWithOptions(WithHostAddressFunc(func() string { return "192.0.2.10" }))
+	if h.GetAddress() != "192.0.2.10" {
+		t.Fatalf("GetHostInfoWithOptions address = %q", h.GetAddress())
 	}
 }
 
@@ -166,6 +187,18 @@ func TestOsInfoWithOptions(t *testing.T) {
 	}
 }
 
+func TestSystemInfoGettersWithOptions(t *testing.T) {
+	g := GetGoInfoWithOptions(WithGoVersionFunc(func() string { return "go-getter" }))
+	if g.GetVersion() != "go-getter" {
+		t.Fatalf("GetGoInfoWithOptions version = %q", g.GetVersion())
+	}
+
+	o := GetOsInfoWithOptions(WithOSNameFunc(func() string { return "linux" }))
+	if o.GetName() != "linux" {
+		t.Fatalf("GetOsInfoWithOptions name = %q", o.GetName())
+	}
+}
+
 func TestRuntimeInfo(t *testing.T) {
 	r := GetRuntimeInfo()
 	if r == nil {
@@ -182,9 +215,38 @@ func TestRuntimeInfo(t *testing.T) {
 	}
 }
 
+func TestRuntimeInfoWithOptions(t *testing.T) {
+	readCalls := 0
+	r := NewRuntimeInfoWithOptions(
+		WithReadMemStatsFunc(func(stats *runtime.MemStats) {
+			readCalls++
+			stats.Sys = 1024
+			stats.HeapSys = 512
+			stats.HeapIdle = 128
+			stats.HeapInuse = 256
+		}),
+		WithNumGoroutineFunc(func() int { return 7 }),
+	)
+	if readCalls != 1 || r.GetMaxMemory() != 1024 || r.GetTotalMemory() != 512 || r.GetFreeMemory() != 128 || r.GetUsableMemory() != 768 || r.GetGoroutineCount() != 7 {
+		t.Fatalf("NewRuntimeInfoWithOptions = %#v calls=%d", r, readCalls)
+	}
+	r.Refresh()
+	if readCalls != 2 {
+		t.Fatalf("Refresh read calls = %d", readCalls)
+	}
+
+	r = GetRuntimeInfoWithOptions(WithReadMemStatsFunc(func(stats *runtime.MemStats) { stats.Sys = 2048 }))
+	if r.GetMaxMemory() != 2048 {
+		t.Fatalf("GetRuntimeInfoWithOptions max = %d", r.GetMaxMemory())
+	}
+}
+
 func TestGetCurrentPID(t *testing.T) {
 	if GetCurrentPID() != os.Getpid() {
 		t.Errorf("PID 不一致")
+	}
+	if got := GetCurrentPIDWithOptions(WithPIDFunc(func() int { return 4242 })); got != 4242 {
+		t.Fatalf("GetCurrentPIDWithOptions = %d", got)
 	}
 }
 
@@ -211,9 +273,45 @@ func TestGetEnv(t *testing.T) {
 	}
 }
 
+func TestGetEnvWithOptions(t *testing.T) {
+	lookup := func(key string) (string, bool) {
+		switch key {
+		case "STRING":
+			return "value", true
+		case "INT":
+			return "12", true
+		case "BOOL":
+			return "true", true
+		case "EMPTY":
+			return "", true
+		default:
+			return "", false
+		}
+	}
+	var warning bytes.Buffer
+	if got := GetWithOptions("STRING", true, WithEnvLookupFunc(lookup)); got != "value" {
+		t.Fatalf("GetWithOptions = %q", got)
+	}
+	if got := GetWithOptions("MISSING", false, WithEnvLookupFunc(lookup), WithEnvWarningWriter(&warning)); got != "" || !strings.Contains(warning.String(), "MISSING") {
+		t.Fatalf("GetWithOptions missing = %q warning=%q", got, warning.String())
+	}
+	if got := GetOrDefaultWithOptions("EMPTY", "def", WithEnvLookupFunc(lookup)); got != "def" {
+		t.Fatalf("GetOrDefaultWithOptions empty = %q", got)
+	}
+	if got := GetIntWithOptions("INT", 0, WithEnvLookupFunc(lookup)); got != 12 {
+		t.Fatalf("GetIntWithOptions = %d", got)
+	}
+	if got := GetBoolWithOptions("BOOL", false, WithEnvLookupFunc(lookup)); !got {
+		t.Fatalf("GetBoolWithOptions = %v", got)
+	}
+}
+
 func TestTotalThreadCount(t *testing.T) {
 	if GetTotalThreadCount() <= 0 {
 		t.Errorf("总协程数应大于 0")
+	}
+	if got := GetTotalThreadCountWithOptions(WithProcessNumGoroutineFunc(func() int { return 6 })); got != 6 {
+		t.Fatalf("GetTotalThreadCountWithOptions = %d", got)
 	}
 }
 

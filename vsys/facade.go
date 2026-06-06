@@ -19,6 +19,11 @@ func NewHostInfo() *HostInfo {
 	return system.NewHostInfo()
 }
 
+// NewHostInfoWithOptions delegates to the internal system implementation.
+func NewHostInfoWithOptions(opts ...HostInfoOption) *HostInfo {
+	return system.NewHostInfoWithOptions(opts...)
+}
+
 // NewOsInfo delegates to the internal system implementation.
 func NewOsInfo() *OsInfo {
 	return system.NewOsInfo()
@@ -34,14 +39,29 @@ func NewRuntimeInfo() *RuntimeInfo {
 	return system.NewRuntimeInfo()
 }
 
+// NewRuntimeInfoWithOptions delegates to the internal system implementation.
+func NewRuntimeInfoWithOptions(opts ...RuntimeInfoOption) *RuntimeInfo {
+	return system.NewRuntimeInfoWithOptions(opts...)
+}
+
 // GetHostInfo delegates to the internal system implementation.
 func GetHostInfo() *HostInfo {
 	return system.GetHostInfo()
 }
 
+// GetHostInfoWithOptions delegates to the internal system implementation.
+func GetHostInfoWithOptions(opts ...HostInfoOption) *HostInfo {
+	return system.GetHostInfoWithOptions(opts...)
+}
+
 // GetOsInfo delegates to the internal system implementation.
 func GetOsInfo() *OsInfo {
 	return system.GetOsInfo()
+}
+
+// GetOsInfoWithOptions delegates to the internal system implementation.
+func GetOsInfoWithOptions(opts ...OsInfoOption) *OsInfo {
+	return system.GetOsInfoWithOptions(opts...)
 }
 
 // GetUserInfo delegates to the internal system implementation.
@@ -59,9 +79,19 @@ func GetGoInfo() *GoInfo {
 	return system.GetGoInfo()
 }
 
+// GetGoInfoWithOptions delegates to the internal system implementation.
+func GetGoInfoWithOptions(opts ...GoInfoOption) *GoInfo {
+	return system.GetGoInfoWithOptions(opts...)
+}
+
 // GetRuntimeInfo delegates to the internal system implementation.
 func GetRuntimeInfo() *RuntimeInfo {
 	return system.GetRuntimeInfo()
+}
+
+// GetRuntimeInfoWithOptions delegates to the internal system implementation.
+func GetRuntimeInfoWithOptions(opts ...RuntimeInfoOption) *RuntimeInfo {
+	return system.GetRuntimeInfoWithOptions(opts...)
 }
 
 // GetCurrentPID delegates to the internal system implementation.
@@ -69,9 +99,19 @@ func GetCurrentPID() int {
 	return system.GetCurrentPID()
 }
 
+// GetCurrentPIDWithOptions delegates to the internal system implementation.
+func GetCurrentPIDWithOptions(opts ...ProcessOption) int {
+	return system.GetCurrentPIDWithOptions(opts...)
+}
+
 // GetTotalMemory delegates to the internal system implementation.
 func GetTotalMemory() uint64 {
 	return system.GetTotalMemory()
+}
+
+// GetTotalMemoryWithOptions delegates to the internal system implementation.
+func GetTotalMemoryWithOptions(opts ...RuntimeInfoOption) uint64 {
+	return system.GetTotalMemoryWithOptions(opts...)
 }
 
 // GetFreeMemory delegates to the internal system implementation.
@@ -79,9 +119,19 @@ func GetFreeMemory() uint64 {
 	return system.GetFreeMemory()
 }
 
+// GetFreeMemoryWithOptions delegates to the internal system implementation.
+func GetFreeMemoryWithOptions(opts ...RuntimeInfoOption) uint64 {
+	return system.GetFreeMemoryWithOptions(opts...)
+}
+
 // GetMaxMemory delegates to the internal system implementation.
 func GetMaxMemory() uint64 {
 	return system.GetMaxMemory()
+}
+
+// GetMaxMemoryWithOptions delegates to the internal system implementation.
+func GetMaxMemoryWithOptions(opts ...RuntimeInfoOption) uint64 {
+	return system.GetMaxMemoryWithOptions(opts...)
 }
 
 // GetTotalThreadCount delegates to the internal system implementation.
@@ -89,9 +139,19 @@ func GetTotalThreadCount() int {
 	return system.GetTotalThreadCount()
 }
 
+// GetTotalThreadCountWithOptions delegates to the internal system implementation.
+func GetTotalThreadCountWithOptions(opts ...ProcessOption) int {
+	return system.GetTotalThreadCountWithOptions(opts...)
+}
+
 // Get delegates to the internal system implementation.
 func Get(key string, quiet bool) string {
 	return system.Get(key, quiet)
+}
+
+// GetWithOptions delegates to the internal system implementation.
+func GetWithOptions(key string, quiet bool, opts ...EnvOption) string {
+	return system.GetWithOptions(key, quiet, opts...)
 }
 
 // GetOrDefault delegates to the internal system implementation.
@@ -99,14 +159,29 @@ func GetOrDefault(key, def string) string {
 	return system.GetOrDefault(key, def)
 }
 
+// GetOrDefaultWithOptions delegates to the internal system implementation.
+func GetOrDefaultWithOptions(key, def string, opts ...EnvOption) string {
+	return system.GetOrDefaultWithOptions(key, def, opts...)
+}
+
 // GetInt delegates to the internal system implementation.
 func GetInt(key string, def int) int {
 	return system.GetInt(key, def)
 }
 
+// GetIntWithOptions delegates to the internal system implementation.
+func GetIntWithOptions(key string, def int, opts ...EnvOption) int {
+	return system.GetIntWithOptions(key, def, opts...)
+}
+
 // GetBool delegates to the internal system implementation.
 func GetBool(key string, def bool) bool {
 	return system.GetBool(key, def)
+}
+
+// GetBoolWithOptions delegates to the internal system implementation.
+func GetBoolWithOptions(key string, def bool, opts ...EnvOption) bool {
+	return system.GetBoolWithOptions(key, def, opts...)
 }
 
 // NewUserInfo delegates to the internal system implementation.

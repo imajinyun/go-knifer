@@ -23,16 +23,110 @@ var (
 	runtimeRef  *RuntimeInfo
 )
 
+type processConfig struct {
+	pid          func() int
+	numGoroutine func() int
+}
+
+// ProcessOption customizes process/runtime scalar helpers per call.
+type ProcessOption func(*processConfig)
+
+// WithPIDFunc sets the function used to collect the current process id.
+func WithPIDFunc(fn func() int) ProcessOption {
+	return func(c *processConfig) {
+		if fn != nil {
+			c.pid = fn
+		}
+	}
+}
+
+// WithProcessNumGoroutineFunc sets the function used by process scalar helpers to collect goroutine count.
+func WithProcessNumGoroutineFunc(fn func() int) ProcessOption {
+	return func(c *processConfig) {
+		if fn != nil {
+			c.numGoroutine = fn
+		}
+	}
+}
+
+func applyProcessOptions(opts []ProcessOption) processConfig {
+	cfg := processConfig{pid: os.Getpid, numGoroutine: runtime.NumGoroutine}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.pid == nil {
+		cfg.pid = os.Getpid
+	}
+	if cfg.numGoroutine == nil {
+		cfg.numGoroutine = runtime.NumGoroutine
+	}
+	return cfg
+}
+
+type envConfig struct {
+	lookup        func(string) (string, bool)
+	warningWriter io.Writer
+}
+
+// EnvOption customizes environment helpers per call.
+type EnvOption func(*envConfig)
+
+// WithEnvLookupFunc sets the function used to look up environment variables.
+func WithEnvLookupFunc(fn func(string) (string, bool)) EnvOption {
+	return func(c *envConfig) {
+		if fn != nil {
+			c.lookup = fn
+		}
+	}
+}
+
+// WithEnvWarningWriter sets the writer used for missing-variable warnings.
+func WithEnvWarningWriter(w io.Writer) EnvOption {
+	return func(c *envConfig) {
+		if w != nil {
+			c.warningWriter = w
+		}
+	}
+}
+
+func applyEnvOptions(opts []EnvOption) envConfig {
+	cfg := envConfig{lookup: os.LookupEnv, warningWriter: os.Stderr}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.lookup == nil {
+		cfg.lookup = os.LookupEnv
+	}
+	if cfg.warningWriter == nil {
+		cfg.warningWriter = os.Stderr
+	}
+	return cfg
+}
+
 // GetHostInfo returns cached host information.
 func GetHostInfo() *HostInfo {
 	hostOnce.Do(func() { hostInfo = NewHostInfo() })
 	return hostInfo
 }
 
+// GetHostInfoWithOptions returns uncached host information collected with per-call options.
+func GetHostInfoWithOptions(opts ...HostInfoOption) *HostInfo {
+	return NewHostInfoWithOptions(opts...)
+}
+
 // GetOsInfo returns cached OS information.
 func GetOsInfo() *OsInfo {
 	osOnce.Do(func() { osInfo = NewOsInfo() })
 	return osInfo
+}
+
+// GetOsInfoWithOptions returns uncached OS information collected with per-call options.
+func GetOsInfoWithOptions(opts ...OsInfoOption) *OsInfo {
+	return NewOsInfoWithOptions(opts...)
 }
 
 // GetUserInfo returns cached user information.
@@ -52,15 +146,30 @@ func GetGoInfo() *GoInfo {
 	return goInfo
 }
 
+// GetGoInfoWithOptions returns uncached Go runtime metadata collected with per-call options.
+func GetGoInfoWithOptions(opts ...GoInfoOption) *GoInfo {
+	return NewGoInfoWithOptions(opts...)
+}
+
 // GetRuntimeInfo returns runtime memory information and refreshes it on each call.
 func GetRuntimeInfo() *RuntimeInfo {
 	runtimeOnce.Do(func() { runtimeRef = NewRuntimeInfo() })
 	return runtimeRef.Refresh()
 }
 
+// GetRuntimeInfoWithOptions returns uncached runtime information collected with per-call options.
+func GetRuntimeInfoWithOptions(opts ...RuntimeInfoOption) *RuntimeInfo {
+	return NewRuntimeInfoWithOptions(opts...)
+}
+
 // GetCurrentPID returns the current process PID.
 func GetCurrentPID() int {
-	return os.Getpid()
+	return GetCurrentPIDWithOptions()
+}
+
+// GetCurrentPIDWithOptions returns the current process PID using custom providers.
+func GetCurrentPIDWithOptions(opts ...ProcessOption) int {
+	return applyProcessOptions(opts).pid()
 }
 
 // GetTotalMemory returns total memory requested from the OS by the current Go program.
@@ -68,9 +177,19 @@ func GetTotalMemory() uint64 {
 	return GetRuntimeInfo().GetTotalMemory()
 }
 
+// GetTotalMemoryWithOptions returns total memory using custom runtime providers.
+func GetTotalMemoryWithOptions(opts ...RuntimeInfoOption) uint64 {
+	return GetRuntimeInfoWithOptions(opts...).GetTotalMemory()
+}
+
 // GetFreeMemory returns idle memory in the current Go program.
 func GetFreeMemory() uint64 {
 	return GetRuntimeInfo().GetFreeMemory()
+}
+
+// GetFreeMemoryWithOptions returns idle memory using custom runtime providers.
+func GetFreeMemoryWithOptions(opts ...RuntimeInfoOption) uint64 {
+	return GetRuntimeInfoWithOptions(opts...).GetFreeMemory()
 }
 
 // GetMaxMemory returns the detected memory upper bound for the current Go program.
@@ -78,24 +197,46 @@ func GetMaxMemory() uint64 {
 	return GetRuntimeInfo().GetMaxMemory()
 }
 
+// GetMaxMemoryWithOptions returns the memory upper bound using custom runtime providers.
+func GetMaxMemoryWithOptions(opts ...RuntimeInfoOption) uint64 {
+	return GetRuntimeInfoWithOptions(opts...).GetMaxMemory()
+}
+
 // GetTotalThreadCount returns the total goroutine count.
 func GetTotalThreadCount() int {
-	return runtime.NumGoroutine()
+	return GetTotalThreadCountWithOptions()
+}
+
+// GetTotalThreadCountWithOptions returns the goroutine count using custom providers.
+func GetTotalThreadCountWithOptions(opts ...ProcessOption) int {
+	return applyProcessOptions(opts).numGoroutine()
 }
 
 // Get returns an environment variable by key.
 // If quiet is false and the variable is missing, it prints a warning to stderr.
 func Get(key string, quiet bool) string {
-	v, ok := os.LookupEnv(key)
+	return GetWithOptions(key, quiet)
+}
+
+// GetWithOptions returns an environment variable by key using custom providers.
+// If quiet is false and the variable is missing, it prints a warning to the configured writer.
+func GetWithOptions(key string, quiet bool, opts ...EnvOption) string {
+	cfg := applyEnvOptions(opts)
+	v, ok := cfg.lookup(key)
 	if !ok && !quiet {
-		fmt.Fprintf(os.Stderr, "[gksystem] env %q not found\n", key)
+		_, _ = fmt.Fprintf(cfg.warningWriter, "[gksystem] env %q not found\n", key)
 	}
 	return v
 }
 
 // GetOrDefault returns an environment variable, or def when it is missing or empty.
 func GetOrDefault(key, def string) string {
-	v, ok := os.LookupEnv(key)
+	return GetOrDefaultWithOptions(key, def)
+}
+
+// GetOrDefaultWithOptions returns an environment variable, or def when it is missing or empty, using custom providers.
+func GetOrDefaultWithOptions(key, def string, opts ...EnvOption) string {
+	v, ok := applyEnvOptions(opts).lookup(key)
 	if !ok || v == "" {
 		return def
 	}
@@ -104,7 +245,12 @@ func GetOrDefault(key, def string) string {
 
 // GetInt returns an environment variable as an int, or def on conversion failure.
 func GetInt(key string, def int) int {
-	v, ok := os.LookupEnv(key)
+	return GetIntWithOptions(key, def)
+}
+
+// GetIntWithOptions returns an environment variable as an int, or def on conversion failure, using custom providers.
+func GetIntWithOptions(key string, def int, opts ...EnvOption) int {
+	v, ok := applyEnvOptions(opts).lookup(key)
 	if !ok {
 		return def
 	}
@@ -117,7 +263,12 @@ func GetInt(key string, def int) int {
 
 // GetBool returns an environment variable as a bool, or def on conversion failure.
 func GetBool(key string, def bool) bool {
-	v, ok := os.LookupEnv(key)
+	return GetBoolWithOptions(key, def)
+}
+
+// GetBoolWithOptions returns an environment variable as a bool, or def on conversion failure, using custom providers.
+func GetBoolWithOptions(key string, def bool, opts ...EnvOption) bool {
+	v, ok := applyEnvOptions(opts).lookup(key)
 	if !ok {
 		return def
 	}

@@ -2,8 +2,10 @@ package vsys_test
 
 import (
 	"bytes"
+	"net"
 	"os"
 	"os/user"
+	"runtime"
 	"testing"
 
 	"github.com/imajinyun/go-knifer/vsys"
@@ -14,12 +16,34 @@ func TestFacadeHostInfo(t *testing.T) {
 	if info == nil {
 		t.Fatal("expected non-nil host info")
 	}
+
+	_, ipNet, err := net.ParseCIDR("10.1.2.3/24")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ipNet.IP = net.ParseIP("10.1.2.3")
+	info = vsys.SysHostInfoWithOptions(
+		vsys.WithHostNameFunc(func() (string, error) { return "facade-host", nil }),
+		vsys.WithHostInterfaceAddrsFunc(func() ([]net.Addr, error) { return []net.Addr{ipNet}, nil }),
+	)
+	if info.GetName() != "facade-host" || info.GetAddress() != "10.1.2.3" {
+		t.Fatalf("SysHostInfoWithOptions = %#v", info)
+	}
+
+	info = vsys.NewHostInfoWithOptions(vsys.WithHostAddressFunc(func() string { return "198.51.100.2" }))
+	if info.GetAddress() != "198.51.100.2" {
+		t.Fatalf("NewHostInfoWithOptions address = %q", info.GetAddress())
+	}
 }
 
 func TestFacadeOsInfo(t *testing.T) {
 	info := vsys.SystemOsInfo()
 	if info == nil {
 		t.Fatal("expected non-nil os info")
+	}
+	info = vsys.SysOsInfoWithOptions(vsys.WithOSNameFunc(func() string { return "linux" }))
+	if info.GetName() != "linux" {
+		t.Fatalf("SysOsInfoWithOptions name = %q", info.GetName())
 	}
 }
 
@@ -31,7 +55,7 @@ func TestFacadeUserInfo(t *testing.T) {
 }
 
 func TestFacadeUserInfoOptions(t *testing.T) {
-	info := vsys.SystemUserInfoWithOptions(
+	info := vsys.SysUserInfoWithOptions(
 		vsys.WithCurrentUserFunc(func() (*user.User, error) {
 			return &user.User{Username: "facade-user", HomeDir: "/home/facade"}, nil
 		}),
@@ -49,7 +73,7 @@ func TestFacadeUserInfoOptions(t *testing.T) {
 		t.Fatalf("SystemUserInfoWithOptions = %#v", info)
 	}
 	if info.GetLanguage() != "zh" || info.GetCountry() != "CN" {
-		t.Fatalf("SystemUserInfoWithOptions locale = %s/%s", info.GetLanguage(), info.GetCountry())
+		t.Fatalf("SysUserInfoWithOptions locale = %s/%s", info.GetLanguage(), info.GetCountry())
 	}
 
 	info = vsys.NewUserInfoWithOptions(vsys.WithCurrentUserFunc(func() (*user.User, error) {
@@ -64,6 +88,10 @@ func TestFacadeGoInfo(t *testing.T) {
 	info := vsys.SystemGoInfo()
 	if info == nil {
 		t.Fatal("expected non-nil go info")
+	}
+	info = vsys.SysGoInfoWithOptions(vsys.WithGoVersionFunc(func() string { return "go-sys" }))
+	if info.GetVersion() != "go-sys" {
+		t.Fatalf("SysGoInfoWithOptions version = %q", info.GetVersion())
 	}
 	info = vsys.NewGoInfoWithOptions(
 		vsys.WithGoVersionFunc(func() string { return "go-facade" }),
@@ -101,12 +129,30 @@ func TestFacadeRuntimeInfo(t *testing.T) {
 	if info == nil {
 		t.Fatal("expected non-nil runtime info")
 	}
+	info = vsys.SysRuntimeInfoWithOptions(
+		vsys.WithReadMemStatsFunc(func(stats *runtime.MemStats) {
+			stats.Sys = 4096
+			stats.HeapSys = 1024
+		}),
+		vsys.WithNumGoroutineFunc(func() int { return 5 }),
+	)
+	if info.GetMaxMemory() != 4096 || info.GetTotalMemory() != 1024 || info.GetGoroutineCount() != 5 {
+		t.Fatalf("SysRuntimeInfoWithOptions = %#v", info)
+	}
+
+	info = vsys.NewRuntimeInfoWithOptions(vsys.WithReadMemStatsFunc(func(stats *runtime.MemStats) { stats.Sys = 8192 }))
+	if info.GetMaxMemory() != 8192 {
+		t.Fatalf("NewRuntimeInfoWithOptions max = %d", info.GetMaxMemory())
+	}
 }
 
 func TestFacadePID(t *testing.T) {
 	pid := vsys.CurrentPID()
 	if pid <= 0 {
 		t.Fatalf("expected positive pid, got %d", pid)
+	}
+	if got := vsys.CurrentPIDWithOptions(vsys.WithPIDFunc(func() int { return 99 })); got != 99 {
+		t.Fatalf("CurrentPIDWithOptions = %d", got)
 	}
 }
 
@@ -117,12 +163,23 @@ func TestFacadeMemory(t *testing.T) {
 	if total == 0 && free == 0 && max == 0 {
 		t.Fatal("expected at least one memory metric to be non-zero")
 	}
+	opt := vsys.WithReadMemStatsFunc(func(stats *runtime.MemStats) {
+		stats.Sys = 300
+		stats.HeapSys = 200
+		stats.HeapIdle = 100
+	})
+	if vsys.MaxMemoryWithOptions(opt) != 300 || vsys.TotalMemoryWithOptions(opt) != 200 || vsys.FreeMemoryWithOptions(opt) != 100 {
+		t.Fatal("expected memory option providers to be used")
+	}
 }
 
 func TestFacadeGoroutineCount(t *testing.T) {
 	count := vsys.TotalGoroutineCount()
 	if count < 1 {
 		t.Fatalf("expected at least 1 goroutine, got %d", count)
+	}
+	if got := vsys.TotalGoroutineCountWithOptions(vsys.WithProcessNumGoroutineFunc(func() int { return 12 })); got != 12 {
+		t.Fatalf("TotalGoroutineCountWithOptions = %d", got)
 	}
 }
 
@@ -141,6 +198,35 @@ func TestFacadeEnv(t *testing.T) {
 	}
 	if got := vsys.EnvBool("GO_KNIFER_TEST_KEY", false); got != false {
 		t.Fatalf("expected false for non-bool env, got %v", got)
+	}
+
+	lookup := vsys.WithEnvLookupFunc(func(key string) (string, bool) {
+		switch key {
+		case "A":
+			return "value", true
+		case "N":
+			return "13", true
+		case "B":
+			return "true", true
+		default:
+			return "", false
+		}
+	})
+	var warning bytes.Buffer
+	if got := vsys.EnvWithOptions("A", lookup); got != "value" {
+		t.Fatalf("EnvWithOptions = %q", got)
+	}
+	if got := vsys.GetWithOptions("MISSING", false, lookup, vsys.WithEnvWarningWriter(&warning)); got != "" || warning.Len() == 0 {
+		t.Fatalf("GetWithOptions missing = %q warning=%q", got, warning.String())
+	}
+	if got := vsys.EnvOrDefaultWithOptions("MISSING", "def", lookup); got != "def" {
+		t.Fatalf("EnvOrDefaultWithOptions = %q", got)
+	}
+	if got := vsys.EnvIntWithOptions("N", 0, lookup); got != 13 {
+		t.Fatalf("EnvIntWithOptions = %d", got)
+	}
+	if got := vsys.EnvBoolWithOptions("B", false, lookup); !got {
+		t.Fatalf("EnvBoolWithOptions = %v", got)
 	}
 }
 

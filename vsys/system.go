@@ -2,7 +2,9 @@ package vsys
 
 import (
 	"io"
+	"net"
 	"os/user"
+	"runtime"
 
 	"github.com/imajinyun/go-knifer/internal/system"
 )
@@ -22,14 +24,41 @@ type GoInfo = system.GoInfo
 // RuntimeInfo describes current process runtime statistics.
 type RuntimeInfo = system.RuntimeInfo
 
+// HostInfoOption customizes host information collection per call.
+type HostInfoOption = system.HostInfoOption
+
 // GoInfoOption customizes Go runtime metadata collection per call.
 type GoInfoOption = system.GoInfoOption
 
 // OsInfoOption customizes OS information collection per call.
 type OsInfoOption = system.OsInfoOption
 
+// RuntimeInfoOption customizes runtime information collection per call.
+type RuntimeInfoOption = system.RuntimeInfoOption
+
+// ProcessOption customizes process/runtime scalar helpers per call.
+type ProcessOption = system.ProcessOption
+
+// EnvOption customizes environment helpers per call.
+type EnvOption = system.EnvOption
+
 // UserInfoOption customizes user information collection per call.
 type UserInfoOption = system.UserInfoOption
+
+// WithHostNameFunc sets the function used to collect the host name.
+func WithHostNameFunc(fn func() (string, error)) HostInfoOption {
+	return system.WithHostNameFunc(fn)
+}
+
+// WithHostInterfaceAddrsFunc sets the function used to collect local interface addresses.
+func WithHostInterfaceAddrsFunc(fn func() ([]net.Addr, error)) HostInfoOption {
+	return system.WithHostInterfaceAddrsFunc(fn)
+}
+
+// WithHostAddressFunc sets the function used to collect the host address directly.
+func WithHostAddressFunc(fn func() string) HostInfoOption {
+	return system.WithHostAddressFunc(fn)
+}
 
 // WithGoVersionFunc sets the function used to collect the Go version.
 func WithGoVersionFunc(fn func() string) GoInfoOption { return system.WithGoVersionFunc(fn) }
@@ -78,6 +107,32 @@ func WithOSPathSeparatorFunc(fn func() string) OsInfoOption {
 	return system.WithOSPathSeparatorFunc(fn)
 }
 
+// WithReadMemStatsFunc sets the function used to collect memory statistics.
+func WithReadMemStatsFunc(fn func(*runtime.MemStats)) RuntimeInfoOption {
+	return system.WithReadMemStatsFunc(fn)
+}
+
+// WithNumGoroutineFunc sets the function used to collect the goroutine count.
+func WithNumGoroutineFunc(fn func() int) RuntimeInfoOption {
+	return system.WithNumGoroutineFunc(fn)
+}
+
+// WithPIDFunc sets the function used to collect the current process id.
+func WithPIDFunc(fn func() int) ProcessOption { return system.WithPIDFunc(fn) }
+
+// WithProcessNumGoroutineFunc sets the function used by process scalar helpers to collect goroutine count.
+func WithProcessNumGoroutineFunc(fn func() int) ProcessOption {
+	return system.WithProcessNumGoroutineFunc(fn)
+}
+
+// WithEnvLookupFunc sets the function used to look up environment variables.
+func WithEnvLookupFunc(fn func(string) (string, bool)) EnvOption {
+	return system.WithEnvLookupFunc(fn)
+}
+
+// WithEnvWarningWriter sets the writer used for missing-variable warnings.
+func WithEnvWarningWriter(w io.Writer) EnvOption { return system.WithEnvWarningWriter(w) }
+
 // WithCurrentUserFunc sets the function used to discover the current OS user.
 func WithCurrentUserFunc(fn func() (*user.User, error)) UserInfoOption {
 	return system.WithCurrentUserFunc(fn)
@@ -99,49 +154,119 @@ func WithTempDirFunc(fn func() string) UserInfoOption { return system.WithTempDi
 // SystemHostInfo returns cached host information.
 func SystemHostInfo() *HostInfo { return system.GetHostInfo() }
 
+// SysHostInfoWithOptions returns uncached host information collected with per-call options.
+func SysHostInfoWithOptions(opts ...HostInfoOption) *HostInfo {
+	return system.GetHostInfoWithOptions(opts...)
+}
+
 // SystemOsInfo returns cached operating system information.
 func SystemOsInfo() *OsInfo { return system.GetOsInfo() }
+
+// SysOsInfoWithOptions returns uncached operating system information collected with per-call options.
+func SysOsInfoWithOptions(opts ...OsInfoOption) *OsInfo {
+	return system.GetOsInfoWithOptions(opts...)
+}
 
 // SystemUserInfo returns cached user information.
 func SystemUserInfo() *UserInfo { return system.GetUserInfo() }
 
+// SysUserInfoWithOptions returns uncached user information collected with per-call options.
+func SysUserInfoWithOptions(opts ...UserInfoOption) *UserInfo {
+	return system.GetUserInfoWithOptions(opts...)
+}
+
 // SystemUserInfoWithOptions returns uncached user information collected with per-call options.
 func SystemUserInfoWithOptions(opts ...UserInfoOption) *UserInfo {
-	return system.GetUserInfoWithOptions(opts...)
+	return SysUserInfoWithOptions(opts...)
 }
 
 // SystemGoInfo returns cached Go runtime metadata.
 func SystemGoInfo() *GoInfo { return system.GetGoInfo() }
 
+// SysGoInfoWithOptions returns uncached Go runtime metadata collected with per-call options.
+func SysGoInfoWithOptions(opts ...GoInfoOption) *GoInfo {
+	return system.GetGoInfoWithOptions(opts...)
+}
+
 // SystemRuntimeInfo returns refreshed runtime statistics.
 func SystemRuntimeInfo() *RuntimeInfo { return system.GetRuntimeInfo() }
+
+// SysRuntimeInfoWithOptions returns uncached runtime statistics collected with per-call options.
+func SysRuntimeInfoWithOptions(opts ...RuntimeInfoOption) *RuntimeInfo {
+	return system.GetRuntimeInfoWithOptions(opts...)
+}
 
 // CurrentPID returns the current process id.
 func CurrentPID() int { return system.GetCurrentPID() }
 
+// CurrentPIDWithOptions returns the current process id using custom providers.
+func CurrentPIDWithOptions(opts ...ProcessOption) int {
+	return system.GetCurrentPIDWithOptions(opts...)
+}
+
 // TotalMemory returns memory allocated from OS by the current Go process.
 func TotalMemory() uint64 { return system.GetTotalMemory() }
+
+// TotalMemoryWithOptions returns memory allocated from OS using custom runtime providers.
+func TotalMemoryWithOptions(opts ...RuntimeInfoOption) uint64 {
+	return system.GetTotalMemoryWithOptions(opts...)
+}
 
 // FreeMemory returns idle memory in the current Go process.
 func FreeMemory() uint64 { return system.GetFreeMemory() }
 
+// FreeMemoryWithOptions returns idle memory using custom runtime providers.
+func FreeMemoryWithOptions(opts ...RuntimeInfoOption) uint64 {
+	return system.GetFreeMemoryWithOptions(opts...)
+}
+
 // MaxMemory returns the detected memory upper bound.
 func MaxMemory() uint64 { return system.GetMaxMemory() }
+
+// MaxMemoryWithOptions returns the detected memory upper bound using custom runtime providers.
+func MaxMemoryWithOptions(opts ...RuntimeInfoOption) uint64 {
+	return system.GetMaxMemoryWithOptions(opts...)
+}
 
 // TotalGoroutineCount returns the current goroutine count.
 func TotalGoroutineCount() int { return system.GetTotalThreadCount() }
 
+// TotalGoroutineCountWithOptions returns the current goroutine count using custom providers.
+func TotalGoroutineCountWithOptions(opts ...ProcessOption) int {
+	return system.GetTotalThreadCountWithOptions(opts...)
+}
+
 // Env returns an environment variable value.
 func Env(key string) string { return system.Get(key, true) }
+
+// EnvWithOptions returns an environment variable value using custom providers.
+func EnvWithOptions(key string, opts ...EnvOption) string {
+	return system.GetWithOptions(key, true, opts...)
+}
 
 // EnvOrDefault returns an environment variable or def when empty/missing.
 func EnvOrDefault(key, def string) string { return system.GetOrDefault(key, def) }
 
+// EnvOrDefaultWithOptions returns an environment variable or def using custom providers.
+func EnvOrDefaultWithOptions(key, def string, opts ...EnvOption) string {
+	return system.GetOrDefaultWithOptions(key, def, opts...)
+}
+
 // EnvInt returns an int environment variable or def when missing/invalid.
 func EnvInt(key string, def int) int { return system.GetInt(key, def) }
 
+// EnvIntWithOptions returns an int environment variable or def using custom providers.
+func EnvIntWithOptions(key string, def int, opts ...EnvOption) int {
+	return system.GetIntWithOptions(key, def, opts...)
+}
+
 // EnvBool returns a bool environment variable or def when missing/invalid.
 func EnvBool(key string, def bool) bool { return system.GetBool(key, def) }
+
+// EnvBoolWithOptions returns a bool environment variable or def using custom providers.
+func EnvBoolWithOptions(key string, def bool, opts ...EnvOption) bool {
+	return system.GetBoolWithOptions(key, def, opts...)
+}
 
 // DumpSystemInfo writes system information to stdout.
 func DumpSystemInfo() { system.DumpSystemInfo() }
