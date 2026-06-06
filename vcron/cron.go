@@ -64,7 +64,7 @@ func NewCronPattern(expr string) (*CronPattern, error) { return cron.NewPattern(
 func MustNewCronPattern(expr string) *CronPattern { return cron.MustNewPattern(expr) }
 
 // NewScheduler creates a cron scheduler.
-func NewScheduler() *Scheduler { return cron.NewScheduler() }
+func NewScheduler() *Scheduler { return NewSchedulerWithOptions() }
 
 // WithLocation sets the scheduler time zone.
 func WithLocation(loc *time.Location) SchedulerOption { return cron.WithLocation(loc) }

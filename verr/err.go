@@ -78,13 +78,13 @@ type Wrapper = errimpl.Wrapper
 func NewCollector() *Collector { return errimpl.NewCollector() }
 
 // GetStack returns the stack attached to err, or the current goroutine stack.
-func GetStack(err error) string { return errimpl.GetStack(err) }
+func GetStack(err error) string { return GetStackWithOptions(err) }
 
 // ErrorIs is like errors.Is, but it also checks each member of a multierror.
 func ErrorIs(err error, target error) bool { return errimpl.ErrorIs(err, target) }
 
 // MustExit logs err and panics when err is non-nil.
-func MustExit(ctx context.Context, err error) { errimpl.MustExit(ctx, err) }
+func MustExit(ctx context.Context, err error) { MustExitWithOptions(ctx, err) }
 
 // MustExitWithOptions logs err and panics when err is non-nil with custom options.
 func MustExitWithOptions(ctx context.Context, err error, opts ...ExitOption) {
@@ -92,7 +92,7 @@ func MustExitWithOptions(ctx context.Context, err error, opts ...ExitOption) {
 }
 
 // Init configures logrus output and optional Sentry forwarding.
-func Init(sentryDSN string) { errimpl.Init(sentryDSN) }
+func Init(sentryDSN string) { InitWithOptions(WithSentryDSN(sentryDSN)) }
 
 // WithSentryDSN sets the DSN used for Sentry forwarding.
 func WithSentryDSN(dsn string) InitOption { return errimpl.WithSentryDSN(dsn) }
@@ -164,7 +164,7 @@ func RecoverWithoutError(f func(), format string, args ...any) error {
 }
 
 // GetStackTrace captures the current goroutine stack trace.
-func GetStackTrace(skip int) StackTrace { return errimpl.GetStackTrace(skip) }
+func GetStackTrace(skip int) StackTrace { return GetStackTraceWithOptions(WithStackSkip(skip)) }
 
 // WithStackSkip sets how many caller frames to skip while capturing a stack trace.
 func WithStackSkip(skip int) StackTraceOption { return errimpl.WithStackSkip(skip) }

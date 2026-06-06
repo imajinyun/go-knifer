@@ -81,7 +81,14 @@ func Base64Decrypt(cipherText string) (string, error) { return confimpl.Base64De
 func SchemaFromStruct(dst any) (Schema, error) { return confimpl.SchemaFromStruct(dst) }
 
 // LoadProfile loads a configuration file and applies profile-specific overrides.
-func LoadProfile(path, profile string) (*Conf, error) { return confimpl.LoadProfile(path, profile) }
+func LoadProfile(path, profile string) (*Conf, error) {
+	return LoadProfileWithOptions(path, profile, LoadOptions{})
+}
+
+// LoadProfileWithOptions loads a configuration file with options and applies profile-specific overrides.
+func LoadProfileWithOptions(path, profile string, opts LoadOptions) (*Conf, error) {
+	return confimpl.LoadProfileWithOptions(path, profile, opts)
+}
 
 // Parse 解析 setting/properties 文本内容。Parse parses setting/properties content.
 func Parse(content string) (*Conf, error) { return confimpl.Parse(content) }

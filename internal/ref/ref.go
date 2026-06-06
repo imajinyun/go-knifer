@@ -15,6 +15,31 @@ type FieldFilter func(reflect.StructField) bool
 // MethodFilter filters methods.
 type MethodFilter func(reflect.Method) bool
 
+type fieldAccessConfig struct {
+	unsafeAccess bool
+}
+
+// FieldAccessOption customizes field value access and mutation.
+type FieldAccessOption func(*fieldAccessConfig)
+
+// WithUnsafeAccess controls whether unexported addressable fields may be accessed via unsafe.
+func WithUnsafeAccess(enabled bool) FieldAccessOption {
+	return func(c *fieldAccessConfig) { c.unsafeAccess = enabled }
+}
+
+// WithAllowUnexported controls whether unexported addressable fields may be accessed via unsafe.
+func WithAllowUnexported(enabled bool) FieldAccessOption { return WithUnsafeAccess(enabled) }
+
+func applyFieldAccessOptions(opts []FieldAccessOption) fieldAccessConfig {
+	cfg := fieldAccessConfig{unsafeAccess: true}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	return cfg
+}
+
 // TypeOf returns the non-nil reflection type of object.
 func TypeOf(object any) reflect.Type {
 	if IsNil(object) {
@@ -145,11 +170,20 @@ func GetFieldsDirectly(target any, withEmbeddedFields bool) []reflect.StructFiel
 
 // GetFieldValue returns a field value by name. Missing or inaccessible fields return nil.
 func GetFieldValue(obj any, fieldName string) any {
+	return GetFieldValueWithOptions(obj, fieldName)
+}
+
+// GetFieldValueWithOptions returns a field value by name using per-call access options.
+func GetFieldValueWithOptions(obj any, fieldName string, opts ...FieldAccessOption) any {
 	v := fieldValue(obj, fieldName)
 	if !v.IsValid() {
 		return nil
 	}
-	return valueInterface(v)
+	value, ok := valueInterface(v, applyFieldAccessOptions(opts))
+	if !ok {
+		return nil
+	}
+	return value
 }
 
 // GetStaticFieldValue returns the value represented by value.
@@ -157,16 +191,24 @@ func GetStaticFieldValue(value any) any { return value }
 
 // GetFieldsValue returns values of all matched fields.
 func GetFieldsValue(obj any, filters ...FieldFilter) []any {
+	return GetFieldsValueWithOptions(obj, nil, filters...)
+}
+
+// GetFieldsValueWithOptions returns values of all matched fields using per-call access options.
+func GetFieldsValueWithOptions(obj any, opts []FieldAccessOption, filters ...FieldFilter) []any {
 	v := IndirectValue(reflect.ValueOf(obj))
 	if !v.IsValid() || v.Kind() != reflect.Struct {
 		return nil
 	}
+	cfg := applyFieldAccessOptions(opts)
 	fields := GetFields(v.Type(), filters...)
 	out := make([]any, 0, len(fields))
 	for _, field := range fields {
 		fv := fieldByIndex(v, field.Index)
 		if fv.IsValid() {
-			out = append(out, valueInterface(fv))
+			if value, ok := valueInterface(fv, cfg); ok {
+				out = append(out, value)
+			}
 		}
 	}
 	return out
@@ -174,11 +216,16 @@ func GetFieldsValue(obj any, filters ...FieldFilter) []any {
 
 // SetFieldValue sets a field by Go name or common tag alias.
 func SetFieldValue(obj any, fieldName string, value any) error {
+	return SetFieldValueWithOptions(obj, fieldName, value)
+}
+
+// SetFieldValueWithOptions sets a field by Go name or common tag alias using per-call access options.
+func SetFieldValueWithOptions(obj any, fieldName string, value any, opts ...FieldAccessOption) error {
 	v := fieldValue(obj, fieldName)
 	if !v.IsValid() {
 		return fmt.Errorf("field %q not found", fieldName)
 	}
-	return setValue(v, value)
+	return setValue(v, value, applyFieldAccessOptions(opts))
 }
 
 // IsOuterClassField reports false in Go; it is kept as a compatibility guard.
@@ -434,20 +481,23 @@ func fieldByIndex(v reflect.Value, index []int) reflect.Value {
 	return v
 }
 
-func valueInterface(v reflect.Value) any {
+func valueInterface(v reflect.Value, cfg fieldAccessConfig) (any, bool) {
 	if !v.IsValid() {
-		return nil
+		return nil, false
 	}
 	if v.CanInterface() {
-		return v.Interface()
+		return v.Interface(), true
+	}
+	if !cfg.unsafeAccess || !v.CanAddr() {
+		return nil, false
 	}
 	// #nosec G103 -- reflection helpers intentionally access unexported addressable fields.
-	return reflect.NewAt(v.Type(), unsafe.Pointer(v.UnsafeAddr())).Elem().Interface()
+	return reflect.NewAt(v.Type(), unsafe.Pointer(v.UnsafeAddr())).Elem().Interface(), true
 }
 
-func setValue(dst reflect.Value, value any) error {
+func setValue(dst reflect.Value, value any, cfg fieldAccessConfig) error {
 	if !dst.CanSet() {
-		if !dst.CanAddr() {
+		if !cfg.unsafeAccess || !dst.CanAddr() {
 			return errors.New("field cannot be set")
 		}
 		// #nosec G103 -- setter must address unexported fields when caller provides addressable values.
@@ -544,11 +594,12 @@ func call(fn reflect.Value, args []reflect.Value) (result any, err error) {
 		return nil, nil
 	}
 	if len(outs) == 1 {
-		return valueInterface(outs[0]), nil
+		value, _ := valueInterface(outs[0], fieldAccessConfig{unsafeAccess: true})
+		return value, nil
 	}
 	values := make([]any, len(outs))
 	for i, out := range outs {
-		values[i] = valueInterface(out)
+		values[i], _ = valueInterface(out, fieldAccessConfig{unsafeAccess: true})
 	}
 	return values, nil
 }

@@ -17,17 +17,20 @@ const (
 // RandomOption customizes per-call random helpers.
 type RandomOption = randimpl.RandomOption
 
-func Int(max int) int                         { return randimpl.RandomInt(max) }
-func IntRange(min, max int) int               { return randimpl.RandomIntRange(min, max) }
-func Long() int64                             { return randimpl.RandomLong() }
-func Float() float64                          { return randimpl.RandomFloat() }
-func Bool() bool                              { return randimpl.RandomBool() }
-func Bytes(n int) []byte                      { return randimpl.RandomBytes(n) }
-func String(n int) string                     { return randimpl.RandomString(n) }
-func Numbers(n int) string                    { return randimpl.RandomNumbers(n) }
-func StringUpper(n int) string                { return randimpl.RandomStringUpper(n) }
-func StringFrom(charset string, n int) string { return randimpl.RandomStringFrom(charset, n) }
-func Ele[T any](a []T) T                      { return randimpl.RandomEle(a) }
+func Int(max int) int           { return IntWithOptions(max) }
+func IntRange(min, max int) int { return IntRangeWithOptions(min, max) }
+func Long() int64               { return LongWithOptions() }
+func Float() float64            { return FloatWithOptions() }
+func Bool() bool                { return BoolWithOptions() }
+func Bytes(n int) []byte {
+	b, _ := BytesWithOptions(n)
+	return b
+}
+func String(n int) string                     { return StringWithOptions(n) }
+func Numbers(n int) string                    { return NumbersWithOptions(n) }
+func StringUpper(n int) string                { return StringUpperWithOptions(n) }
+func StringFrom(charset string, n int) string { return StringFromWithOptions(charset, n) }
+func Ele[T any](a []T) T                      { return EleWithOptions(a) }
 
 // WithRandomSource sets the pseudo-random source used by numeric, string, element, and fallback byte helpers.
 func WithRandomSource(source *mathrand.Rand) RandomOption { return randimpl.WithRandomSource(source) }

@@ -41,7 +41,8 @@ var (
 )
 
 type randomConfig struct {
-	reader io.Reader
+	reader         io.Reader
+	fallbackSource *mathrand.Rand
 }
 
 // RandomOption customizes random-byte based ID helpers.
@@ -50,6 +51,11 @@ type RandomOption func(*randomConfig)
 // WithRandomReader sets the random source used by ID helpers.
 func WithRandomReader(reader io.Reader) RandomOption {
 	return func(c *randomConfig) { c.reader = reader }
+}
+
+// WithFallbackRandomSource sets the pseudo-random fallback used when the primary random reader fails.
+func WithFallbackRandomSource(source *mathrand.Rand) RandomOption {
+	return func(c *randomConfig) { c.fallbackSource = source }
 }
 
 func applyRandomOptions(opts []RandomOption) randomConfig {
@@ -77,6 +83,11 @@ type ObjectIDOption func(*objectIDConfig)
 // WithObjectIDRandomReader sets the random source used by ObjectIdWithOptions.
 func WithObjectIDRandomReader(reader io.Reader) ObjectIDOption {
 	return func(c *objectIDConfig) { c.reader = reader }
+}
+
+// WithObjectIDFallbackRandomSource sets the fallback random source used when ObjectId random reads fail.
+func WithObjectIDFallbackRandomSource(source *mathrand.Rand) ObjectIDOption {
+	return func(c *objectIDConfig) { c.fallbackSource = source }
 }
 
 // WithObjectIDTimeFunc sets the time source used by ObjectIdWithOptions.
@@ -134,6 +145,11 @@ type SnowflakeOption func(*snowflakeConfig)
 // WithNanoIDRandomReader sets the random source used by NanoIdWithOptions.
 func WithNanoIDRandomReader(reader io.Reader) NanoIDOption {
 	return func(c *nanoIDConfig) { c.reader = reader }
+}
+
+// WithNanoIDFallbackRandomSource sets the fallback random source used when NanoId random reads fail.
+func WithNanoIDFallbackRandomSource(source *mathrand.Rand) NanoIDOption {
+	return func(c *nanoIDConfig) { c.fallbackSource = source }
 }
 
 // WithNanoIDAlphabet sets the alphabet used by NanoIdWithOptions.
@@ -253,7 +269,7 @@ func RandomUUID() string { return RandomUUIDWithOptions() }
 // RandomUUIDWithOptions returns a standard random UUID string using custom random options.
 func RandomUUIDWithOptions(opts ...RandomOption) string {
 	cfg := applyRandomOptions(opts)
-	return formatUUID(randomUUIDBytesFrom(cfg.reader), false)
+	return formatUUID(randomUUIDBytesFrom(cfg), false)
 }
 
 // SimpleUUID returns a 32-character UUID without hyphens.
@@ -262,20 +278,26 @@ func SimpleUUID() string { return SimpleUUIDWithOptions() }
 // SimpleUUIDWithOptions returns a 32-character UUID without hyphens using custom random options.
 func SimpleUUIDWithOptions(opts ...RandomOption) string {
 	cfg := applyRandomOptions(opts)
-	return formatUUID(randomUUIDBytesFrom(cfg.reader), true)
+	return formatUUID(randomUUIDBytesFrom(cfg), true)
 }
 
 // FastUUID returns a standard random UUID string.
 // Go uses crypto/rand directly here; the name is kept as a convenient alias.
 func FastUUID() string { return RandomUUID() }
 
+// FastUUIDWithOptions returns a standard random UUID string using custom random options.
+func FastUUIDWithOptions(opts ...RandomOption) string { return RandomUUIDWithOptions(opts...) }
+
 // FastSimpleUUID returns a 32-character UUID without hyphens.
 // Go uses crypto/rand directly here; the name is kept as a convenient alias.
 func FastSimpleUUID() string { return SimpleUUID() }
 
-func randomUUIDBytesFrom(reader io.Reader) []byte {
+// FastSimpleUUIDWithOptions returns a 32-character UUID without hyphens using custom random options.
+func FastSimpleUUIDWithOptions(opts ...RandomOption) string { return SimpleUUIDWithOptions(opts...) }
+
+func randomUUIDBytesFrom(cfg randomConfig) []byte {
 	b := make([]byte, 16)
-	fillRandomBytesFrom(reader, b)
+	fillRandomBytesWithConfig(cfg, b)
 	// version 4 / variant
 	b[6] = (b[6] & 0x0f) | 0x40
 	b[8] = (b[8] & 0x3f) | 0x80
@@ -301,7 +323,7 @@ func ObjectIdWithOptions(opts ...ObjectIDOption) string {
 	cfg := applyObjectIDOptions(opts)
 	now := uint32(cfg.now().Unix()) // #nosec G115 -- ObjectId timestamp is intentionally stored in 4 bytes.
 	rnd := make([]byte, 5)
-	fillRandomBytesFrom(cfg.reader, rnd)
+	fillRandomBytesWithConfig(cfg.randomConfig, rnd)
 	c := cfg.counter()
 	b := make([]byte, 12)
 	binary.BigEndian.PutUint32(b[0:4], now)
@@ -517,7 +539,12 @@ func NanoId() string { return NanoIdN(21) }
 
 // NanoIdN returns a NanoId with the specified length.
 func NanoIdN(n int) string {
-	return NanoIdWithOptions(WithNanoIDLength(n))
+	return NanoIdNWithOptions(n)
+}
+
+// NanoIdNWithOptions returns a NanoId with the specified length and custom options.
+func NanoIdNWithOptions(n int, opts ...NanoIDOption) string {
+	return NanoIdWithOptions(append([]NanoIDOption{WithNanoIDLength(n)}, opts...)...)
 }
 
 // NanoIdWithOptions returns a NanoId using custom generation options.
@@ -535,7 +562,7 @@ func NanoIdWithOptions(opts ...NanoIDOption) string {
 	out := make([]byte, 0, n)
 	buf := make([]byte, step)
 	for {
-		fillRandomBytesFrom(cfg.reader, buf)
+		fillRandomBytesWithConfig(cfg.randomConfig, buf)
 		for i := 0; i < step && len(out) < n; i++ {
 			idx := int(buf[i] & mask)
 			if idx < len(cfg.alphabet) {
@@ -550,13 +577,32 @@ func NanoIdWithOptions(opts ...NanoIDOption) string {
 }
 
 // GetSnowflakeNextID returns the next ID from the default singleton Snowflake generator.
-func GetSnowflakeNextID() int64 { return GetSnowflake().NextID() }
+func GetSnowflakeNextID() int64 { return GetSnowflakeNextIDWithOptions() }
+
+// GetSnowflakeNextIDWithOptions returns the next ID from the default singleton Snowflake generator.
+func GetSnowflakeNextIDWithOptions(opts ...SnowflakeOption) int64 {
+	return GetSnowflakeWithOptions(opts...).NextID()
+}
 
 // GetSnowflakeNextIDStr returns the next ID string from the default singleton Snowflake generator.
-func GetSnowflakeNextIDStr() string { return GetSnowflake().NextIDStr() }
+func GetSnowflakeNextIDStr() string { return GetSnowflakeNextIDStrWithOptions() }
 
-func fillRandomBytesFrom(reader io.Reader, buf []byte) {
-	if _, err := io.ReadFull(reader, buf); err != nil {
+// GetSnowflakeNextIDStrWithOptions returns the next ID string from the default singleton Snowflake generator.
+func GetSnowflakeNextIDStrWithOptions(opts ...SnowflakeOption) string {
+	return GetSnowflakeWithOptions(opts...).NextIDStr()
+}
+
+func fillRandomBytesWithConfig(cfg randomConfig, buf []byte) {
+	if cfg.reader == nil {
+		cfg.reader = cryptorand.Reader
+	}
+	if _, err := io.ReadFull(cfg.reader, buf); err != nil {
+		if cfg.fallbackSource != nil {
+			for i := range buf {
+				buf[i] = byte(cfg.fallbackSource.Intn(256)) // #nosec G115 -- Intn(256) always fits in byte.
+			}
+			return
+		}
 		defaultRandMu.Lock()
 		defer defaultRandMu.Unlock()
 		for i := range buf {

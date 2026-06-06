@@ -8,7 +8,7 @@ import (
 
 func IsValidPort(port int) bool { return netimpl.IsValidPort(port) }
 
-func IsUsableLocalPort(port int) bool { return netimpl.IsUsableLocalPort(port) }
+func IsUsableLocalPort(port int) bool { return IsUsableLocalPortWithOptions(port) }
 
 func WithPortNetwork(network string) PortOption { return netimpl.WithPortNetwork(network) }
 
@@ -22,20 +22,22 @@ func IsUsableLocalPortWithOptions(port int, opts ...PortOption) bool {
 	return netimpl.IsUsableLocalPortWithOptions(port, opts...)
 }
 
-func GetUsableLocalPort() (int, error) { return netimpl.GetUsableLocalPort() }
+func GetUsableLocalPort() (int, error) { return GetUsableLocalPortWithOptions() }
 
 func GetUsableLocalPortWithOptions(opts ...PortOption) (int, error) {
 	return netimpl.GetUsableLocalPortWithOptions(opts...)
 }
 
-func GetUsableLocalPortFrom(minPort int) (int, error) { return netimpl.GetUsableLocalPortFrom(minPort) }
+func GetUsableLocalPortFrom(minPort int) (int, error) {
+	return GetUsableLocalPortFromWithOptions(minPort)
+}
 
 func GetUsableLocalPortFromWithOptions(minPort int, opts ...PortOption) (int, error) {
 	return netimpl.GetUsableLocalPortFromWithOptions(minPort, opts...)
 }
 
 func GetUsableLocalPortInRange(minPort, maxPort int) (int, error) {
-	return netimpl.GetUsableLocalPortInRange(minPort, maxPort)
+	return GetUsableLocalPortInRangeWithOptions(minPort, maxPort)
 }
 
 func GetUsableLocalPortInRangeWithOptions(minPort, maxPort int, opts ...PortOption) (int, error) {
@@ -43,7 +45,7 @@ func GetUsableLocalPortInRangeWithOptions(minPort, maxPort int, opts ...PortOpti
 }
 
 func GetUsableLocalPorts(numRequested, minPort, maxPort int) ([]int, error) {
-	return netimpl.GetUsableLocalPorts(numRequested, minPort, maxPort)
+	return GetUsableLocalPortsWithOptions(numRequested, minPort, maxPort)
 }
 
 func GetUsableLocalPortsWithOptions(numRequested, minPort, maxPort int, opts ...PortOption) ([]int, error) {
@@ -51,7 +53,7 @@ func GetUsableLocalPortsWithOptions(numRequested, minPort, maxPort int, opts ...
 }
 
 func NewLocalPortGenerator(beginPort int) *LocalPortGenerator {
-	return netimpl.NewLocalPortGenerator(beginPort)
+	return NewLocalPortGeneratorWithOptions(beginPort)
 }
 
 func NewLocalPortGeneratorWithOptions(beginPort int, opts ...PortOption) *LocalPortGenerator {

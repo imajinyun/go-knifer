@@ -35,32 +35,32 @@ func WithNetHostnameFunc(fn func() (string, error)) InterfaceOption {
 }
 
 func GetNetworkInterface(name string) (*stdnet.Interface, error) {
-	return netimpl.GetNetworkInterface(name)
+	return GetNetworkInterfaceWithOptions(name)
 }
 
 func GetNetworkInterfaceWithOptions(name string, opts ...InterfaceOption) (*stdnet.Interface, error) {
 	return netimpl.GetNetworkInterfaceWithOptions(name, opts...)
 }
 
-func GetNetworkInterfaces() ([]stdnet.Interface, error) { return netimpl.GetNetworkInterfaces() }
+func GetNetworkInterfaces() ([]stdnet.Interface, error) { return GetNetworkInterfacesWithOptions() }
 
 func GetNetworkInterfacesWithOptions(opts ...InterfaceOption) ([]stdnet.Interface, error) {
 	return netimpl.GetNetworkInterfacesWithOptions(opts...)
 }
 
-func LocalIPv4s() []string { return netimpl.LocalIPv4s() }
+func LocalIPv4s() []string { return LocalIPv4sWithOptions() }
 
 func LocalIPv4sWithOptions(opts ...InterfaceOption) []string {
 	return netimpl.LocalIPv4sWithOptions(opts...)
 }
 
-func LocalIPv6s() []string { return netimpl.LocalIPv6s() }
+func LocalIPv6s() []string { return LocalIPv6sWithOptions() }
 
 func LocalIPv6sWithOptions(opts ...InterfaceOption) []string {
 	return netimpl.LocalIPv6sWithOptions(opts...)
 }
 
-func LocalIPs() []string { return netimpl.LocalIPs() }
+func LocalIPs() []string { return LocalIPsWithOptions() }
 
 func LocalIPsWithOptions(opts ...InterfaceOption) []string {
 	return netimpl.LocalIPsWithOptions(opts...)
@@ -69,7 +69,7 @@ func LocalIPsWithOptions(opts ...InterfaceOption) []string {
 func ToIPList(addressList []stdnet.IP) []string { return netimpl.ToIPList(addressList) }
 
 func LocalAddressList(addressFilter func(stdnet.IP) bool) []stdnet.IP {
-	return netimpl.LocalAddressList(addressFilter)
+	return LocalAddressListWithOptions(addressFilter)
 }
 
 func LocalAddressListWithOptions(addressFilter func(stdnet.IP) bool, opts ...InterfaceOption) []stdnet.IP {
@@ -77,39 +77,41 @@ func LocalAddressListWithOptions(addressFilter func(stdnet.IP) bool, opts ...Int
 }
 
 func LocalAddressListByInterface(interfaceFilter func(stdnet.Interface) bool, addressFilter func(stdnet.IP) bool) []stdnet.IP {
-	return netimpl.LocalAddressListByInterface(interfaceFilter, addressFilter)
+	return LocalAddressListByInterfaceWithOptions(interfaceFilter, addressFilter)
 }
 
 func LocalAddressListByInterfaceWithOptions(interfaceFilter func(stdnet.Interface) bool, addressFilter func(stdnet.IP) bool, opts ...InterfaceOption) []stdnet.IP {
 	return netimpl.LocalAddressListByInterfaceWithOptions(interfaceFilter, addressFilter, opts...)
 }
 
-func GetLocalhostStr() string { return netimpl.GetLocalhostStr() }
+func GetLocalhostStr() string { return GetLocalhostStrWithOptions() }
 
 func GetLocalhostStrWithOptions(opts ...InterfaceOption) string {
 	return netimpl.GetLocalhostStrWithOptions(opts...)
 }
 
-func GetLocalhost() stdnet.IP { return netimpl.GetLocalhost() }
+func GetLocalhost() stdnet.IP { return GetLocalhostWithOptions() }
 
 func GetLocalhostWithOptions(opts ...InterfaceOption) stdnet.IP {
 	return netimpl.GetLocalhostWithOptions(opts...)
 }
 
-func GetLocalHostName() string { return netimpl.GetLocalHostName() }
+func GetLocalHostName() string { return GetLocalHostNameWithOptions() }
 
 func GetLocalHostNameWithOptions(opts ...InterfaceOption) string {
 	return netimpl.GetLocalHostNameWithOptions(opts...)
 }
 
-func GetLocalMACAddress(separator ...string) string { return netimpl.GetLocalMACAddress(separator...) }
+func GetLocalMACAddress(separator ...string) string {
+	return GetLocalMACAddressWithOptions(nil, separator...)
+}
 
 func GetLocalMACAddressWithOptions(opts []InterfaceOption, separator ...string) string {
 	return netimpl.GetLocalMACAddressWithOptions(opts, separator...)
 }
 
 func GetMACAddress(inetAddress stdnet.IP, separator ...string) string {
-	return netimpl.GetMACAddress(inetAddress, separator...)
+	return GetMACAddressWithOptions(inetAddress, nil, separator...)
 }
 
 func GetMACAddressWithOptions(inetAddress stdnet.IP, opts []InterfaceOption, separator ...string) string {
@@ -117,14 +119,14 @@ func GetMACAddressWithOptions(inetAddress stdnet.IP, opts []InterfaceOption, sep
 }
 
 func GetHardwareAddress(inetAddress stdnet.IP) stdnet.HardwareAddr {
-	return netimpl.GetHardwareAddress(inetAddress)
+	return GetHardwareAddressWithOptions(inetAddress)
 }
 
 func GetHardwareAddressWithOptions(inetAddress stdnet.IP, opts ...InterfaceOption) stdnet.HardwareAddr {
 	return netimpl.GetHardwareAddressWithOptions(inetAddress, opts...)
 }
 
-func GetLocalHardwareAddress() stdnet.HardwareAddr { return netimpl.GetLocalHardwareAddress() }
+func GetLocalHardwareAddress() stdnet.HardwareAddr { return GetLocalHardwareAddressWithOptions() }
 
 func GetLocalHardwareAddressWithOptions(opts ...InterfaceOption) stdnet.HardwareAddr {
 	return netimpl.GetLocalHardwareAddressWithOptions(opts...)

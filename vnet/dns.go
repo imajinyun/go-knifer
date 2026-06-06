@@ -34,7 +34,7 @@ func IsUnknown(checkString string) bool { return netimpl.IsUnknown(checkString) 
 func ParseCookies(cookieStr string) []*http.Cookie { return netimpl.ParseCookies(cookieStr) }
 
 func GetDNSInfo(hostName string, attrNames ...string) ([]string, error) {
-	return netimpl.GetDNSInfo(hostName, attrNames...)
+	return GetDNSInfoWithOptions(hostName, WithDNSTypes(attrNames...))
 }
 
 func GetDNSInfoWithOptions(hostName string, opts ...ResolveOption) ([]string, error) {

@@ -116,7 +116,7 @@ func WithCreateTemp(createTemp CreateTempFunc) ArchiveOption {
 }
 
 // Open opens a ZIP file for reading.
-func Open(path string) (*archivezip.ReadCloser, error) { return zipimpl.Open(path) }
+func Open(path string) (*archivezip.ReadCloser, error) { return OpenWithOptions(path) }
 
 // OpenWithOptions opens a ZIP file for reading with per-call options.
 func OpenWithOptions(path string, opts ...ArchiveOption) (*archivezip.ReadCloser, error) {
@@ -130,7 +130,7 @@ func NewWriter(out io.Writer) *archivezip.Writer { return zipimpl.NewWriter(out)
 func GetStream(entry *archivezip.File) (io.ReadCloser, error) { return zipimpl.GetStream(entry) }
 
 // Append appends srcPath into zipPath by rewriting the archive.
-func Append(zipPath, srcPath string) error { return zipimpl.Append(zipPath, srcPath) }
+func Append(zipPath, srcPath string) error { return AppendWithOptions(zipPath, srcPath) }
 
 // AppendWithOptions appends srcPath into zipPath by rewriting the archive with per-call options.
 func AppendWithOptions(zipPath, srcPath string, opts ...ArchiveOption) error {
@@ -147,7 +147,7 @@ func ZipTo(srcPath, zipPath string, withSrcDir bool) error {
 
 // ZipFiles creates a ZIP archive from source files or directories.
 func ZipFiles(dest string, withSrcDir bool, srcFiles ...string) error {
-	return zipimpl.ZipFiles(dest, withSrcDir, srcFiles...)
+	return ZipFilesWithOptions(dest, withSrcDir, srcFiles)
 }
 
 // ZipFilesWithOptions creates a ZIP archive from source files or directories with per-call options.
@@ -162,7 +162,7 @@ func ZipFilesUsingOptions(dest string, srcFiles []string, opts ...ArchiveOption)
 
 // ZipFilesFilter creates a ZIP archive and filters source paths.
 func ZipFilesFilter(dest string, withSrcDir bool, filter FileFilter, srcFiles ...string) error {
-	return zipimpl.ZipFilesFilter(dest, withSrcDir, filter, srcFiles...)
+	return ZipFilesFilterWithOptions(dest, withSrcDir, filter, srcFiles)
 }
 
 // ZipFilesFilterWithOptions creates a ZIP archive with source filtering and per-call options.
@@ -172,7 +172,7 @@ func ZipFilesFilterWithOptions(dest string, withSrcDir bool, filter FileFilter, 
 
 // ZipToWriter writes source files or directories into out as a ZIP archive.
 func ZipToWriter(out io.Writer, withSrcDir bool, filter FileFilter, srcFiles ...string) error {
-	return zipimpl.ZipToWriter(out, withSrcDir, filter, srcFiles...)
+	return ZipToWriterWithOptions(out, withSrcDir, filter, srcFiles)
 }
 
 // ZipToWriterWithOptions writes source files or directories into out as a ZIP archive with per-call options.
@@ -193,7 +193,7 @@ func ZipBytes(zipFile, path string, data []byte) error { return zipimpl.ZipBytes
 
 // ZipEntries creates or overwrites zipFile and adds in-memory entries.
 func ZipEntries(zipFile string, entries ...EntryData) error {
-	return zipimpl.ZipEntries(zipFile, entries...)
+	return ZipEntriesWithOptions(zipFile, entries)
 }
 
 // ZipEntriesWithOptions creates or overwrites zipFile and adds in-memory entries with per-call options.
@@ -203,7 +203,7 @@ func ZipEntriesWithOptions(zipFile string, entries []EntryData, opts ...ArchiveO
 
 // ZipEntriesToWriter writes in-memory entries into out as a ZIP archive.
 func ZipEntriesToWriter(out io.Writer, entries ...EntryData) error {
-	return zipimpl.ZipEntriesToWriter(out, entries...)
+	return ZipEntriesToWriterWithOptions(out, entries)
 }
 
 // ZipEntriesToWriterWithOptions writes in-memory entries into out as a ZIP archive with per-call options.
@@ -213,7 +213,7 @@ func ZipEntriesToWriterWithOptions(out io.Writer, entries []EntryData, opts ...A
 
 // ZipStreams creates or overwrites zipFile and adds stream entries.
 func ZipStreams(zipFile string, entries ...StreamEntry) error {
-	return zipimpl.ZipStreams(zipFile, entries...)
+	return ZipStreamsWithOptions(zipFile, entries)
 }
 
 // ZipStreamsWithOptions creates or overwrites zipFile and adds stream entries with per-call options.
@@ -223,7 +223,7 @@ func ZipStreamsWithOptions(zipFile string, entries []StreamEntry, opts ...Archiv
 
 // ZipStreamsToWriter writes stream entries into out as a ZIP archive.
 func ZipStreamsToWriter(out io.Writer, entries ...StreamEntry) error {
-	return zipimpl.ZipStreamsToWriter(out, entries...)
+	return ZipStreamsToWriterWithOptions(out, entries)
 }
 
 // ZipStreamsToWriterWithOptions writes stream entries into out as a ZIP archive with per-call options.
@@ -235,7 +235,7 @@ func ZipStreamsToWriterWithOptions(out io.Writer, entries []StreamEntry, opts ..
 func Unzip(zipFile string) (string, error) { return zipimpl.Unzip(zipFile) }
 
 // UnzipTo extracts zipFile into destDir.
-func UnzipTo(zipFile, destDir string) error { return zipimpl.UnzipTo(zipFile, destDir) }
+func UnzipTo(zipFile, destDir string) error { return UnzipToWithOptions(zipFile, destDir) }
 
 // UnzipToLimit extracts zipFile into destDir and optionally limits total uncompressed size.
 func UnzipToLimit(zipFile, destDir string, limit int64) error {
@@ -249,7 +249,7 @@ func UnzipToWithOptions(zipFile, destDir string, opts ...ArchiveOption) error {
 
 // UnzipReaderTo extracts archive reader contents into destDir.
 func UnzipReaderTo(r *archivezip.Reader, destDir string) error {
-	return zipimpl.UnzipReaderTo(r, destDir)
+	return UnzipReaderToWithOptions(r, destDir)
 }
 
 // UnzipReaderToLimit extracts archive reader contents into destDir and optionally limits total size.
@@ -263,7 +263,7 @@ func UnzipReaderToWithOptions(r *archivezip.Reader, destDir string, opts ...Arch
 }
 
 // Get returns a reader for the named entry in zipFile.
-func Get(zipFile, name string) (io.ReadCloser, error) { return zipimpl.Get(zipFile, name) }
+func Get(zipFile, name string) (io.ReadCloser, error) { return GetWithOptions(zipFile, name) }
 
 // GetWithOptions returns a reader for the named entry in zipFile with per-call options.
 func GetWithOptions(zipFile, name string, opts ...ArchiveOption) (io.ReadCloser, error) {
@@ -271,7 +271,7 @@ func GetWithOptions(zipFile, name string, opts ...ArchiveOption) (io.ReadCloser,
 }
 
 // GetBytes returns the content of the named entry in zipFile.
-func GetBytes(zipFile, name string) ([]byte, error) { return zipimpl.GetBytes(zipFile, name) }
+func GetBytes(zipFile, name string) ([]byte, error) { return GetBytesWithOptions(zipFile, name) }
 
 // GetBytesWithOptions returns the content of the named entry in zipFile with per-call options.
 func GetBytesWithOptions(zipFile, name string, opts ...ArchiveOption) ([]byte, error) {
@@ -280,7 +280,7 @@ func GetBytesWithOptions(zipFile, name string, opts ...ArchiveOption) ([]byte, e
 
 // Read walks every archive entry and calls consumer.
 func Read(zipFile string, consumer func(*archivezip.File) error) error {
-	return zipimpl.Read(zipFile, consumer)
+	return ReadWithOptions(zipFile, consumer)
 }
 
 // ReadWithOptions walks every archive entry and calls consumer using per-call options.
@@ -289,7 +289,9 @@ func ReadWithOptions(zipFile string, consumer func(*archivezip.File) error, opts
 }
 
 // ListFileNames returns direct file names under dir inside zipFile.
-func ListFileNames(zipFile, dir string) ([]string, error) { return zipimpl.ListFileNames(zipFile, dir) }
+func ListFileNames(zipFile, dir string) ([]string, error) {
+	return ListFileNamesWithOptions(zipFile, dir)
+}
 
 // ListFileNamesWithOptions returns direct file names under dir inside zipFile using per-call options.
 func ListFileNamesWithOptions(zipFile, dir string, opts ...ArchiveOption) ([]string, error) {
@@ -297,7 +299,7 @@ func ListFileNamesWithOptions(zipFile, dir string, opts ...ArchiveOption) ([]str
 }
 
 // Gzip compresses data using gzip.
-func Gzip(data []byte) ([]byte, error) { return zipimpl.Gzip(data) }
+func Gzip(data []byte) ([]byte, error) { return GzipWithOptions(data) }
 
 // GzipWithOptions compresses data using gzip with per-call options.
 func GzipWithOptions(data []byte, opts ...ArchiveOption) ([]byte, error) {
@@ -308,7 +310,7 @@ func GzipWithOptions(data []byte, opts ...ArchiveOption) ([]byte, error) {
 func GzipString(content string) ([]byte, error) { return zipimpl.GzipString(content) }
 
 // GzipFile compresses a file using gzip and returns compressed bytes.
-func GzipFile(path string) ([]byte, error) { return zipimpl.GzipFile(path) }
+func GzipFile(path string) ([]byte, error) { return GzipFileWithOptions(path) }
 
 // GzipFileWithOptions compresses a file using gzip and per-call options.
 func GzipFileWithOptions(path string, opts ...ArchiveOption) ([]byte, error) {
@@ -317,7 +319,7 @@ func GzipFileWithOptions(path string, opts ...ArchiveOption) ([]byte, error) {
 
 // GzipReader compresses all bytes from r using gzip.
 func GzipReader(r io.Reader, estimatedLength int) ([]byte, error) {
-	return zipimpl.GzipReader(r, estimatedLength)
+	return GzipReaderWithOptions(r, estimatedLength)
 }
 
 // GzipReaderWithOptions compresses all bytes from r using gzip with per-call options.
@@ -326,7 +328,7 @@ func GzipReaderWithOptions(r io.Reader, estimatedLength int, opts ...ArchiveOpti
 }
 
 // UnGzip decompresses gzip data.
-func UnGzip(data []byte) ([]byte, error) { return zipimpl.UnGzip(data) }
+func UnGzip(data []byte) ([]byte, error) { return UnGzipWithOptions(data) }
 
 // UnGzipWithOptions decompresses gzip data with per-call options.
 func UnGzipWithOptions(data []byte, opts ...ArchiveOption) ([]byte, error) {
@@ -341,7 +343,7 @@ func UnGzipString(data []byte) (string, error) { return zipimpl.UnGzipString(dat
 
 // UnGzipReader decompresses all gzip bytes from r.
 func UnGzipReader(r io.Reader, estimatedLength int) ([]byte, error) {
-	return zipimpl.UnGzipReader(r, estimatedLength)
+	return UnGzipReaderWithOptions(r, estimatedLength)
 }
 
 // UnGzipReaderWithOptions decompresses gzip bytes from r with per-call options.
@@ -356,7 +358,7 @@ func Zlib(data []byte) ([]byte, error) { return zipimpl.Zlib(data) }
 func ZlibString(content string, level int) ([]byte, error) { return zipimpl.ZlibString(content, level) }
 
 // ZlibFile compresses a file using zlib with the specified compression level.
-func ZlibFile(path string, level int) ([]byte, error) { return zipimpl.ZlibFile(path, level) }
+func ZlibFile(path string, level int) ([]byte, error) { return ZlibFileWithOptions(path, level) }
 
 // ZlibFileWithOptions compresses a file using zlib with the specified compression level and per-call options.
 func ZlibFileWithOptions(path string, level int, opts ...ArchiveOption) ([]byte, error) {
@@ -372,7 +374,7 @@ func ZlibReader(r io.Reader, level, estimatedLength int) ([]byte, error) {
 }
 
 // UnZlib decompresses zlib data.
-func UnZlib(data []byte) ([]byte, error) { return zipimpl.UnZlib(data) }
+func UnZlib(data []byte) ([]byte, error) { return UnZlibWithOptions(data) }
 
 // UnZlibWithOptions decompresses zlib data with per-call options.
 func UnZlibWithOptions(data []byte, opts ...ArchiveOption) ([]byte, error) {
@@ -387,7 +389,7 @@ func UnZlibString(data []byte) (string, error) { return zipimpl.UnZlibString(dat
 
 // UnZlibReader decompresses all zlib bytes from r.
 func UnZlibReader(r io.Reader, estimatedLength int) ([]byte, error) {
-	return zipimpl.UnZlibReader(r, estimatedLength)
+	return UnZlibReaderWithOptions(r, estimatedLength)
 }
 
 // UnZlibReaderWithOptions decompresses zlib bytes from r with per-call options.
@@ -396,7 +398,7 @@ func UnZlibReaderWithOptions(r io.Reader, estimatedLength int, opts ...ArchiveOp
 }
 
 // ReadFile reads a file from disk. It is useful when composing in-memory archive entries.
-func ReadFile(path string) ([]byte, error) { return zipimpl.ReadFile(path) }
+func ReadFile(path string) ([]byte, error) { return ReadFileWithOptions(path) }
 
 // ReadFileWithOptions reads a file using per-call archive options.
 func ReadFileWithOptions(path string, opts ...ArchiveOption) ([]byte, error) {

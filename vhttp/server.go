@@ -11,7 +11,7 @@ import (
 )
 
 // NewSimpleServer creates a simple HTTP server on port.
-func NewSimpleServer(port int) *SimpleServer { return httpx.NewSimpleServer(port) }
+func NewSimpleServer(port int) *SimpleServer { return NewSimpleServerWithOptions(port) }
 
 // NewSimpleServerWithOptions creates a simple HTTP server on port with options.
 func NewSimpleServerWithOptions(port int, opts ...ServerOption) *SimpleServer {
@@ -20,7 +20,7 @@ func NewSimpleServerWithOptions(port int, opts ...ServerOption) *SimpleServer {
 
 // NewSimpleServerAddr delegates to the internal httpx implementation.
 func NewSimpleServerAddr(addr string) *SimpleServer {
-	return httpx.NewSimpleServerAddr(addr)
+	return NewSimpleServerAddrWithOptions(addr)
 }
 
 // NewSimpleServerAddrWithOptions creates a simple HTTP server on addr with options.

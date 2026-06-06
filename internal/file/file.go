@@ -313,11 +313,21 @@ func FileReadLinesWithOptions(path string, opts ...ReadOption) ([]string, error)
 
 // FileWriteString writes content to a file, overwriting existing data and creating parent directories.
 func FileWriteString(path, content string, opts ...WriteOption) error {
-	return FileWriteBytes(path, []byte(content), opts...)
+	return FileWriteStringWithOptions(path, content, opts...)
+}
+
+// FileWriteStringWithOptions writes content to a file with per-call write options.
+func FileWriteStringWithOptions(path, content string, opts ...WriteOption) error {
+	return FileWriteBytesWithOptions(path, []byte(content), opts...)
 }
 
 // FileWriteBytes writes bytes to a file, overwriting existing data and creating parent directories.
 func FileWriteBytes(path string, data []byte, opts ...WriteOption) error {
+	return FileWriteBytesWithOptions(path, data, opts...)
+}
+
+// FileWriteBytesWithOptions writes bytes to a file with per-call write options.
+func FileWriteBytesWithOptions(path string, data []byte, opts ...WriteOption) error {
 	cfg := applyWriteOptions(opts)
 	if err := ensureWriteParent(path, cfg); err != nil {
 		return err
@@ -331,6 +341,11 @@ func FileWriteBytes(path string, data []byte, opts ...WriteOption) error {
 
 // FileAppendString appends content to a file and creates parent directories when needed.
 func FileAppendString(path, content string, opts ...WriteOption) error {
+	return FileAppendStringWithOptions(path, content, opts...)
+}
+
+// FileAppendStringWithOptions appends content to a file with per-call write options.
+func FileAppendStringWithOptions(path, content string, opts ...WriteOption) error {
 	cfg := applyWriteOptions(opts)
 	if err := ensureWriteParent(path, cfg); err != nil {
 		return err
@@ -350,6 +365,11 @@ func FileAppendString(path, content string, opts ...WriteOption) error {
 
 // Mkdir creates a directory tree. Empty and current-directory paths are treated as no-ops.
 func Mkdir(dir string, opts ...DirOption) error {
+	return MkdirWithOptions(dir, opts...)
+}
+
+// MkdirWithOptions creates a directory tree with per-call directory options.
+func MkdirWithOptions(dir string, opts ...DirOption) error {
 	if dir == "" || dir == "." {
 		return nil
 	}
@@ -359,6 +379,11 @@ func Mkdir(dir string, opts ...DirOption) error {
 
 // Touch creates an empty file when it does not exist.
 func Touch(path string, opts ...WriteOption) error {
+	return TouchWithOptions(path, opts...)
+}
+
+// TouchWithOptions creates an empty file when it does not exist using per-call write options.
+func TouchWithOptions(path string, opts ...WriteOption) error {
 	cfg := applyWriteOptions(opts)
 	if FileExistsWithOptions(path, WithStat(cfg.stat)) {
 		return nil
@@ -389,6 +414,11 @@ func DelWithOptions(path string, opts ...DeleteOption) error {
 
 // FileCopy copies a file and overwrites the destination when it already exists.
 func FileCopy(src, dst string, opts ...WriteOption) error {
+	return FileCopyWithOptions(src, dst, opts...)
+}
+
+// FileCopyWithOptions copies a file using per-call write options.
+func FileCopyWithOptions(src, dst string, opts ...WriteOption) error {
 	cfg := applyWriteOptions(opts)
 	if !IsFileWithOptions(src, WithStat(cfg.stat)) {
 		return invalidInputf("source is not a file: %s", src)

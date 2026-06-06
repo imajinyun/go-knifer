@@ -42,6 +42,9 @@ type ProcessOption = system.ProcessOption
 // EnvOption customizes environment helpers per call.
 type EnvOption = system.EnvOption
 
+// DumpOption customizes system information dumping per call.
+type DumpOption = system.DumpOption
+
 // UserInfoOption customizes user information collection per call.
 type UserInfoOption = system.UserInfoOption
 
@@ -163,6 +166,27 @@ func WithWorkingDirFunc(fn func() (string, error)) UserInfoOption {
 
 // WithTempDirFunc sets the function used to discover the temporary directory.
 func WithTempDirFunc(fn func() string) UserInfoOption { return system.WithTempDirFunc(fn) }
+
+// WithDumpHostOptions sets host information providers used by DumpSystemInfoWithOptions.
+func WithDumpHostOptions(opts ...HostInfoOption) DumpOption {
+	return system.WithDumpHostOptions(opts...)
+}
+
+// WithDumpOsOptions sets OS information providers used by DumpSystemInfoWithOptions.
+func WithDumpOsOptions(opts ...OsInfoOption) DumpOption { return system.WithDumpOsOptions(opts...) }
+
+// WithDumpUserOptions sets user information providers used by DumpSystemInfoWithOptions.
+func WithDumpUserOptions(opts ...UserInfoOption) DumpOption {
+	return system.WithDumpUserOptions(opts...)
+}
+
+// WithDumpGoOptions sets Go runtime metadata providers used by DumpSystemInfoWithOptions.
+func WithDumpGoOptions(opts ...GoInfoOption) DumpOption { return system.WithDumpGoOptions(opts...) }
+
+// WithDumpRuntimeOptions sets runtime information providers used by DumpSystemInfoWithOptions.
+func WithDumpRuntimeOptions(opts ...RuntimeInfoOption) DumpOption {
+	return system.WithDumpRuntimeOptions(opts...)
+}
 
 // SystemHostInfo returns cached host information.
 func SystemHostInfo() *HostInfo { return system.GetHostInfo() }
@@ -289,3 +313,8 @@ func DumpSystemInfo() { system.DumpSystemInfo() }
 
 // DumpSystemInfoTo writes system information to w.
 func DumpSystemInfoTo(w io.Writer) { system.DumpSystemInfoTo(w) }
+
+// DumpSystemInfoWithOptions writes uncached system information to w using per-call providers.
+func DumpSystemInfoWithOptions(w io.Writer, opts ...DumpOption) {
+	system.DumpSystemInfoWithOptions(w, opts...)
+}

@@ -87,6 +87,52 @@ type envConfig struct {
 	warningWriter io.Writer
 }
 
+// DumpOption customizes system information dumping per call.
+type DumpOption func(*dumpConfig)
+
+type dumpConfig struct {
+	hostOpts    []HostInfoOption
+	osOpts      []OsInfoOption
+	userOpts    []UserInfoOption
+	goOpts      []GoInfoOption
+	runtimeOpts []RuntimeInfoOption
+}
+
+// WithDumpHostOptions sets host information providers used by DumpSystemInfoWithOptions.
+func WithDumpHostOptions(opts ...HostInfoOption) DumpOption {
+	return func(c *dumpConfig) { c.hostOpts = append([]HostInfoOption(nil), opts...) }
+}
+
+// WithDumpOsOptions sets OS information providers used by DumpSystemInfoWithOptions.
+func WithDumpOsOptions(opts ...OsInfoOption) DumpOption {
+	return func(c *dumpConfig) { c.osOpts = append([]OsInfoOption(nil), opts...) }
+}
+
+// WithDumpUserOptions sets user information providers used by DumpSystemInfoWithOptions.
+func WithDumpUserOptions(opts ...UserInfoOption) DumpOption {
+	return func(c *dumpConfig) { c.userOpts = append([]UserInfoOption(nil), opts...) }
+}
+
+// WithDumpGoOptions sets Go runtime metadata providers used by DumpSystemInfoWithOptions.
+func WithDumpGoOptions(opts ...GoInfoOption) DumpOption {
+	return func(c *dumpConfig) { c.goOpts = append([]GoInfoOption(nil), opts...) }
+}
+
+// WithDumpRuntimeOptions sets runtime information providers used by DumpSystemInfoWithOptions.
+func WithDumpRuntimeOptions(opts ...RuntimeInfoOption) DumpOption {
+	return func(c *dumpConfig) { c.runtimeOpts = append([]RuntimeInfoOption(nil), opts...) }
+}
+
+func applyDumpOptions(opts []DumpOption) dumpConfig {
+	cfg := dumpConfig{}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	return cfg
+}
+
 // EnvOption customizes environment helpers per call.
 type EnvOption func(*envConfig)
 
@@ -324,5 +370,25 @@ func DumpSystemInfoTo(w io.Writer) {
 	_, _ = fmt.Fprint(w, GetHostInfo())
 	_, _ = fmt.Fprint(w, sep)
 	_, _ = fmt.Fprint(w, GetRuntimeInfo())
+	_, _ = fmt.Fprint(w, sep)
+}
+
+// DumpSystemInfoWithOptions writes uncached system information to w using per-call providers.
+func DumpSystemInfoWithOptions(w io.Writer, opts ...DumpOption) {
+	if w == nil {
+		w = io.Discard
+	}
+	cfg := applyDumpOptions(opts)
+	const sep = "--------------\n"
+	_, _ = fmt.Fprint(w, sep)
+	_, _ = fmt.Fprint(w, GetGoInfoWithOptions(cfg.goOpts...))
+	_, _ = fmt.Fprint(w, sep)
+	_, _ = fmt.Fprint(w, GetOsInfoWithOptions(cfg.osOpts...))
+	_, _ = fmt.Fprint(w, sep)
+	_, _ = fmt.Fprint(w, GetUserInfoWithOptions(cfg.userOpts...))
+	_, _ = fmt.Fprint(w, sep)
+	_, _ = fmt.Fprint(w, GetHostInfoWithOptions(cfg.hostOpts...))
+	_, _ = fmt.Fprint(w, sep)
+	_, _ = fmt.Fprint(w, GetRuntimeInfoWithOptions(cfg.runtimeOpts...))
 	_, _ = fmt.Fprint(w, sep)
 }

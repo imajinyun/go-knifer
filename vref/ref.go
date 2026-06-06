@@ -7,9 +7,16 @@ import (
 )
 
 type (
-	FieldFilter  = refimpl.FieldFilter
-	MethodFilter = refimpl.MethodFilter
+	FieldFilter       = refimpl.FieldFilter
+	MethodFilter      = refimpl.MethodFilter
+	FieldAccessOption = refimpl.FieldAccessOption
 )
+
+// WithUnsafeAccess controls whether unexported addressable fields may be accessed via unsafe.
+func WithUnsafeAccess(enabled bool) FieldAccessOption { return refimpl.WithUnsafeAccess(enabled) }
+
+// WithAllowUnexported controls whether unexported addressable fields may be accessed via unsafe.
+func WithAllowUnexported(enabled bool) FieldAccessOption { return refimpl.WithAllowUnexported(enabled) }
 
 func TypeOf(object any) reflect.Type                  { return refimpl.TypeOf(object) }
 func IndirectType(typ reflect.Type) reflect.Type      { return refimpl.IndirectType(typ) }
@@ -32,14 +39,27 @@ func GetFields(target any, filters ...FieldFilter) []reflect.StructField {
 func GetFieldsDirectly(target any, withEmbeddedFields bool) []reflect.StructField {
 	return refimpl.GetFieldsDirectly(target, withEmbeddedFields)
 }
-func GetFieldValue(obj any, fieldName string) any { return refimpl.GetFieldValue(obj, fieldName) }
-func GetStaticFieldValue(value any) any           { return refimpl.GetStaticFieldValue(value) }
+func GetFieldValue(obj any, fieldName string) any { return GetFieldValueWithOptions(obj, fieldName) }
+
+func GetFieldValueWithOptions(obj any, fieldName string, opts ...FieldAccessOption) any {
+	return refimpl.GetFieldValueWithOptions(obj, fieldName, opts...)
+}
+
+func GetStaticFieldValue(value any) any { return refimpl.GetStaticFieldValue(value) }
 func GetFieldsValue(obj any, filters ...FieldFilter) []any {
-	return refimpl.GetFieldsValue(obj, filters...)
+	return GetFieldsValueWithOptions(obj, nil, filters...)
+}
+
+func GetFieldsValueWithOptions(obj any, opts []FieldAccessOption, filters ...FieldFilter) []any {
+	return refimpl.GetFieldsValueWithOptions(obj, opts, filters...)
 }
 
 func SetFieldValue(obj any, fieldName string, value any) error {
-	return refimpl.SetFieldValue(obj, fieldName, value)
+	return SetFieldValueWithOptions(obj, fieldName, value)
+}
+
+func SetFieldValueWithOptions(obj any, fieldName string, value any, opts ...FieldAccessOption) error {
+	return refimpl.SetFieldValueWithOptions(obj, fieldName, value, opts...)
 }
 func IsOuterClassField(field reflect.StructField) bool { return refimpl.IsOuterClassField(field) }
 func GetPublicMethodNames(target any) []string         { return refimpl.GetPublicMethodNames(target) }

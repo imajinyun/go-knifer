@@ -2,6 +2,7 @@ package vid
 
 import (
 	"io"
+	mathrand "math/rand"
 	"net"
 	"time"
 
@@ -21,15 +22,20 @@ type (
 	SnowflakeOption = idimpl.SnowflakeOption
 )
 
-func RandomUUID() string     { return idimpl.RandomUUID() }
-func SimpleUUID() string     { return idimpl.SimpleUUID() }
-func FastUUID() string       { return idimpl.FastUUID() }
-func FastSimpleUUID() string { return idimpl.FastSimpleUUID() }
-func UUID() string           { return idimpl.SimpleUUID() }
-func ObjectId() string       { return idimpl.ObjectId() }
+func RandomUUID() string     { return RandomUUIDWithOptions() }
+func SimpleUUID() string     { return SimpleUUIDWithOptions() }
+func FastUUID() string       { return FastUUIDWithOptions() }
+func FastSimpleUUID() string { return FastSimpleUUIDWithOptions() }
+func UUID() string           { return SimpleUUIDWithOptions() }
+func ObjectId() string       { return ObjectIdWithOptions() }
 
 // WithRandomReader sets the entropy source used by UUID helpers.
 func WithRandomReader(reader io.Reader) RandomOption { return idimpl.WithRandomReader(reader) }
+
+// WithFallbackRandomSource sets the fallback PRNG used when UUID random reads fail.
+func WithFallbackRandomSource(source *mathrand.Rand) RandomOption {
+	return idimpl.WithFallbackRandomSource(source)
+}
 
 // RandomUUIDWithOptions creates an RFC 4122 UUID with random options.
 func RandomUUIDWithOptions(opts ...RandomOption) string { return idimpl.RandomUUIDWithOptions(opts...) }
@@ -37,9 +43,22 @@ func RandomUUIDWithOptions(opts ...RandomOption) string { return idimpl.RandomUU
 // SimpleUUIDWithOptions creates a UUID without hyphens with random options.
 func SimpleUUIDWithOptions(opts ...RandomOption) string { return idimpl.SimpleUUIDWithOptions(opts...) }
 
+// FastUUIDWithOptions creates a UUID alias with random options.
+func FastUUIDWithOptions(opts ...RandomOption) string { return idimpl.FastUUIDWithOptions(opts...) }
+
+// FastSimpleUUIDWithOptions creates a simple UUID alias with random options.
+func FastSimpleUUIDWithOptions(opts ...RandomOption) string {
+	return idimpl.FastSimpleUUIDWithOptions(opts...)
+}
+
 // WithObjectIDRandomReader sets the random source used by ObjectIdWithOptions.
 func WithObjectIDRandomReader(reader io.Reader) ObjectIDOption {
 	return idimpl.WithObjectIDRandomReader(reader)
+}
+
+// WithObjectIDFallbackRandomSource sets the fallback PRNG used when ObjectId random reads fail.
+func WithObjectIDFallbackRandomSource(source *mathrand.Rand) ObjectIDOption {
+	return idimpl.WithObjectIDFallbackRandomSource(source)
 }
 
 // WithObjectIDTimeFunc sets the timestamp source used by ObjectIdWithOptions.
@@ -56,7 +75,7 @@ func WithObjectIDCounter(counter func() uint32) ObjectIDOption {
 func ObjectIdWithOptions(opts ...ObjectIDOption) string { return idimpl.ObjectIdWithOptions(opts...) }
 
 func CreateSnowflake(workerID, datacenterID int64) *Snowflake {
-	return idimpl.CreateSnowflake(workerID, datacenterID)
+	return CreateSnowflakeWithOptions(WithSnowflakeWorkerID(workerID), WithSnowflakeDatacenterID(datacenterID))
 }
 
 // WithSnowflakeWorkerID sets the Snowflake worker ID.
@@ -94,7 +113,7 @@ func CreateSnowflakeWithOptions(opts ...SnowflakeOption) *Snowflake {
 	return idimpl.CreateSnowflakeWithOptions(opts...)
 }
 
-func GetSnowflake() *Snowflake { return idimpl.GetSnowflake() }
+func GetSnowflake() *Snowflake { return GetSnowflakeWithOptions() }
 
 // GetSnowflakeWithOptions returns the default singleton Snowflake generator, creating it with options if needed.
 func GetSnowflakeWithOptions(opts ...SnowflakeOption) *Snowflake {
@@ -107,7 +126,7 @@ func ConfigureDefaultSnowflake(opts ...SnowflakeOption) *Snowflake {
 }
 
 func GetSnowflakeWithWorker(workerID int64) *Snowflake {
-	return idimpl.GetSnowflakeWithWorker(workerID)
+	return GetSnowflakeWithWorkerWithOptions(workerID)
 }
 
 // GetSnowflakeWithWorkerWithOptions returns a singleton Snowflake generator for workerID using custom defaults.
@@ -116,7 +135,7 @@ func GetSnowflakeWithWorkerWithOptions(workerID int64, opts ...SnowflakeOption) 
 }
 
 func GetSnowflakeWithWorkerDataCenter(workerID, datacenterID int64) *Snowflake {
-	return idimpl.GetSnowflakeWithWorkerDataCenter(workerID, datacenterID)
+	return GetSnowflakeWithWorkerDataCenterWithOptions(workerID, datacenterID)
 }
 
 // GetSnowflakeWithWorkerDataCenterWithOptions returns a singleton Snowflake generator for worker/datacenter pair using custom clock options.
@@ -124,7 +143,7 @@ func GetSnowflakeWithWorkerDataCenterWithOptions(workerID, datacenterID int64, o
 	return idimpl.GetSnowflakeWithWorkerDataCenterWithOptions(workerID, datacenterID, opts...)
 }
 
-func GetDataCenterID(maxDatacenterID int64) int64 { return idimpl.GetDataCenterID(maxDatacenterID) }
+func GetDataCenterID(maxDatacenterID int64) int64 { return GetDataCenterIDWithOptions(maxDatacenterID) }
 
 // GetDataCenterIDWithOptions derives a datacenter id using custom Snowflake providers.
 func GetDataCenterIDWithOptions(maxDatacenterID int64, opts ...SnowflakeOption) int64 {
@@ -132,7 +151,7 @@ func GetDataCenterIDWithOptions(maxDatacenterID int64, opts ...SnowflakeOption) 
 }
 
 func GetWorkerID(datacenterID, maxWorkerID int64) int64 {
-	return idimpl.GetWorkerID(datacenterID, maxWorkerID)
+	return GetWorkerIDWithOptions(datacenterID, maxWorkerID)
 }
 
 // GetWorkerIDWithOptions derives a worker id using custom Snowflake providers.
@@ -140,12 +159,17 @@ func GetWorkerIDWithOptions(datacenterID, maxWorkerID int64, opts ...SnowflakeOp
 	return idimpl.GetWorkerIDWithOptions(datacenterID, maxWorkerID, opts...)
 }
 
-func NanoId() string       { return idimpl.NanoId() }
-func NanoIdN(n int) string { return idimpl.NanoIdN(n) }
+func NanoId() string       { return NanoIdWithOptions() }
+func NanoIdN(n int) string { return NanoIdNWithOptions(n) }
 
 // WithNanoIDRandomReader sets the entropy source used by NanoIdWithOptions.
 func WithNanoIDRandomReader(reader io.Reader) NanoIDOption {
 	return idimpl.WithNanoIDRandomReader(reader)
+}
+
+// WithNanoIDFallbackRandomSource sets the fallback PRNG used when NanoId random reads fail.
+func WithNanoIDFallbackRandomSource(source *mathrand.Rand) NanoIDOption {
+	return idimpl.WithNanoIDFallbackRandomSource(source)
 }
 
 // WithNanoIDAlphabet sets the alphabet used by NanoIdWithOptions.
@@ -157,5 +181,21 @@ func WithNanoIDLength(length int) NanoIDOption { return idimpl.WithNanoIDLength(
 // NanoIdWithOptions creates a NanoId with custom generation options.
 func NanoIdWithOptions(opts ...NanoIDOption) string { return idimpl.NanoIdWithOptions(opts...) }
 
-func GetSnowflakeNextID() int64     { return idimpl.GetSnowflakeNextID() }
-func GetSnowflakeNextIDStr() string { return idimpl.GetSnowflakeNextIDStr() }
+// NanoIdNWithOptions creates a NanoId with explicit length and custom options.
+func NanoIdNWithOptions(n int, opts ...NanoIDOption) string {
+	return idimpl.NanoIdNWithOptions(n, opts...)
+}
+
+func GetSnowflakeNextID() int64 { return GetSnowflakeNextIDWithOptions() }
+
+// GetSnowflakeNextIDWithOptions returns the next ID from the default singleton Snowflake generator.
+func GetSnowflakeNextIDWithOptions(opts ...SnowflakeOption) int64 {
+	return idimpl.GetSnowflakeNextIDWithOptions(opts...)
+}
+
+func GetSnowflakeNextIDStr() string { return GetSnowflakeNextIDStrWithOptions() }
+
+// GetSnowflakeNextIDStrWithOptions returns the next ID string from the default singleton Snowflake generator.
+func GetSnowflakeNextIDStrWithOptions(opts ...SnowflakeOption) string {
+	return idimpl.GetSnowflakeNextIDStrWithOptions(opts...)
+}

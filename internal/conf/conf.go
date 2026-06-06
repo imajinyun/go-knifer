@@ -60,7 +60,12 @@ func Load(path string) (*Conf, error) {
 
 // LoadProfile loads a configuration file and applies profile-specific overrides.
 func LoadProfile(path, profile string) (*Conf, error) {
-	c, err := Load(path)
+	return LoadProfileWithOptions(path, profile, LoadOptions{})
+}
+
+// LoadProfileWithOptions loads a configuration file with options and applies profile-specific overrides.
+func LoadProfileWithOptions(path, profile string, opts LoadOptions) (*Conf, error) {
+	c, err := LoadWithOptions(path, opts)
 	if err != nil {
 		return nil, err
 	}
