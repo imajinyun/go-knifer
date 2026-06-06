@@ -104,7 +104,10 @@ func applyParse(opts []ParseOption) parseConfig {
 	return cfg
 }
 
-func defaultOpenFile(path string) (io.ReadCloser, error) { return os.Open(path) }
+func defaultOpenFile(path string) (io.ReadCloser, error) {
+	// #nosec G304 -- XML file helpers intentionally read the caller-provided path.
+	return os.Open(path)
+}
 
 // WithNamespaceAware controls whether parsed element names keep namespace URIs.
 func WithNamespaceAware(b bool) ParseOption {
@@ -182,6 +185,7 @@ func applyWrite(opts []WriteOption) writeConfig {
 }
 
 func defaultOpenWriteFile(path string, flag int, perm fs.FileMode) (io.WriteCloser, error) {
+	// #nosec G304 -- XML file helpers intentionally write to the caller-provided destination path.
 	return os.OpenFile(path, flag, perm)
 }
 

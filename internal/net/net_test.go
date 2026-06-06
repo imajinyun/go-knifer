@@ -313,7 +313,7 @@ func TestResolveWithOptions(t *testing.T) {
 }
 
 func TestMultipartFileExts(t *testing.T) {
-	req := multipartRequest(t, "avatar", "a.txt", "hello")
+	req := multipartAvatarRequest(t, "a.txt")
 	setting := NewUploadSetting()
 	setting.FileExts = []string{".jpg"}
 	setting.AllowFileExts = true
@@ -321,14 +321,14 @@ func TestMultipartFileExts(t *testing.T) {
 		t.Fatal("ParseMultipartForm should reject extension outside allow list")
 	}
 
-	req = multipartRequest(t, "avatar", "a.txt", "hello")
+	req = multipartAvatarRequest(t, "a.txt")
 	setting.FileExts = []string{"txt"}
 	setting.AllowFileExts = true
 	if _, err := ParseMultipartForm(req, setting); err != nil {
 		t.Fatalf("ParseMultipartForm should accept allowed extension: %v", err)
 	}
 
-	req = multipartRequest(t, "avatar", "a.exe", "hello")
+	req = multipartAvatarRequest(t, "a.exe")
 	setting.FileExts = []string{".exe"}
 	setting.AllowFileExts = false
 	if _, err := ParseMultipartForm(req, setting); err == nil {
@@ -337,7 +337,7 @@ func TestMultipartFileExts(t *testing.T) {
 }
 
 func TestSaveUploadedFileProviderOptions(t *testing.T) {
-	req := multipartRequest(t, "avatar", "a.txt", "hello")
+	req := multipartAvatarRequest(t, "a.txt")
 	form, err := ParseMultipartForm(req, NewUploadSetting())
 	if err != nil {
 		t.Fatalf("ParseMultipartForm: %v", err)
@@ -376,15 +376,15 @@ type nopWriteCloser struct{ io.Writer }
 
 func (w nopWriteCloser) Close() error { return nil }
 
-func multipartRequest(t *testing.T, field, filename, content string) *http.Request {
+func multipartAvatarRequest(t *testing.T, filename string) *http.Request {
 	t.Helper()
 	body := &bytes.Buffer{}
 	w := multipart.NewWriter(body)
-	part, err := w.CreateFormFile(field, filename)
+	part, err := w.CreateFormFile("avatar", filename)
 	if err != nil {
 		t.Fatalf("create form file: %v", err)
 	}
-	if _, err := part.Write([]byte(content)); err != nil {
+	if _, err := part.Write([]byte("hello")); err != nil {
 		t.Fatalf("write form file: %v", err)
 	}
 	if err := w.Close(); err != nil {

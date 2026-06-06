@@ -46,6 +46,7 @@ func defaultSaveConfig() saveConfig {
 }
 
 func defaultOpenWriteFile(path string, flag int, perm fs.FileMode) (io.WriteCloser, error) {
+	// #nosec G304 -- SaveAs intentionally writes to the caller-provided destination path.
 	return os.OpenFile(path, flag, perm)
 }
 

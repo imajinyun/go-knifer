@@ -140,7 +140,10 @@ func applyResourceOptions(opts []ResourceOption) resourceConfig {
 	return cfg
 }
 
-func defaultOpenFile(path string) (io.ReadCloser, error) { return os.Open(path) }
+func defaultOpenFile(path string) (io.ReadCloser, error) {
+	// #nosec G304 -- URL resource helpers intentionally read caller-provided file URLs or paths.
+	return os.Open(path)
+}
 
 func defaultRequestFactory(ctx context.Context, method, raw string) (*http.Request, error) {
 	return http.NewRequestWithContext(ctx, method, raw, nil)

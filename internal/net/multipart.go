@@ -37,6 +37,7 @@ func defaultUploadSaveConfig() uploadSaveConfig {
 }
 
 func defaultOpenUploadFile(path string, flag int, perm fs.FileMode) (io.WriteCloser, error) {
+	// #nosec G304 -- upload helpers intentionally write to the caller-provided destination path.
 	return os.OpenFile(path, flag, perm)
 }
 

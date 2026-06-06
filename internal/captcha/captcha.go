@@ -195,6 +195,7 @@ func applyWriteOptions(opts []WriteOption) writeConfig {
 }
 
 func defaultOpenWriteFile(path string, flag int, perm fs.FileMode) (io.WriteCloser, error) {
+	// #nosec G304 -- captcha file output intentionally writes to the caller-provided destination path.
 	return os.OpenFile(path, flag, perm)
 }
 
