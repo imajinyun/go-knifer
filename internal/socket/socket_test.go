@@ -103,6 +103,17 @@ func TestSocketConfigOptions(t *testing.T) {
 	}
 }
 
+func TestSocketConfigThreadPoolSizeFunc(t *testing.T) {
+	calls := 0
+	cfg := NewSocketConfigWithOptions(WithThreadPoolSizeFunc(func() int {
+		calls++
+		return 7
+	}))
+	if calls != 1 || cfg.ThreadPoolSize != 7 {
+		t.Fatalf("WithThreadPoolSizeFunc calls=%d size=%d, want 1/7", calls, cfg.ThreadPoolSize)
+	}
+}
+
 func TestSocketListenerAndConnFactories(t *testing.T) {
 	addr := &net.TCPAddr{IP: net.ParseIP("127.0.0.1"), Port: 9999}
 	listener := &fakeListener{addr: factoryFakeAddr("aio-listener")}

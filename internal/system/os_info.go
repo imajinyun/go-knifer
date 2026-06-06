@@ -89,7 +89,6 @@ func applyOsInfoOptions(opts []OsInfoOption) osInfoConfig {
 		arch:          func() string { return runtime.GOARCH },
 		getenv:        os.Getenv,
 		fileSeparator: func() string { return string(filepath.Separator) },
-		lineSeparator: lineSeparator,
 		pathSeparator: func() string { return string(os.PathListSeparator) },
 	}
 	for _, opt := range opts {
@@ -107,13 +106,13 @@ func applyOsInfoOptions(opts []OsInfoOption) osInfoConfig {
 		cfg.getenv = os.Getenv
 	}
 	if cfg.version == nil {
-		cfg.version = func() string { return readOsVersion(cfg.getenv) }
+		cfg.version = func() string { return readOsVersion(cfg.getenv, cfg.name) }
 	}
 	if cfg.fileSeparator == nil {
 		cfg.fileSeparator = func() string { return string(filepath.Separator) }
 	}
 	if cfg.lineSeparator == nil {
-		cfg.lineSeparator = lineSeparator
+		cfg.lineSeparator = func() string { return lineSeparator(cfg.name) }
 	}
 	if cfg.pathSeparator == nil {
 		cfg.pathSeparator = func() string { return string(os.PathListSeparator) }
@@ -200,9 +199,12 @@ func (o *OsInfo) String() string {
 	return b.String()
 }
 
-// lineSeparator returns the line separator for the current OS.
-func lineSeparator() string {
-	if runtime.GOOS == "windows" {
+// lineSeparator returns the line separator for the configured OS.
+func lineSeparator(goos func() string) string {
+	if goos == nil {
+		goos = func() string { return runtime.GOOS }
+	}
+	if goos() == "windows" {
 		return "\r\n"
 	}
 	return "\n"
@@ -210,12 +212,18 @@ func lineSeparator() string {
 
 // readOsVersion detects the OS version from environment variables or common fallbacks.
 // The Go standard library has no unified API for this, so this is best-effort.
-func readOsVersion(getenv func(string) string) string {
+func readOsVersion(getenv func(string) string, goos func() string) string {
+	if getenv == nil {
+		getenv = os.Getenv
+	}
+	if goos == nil {
+		goos = func() string { return runtime.GOOS }
+	}
 	if v := getenv("OSVERSION"); v != "" {
 		return v
 	}
 	if v := getenv("OSTYPE"); v != "" {
 		return v
 	}
-	return strings.TrimSpace(runtime.GOOS)
+	return strings.TrimSpace(goos())
 }

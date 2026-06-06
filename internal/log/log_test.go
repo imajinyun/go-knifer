@@ -223,6 +223,33 @@ func TestConsoleColorLogWithOptions(t *testing.T) {
 	}
 }
 
+func TestConsoleColorLogInstanceColorFactory(t *testing.T) {
+	prevLevel := GetConsoleLevel()
+	SetConsoleLevel(LevelDebug)
+	defer SetConsoleLevel(prevLevel)
+
+	SetColorFactory(func(Level) string { return ansiBlue })
+	defer SetColorFactory(defaultColorFactory)
+
+	out := &bytes.Buffer{}
+	called := false
+	c := NewConsoleColorLogWithOptions("test.color.instance",
+		WithLogOutput(out, &bytes.Buffer{}),
+		WithLogColorFactory(func(Level) string {
+			called = true
+			return ansiCyan
+		}),
+	)
+	c.Info("hi")
+
+	if !called {
+		t.Fatal("instance color factory was not called")
+	}
+	if got := out.String(); !strings.Contains(got, ansiCyan) || strings.Contains(got, ansiBlue) {
+		t.Fatalf("instance color factory should override global factory, got %q", got)
+	}
+}
+
 func TestSetColorFactory(t *testing.T) {
 	called := false
 	SetColorFactory(func(level Level) string {

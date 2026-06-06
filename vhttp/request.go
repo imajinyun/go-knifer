@@ -56,12 +56,22 @@ func CreateRequestWithOptions(method Method, rawURL string, opts ...RequestOptio
 
 // CreateGet delegates to the internal httpx implementation.
 func CreateGet(rawURL string, followRedirects bool) *Request {
-	return httpx.CreateGet(rawURL, followRedirects)
+	return CreateGetWithOptions(rawURL, followRedirects)
+}
+
+// CreateGetWithOptions delegates to the internal httpx implementation with options.
+func CreateGetWithOptions(rawURL string, followRedirects bool, opts ...RequestOption) *Request {
+	return httpx.CreateGetWithOptions(rawURL, followRedirects, opts...)
 }
 
 // CreatePost delegates to the internal httpx implementation.
 func CreatePost(rawURL string) *Request {
-	return httpx.CreatePost(rawURL)
+	return CreatePostWithOptions(rawURL)
+}
+
+// CreatePostWithOptions delegates to the internal httpx implementation with options.
+func CreatePostWithOptions(rawURL string, opts ...RequestOption) *Request {
+	return httpx.CreatePostWithOptions(rawURL, opts...)
 }
 
 // GetString sends a GET request and returns response body as string.

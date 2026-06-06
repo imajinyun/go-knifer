@@ -109,3 +109,26 @@ func TestInitWithOptionsUsesInjectedProviders(t *testing.T) {
 		t.Fatalf("hook providers client=%v levels=%v added=%v", hookClient, hookLevels, hookAdded)
 	}
 }
+
+func TestNewIsolatedLogrusWithOptionsDoesNotUseGlobalConfigurers(t *testing.T) {
+	var globalConfigured bool
+	logger := NewIsolatedLogrusWithOptions(
+		WithEnvLookupFunc(func(string) string { return "" }),
+		WithLogOutput(io.Discard),
+		WithReportCaller(false),
+		WithLogrusConfigurer(
+			func(bool) { globalConfigured = true },
+			func(io.Writer) { globalConfigured = true },
+			func(logrus.Formatter) { globalConfigured = true },
+		),
+	)
+	if logger == nil {
+		t.Fatal("NewIsolatedLogrusWithOptions returned nil")
+	}
+	if globalConfigured {
+		t.Fatal("isolated logger should not call global logrus configurers")
+	}
+	if logger.Out != io.Discard || logger.ReportCaller {
+		t.Fatalf("isolated logger config out=%T reportCaller=%v", logger.Out, logger.ReportCaller)
+	}
+}

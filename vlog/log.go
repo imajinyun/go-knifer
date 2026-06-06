@@ -87,6 +87,9 @@ func WithLogOutput(out, errOut io.Writer) ConsoleLogOption { return logx.WithLog
 // WithLogLevel sets an instance-specific console log threshold.
 func WithLogLevel(level Level) ConsoleLogOption { return logx.WithLogLevel(level) }
 
+// WithLogColorFactory sets an instance-specific color factory for ConsoleColorLog output.
+func WithLogColorFactory(f ColorFactory) ConsoleLogOption { return logx.WithLogColorFactory(f) }
+
 // WithLoggerFactory sets the logger factory used by LoggerWithOptions or NewIsolatedLogger.
 func WithLoggerFactory(factory LogFactory) LoggerOption { return logx.WithLoggerFactory(factory) }
 

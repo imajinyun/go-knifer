@@ -66,6 +66,58 @@ func TestFacadeRequestOptions(t *testing.T) {
 	}
 }
 
+func TestFacadeTransportProviderOption(t *testing.T) {
+	calls := 0
+	transport := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(req.Header.Get("X-Transport"))),
+			Header:     http.Header{},
+			Request:    req,
+		}, nil
+	})
+	resp := vhttp.Get("https://example.com",
+		vhttp.WithHeader("X-Transport", "facade"),
+		vhttp.WithTransportProvider(func() http.RoundTripper {
+			calls++
+			return transport
+		}),
+	).Execute()
+	if resp.Err() != nil {
+		t.Fatal(resp.Err())
+	}
+	if calls != 1 || resp.Body() != "facade" {
+		t.Fatalf("transport provider calls=%d body=%q", calls, resp.Body())
+	}
+}
+
+func TestFacadeCreateWithOptions(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/redirect" {
+			http.Redirect(w, r, "/final", http.StatusFound)
+			return
+		}
+		_, _ = w.Write([]byte(r.Method + ":" + r.Header.Get("X-Create")))
+	}))
+	defer server.Close()
+
+	getResp := vhttp.CreateGetWithOptions(server.URL+"/redirect", false, vhttp.WithHeader("X-Create", "get")).Execute()
+	if getResp.Err() != nil {
+		t.Fatal(getResp.Err())
+	}
+	if got := getResp.Status(); got != http.StatusFound {
+		t.Fatalf("CreateGetWithOptions status = %d, want 302", got)
+	}
+
+	postResp := vhttp.CreatePostWithOptions(server.URL, vhttp.WithHeader("X-Create", "post")).Execute()
+	if postResp.Err() != nil {
+		t.Fatal(postResp.Err())
+	}
+	if got := postResp.Body(); got != "POST:post" {
+		t.Fatalf("CreatePostWithOptions body = %q, want POST:post", got)
+	}
+}
+
 func TestFacadeResponseDecodeOptions(t *testing.T) {
 	gzipServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Encoding", "gzip")
@@ -192,6 +244,10 @@ func TestFacadeSaveProviderOptions(t *testing.T) {
 type nopWriteCloser struct{ io.Writer }
 
 func (w nopWriteCloser) Close() error { return nil }
+
+type roundTripperFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripperFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
 
 func executeRequest(req *vhttp.Request) *vhttp.Response {
 	return req.Execute()

@@ -21,11 +21,21 @@ func CreateRequest(method Method, rawURL string, opts ...RequestOption) *HTTPReq
 
 // CreateGet creates a GET request and sets whether redirects are followed.
 func CreateGet(rawURL string, followRedirects bool) *HTTPRequest {
-	return Get(rawURL).FollowRedirects(followRedirects)
+	return CreateGetWithOptions(rawURL, followRedirects)
+}
+
+// CreateGetWithOptions creates a GET request with options and sets whether redirects are followed.
+func CreateGetWithOptions(rawURL string, followRedirects bool, opts ...RequestOption) *HTTPRequest {
+	return Get(rawURL, opts...).FollowRedirects(followRedirects)
 }
 
 // CreatePost creates a POST request.
-func CreatePost(rawURL string) *HTTPRequest { return Post(rawURL) }
+func CreatePost(rawURL string) *HTTPRequest { return CreatePostWithOptions(rawURL) }
+
+// CreatePostWithOptions creates a POST request with options.
+func CreatePostWithOptions(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return Post(rawURL, opts...)
+}
 
 // GetString sends a GET request and returns the response body as a string.
 func GetString(rawURL string) string { return GetStringWithOptions(rawURL) }

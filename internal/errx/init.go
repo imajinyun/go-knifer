@@ -228,3 +228,45 @@ func InitWithOptions(opts ...InitOption) {
 	sentry.StacktraceConfiguration.IncludeErrorBreadcrumb = true
 	cfg.addHook(sentry)
 }
+
+// NewIsolatedLogrusWithOptions creates and configures a standalone logrus logger.
+// Unlike InitWithOptions, it does not mutate the package-level logrus logger or
+// raven default client. When a DSN is configured, the returned logger receives a
+// Sentry hook backed by an isolated raven client unless WithSentryClient supplies one.
+func NewIsolatedLogrusWithOptions(opts ...InitOption) *logrus.Logger {
+	cfg := applyInitOptions("", opts)
+	logger := logrus.New()
+	logger.SetReportCaller(cfg.reportCaller)
+	logger.SetOutput(cfg.output)
+	logger.SetFormatter(cfg.formatter)
+
+	if dsn := cfg.getenv(cfg.envKey); dsn != "" {
+		cfg.dsn = dsn
+	}
+	if cfg.dsn == "" {
+		return logger
+	}
+
+	client := cfg.sentryClient
+	if client == raven.DefaultClient {
+		isolatedClient, err := raven.New(cfg.dsn)
+		if err != nil {
+			cfg.logError(err, "raven init failed")
+			return logger
+		}
+		client = isolatedClient
+	} else if err := client.SetDSN(cfg.dsn); err != nil {
+		cfg.logError(err, "raven init failed")
+		return logger
+	}
+
+	sentry, err := cfg.newSentryHook(client, cfg.levels)
+	if err != nil {
+		cfg.logError(err, "sentry hook init failed")
+		return logger
+	}
+	sentry.StacktraceConfiguration.Enable = true
+	sentry.StacktraceConfiguration.IncludeErrorBreadcrumb = true
+	logger.AddHook(sentry)
+	return logger
+}

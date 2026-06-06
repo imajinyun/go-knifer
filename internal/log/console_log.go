@@ -22,6 +22,8 @@ type ConsoleLog struct {
 	clock      func() time.Time
 	timeLayout string
 	level      *Level
+	// colorFactory is used by ConsoleColorLog instances; nil falls back to the package default.
+	colorFactory ColorFactory
 }
 
 const consoleLogTimeLayout = "2006-01-02 15:04:05"
@@ -58,6 +60,15 @@ func WithLogOutput(out, errOut io.Writer) ConsoleLogOption {
 func WithLogLevel(level Level) ConsoleLogOption {
 	return func(c *ConsoleLog) {
 		c.level = &level
+	}
+}
+
+// WithLogColorFactory sets an instance-specific color factory for ConsoleColorLog output.
+func WithLogColorFactory(f ColorFactory) ConsoleLogOption {
+	return func(c *ConsoleLog) {
+		if f != nil {
+			c.colorFactory = f
+		}
 	}
 }
 

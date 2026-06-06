@@ -10,10 +10,30 @@ import (
 	"net/url"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 )
 
-var defaultTransport = http.DefaultTransport.(*http.Transport).Clone()
+var (
+	defaultTransportMu sync.Mutex
+	defaultTransport   *http.Transport
+)
+
+func cloneDefaultTransport() *http.Transport {
+	if transport, ok := http.DefaultTransport.(*http.Transport); ok && transport != nil {
+		return transport.Clone()
+	}
+	return &http.Transport{}
+}
+
+func getDefaultTransport() *http.Transport {
+	defaultTransportMu.Lock()
+	defer defaultTransportMu.Unlock()
+	if defaultTransport == nil {
+		defaultTransport = cloneDefaultTransport()
+	}
+	return defaultTransport
+}
 
 // HTTPRequest is a chainable HTTP request builder, aligned with the utility toolkit-http HttpRequest.
 type HTTPRequest struct {
@@ -37,6 +57,7 @@ type HTTPRequest struct {
 	tlsConfig    *tls.Config
 	userAgent    string
 	transport    http.RoundTripper
+	transportFn  func() http.RoundTripper
 	basicUser    string
 	basicPass    string
 	hasBasic     bool
@@ -184,6 +205,15 @@ func WithTLSConfig(cfg *tls.Config) RequestOption { return func(r *HTTPRequest) 
 // WithTransport sets a per-request RoundTripper.
 func WithTransport(t http.RoundTripper) RequestOption { return func(r *HTTPRequest) { r.Transport(t) } }
 
+// WithTransportProvider sets a per-request RoundTripper provider evaluated when the request is built.
+func WithTransportProvider(provider func() http.RoundTripper) RequestOption {
+	return func(r *HTTPRequest) {
+		if provider != nil {
+			r.transportFn = provider
+		}
+	}
+}
+
 // WithClient sets a per-request HTTP client.
 func WithClient(c *http.Client) RequestOption { return func(r *HTTPRequest) { r.Client(c) } }
 
@@ -300,7 +330,11 @@ func (r *HTTPRequest) SkipTLSVerify(b bool) *HTTPRequest { r.tlsSkip = b; return
 func (r *HTTPRequest) TLSConfig(cfg *tls.Config) *HTTPRequest { r.tlsConfig = cfg; return r }
 
 // Transport sets a custom RoundTripper.
-func (r *HTTPRequest) Transport(t http.RoundTripper) *HTTPRequest { r.transport = t; return r }
+func (r *HTTPRequest) Transport(t http.RoundTripper) *HTTPRequest {
+	r.transport = t
+	r.transportFn = nil
+	return r
+}
 
 // Client sets a custom *http.Client, overriding Transport, Timeout, and related options.
 func (r *HTTPRequest) Client(c *http.Client) *HTTPRequest { r.httpClient = c; return r }
@@ -469,9 +503,13 @@ func (r *HTTPRequest) buildClient() *http.Client {
 		return r.httpClient
 	}
 	transport := r.transport
+	if transport == nil && r.transportFn != nil {
+		transport = r.transportFn()
+	}
 	if transport == nil {
+		baseTransport := getDefaultTransport()
 		if r.tlsSkip || r.tlsConfig != nil {
-			t := defaultTransport.Clone()
+			t := baseTransport.Clone()
 			if r.tlsConfig != nil {
 				t.TLSClientConfig = r.tlsConfig.Clone()
 			} else {
@@ -482,7 +520,7 @@ func (r *HTTPRequest) buildClient() *http.Client {
 			}
 			transport = t
 		} else {
-			transport = defaultTransport
+			transport = baseTransport
 		}
 	}
 	timeout := r.timeout

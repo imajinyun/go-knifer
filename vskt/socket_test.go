@@ -69,6 +69,17 @@ func TestFacadeSocketConfigWithOptions(t *testing.T) {
 	}
 }
 
+func TestFacadeSocketConfigThreadPoolSizeFunc(t *testing.T) {
+	calls := 0
+	cfg := vskt.NewSocketConfigWithOptions(vskt.WithThreadPoolSizeFunc(func() int {
+		calls++
+		return 9
+	}))
+	if calls != 1 || cfg.ThreadPoolSize != 9 {
+		t.Fatalf("WithThreadPoolSizeFunc calls=%d size=%d, want 1/9", calls, cfg.ThreadPoolSize)
+	}
+}
+
 func TestFacadeSocketFactories(t *testing.T) {
 	addr := &net.TCPAddr{IP: net.ParseIP("127.0.0.1"), Port: 9999}
 	listener := &facadeFakeListener{addr: facadeFakeAddr("facade-aio")}

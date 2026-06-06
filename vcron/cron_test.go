@@ -1,6 +1,7 @@
 package vcron_test
 
 import (
+	"bytes"
 	"testing"
 	"time"
 
@@ -78,6 +79,17 @@ func TestFacadeSchedulerWithOptions(t *testing.T) {
 	}
 	if id != "facade-task" {
 		t.Fatalf("scheduled id = %q, want facade-task", id)
+	}
+}
+
+func TestFacadeSchedulerIDRandomReaderOption(t *testing.T) {
+	s := vcron.NewSchedulerWithOptions(vcron.WithIDRandomReader(bytes.NewReader([]byte{8, 7, 6, 5, 4, 3, 2, 1})))
+	id, err := s.ScheduleFunc("* * * * *", func() {})
+	if err != nil {
+		t.Fatalf("ScheduleFunc: %v", err)
+	}
+	if id != "0807060504030201" {
+		t.Fatalf("id = %q, want 0807060504030201", id)
 	}
 }
 

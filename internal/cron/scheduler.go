@@ -1,6 +1,7 @@
 package cron
 
 import (
+	"io"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -47,6 +48,15 @@ func WithIDGenerator(idFunc func() string) SchedulerOption {
 	return func(s *Scheduler) {
 		if idFunc != nil {
 			s.idFunc = idFunc
+		}
+	}
+}
+
+// WithIDRandomReader sets the random reader used by the default hexadecimal task id generator.
+func WithIDRandomReader(reader io.Reader) SchedulerOption {
+	return func(s *Scheduler) {
+		if reader != nil {
+			s.idFunc = func() string { return generateIDWithReader(reader) }
 		}
 	}
 }

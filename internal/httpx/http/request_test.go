@@ -394,29 +394,47 @@ func TestRequestOptionCookieJar(t *testing.T) {
 func TestDefaultTransportIsReused(t *testing.T) {
 	clientA := Get("https://example.com").buildClient()
 	clientB := Post("https://example.com").Timeout(time.Second).buildClient()
+	shared := getDefaultTransport()
 
-	if clientA.Transport != defaultTransport {
-		t.Fatalf("default request transport = %p, want shared default transport %p", clientA.Transport, defaultTransport)
+	if clientA.Transport != shared {
+		t.Fatalf("default request transport = %p, want shared default transport %p", clientA.Transport, shared)
 	}
-	if clientB.Transport != defaultTransport {
-		t.Fatalf("request with timeout transport = %p, want shared default transport %p", clientB.Transport, defaultTransport)
+	if clientB.Transport != shared {
+		t.Fatalf("request with timeout transport = %p, want shared default transport %p", clientB.Transport, shared)
 	}
 }
 
 func TestSkipTLSVerifyUsesClonedTransport(t *testing.T) {
 	client := Get("https://example.com").SkipTLSVerify(true).buildClient()
+	shared := getDefaultTransport()
 	transport, ok := client.Transport.(*http.Transport)
 	if !ok {
 		t.Fatalf("transport type = %T, want *http.Transport", client.Transport)
 	}
-	if transport == defaultTransport {
+	if transport == shared {
 		t.Fatal("SkipTLSVerify should clone the default transport instead of mutating it")
 	}
 	if transport.TLSClientConfig == nil || !transport.TLSClientConfig.InsecureSkipVerify {
 		t.Fatal("SkipTLSVerify should enable InsecureSkipVerify on the cloned transport")
 	}
-	if defaultTransport.TLSClientConfig != nil && defaultTransport.TLSClientConfig.InsecureSkipVerify {
+	if shared.TLSClientConfig != nil && shared.TLSClientConfig.InsecureSkipVerify {
 		t.Fatal("default transport must not be mutated by SkipTLSVerify")
+	}
+}
+
+func TestTransportProviderEvaluatedWhenBuildingClient(t *testing.T) {
+	calls := 0
+	custom := &http.Transport{}
+	req := Get("https://example.com", WithTransportProvider(func() http.RoundTripper {
+		calls++
+		return custom
+	}))
+	if calls != 0 {
+		t.Fatalf("transport provider called during construction: %d", calls)
+	}
+	client := req.buildClient()
+	if calls != 1 || client.Transport != custom {
+		t.Fatalf("transport provider calls=%d transport=%#v, want custom", calls, client.Transport)
 	}
 }
 

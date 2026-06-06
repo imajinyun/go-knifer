@@ -91,6 +91,16 @@ func TestFacadeConsoleLogOptions(t *testing.T) {
 	if !strings.Contains(colorOut.String(), "06:07") || !strings.Contains(colorOut.String(), "color") {
 		t.Fatalf("color log options not applied: %q", colorOut.String())
 	}
+
+	customColorOut := &bytes.Buffer{}
+	customColorLog := vlog.NewConsoleColorLogWithOptions("facade.color.custom",
+		vlog.WithLogOutput(customColorOut, &bytes.Buffer{}),
+		vlog.WithLogColorFactory(func(vlog.Level) string { return "\033[36m" }),
+	)
+	customColorLog.Info("custom-color")
+	if !strings.Contains(customColorOut.String(), "\033[36m") || !strings.Contains(customColorOut.String(), "custom-color") {
+		t.Fatalf("color factory option not applied: %q", customColorOut.String())
+	}
 }
 
 func TestFacadeStaticLogWithOptions(t *testing.T) {

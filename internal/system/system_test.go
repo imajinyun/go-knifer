@@ -210,6 +210,14 @@ func TestOsInfoWithOptions(t *testing.T) {
 	if !o.IsLinux() || o.IsWindows() {
 		t.Fatalf("NewOsInfoWithOptions OS helpers = %#v", o)
 	}
+
+	o = NewOsInfoWithOptions(
+		WithOSNameFunc(func() string { return "windows" }),
+		WithOSEnvLookupFunc(func(string) string { return "" }),
+	)
+	if o.GetVersion() != "windows" || o.GetLineSeparator() != "\r\n" {
+		t.Fatalf("OS providers should drive version and line separator: %#v", o)
+	}
 }
 
 func TestSystemInfoGettersWithOptions(t *testing.T) {

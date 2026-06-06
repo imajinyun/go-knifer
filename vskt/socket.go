@@ -108,6 +108,9 @@ func NewSocketConfig() *SocketConfig { return socketx.NewSocketConfig() }
 // WithThreadPoolSize sets the configured server handler concurrency limit.
 func WithThreadPoolSize(n int) ConfigOption { return socketx.WithThreadPoolSize(n) }
 
+// WithThreadPoolSizeFunc sets the configured server handler concurrency limit from a provider.
+func WithThreadPoolSizeFunc(f func() int) ConfigOption { return socketx.WithThreadPoolSizeFunc(f) }
+
 // WithReadTimeout sets the read timeout in milliseconds.
 func WithReadTimeout(ms int64) ConfigOption { return socketx.WithReadTimeout(ms) }
 

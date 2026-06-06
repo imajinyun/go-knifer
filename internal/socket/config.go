@@ -42,6 +42,15 @@ func WithThreadPoolSize(n int) ConfigOption {
 	return func(c *SocketConfig) { c.ThreadPoolSize = n }
 }
 
+// WithThreadPoolSizeFunc sets the configured thread-pool/concurrency size from a provider.
+func WithThreadPoolSizeFunc(f func() int) ConfigOption {
+	return func(c *SocketConfig) {
+		if f != nil {
+			c.ThreadPoolSize = f()
+		}
+	}
+}
+
 // WithReadTimeout sets the read timeout in milliseconds.
 func WithReadTimeout(ms int64) ConfigOption {
 	return func(c *SocketConfig) { c.ReadTimeout = ms }
@@ -97,7 +106,7 @@ func NewSocketConfig() *SocketConfig {
 // NewSocketConfigWithOptions creates a socket config customized by options.
 func NewSocketConfigWithOptions(opts ...ConfigOption) *SocketConfig {
 	cfg := &SocketConfig{
-		ThreadPoolSize:  runtime.NumCPU(),
+		ThreadPoolSize:  defaultThreadPoolSize(),
 		ReadBufferSize:  DefaultBufferSize,
 		WriteBufferSize: DefaultBufferSize,
 	}
@@ -108,6 +117,8 @@ func NewSocketConfigWithOptions(opts ...ConfigOption) *SocketConfig {
 	}
 	return cfg
 }
+
+func defaultThreadPoolSize() int { return runtime.NumCPU() }
 
 func newConcurrencyLimiter(cfg *SocketConfig) chan struct{} {
 	if cfg == nil || cfg.ThreadPoolSize <= 0 {

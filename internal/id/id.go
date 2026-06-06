@@ -33,7 +33,7 @@ const (
 )
 
 var (
-	defaultRand      = mathrand.New(mathrand.NewSource(time.Now().UnixNano())) // #nosec G404 -- fallback only for IDs when crypto/rand is unavailable.
+	defaultRand      *mathrand.Rand
 	defaultRandMu    sync.Mutex
 	objectIDCounter  uint32
 	snowflakeCache   sync.Map
@@ -633,9 +633,16 @@ func fillRandomBytesWithConfig(cfg randomConfig, buf []byte) {
 		defaultRandMu.Lock()
 		defer defaultRandMu.Unlock()
 		for i := range buf {
-			buf[i] = byte(defaultRand.Intn(256)) // #nosec G115 -- Intn(256) always fits in byte.
+			buf[i] = byte(defaultRandLocked().Intn(256)) // #nosec G115 -- Intn(256) always fits in byte.
 		}
 	}
+}
+
+func defaultRandLocked() *mathrand.Rand {
+	if defaultRand == nil {
+		defaultRand = mathrand.New(mathrand.NewSource(time.Now().UnixNano())) // #nosec G404 -- fallback only for IDs when crypto/rand is unavailable.
+	}
+	return defaultRand
 }
 
 func nextPowerOfTwo(n int) int {

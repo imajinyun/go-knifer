@@ -113,6 +113,24 @@ func CreateRequestWithOptions(method Method, rawURL string, opts ...RequestOptio
 	return restyimpl.CreateRequest(method, rawURL, opts...)
 }
 
+// CreateGet creates a GET request and sets whether redirects are followed.
+func CreateGet(rawURL string, followRedirects bool) *Request {
+	return CreateGetWithOptions(rawURL, followRedirects)
+}
+
+// CreateGetWithOptions creates a GET request with options and sets whether redirects are followed.
+func CreateGetWithOptions(rawURL string, followRedirects bool, opts ...RequestOption) *Request {
+	return restyimpl.CreateGetWithOptions(rawURL, followRedirects, opts...)
+}
+
+// CreatePost creates a POST request.
+func CreatePost(rawURL string) *Request { return CreatePostWithOptions(rawURL) }
+
+// CreatePostWithOptions creates a POST request with options.
+func CreatePostWithOptions(rawURL string, opts ...RequestOption) *Request {
+	return restyimpl.CreatePostWithOptions(rawURL, opts...)
+}
+
 // WithGlobalConfig initializes request defaults from a captured global configuration snapshot.
 func WithGlobalConfig(cfg GlobalConfig) RequestOption { return restyimpl.WithGlobalConfig(cfg) }
 
@@ -188,6 +206,34 @@ func GetString(rawURL string) string { return GetStringWithOptions(rawURL) }
 // GetStringWithOptions sends a GET request with options and returns response body as string.
 func GetStringWithOptions(rawURL string, opts ...RequestOption) string {
 	return restyimpl.GetStringWithOptions(rawURL, opts...)
+}
+
+// GetWithTimeout sends a GET request with a timeout.
+func GetWithTimeout(rawURL string, timeout time.Duration) string {
+	return GetWithTimeoutWithOptions(rawURL, timeout)
+}
+
+// GetWithTimeoutWithOptions sends a GET request with a timeout and custom options.
+func GetWithTimeoutWithOptions(rawURL string, timeout time.Duration, opts ...RequestOption) string {
+	return restyimpl.GetWithTimeoutWithOptions(rawURL, timeout, opts...)
+}
+
+// GetWithParams sends a GET request with form parameters.
+func GetWithParams(rawURL string, params map[string]any) string {
+	return GetWithParamsWithOptions(rawURL, params)
+}
+
+// GetWithParamsWithOptions sends a GET request with form parameters and custom options.
+func GetWithParamsWithOptions(rawURL string, params map[string]any, opts ...RequestOption) string {
+	return restyimpl.GetWithParamsWithOptions(rawURL, params, opts...)
+}
+
+// PostString sends a POST request with a string body.
+func PostString(rawURL, body string) string { return PostStringWithOptions(rawURL, body) }
+
+// PostStringWithOptions sends a POST request with a string body and custom options.
+func PostStringWithOptions(rawURL, body string, opts ...RequestOption) string {
+	return restyimpl.PostStringWithOptions(rawURL, body, opts...)
 }
 
 // PostForm posts form parameters and returns response body as string.
@@ -270,6 +316,20 @@ func CloseCookie() { restyimpl.CloseCookie() }
 
 // BuildBasicAuth builds a Basic authorization value.
 func BuildBasicAuth(user, pass string) string { return restyimpl.BuildBasicAuth(user, pass) }
+
+// IsHTTPS reports whether the given URL is https.
+func IsHTTPS(rawURL string) bool { return restyimpl.IsHTTPS(rawURL) }
+
+// IsHTTP reports whether the given URL is http.
+func IsHTTP(rawURL string) bool { return restyimpl.IsHTTP(rawURL) }
+
+// ToParams converts a map to a URL query string.
+func ToParams(m map[string]any) string { return restyimpl.ToParams(m) }
+
+// URLWithForm appends form values to a URL.
+func URLWithForm(rawURL string, form map[string]any) string {
+	return restyimpl.URLWithForm(rawURL, form)
+}
 
 // BuildContentType builds a Content-Type string with charset.
 func BuildContentType(contentType, charset string) string {

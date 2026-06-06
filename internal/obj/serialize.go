@@ -83,9 +83,13 @@ func MustDeserialize[T any](data []byte, acceptedTypes ...any) T {
 }
 
 // Register records a concrete type for gob interface encoding.
+// It delegates to encoding/gob's process-global registry; callers that need
+// isolated codecs should use Encoder/Decoder values directly instead.
 func Register(value any) { gob.Register(value) }
 
 // RegisterName records a concrete type with a custom gob name.
+// It delegates to encoding/gob's process-global registry; callers that need
+// isolated codecs should use Encoder/Decoder values directly instead.
 func RegisterName(name string, value any) { gob.RegisterName(name, value) }
 
 // ValidateAcceptedTypes checks whether value only contains built-in safe types

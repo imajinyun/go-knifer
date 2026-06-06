@@ -134,3 +134,24 @@ func TestCreateGetWithFollowRedirects(t *testing.T) {
 		t.Fatalf("followRedir: %v", req.followRedir)
 	}
 }
+
+func TestCreateWithOptionsAppliesRequestOptions(t *testing.T) {
+	getReq := CreateGetWithOptions("http://example.com", false, WithHeader("X-Create", "get"), WithUserAgent("create-get-agent"))
+	if getReq.followRedir == nil || *getReq.followRedir {
+		t.Fatalf("followRedir: %v", getReq.followRedir)
+	}
+	if got := getReq.headers.Get("X-Create"); got != "get" {
+		t.Fatalf("CreateGetWithOptions header = %q, want get", got)
+	}
+	if got := getReq.userAgent; got != "create-get-agent" {
+		t.Fatalf("CreateGetWithOptions userAgent = %q", got)
+	}
+
+	postReq := CreatePostWithOptions("http://example.com", WithHeader("X-Create", "post"))
+	if postReq.method != MethodPost {
+		t.Fatalf("CreatePostWithOptions method = %v, want POST", postReq.method)
+	}
+	if got := postReq.headers.Get("X-Create"); got != "post" {
+		t.Fatalf("CreatePostWithOptions header = %q, want post", got)
+	}
+}

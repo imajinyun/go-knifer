@@ -49,7 +49,7 @@ func WithHashFunc(hashFunc HashFunc) FuncFilterOption {
 }
 
 // DefaultMachineNum is the default machine word size for FuncFilter.
-var DefaultMachineNum = Machine32
+const DefaultMachineNum = Machine32
 
 func defaultFuncFilterConfig() funcFilterConfig {
 	return funcFilterConfig{

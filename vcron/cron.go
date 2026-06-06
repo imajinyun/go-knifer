@@ -1,6 +1,7 @@
 package vcron
 
 import (
+	"io"
 	"time"
 
 	"github.com/imajinyun/go-knifer/internal/cron"
@@ -96,6 +97,9 @@ func WithExecutor(exec func(func())) SchedulerOption { return cron.WithExecutor(
 
 // WithIDGenerator sets the task id generator used by Schedule and ScheduleFunc.
 func WithIDGenerator(idFunc func() string) SchedulerOption { return cron.WithIDGenerator(idFunc) }
+
+// WithIDRandomReader sets the random reader used by the default hexadecimal task id generator.
+func WithIDRandomReader(reader io.Reader) SchedulerOption { return cron.WithIDRandomReader(reader) }
 
 // WithClock sets the time source used by the scheduler timer.
 func WithClock(clock func() time.Time) SchedulerOption { return cron.WithClock(clock) }

@@ -150,6 +150,11 @@ func WithInitErrorLogger(logError func(error, string)) InitOption {
 // InitWithOptions configures logrus output and optional Sentry forwarding with options.
 func InitWithOptions(opts ...InitOption) { errimpl.InitWithOptions(opts...) }
 
+// NewIsolatedLogrusWithOptions creates a standalone logrus logger without mutating global logrus/raven state.
+func NewIsolatedLogrusWithOptions(opts ...InitOption) *logrus.Logger {
+	return errimpl.NewIsolatedLogrusWithOptions(opts...)
+}
+
 // Wrap creates a recoverable function wrapper.
 func Wrap(f func() error) *Wrapper { return errimpl.Wrap(f) }
 

@@ -62,6 +62,7 @@ func getColorFactory() ColorFactory {
 // ConsoleColorLog 对应 the utility ConsoleColorLog，使用 ANSI 颜色打印日志。
 type ConsoleColorLog struct {
 	*ConsoleLog
+	colorFactory ColorFactory
 }
 
 // NewConsoleColorLog 创建一个带颜色的控制台日志实例。
@@ -72,7 +73,11 @@ func NewConsoleColorLog(name string) *ConsoleColorLog {
 // NewConsoleColorLogWithOptions 创建一个带颜色的控制台日志实例，并应用构造选项。
 func NewConsoleColorLogWithOptions(name string, opts ...ConsoleLogOption) *ConsoleColorLog {
 	base := NewConsoleLogWithOptions(name, opts...)
-	c := &ConsoleColorLog{ConsoleLog: base}
+	factory := base.colorFactory
+	if factory == nil {
+		factory = getColorFactory()
+	}
+	c := &ConsoleColorLog{ConsoleLog: base, colorFactory: factory}
 	// 替换 Core 为彩色实现。
 	base.Core = c.write
 	return c
@@ -81,7 +86,11 @@ func NewConsoleColorLogWithOptions(name string, opts ...ConsoleLogOption) *Conso
 // write 带颜色的写入实现。
 func (c *ConsoleColorLog) write(level Level, err error, format string, args ...any) {
 	msg := renderLogMessage(format, args...)
-	color := getColorFactory()(level)
+	factory := c.colorFactory
+	if factory == nil {
+		factory = defaultColorFactory
+	}
+	color := factory(level)
 	line := fmt.Sprintf(
 		"%s[%s]%s %s[%-5s]%s %s%s%s: %s",
 		ansiWhite, c.now().Format(c.layout()), ansiReset,

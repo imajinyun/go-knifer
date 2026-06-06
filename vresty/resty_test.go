@@ -59,6 +59,58 @@ func TestFacadeRequestOptions(t *testing.T) {
 	}
 }
 
+func TestFacadeCreateWithOptions(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/redirect" {
+			http.Redirect(w, r, "/final", http.StatusFound)
+			return
+		}
+		_, _ = w.Write([]byte(r.Method + ":" + r.Header.Get("X-Create")))
+	}))
+	defer srv.Close()
+
+	getResp := vresty.CreateGetWithOptions(srv.URL+"/redirect", false, vresty.WithHeader("X-Create", "get")).Execute()
+	if getResp.Err() != nil {
+		t.Fatal(getResp.Err())
+	}
+	if got := getResp.Status(); got != http.StatusFound {
+		t.Fatalf("CreateGetWithOptions status = %d, want 302", got)
+	}
+
+	postResp := vresty.CreatePostWithOptions(srv.URL, vresty.WithHeader("X-Create", "post")).Execute()
+	if postResp.Err() != nil {
+		t.Fatal(postResp.Err())
+	}
+	if got := postResp.Body(); got != "POST:post" {
+		t.Fatalf("CreatePostWithOptions body = %q, want POST:post", got)
+	}
+}
+
+func TestFacadeUtilityWrappers(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			body, _ := io.ReadAll(r.Body)
+			_, _ = w.Write([]byte("post:" + string(body) + ":" + r.Header.Get("X-Util")))
+			return
+		}
+		_, _ = w.Write([]byte(r.URL.Query().Get("q") + ":" + r.Header.Get("X-Util")))
+	}))
+	defer srv.Close()
+
+	if got := vresty.GetWithParamsWithOptions(srv.URL, map[string]any{"q": "go"}, vresty.WithHeader("X-Util", "get")); got != "go:get" {
+		t.Fatalf("GetWithParamsWithOptions() = %q, want go:get", got)
+	}
+	if got := vresty.PostStringWithOptions(srv.URL, "body", vresty.WithHeader("X-Util", "post")); got != "post:body:post" {
+		t.Fatalf("PostStringWithOptions() = %q, want post:body:post", got)
+	}
+	if !vresty.IsHTTP("http://example.com") || !vresty.IsHTTPS("https://example.com") {
+		t.Fatal("IsHTTP/IsHTTPS wrappers returned false")
+	}
+	if got := vresty.ToParams(map[string]any{"q": "go"}); got != "q=go" {
+		t.Fatalf("ToParams() = %q, want q=go", got)
+	}
+}
+
 func TestFacadeRequestGlobalConfigAPIs(t *testing.T) {
 	vresty.SetGlobalTimeout(321 * time.Millisecond)
 	vresty.SetGlobalHeader("X-Facade-Config", "global")

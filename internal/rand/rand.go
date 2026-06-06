@@ -21,7 +21,7 @@ const (
 
 var (
 	defaultRandMu sync.Mutex
-	defaultRand   = mathrand.New(mathrand.NewSource(time.Now().UnixNano()))
+	defaultRand   *mathrand.Rand
 )
 
 type randomConfig struct {
@@ -65,7 +65,7 @@ func applyRandomOptions(opts []RandomOption) randomConfig {
 func SetSeed(seed int64) {
 	defaultRandMu.Lock()
 	defer defaultRandMu.Unlock()
-	defaultRand.Seed(seed)
+	defaultRand = mathrand.New(mathrand.NewSource(seed))
 }
 
 // RandomInt returns a random integer in [0, max). Non-positive max returns 0.
@@ -109,7 +109,7 @@ func RandomLongWithOptions(opts ...RandomOption) int64 {
 	}
 	defaultRandMu.Lock()
 	defer defaultRandMu.Unlock()
-	return defaultRand.Int63()
+	return defaultRandLocked().Int63()
 }
 
 // RandomFloat returns a random float64 in [0.0, 1.0).
@@ -125,7 +125,7 @@ func RandomFloatWithOptions(opts ...RandomOption) float64 {
 	}
 	defaultRandMu.Lock()
 	defer defaultRandMu.Unlock()
-	return defaultRand.Float64()
+	return defaultRandLocked().Float64()
 }
 
 // RandomBool returns a random boolean.
@@ -237,5 +237,12 @@ func randomIntn(cfg randomConfig, n int) int {
 	}
 	defaultRandMu.Lock()
 	defer defaultRandMu.Unlock()
-	return defaultRand.Intn(n)
+	return defaultRandLocked().Intn(n)
+}
+
+func defaultRandLocked() *mathrand.Rand {
+	if defaultRand == nil {
+		defaultRand = mathrand.New(mathrand.NewSource(time.Now().UnixNano()))
+	}
+	return defaultRand
 }
