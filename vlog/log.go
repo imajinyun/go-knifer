@@ -81,6 +81,9 @@ func WithLogClock(clock func() time.Time) ConsoleLogOption { return logx.WithLog
 // WithLogOutput sets the output writers used by console log output.
 func WithLogOutput(out, errOut io.Writer) ConsoleLogOption { return logx.WithLogOutput(out, errOut) }
 
+// WithLogLevel sets an instance-specific console log threshold.
+func WithLogLevel(level Level) ConsoleLogOption { return logx.WithLogLevel(level) }
+
 // Logger returns a cached logger by name.
 func Logger(name string) Log { return logx.Get(name) }
 

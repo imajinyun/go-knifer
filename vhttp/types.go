@@ -8,6 +8,9 @@ type Request = httpx.HTTPRequest
 // RequestOption customizes one HTTP request at construction time.
 type RequestOption = httpx.RequestOption
 
+// GlobalConfig is an immutable snapshot of package-level HTTP defaults.
+type GlobalConfig = httpx.GlobalConfig
+
 // Response wraps an HTTP response.
 type Response = httpx.HTTPResponse
 

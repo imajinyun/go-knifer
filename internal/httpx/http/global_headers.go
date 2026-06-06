@@ -46,8 +46,12 @@ func RemoveGlobalHeader(name string) {
 func CloneGlobalHeaders() http.Header {
 	globalHeadersMu.RLock()
 	defer globalHeadersMu.RUnlock()
+	return cloneHeader(globalHeaders)
+}
+
+func cloneHeader(headers http.Header) http.Header {
 	out := http.Header{}
-	for k, v := range globalHeaders {
+	for k, v := range headers {
 		out[k] = append([]string(nil), v...)
 	}
 	return out

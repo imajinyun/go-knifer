@@ -21,6 +21,7 @@ type ConsoleLog struct {
 	// clock / timeLayout 可由测试注入；为空时使用 time.Now / 默认布局。
 	clock      func() time.Time
 	timeLayout string
+	level      *Level
 }
 
 const consoleLogTimeLayout = "2006-01-02 15:04:05"
@@ -50,6 +51,13 @@ func WithLogClock(clock func() time.Time) ConsoleLogOption {
 func WithLogOutput(out, errOut io.Writer) ConsoleLogOption {
 	return func(c *ConsoleLog) {
 		c.SetOutput(out, errOut)
+	}
+}
+
+// WithLogLevel sets an instance-specific console log threshold.
+func WithLogLevel(level Level) ConsoleLogOption {
+	return func(c *ConsoleLog) {
+		c.level = &level
 	}
 }
 
@@ -91,7 +99,7 @@ func NewConsoleLogWithOptions(name string, opts ...ConsoleLogOption) *ConsoleLog
 	}
 	c.AbstractLog = &AbstractLog{
 		Core:        c.write,
-		IsEnabledFn: func(level Level) bool { return GetConsoleLevel() <= level },
+		IsEnabledFn: c.isEnabled,
 	}
 	return c
 }
@@ -117,6 +125,13 @@ func (c *ConsoleLog) layout() string {
 		return c.timeLayout
 	}
 	return consoleLogTimeLayout
+}
+
+func (c *ConsoleLog) isEnabled(level Level) bool {
+	if c.level != nil {
+		return *c.level <= level
+	}
+	return GetConsoleLevel() <= level
 }
 
 // write 是底层写入逻辑，由 AbstractLog.Core 调用。

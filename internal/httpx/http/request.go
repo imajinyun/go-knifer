@@ -54,21 +54,36 @@ type formFile struct {
 // RequestOption customizes one HTTP request at construction time.
 type RequestOption func(*HTTPRequest)
 
+// WithGlobalConfig initializes request defaults from a captured global configuration snapshot.
+func WithGlobalConfig(cfg GlobalConfig) RequestOption {
+	return func(r *HTTPRequest) {
+		r.headers = cloneHeader(cfg.Headers)
+		r.cookieJar = cfg.CookieJar
+		r.timeout = cfg.Timeout
+		follow := cfg.FollowRedirects
+		r.followRedir = &follow
+		r.maxRedirects = cfg.MaxRedirects
+		r.tlsSkip = cfg.TrustAnyHost
+		r.userAgent = cfg.DefaultUserAgent
+	}
+}
+
 // NewRequest creates a request with the specified method and URL.
 func NewRequest(method Method, rawURL string, opts ...RequestOption) *HTTPRequest {
-	follow := GetGlobalFollowRedirects()
+	cfg := SnapshotGlobalConfig()
+	follow := cfg.FollowRedirects
 	r := &HTTPRequest{
 		method:       method,
 		rawURL:       rawURL,
 		queryParams:  url.Values{},
-		headers:      CloneGlobalHeaders(),
-		cookieJar:    GetCookieJar(),
+		headers:      cloneHeader(cfg.Headers),
+		cookieJar:    cfg.CookieJar,
 		charset:      "UTF-8",
-		timeout:      GetGlobalTimeout(),
+		timeout:      cfg.Timeout,
 		followRedir:  &follow,
-		maxRedirects: GetGlobalMaxRedirects(),
-		tlsSkip:      IsTrustAnyHost(),
-		userAgent:    GetGlobalUserAgent(),
+		maxRedirects: cfg.MaxRedirects,
+		tlsSkip:      cfg.TrustAnyHost,
+		userAgent:    cfg.DefaultUserAgent,
 		decodeConfig: defaultResponseDecodeConfig(),
 	}
 	for _, opt := range opts {

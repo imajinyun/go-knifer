@@ -2,6 +2,7 @@ package vid
 
 import (
 	"io"
+	"net"
 	"time"
 
 	idimpl "github.com/imajinyun/go-knifer/internal/id"
@@ -76,6 +77,16 @@ func WithSnowflakeTimeFunc(timeFunc func() int64) SnowflakeOption {
 // WithSnowflakeWaitFunc sets the wait strategy used when Snowflake sequence overflows in one millisecond.
 func WithSnowflakeWaitFunc(waitFunc func(lastTimestamp int64, now func() int64) int64) SnowflakeOption {
 	return idimpl.WithSnowflakeWaitFunc(waitFunc)
+}
+
+// WithSnowflakeInterfacesFunc sets the network interface provider used to derive the default datacenter ID.
+func WithSnowflakeInterfacesFunc(interfaces func() ([]net.Interface, error)) SnowflakeOption {
+	return idimpl.WithSnowflakeInterfacesFunc(interfaces)
+}
+
+// WithSnowflakePIDFunc sets the process-id provider used to derive the default worker ID.
+func WithSnowflakePIDFunc(pid func() int) SnowflakeOption {
+	return idimpl.WithSnowflakePIDFunc(pid)
 }
 
 // CreateSnowflakeWithOptions creates a Snowflake generator from options.

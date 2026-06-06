@@ -15,12 +15,20 @@ const (
 )
 
 type initConfig struct {
-	dsn          string
-	envKey       string
-	output       io.Writer
-	formatter    logrus.Formatter
-	reportCaller bool
-	levels       []logrus.Level
+	dsn             string
+	envKey          string
+	output          io.Writer
+	formatter       logrus.Formatter
+	reportCaller    bool
+	levels          []logrus.Level
+	getenv          func(string) string
+	setDSN          func(string) error
+	sentryClient    *raven.Client
+	newSentryHook   func(*raven.Client, []logrus.Level) (*logrus_sentry.SentryHook, error)
+	addHook         func(logrus.Hook)
+	setReportCaller func(bool)
+	setOutput       func(io.Writer)
+	setFormatter    func(logrus.Formatter)
 }
 
 // InitOption customizes logrus/Sentry initialization.
@@ -50,14 +58,82 @@ func WithSentryLevels(levels ...logrus.Level) InitOption {
 	return func(c *initConfig) { c.levels = append([]logrus.Level(nil), levels...) }
 }
 
+// WithEnvLookupFunc sets the environment lookup used to override the Sentry DSN.
+func WithEnvLookupFunc(getenv func(string) string) InitOption {
+	return func(c *initConfig) {
+		if getenv != nil {
+			c.getenv = getenv
+		}
+	}
+}
+
+// WithRavenSetDSNFunc sets the function used to configure raven's global DSN.
+func WithRavenSetDSNFunc(setDSN func(string) error) InitOption {
+	return func(c *initConfig) {
+		if setDSN != nil {
+			c.setDSN = setDSN
+		}
+	}
+}
+
+// WithSentryClient sets the raven client passed to the Sentry hook factory.
+func WithSentryClient(client *raven.Client) InitOption {
+	return func(c *initConfig) {
+		if client != nil {
+			c.sentryClient = client
+		}
+	}
+}
+
+// WithSentryHookFactory sets the factory used to create the Sentry logrus hook.
+func WithSentryHookFactory(factory func(*raven.Client, []logrus.Level) (*logrus_sentry.SentryHook, error)) InitOption {
+	return func(c *initConfig) {
+		if factory != nil {
+			c.newSentryHook = factory
+		}
+	}
+}
+
+// WithLogHookAdder sets the function used to register the Sentry hook.
+func WithLogHookAdder(addHook func(logrus.Hook)) InitOption {
+	return func(c *initConfig) {
+		if addHook != nil {
+			c.addHook = addHook
+		}
+	}
+}
+
+// WithLogrusConfigurer sets the logrus global configuration functions used during initialization.
+func WithLogrusConfigurer(setReportCaller func(bool), setOutput func(io.Writer), setFormatter func(logrus.Formatter)) InitOption {
+	return func(c *initConfig) {
+		if setReportCaller != nil {
+			c.setReportCaller = setReportCaller
+		}
+		if setOutput != nil {
+			c.setOutput = setOutput
+		}
+		if setFormatter != nil {
+			c.setFormatter = setFormatter
+		}
+	}
+}
+
 func applyInitOptions(dsn string, opts []InitOption) initConfig {
 	cfg := initConfig{
-		dsn:          dsn,
-		envKey:       SentryDSN,
-		output:       io.Discard,
-		formatter:    EmptyFormatter,
-		reportCaller: true,
-		levels:       []logrus.Level{logrus.PanicLevel, logrus.FatalLevel, logrus.ErrorLevel, logrus.WarnLevel},
+		dsn:             dsn,
+		envKey:          SentryDSN,
+		output:          io.Discard,
+		formatter:       EmptyFormatter,
+		reportCaller:    true,
+		levels:          []logrus.Level{logrus.PanicLevel, logrus.FatalLevel, logrus.ErrorLevel, logrus.WarnLevel},
+		getenv:          os.Getenv,
+		setDSN:          raven.SetDSN,
+		sentryClient:    raven.DefaultClient,
+		newSentryHook:   logrus_sentry.NewAsyncWithClientSentryHook,
+		addHook:         logrus.AddHook,
+		setReportCaller: logrus.SetReportCaller,
+		setOutput:       logrus.SetOutput,
+		setFormatter:    logrus.SetFormatter,
 	}
 	for _, opt := range opts {
 		if opt != nil {
@@ -73,6 +149,30 @@ func applyInitOptions(dsn string, opts []InitOption) initConfig {
 	if len(cfg.levels) == 0 {
 		cfg.levels = []logrus.Level{logrus.PanicLevel, logrus.FatalLevel, logrus.ErrorLevel, logrus.WarnLevel}
 	}
+	if cfg.getenv == nil {
+		cfg.getenv = os.Getenv
+	}
+	if cfg.setDSN == nil {
+		cfg.setDSN = raven.SetDSN
+	}
+	if cfg.sentryClient == nil {
+		cfg.sentryClient = raven.DefaultClient
+	}
+	if cfg.newSentryHook == nil {
+		cfg.newSentryHook = logrus_sentry.NewAsyncWithClientSentryHook
+	}
+	if cfg.addHook == nil {
+		cfg.addHook = logrus.AddHook
+	}
+	if cfg.setReportCaller == nil {
+		cfg.setReportCaller = logrus.SetReportCaller
+	}
+	if cfg.setOutput == nil {
+		cfg.setOutput = logrus.SetOutput
+	}
+	if cfg.setFormatter == nil {
+		cfg.setFormatter = logrus.SetFormatter
+	}
 	return cfg
 }
 
@@ -85,23 +185,23 @@ func Init(sentryDSN string) {
 // InitWithOptions configures logrus output and optional Sentry forwarding with custom options.
 func InitWithOptions(opts ...InitOption) {
 	cfg := applyInitOptions("", opts)
-	logrus.SetReportCaller(cfg.reportCaller)
-	logrus.SetOutput(cfg.output)
-	logrus.SetFormatter(cfg.formatter)
+	cfg.setReportCaller(cfg.reportCaller)
+	cfg.setOutput(cfg.output)
+	cfg.setFormatter(cfg.formatter)
 
-	if dsn := os.Getenv(cfg.envKey); dsn != "" {
+	if dsn := cfg.getenv(cfg.envKey); dsn != "" {
 		cfg.dsn = dsn
 	}
 	if cfg.dsn == "" {
 		return
 	}
-	if err := raven.SetDSN(cfg.dsn); err != nil {
+	if err := cfg.setDSN(cfg.dsn); err != nil {
 		logrus.WithError(err).Error("raven init failed")
 		return
 	}
 
-	sentry, err := logrus_sentry.NewAsyncWithClientSentryHook(
-		raven.DefaultClient,
+	sentry, err := cfg.newSentryHook(
+		cfg.sentryClient,
 		cfg.levels,
 	)
 	if err != nil {
@@ -110,5 +210,5 @@ func InitWithOptions(opts ...InitOption) {
 	}
 	sentry.StacktraceConfiguration.Enable = true
 	sentry.StacktraceConfiguration.IncludeErrorBreadcrumb = true
-	logrus.AddHook(sentry)
+	cfg.addHook(sentry)
 }

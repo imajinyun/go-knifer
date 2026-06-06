@@ -16,6 +16,20 @@ type DirOption = fileimpl.DirOption
 // ReadOption customizes file and stream read helpers.
 type ReadOption = fileimpl.ReadOption
 
+// StatOption customizes stat-like file helpers.
+type StatOption = fileimpl.StatOption
+
+// DeleteOption customizes delete helpers.
+type DeleteOption = fileimpl.DeleteOption
+
+type (
+	OpenFunc      = fileimpl.OpenFunc
+	OpenFileFunc  = fileimpl.OpenFileFunc
+	StatFunc      = fileimpl.StatFunc
+	MkdirAllFunc  = fileimpl.MkdirAllFunc
+	RemoveAllFunc = fileimpl.RemoveAllFunc
+)
+
 // Error is the file module error type.
 type Error = fileimpl.FileError
 
@@ -43,6 +57,21 @@ func WithInitialLineBuffer(n int) ReadOption { return fileimpl.WithInitialLineBu
 // WithMaxLineBytes sets the maximum scanner token size for line reads.
 func WithMaxLineBytes(n int) ReadOption { return fileimpl.WithMaxLineBytes(n) }
 
+// WithOpen sets the function used to open files for reading.
+func WithOpen(open OpenFunc) ReadOption { return fileimpl.WithOpen(open) }
+
+// WithOpenFile sets the function used to open files for writing.
+func WithOpenFile(openFile OpenFileFunc) WriteOption { return fileimpl.WithOpenFile(openFile) }
+
+// WithStat sets the function used to inspect filesystem paths.
+func WithStat(stat StatFunc) StatOption { return fileimpl.WithStat(stat) }
+
+// WithMkdirAll sets the function used to create directory trees.
+func WithMkdirAll(mkdirAll MkdirAllFunc) DirOption { return fileimpl.WithMkdirAll(mkdirAll) }
+
+// WithRemoveAll sets the function used to remove file trees.
+func WithRemoveAll(removeAll RemoveAllFunc) DeleteOption { return fileimpl.WithRemoveAll(removeAll) }
+
 func ReadAll(r io.Reader) ([]byte, error)              { return fileimpl.ReadAll(r) }
 func ReadString(r io.Reader) (string, error)           { return fileimpl.ReadString(r) }
 func ReadLines(r io.Reader) ([]string, error)          { return fileimpl.ReadLines(r) }
@@ -54,6 +83,21 @@ func IsDirectory(path string) bool                     { return fileimpl.IsDirec
 func ReadFileString(path string) (string, error)       { return fileimpl.FileReadString(path) }
 func ReadFileBytes(path string) ([]byte, error)        { return fileimpl.FileReadBytes(path) }
 func ReadFileLines(path string) ([]string, error)      { return fileimpl.FileReadLines(path) }
+
+// ExistsWithOptions reports whether a file or directory exists using per-call stat options.
+func ExistsWithOptions(path string, opts ...StatOption) bool {
+	return fileimpl.FileExistsWithOptions(path, opts...)
+}
+
+// IsFileWithOptions reports whether path exists and is a regular file using per-call stat options.
+func IsFileWithOptions(path string, opts ...StatOption) bool {
+	return fileimpl.IsFileWithOptions(path, opts...)
+}
+
+// IsDirectoryWithOptions reports whether path exists and is a directory using per-call stat options.
+func IsDirectoryWithOptions(path string, opts ...StatOption) bool {
+	return fileimpl.IsDirectoryWithOptions(path, opts...)
+}
 
 // ReadAllWithOptions reads data from r with per-call read options.
 func ReadAllWithOptions(r io.Reader, opts ...ReadOption) ([]byte, error) {
@@ -111,11 +155,22 @@ func Touch(path string, opts ...WriteOption) error {
 // Del removes path recursively.
 func Del(path string) error { return fileimpl.Del(path) }
 
+// DelWithOptions removes path recursively using per-call delete options.
+func DelWithOptions(path string, opts ...DeleteOption) error {
+	return fileimpl.DelWithOptions(path, opts...)
+}
+
 // CopyFile copies src to dst, creating destination parents by default.
 func CopyFile(src, dst string, opts ...WriteOption) error {
 	return fileimpl.FileCopy(src, dst, opts...)
 }
-func MainName(path string) string         { return fileimpl.MainName(path) }
-func Extension(path string) string        { return fileimpl.Extension(path) }
-func Size(path string) int64              { return fileimpl.FileSize(path) }
+func MainName(path string) string  { return fileimpl.MainName(path) }
+func Extension(path string) string { return fileimpl.Extension(path) }
+func Size(path string) int64       { return fileimpl.FileSize(path) }
+
+// SizeWithOptions returns the file size using per-call stat options.
+func SizeWithOptions(path string, opts ...StatOption) int64 {
+	return fileimpl.FileSizeWithOptions(path, opts...)
+}
+
 func ReaderFromString(s string) io.Reader { return fileimpl.ReaderFromString(s) }

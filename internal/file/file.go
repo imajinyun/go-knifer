@@ -13,92 +13,148 @@ import (
 
 // This section provides IO helpers aligned with the utility toolkit-core IoUtil.
 
-type writeConfig struct {
-	filePerm      fs.FileMode
-	dirPerm       fs.FileMode
-	overwrite     bool
-	createParents bool
-}
+type (
+	OpenFunc      func(string) (io.ReadCloser, error)
+	OpenFileFunc  func(string, int, fs.FileMode) (io.WriteCloser, error)
+	StatFunc      func(string) (fs.FileInfo, error)
+	MkdirAllFunc  func(string, fs.FileMode) error
+	RemoveAllFunc func(string) error
+)
 
-// WriteOption customizes file write helpers.
-type WriteOption func(*writeConfig)
-
-type dirConfig struct {
-	dirPerm fs.FileMode
-}
-
-// DirOption customizes directory helpers.
-type DirOption func(*dirConfig)
-
-type readConfig struct {
+type fileConfig struct {
+	filePerm         fs.FileMode
+	dirPerm          fs.FileMode
+	overwrite        bool
+	createParents    bool
 	maxBytes         int64
 	initialLineBytes int
 	maxLineBytes     int
+	open             OpenFunc
+	openFile         OpenFileFunc
+	stat             StatFunc
+	mkdirAll         MkdirAllFunc
+	removeAll        RemoveAllFunc
 }
+
+// Option customizes file helpers.
+type Option func(*fileConfig)
+
+// WriteOption customizes file write helpers.
+type WriteOption = Option
+
+// DirOption customizes directory helpers.
+type DirOption = Option
 
 // ReadOption customizes file and stream read helpers.
-type ReadOption func(*readConfig)
+type ReadOption = Option
 
-func defaultWriteConfig() writeConfig {
-	return writeConfig{filePerm: 0o644, dirPerm: 0o755, overwrite: true, createParents: true}
+// StatOption customizes stat-like file helpers.
+type StatOption = Option
+
+// DeleteOption customizes delete helpers.
+type DeleteOption = Option
+
+func defaultConfig() fileConfig {
+	return fileConfig{
+		filePerm:         0o644,
+		dirPerm:          0o755,
+		overwrite:        true,
+		createParents:    true,
+		initialLineBytes: 64 * 1024,
+		maxLineBytes:     1024 * 1024,
+		open:             defaultOpen,
+		openFile:         defaultOpenFile,
+		stat:             os.Stat,
+		mkdirAll:         os.MkdirAll,
+		removeAll:        os.RemoveAll,
+	}
 }
 
-func defaultDirConfig() dirConfig { return dirConfig{dirPerm: 0o755} }
+func defaultOpen(path string) (io.ReadCloser, error) {
+	// #nosec G304 -- file helpers intentionally read caller-provided paths.
+	return os.Open(path)
+}
 
-func defaultReadConfig() readConfig {
-	return readConfig{initialLineBytes: 64 * 1024, maxLineBytes: 1024 * 1024}
+func defaultOpenFile(path string, flag int, perm fs.FileMode) (io.WriteCloser, error) {
+	// #nosec G304 -- file helpers intentionally write caller-provided paths.
+	return os.OpenFile(path, flag, perm)
 }
 
 // WithFilePerm sets the file permission used when creating files.
-func WithFilePerm(perm fs.FileMode) WriteOption { return func(c *writeConfig) { c.filePerm = perm } }
+func WithFilePerm(perm fs.FileMode) WriteOption { return func(c *fileConfig) { c.filePerm = perm } }
 
 // WithDirPerm sets the parent-directory permission used when creating directories.
-func WithDirPerm(perm fs.FileMode) WriteOption { return func(c *writeConfig) { c.dirPerm = perm } }
+func WithDirPerm(perm fs.FileMode) WriteOption { return func(c *fileConfig) { c.dirPerm = perm } }
 
 // WithOverwrite controls whether an existing destination file may be replaced.
 func WithOverwrite(overwrite bool) WriteOption {
-	return func(c *writeConfig) { c.overwrite = overwrite }
+	return func(c *fileConfig) { c.overwrite = overwrite }
 }
 
 // WithCreateParents controls whether parent directories are created automatically.
 func WithCreateParents(create bool) WriteOption {
-	return func(c *writeConfig) { c.createParents = create }
+	return func(c *fileConfig) { c.createParents = create }
 }
 
 // WithMkdirPerm sets the directory permission used by Mkdir.
-func WithMkdirPerm(perm fs.FileMode) DirOption { return func(c *dirConfig) { c.dirPerm = perm } }
+func WithMkdirPerm(perm fs.FileMode) DirOption { return func(c *fileConfig) { c.dirPerm = perm } }
 
 // WithMaxBytes limits how many bytes a read helper may consume. Non-positive means unlimited.
-func WithMaxBytes(n int64) ReadOption { return func(c *readConfig) { c.maxBytes = n } }
+func WithMaxBytes(n int64) ReadOption { return func(c *fileConfig) { c.maxBytes = n } }
 
 // WithInitialLineBuffer sets the initial scanner buffer for line reads.
-func WithInitialLineBuffer(n int) ReadOption { return func(c *readConfig) { c.initialLineBytes = n } }
+func WithInitialLineBuffer(n int) ReadOption { return func(c *fileConfig) { c.initialLineBytes = n } }
 
 // WithMaxLineBytes sets the maximum scanner token size for line reads.
-func WithMaxLineBytes(n int) ReadOption { return func(c *readConfig) { c.maxLineBytes = n } }
+func WithMaxLineBytes(n int) ReadOption { return func(c *fileConfig) { c.maxLineBytes = n } }
 
-func applyWriteOptions(opts []WriteOption) writeConfig {
-	cfg := defaultWriteConfig()
-	for _, opt := range opts {
-		if opt != nil {
-			opt(&cfg)
+// WithOpen sets the function used to open files for reading.
+func WithOpen(open OpenFunc) Option {
+	return func(c *fileConfig) {
+		if open != nil {
+			c.open = open
 		}
 	}
-	return cfg
 }
 
-func applyDirOptions(opts []DirOption) dirConfig {
-	cfg := defaultDirConfig()
-	for _, opt := range opts {
-		if opt != nil {
-			opt(&cfg)
+// WithOpenFile sets the function used to open files for writing.
+func WithOpenFile(openFile OpenFileFunc) Option {
+	return func(c *fileConfig) {
+		if openFile != nil {
+			c.openFile = openFile
 		}
 	}
-	return cfg
 }
 
-func applyReadOptions(opts []ReadOption) readConfig {
-	cfg := defaultReadConfig()
+// WithStat sets the function used to inspect filesystem paths.
+func WithStat(stat StatFunc) Option {
+	return func(c *fileConfig) {
+		if stat != nil {
+			c.stat = stat
+		}
+	}
+}
+
+// WithMkdirAll sets the function used to create directory trees.
+func WithMkdirAll(mkdirAll MkdirAllFunc) Option {
+	return func(c *fileConfig) {
+		if mkdirAll != nil {
+			c.mkdirAll = mkdirAll
+		}
+	}
+}
+
+// WithRemoveAll sets the function used to remove file trees.
+func WithRemoveAll(removeAll RemoveAllFunc) Option {
+	return func(c *fileConfig) {
+		if removeAll != nil {
+			c.removeAll = removeAll
+		}
+	}
+}
+
+func applyOptions(opts []Option) fileConfig {
+	cfg := defaultConfig()
 	for _, opt := range opts {
 		if opt != nil {
 			opt(&cfg)
@@ -113,7 +169,30 @@ func applyReadOptions(opts []ReadOption) readConfig {
 	if cfg.maxLineBytes < cfg.initialLineBytes {
 		cfg.maxLineBytes = cfg.initialLineBytes
 	}
+	if cfg.open == nil {
+		cfg.open = defaultOpen
+	}
+	if cfg.openFile == nil {
+		cfg.openFile = defaultOpenFile
+	}
+	if cfg.stat == nil {
+		cfg.stat = os.Stat
+	}
+	if cfg.mkdirAll == nil {
+		cfg.mkdirAll = os.MkdirAll
+	}
+	if cfg.removeAll == nil {
+		cfg.removeAll = os.RemoveAll
+	}
 	return cfg
+}
+
+func applyWriteOptions(opts []WriteOption) fileConfig { return applyOptions(opts) }
+func applyDirOptions(opts []DirOption) fileConfig     { return applyOptions(opts) }
+func applyReadOptions(opts []ReadOption) fileConfig   { return applyOptions(opts) }
+func applyStatOptions(opts []StatOption) fileConfig   { return applyOptions(opts) }
+func applyDeleteOptions(opts []DeleteOption) fileConfig {
+	return applyOptions(opts)
 }
 
 // ReadAll reads all data from r.
@@ -141,25 +220,7 @@ func ReadLines(r io.Reader) ([]string, error) { return ReadLinesWithOptions(r) }
 
 // ReadLinesWithOptions reads all lines from r with per-call line options.
 func ReadLinesWithOptions(r io.Reader, opts ...ReadOption) ([]string, error) {
-	cfg := applyReadOptions(opts)
-	var limited *io.LimitedReader
-	if cfg.maxBytes > 0 {
-		limited = &io.LimitedReader{R: r, N: cfg.maxBytes + 1}
-		r = limited
-	}
-	scanner := bufio.NewScanner(r)
-	scanner.Buffer(make([]byte, cfg.initialLineBytes), cfg.maxLineBytes)
-	var lines []string
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-	if limited != nil && limited.N == 0 {
-		return nil, invalidInputf("read exceeds max bytes: %d", cfg.maxBytes)
-	}
-	return lines, nil
+	return readLinesWithConfig(r, applyReadOptions(opts))
 }
 
 // IoCopy copies from src to dst and returns the number of bytes written.
@@ -177,19 +238,34 @@ func CloseQuietly(c io.Closer) {
 
 // FileExists reports whether a file or directory exists.
 func FileExists(path string) bool {
-	_, err := os.Stat(path)
+	return FileExistsWithOptions(path)
+}
+
+// FileExistsWithOptions reports whether a file or directory exists using per-call stat options.
+func FileExistsWithOptions(path string, opts ...StatOption) bool {
+	_, err := applyStatOptions(opts).stat(path)
 	return err == nil
 }
 
 // IsFile reports whether path exists and is a regular file.
 func IsFile(path string) bool {
-	st, err := os.Stat(path)
+	return IsFileWithOptions(path)
+}
+
+// IsFileWithOptions reports whether path exists and is a regular file using per-call stat options.
+func IsFileWithOptions(path string, opts ...StatOption) bool {
+	st, err := applyStatOptions(opts).stat(path)
 	return err == nil && !st.IsDir()
 }
 
 // IsDirectory reports whether path exists and is a directory.
 func IsDirectory(path string) bool {
-	st, err := os.Stat(path)
+	return IsDirectoryWithOptions(path)
+}
+
+// IsDirectoryWithOptions reports whether path exists and is a directory using per-call stat options.
+func IsDirectoryWithOptions(path string, opts ...StatOption) bool {
+	st, err := applyStatOptions(opts).stat(path)
 	return err == nil && st.IsDir()
 }
 
@@ -210,12 +286,13 @@ func FileReadBytes(path string) ([]byte, error) { return FileReadBytesWithOption
 
 // FileReadBytesWithOptions reads bytes from a file with per-call read options.
 func FileReadBytesWithOptions(path string, opts ...ReadOption) ([]byte, error) {
-	f, err := os.Open(path)
+	cfg := applyReadOptions(opts)
+	f, err := cfg.open(path)
 	if err != nil {
 		return nil, wrapFileIO("read file "+path, err)
 	}
 	defer CloseQuietly(f)
-	b, err := ReadAllWithOptions(f, opts...)
+	b, err := readAllLimit(f, cfg.maxBytes)
 	return b, wrapFileIO("read file "+path, err)
 }
 
@@ -224,12 +301,13 @@ func FileReadLines(path string) ([]string, error) { return FileReadLinesWithOpti
 
 // FileReadLinesWithOptions reads all lines from a file with per-call read options.
 func FileReadLinesWithOptions(path string, opts ...ReadOption) ([]string, error) {
-	f, err := os.Open(path)
+	cfg := applyReadOptions(opts)
+	f, err := cfg.open(path)
 	if err != nil {
 		return nil, wrapFileIO("open file "+path, err)
 	}
 	defer CloseQuietly(f)
-	lines, err := ReadLinesWithOptions(f, opts...)
+	lines, err := readLinesWithConfig(f, cfg)
 	return lines, wrapFileIO("read lines from file "+path, err)
 }
 
@@ -248,7 +326,7 @@ func FileWriteBytes(path string, data []byte, opts ...WriteOption) error {
 	if !cfg.overwrite {
 		flag |= os.O_EXCL
 	}
-	return writeFile(path, data, flag, cfg.filePerm)
+	return writeFile(path, data, flag, cfg)
 }
 
 // FileAppendString appends content to a file and creates parent directories when needed.
@@ -261,12 +339,12 @@ func FileAppendString(path, content string, opts ...WriteOption) error {
 	if !cfg.overwrite {
 		flag |= os.O_EXCL
 	}
-	f, err := os.OpenFile(path, flag, cfg.filePerm)
+	f, err := cfg.openFile(path, flag, cfg.filePerm)
 	if err != nil {
 		return wrapFileIO("open file "+path, err)
 	}
 	defer CloseQuietly(f)
-	_, err = f.WriteString(content)
+	_, err = io.WriteString(f, content)
 	return wrapFileIO("append file "+path, err)
 }
 
@@ -276,19 +354,19 @@ func Mkdir(dir string, opts ...DirOption) error {
 		return nil
 	}
 	cfg := applyDirOptions(opts)
-	return wrapFileIO("create directory "+dir, os.MkdirAll(dir, cfg.dirPerm))
+	return wrapFileIO("create directory "+dir, cfg.mkdirAll(dir, cfg.dirPerm))
 }
 
 // Touch creates an empty file when it does not exist.
 func Touch(path string, opts ...WriteOption) error {
-	if FileExists(path) {
+	cfg := applyWriteOptions(opts)
+	if FileExistsWithOptions(path, WithStat(cfg.stat)) {
 		return nil
 	}
-	cfg := applyWriteOptions(opts)
 	if err := ensureWriteParent(path, cfg); err != nil {
 		return err
 	}
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, cfg.filePerm)
+	f, err := cfg.openFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, cfg.filePerm)
 	if err != nil {
 		return wrapFileIO("touch file "+path, err)
 	}
@@ -297,22 +375,28 @@ func Touch(path string, opts ...WriteOption) error {
 
 // Del removes a file or directory recursively. Missing paths are treated as success.
 func Del(path string) error {
-	if !FileExists(path) {
+	return DelWithOptions(path)
+}
+
+// DelWithOptions removes a file or directory recursively using per-call delete options.
+func DelWithOptions(path string, opts ...DeleteOption) error {
+	cfg := applyDeleteOptions(opts)
+	if !FileExistsWithOptions(path, WithStat(cfg.stat)) {
 		return nil
 	}
-	return wrapFileIO("delete "+path, os.RemoveAll(path))
+	return wrapFileIO("delete "+path, cfg.removeAll(path))
 }
 
 // FileCopy copies a file and overwrites the destination when it already exists.
 func FileCopy(src, dst string, opts ...WriteOption) error {
-	if !IsFile(src) {
+	cfg := applyWriteOptions(opts)
+	if !IsFileWithOptions(src, WithStat(cfg.stat)) {
 		return invalidInputf("source is not a file: %s", src)
 	}
-	cfg := applyWriteOptions(opts)
 	if err := ensureWriteParent(dst, cfg); err != nil {
 		return err
 	}
-	in, err := os.Open(src)
+	in, err := cfg.open(src)
 	if err != nil {
 		return wrapFileIO("open source file "+src, err)
 	}
@@ -321,7 +405,7 @@ func FileCopy(src, dst string, opts ...WriteOption) error {
 	if !cfg.overwrite {
 		flag |= os.O_EXCL
 	}
-	out, err := os.OpenFile(dst, flag, cfg.filePerm)
+	out, err := cfg.openFile(dst, flag, cfg.filePerm)
 	if err != nil {
 		return wrapFileIO("open destination file "+dst, err)
 	}
@@ -330,19 +414,22 @@ func FileCopy(src, dst string, opts ...WriteOption) error {
 	return wrapFileIO("copy file "+src+" to "+dst, err)
 }
 
-func ensureWriteParent(path string, cfg writeConfig) error {
+func ensureWriteParent(path string, cfg fileConfig) error {
 	if !cfg.createParents {
 		return nil
 	}
-	return Mkdir(filepath.Dir(path), WithMkdirPerm(cfg.dirPerm))
+	dir := filepath.Dir(path)
+	if dir == "" || dir == "." {
+		return nil
+	}
+	return wrapFileIO("create directory "+dir, cfg.mkdirAll(dir, cfg.dirPerm))
 }
 
-func writeFile(path string, data []byte, flag int, perm fs.FileMode) error {
-	f, err := os.OpenFile(path, flag, perm)
+func writeFile(path string, data []byte, flag int, cfg fileConfig) error {
+	f, err := cfg.openFile(path, flag, cfg.filePerm)
 	if err != nil {
 		return wrapFileIO("open file "+path, err)
 	}
-	defer CloseQuietly(f)
 	n, err := f.Write(data)
 	if err == nil && n < len(data) {
 		err = io.ErrShortWrite
@@ -371,6 +458,27 @@ func readAllLimit(r io.Reader, maxBytes int64) ([]byte, error) {
 	return b, nil
 }
 
+func readLinesWithConfig(r io.Reader, cfg fileConfig) ([]string, error) {
+	var limited *io.LimitedReader
+	if cfg.maxBytes > 0 {
+		limited = &io.LimitedReader{R: r, N: cfg.maxBytes + 1}
+		r = limited
+	}
+	scanner := bufio.NewScanner(r)
+	scanner.Buffer(make([]byte, cfg.initialLineBytes), cfg.maxLineBytes)
+	var lines []string
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+	if limited != nil && limited.N == 0 {
+		return nil, invalidInputf("read exceeds max bytes: %d", cfg.maxBytes)
+	}
+	return lines, nil
+}
+
 // MainName returns the file name without its extension; parent directories are ignored.
 func MainName(path string) string {
 	name := filepath.Base(path)
@@ -392,7 +500,12 @@ func Extension(path string) string {
 
 // FileSize returns the file size in bytes, or -1 when the path is missing or not a file.
 func FileSize(path string) int64 {
-	st, err := os.Stat(path)
+	return FileSizeWithOptions(path)
+}
+
+// FileSizeWithOptions returns the file size using per-call stat options.
+func FileSizeWithOptions(path string, opts ...StatOption) int64 {
+	st, err := applyStatOptions(opts).stat(path)
 	if err != nil || st.IsDir() {
 		return -1
 	}

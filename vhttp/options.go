@@ -39,6 +39,9 @@ func WithClient(c *http.Client) RequestOption { return httpx.WithClient(c) }
 // WithCookieJar sets a per-request CookieJar. nil disables cookie management for this request.
 func WithCookieJar(jar http.CookieJar) RequestOption { return httpx.WithCookieJar(jar) }
 
+// WithGlobalConfig initializes request defaults from a captured global configuration snapshot.
+func WithGlobalConfig(cfg GlobalConfig) RequestOption { return httpx.WithGlobalConfig(cfg) }
+
 // WithUserAgent sets a per-request User-Agent.
 func WithUserAgent(ua string) RequestOption { return httpx.WithUserAgent(ua) }
 

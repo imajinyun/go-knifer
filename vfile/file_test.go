@@ -2,9 +2,12 @@ package vfile
 
 import (
 	"errors"
+	"io"
+	"io/fs"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	knifer "github.com/imajinyun/go-knifer"
 )
@@ -126,3 +129,37 @@ func TestFacadeWriteAndDirOptions(t *testing.T) {
 		t.Fatalf("Touch() with options error = %v", err)
 	}
 }
+
+func TestFacadeProviderOptions(t *testing.T) {
+	if got, err := ReadFileStringWithOptions("virtual.txt", WithOpen(func(path string) (io.ReadCloser, error) {
+		if path != "virtual.txt" {
+			t.Fatalf("read path = %q, want virtual.txt", path)
+		}
+		return io.NopCloser(strings.NewReader("virtual")), nil
+	})); err != nil || got != "virtual" {
+		t.Fatalf("ReadFileStringWithOptions() = %q, %v", got, err)
+	}
+	if !ExistsWithOptions("x", WithStat(func(path string) (fs.FileInfo, error) {
+		return fakeFacadeFileInfo{name: path}, nil
+	})) {
+		t.Fatal("ExistsWithOptions() = false, want true")
+	}
+	removed := false
+	if err := DelWithOptions("x",
+		WithStat(func(string) (fs.FileInfo, error) { return fakeFacadeFileInfo{name: "x"}, nil }),
+		WithRemoveAll(func(string) error { removed = true; return nil }),
+	); err != nil || !removed {
+		t.Fatalf("DelWithOptions() = %v, removed=%v", err, removed)
+	}
+}
+
+type fakeFacadeFileInfo struct {
+	name string
+}
+
+func (f fakeFacadeFileInfo) Name() string       { return f.name }
+func (f fakeFacadeFileInfo) Size() int64        { return 1 }
+func (f fakeFacadeFileInfo) Mode() fs.FileMode  { return 0o644 }
+func (f fakeFacadeFileInfo) ModTime() time.Time { return time.Unix(0, 0) }
+func (f fakeFacadeFileInfo) IsDir() bool        { return false }
+func (f fakeFacadeFileInfo) Sys() any           { return nil }

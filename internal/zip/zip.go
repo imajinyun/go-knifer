@@ -41,6 +41,26 @@ type StreamEntry struct {
 	Reader io.Reader
 }
 
+type (
+	OpenFunc          func(string) (io.ReadCloser, error)
+	OpenFileFunc      func(string, int, os.FileMode) (io.WriteCloser, error)
+	StatFunc          func(string) (os.FileInfo, error)
+	LstatFunc         func(string) (os.FileInfo, error)
+	ReadDirFunc       func(string) ([]os.DirEntry, error)
+	ReadlinkFunc      func(string) (string, error)
+	MkdirAllFunc      func(string, os.FileMode) error
+	RemoveFunc        func(string) error
+	RenameFunc        func(string, string) error
+	OpenZipReaderFunc func(string) (*archivezip.ReadCloser, error)
+	CreateTempFunc    func(string, string) (TempFile, error)
+)
+
+// TempFile is the writable temporary file contract used by append operations.
+type TempFile interface {
+	io.WriteCloser
+	Name() string
+}
+
 type archiveConfig struct {
 	dirPerm           os.FileMode
 	filePerm          os.FileMode
@@ -53,6 +73,17 @@ type archiveConfig struct {
 	compressionMethod uint16
 	compressionLevel  int
 	maxBytes          int64
+	open              OpenFunc
+	openFile          OpenFileFunc
+	stat              StatFunc
+	lstat             LstatFunc
+	readDir           ReadDirFunc
+	readlink          ReadlinkFunc
+	mkdirAll          MkdirAllFunc
+	remove            RemoveFunc
+	rename            RenameFunc
+	openZipReader     OpenZipReaderFunc
+	createTemp        CreateTempFunc
 }
 
 // ArchiveOption customizes ZIP/GZIP/ZLIB archive helpers per call.
@@ -66,7 +97,32 @@ func defaultArchiveConfig() archiveConfig {
 		preserveMode:      true,
 		compressionMethod: archivezip.Deflate,
 		compressionLevel:  flate.DefaultCompression,
+		open:              defaultOpen,
+		openFile:          defaultOpenFile,
+		stat:              os.Stat,
+		lstat:             os.Lstat,
+		readDir:           os.ReadDir,
+		readlink:          os.Readlink,
+		mkdirAll:          os.MkdirAll,
+		remove:            os.Remove,
+		rename:            os.Rename,
+		openZipReader:     archivezip.OpenReader,
+		createTemp:        defaultCreateTemp,
 	}
+}
+
+func defaultOpen(path string) (io.ReadCloser, error) {
+	// #nosec G304 -- archive helpers intentionally read caller-provided paths.
+	return os.Open(path)
+}
+
+func defaultOpenFile(path string, flag int, perm os.FileMode) (io.WriteCloser, error) {
+	// #nosec G304 -- archive helpers intentionally write caller-provided paths.
+	return os.OpenFile(path, flag, perm)
+}
+
+func defaultCreateTemp(dir, pattern string) (TempFile, error) {
+	return os.CreateTemp(dir, pattern)
 }
 
 // WithDirPerm sets the directory permission used when creating archive output/extract directories.
@@ -116,6 +172,105 @@ func WithCompressionLevel(level int) ArchiveOption {
 // WithMaxBytes limits bytes read from archive entries or decompressed streams. Non-positive means unlimited.
 func WithMaxBytes(n int64) ArchiveOption { return func(c *archiveConfig) { c.maxBytes = n } }
 
+// WithOpen sets the function used to open source files for reading.
+func WithOpen(open OpenFunc) ArchiveOption {
+	return func(c *archiveConfig) {
+		if open != nil {
+			c.open = open
+		}
+	}
+}
+
+// WithOpenFile sets the function used to open archive/extracted files for writing.
+func WithOpenFile(openFile OpenFileFunc) ArchiveOption {
+	return func(c *archiveConfig) {
+		if openFile != nil {
+			c.openFile = openFile
+		}
+	}
+}
+
+// WithStat sets the function used to inspect existing archive paths.
+func WithStat(stat StatFunc) ArchiveOption {
+	return func(c *archiveConfig) {
+		if stat != nil {
+			c.stat = stat
+		}
+	}
+}
+
+// WithLstat sets the function used to inspect source paths without following symlinks.
+func WithLstat(lstat LstatFunc) ArchiveOption {
+	return func(c *archiveConfig) {
+		if lstat != nil {
+			c.lstat = lstat
+		}
+	}
+}
+
+// WithReadDir sets the function used to enumerate source directories.
+func WithReadDir(readDir ReadDirFunc) ArchiveOption {
+	return func(c *archiveConfig) {
+		if readDir != nil {
+			c.readDir = readDir
+		}
+	}
+}
+
+// WithReadlink sets the function used to read symlink targets.
+func WithReadlink(readlink ReadlinkFunc) ArchiveOption {
+	return func(c *archiveConfig) {
+		if readlink != nil {
+			c.readlink = readlink
+		}
+	}
+}
+
+// WithMkdirAll sets the function used to create directory trees.
+func WithMkdirAll(mkdirAll MkdirAllFunc) ArchiveOption {
+	return func(c *archiveConfig) {
+		if mkdirAll != nil {
+			c.mkdirAll = mkdirAll
+		}
+	}
+}
+
+// WithRemove sets the function used to remove temporary files.
+func WithRemove(remove RemoveFunc) ArchiveOption {
+	return func(c *archiveConfig) {
+		if remove != nil {
+			c.remove = remove
+		}
+	}
+}
+
+// WithRename sets the function used to move completed temporary archives into place.
+func WithRename(rename RenameFunc) ArchiveOption {
+	return func(c *archiveConfig) {
+		if rename != nil {
+			c.rename = rename
+		}
+	}
+}
+
+// WithOpenZipReader sets the function used to open existing ZIP archives for reading.
+func WithOpenZipReader(openZipReader OpenZipReaderFunc) ArchiveOption {
+	return func(c *archiveConfig) {
+		if openZipReader != nil {
+			c.openZipReader = openZipReader
+		}
+	}
+}
+
+// WithCreateTemp sets the function used to create temporary archives for append operations.
+func WithCreateTemp(createTemp CreateTempFunc) ArchiveOption {
+	return func(c *archiveConfig) {
+		if createTemp != nil {
+			c.createTemp = createTemp
+		}
+	}
+}
+
 func applyArchiveOptions(opts []ArchiveOption) archiveConfig {
 	cfg := defaultArchiveConfig()
 	for _, opt := range opts {
@@ -129,11 +284,49 @@ func applyArchiveOptions(opts []ArchiveOption) archiveConfig {
 	if cfg.filePerm == 0 {
 		cfg.filePerm = 0o644
 	}
+	if cfg.open == nil {
+		cfg.open = defaultOpen
+	}
+	if cfg.openFile == nil {
+		cfg.openFile = defaultOpenFile
+	}
+	if cfg.stat == nil {
+		cfg.stat = os.Stat
+	}
+	if cfg.lstat == nil {
+		cfg.lstat = os.Lstat
+	}
+	if cfg.readDir == nil {
+		cfg.readDir = os.ReadDir
+	}
+	if cfg.readlink == nil {
+		cfg.readlink = os.Readlink
+	}
+	if cfg.mkdirAll == nil {
+		cfg.mkdirAll = os.MkdirAll
+	}
+	if cfg.remove == nil {
+		cfg.remove = os.Remove
+	}
+	if cfg.rename == nil {
+		cfg.rename = os.Rename
+	}
+	if cfg.openZipReader == nil {
+		cfg.openZipReader = archivezip.OpenReader
+	}
+	if cfg.createTemp == nil {
+		cfg.createTemp = defaultCreateTemp
+	}
 	return cfg
 }
 
 // Open opens a ZIP file for reading.
-func Open(path string) (*archivezip.ReadCloser, error) { return archivezip.OpenReader(path) }
+func Open(path string) (*archivezip.ReadCloser, error) { return OpenWithOptions(path) }
+
+// OpenWithOptions opens a ZIP file for reading with per-call options.
+func OpenWithOptions(path string, opts ...ArchiveOption) (*archivezip.ReadCloser, error) {
+	return applyArchiveOptions(opts).openZipReader(path)
+}
 
 // NewWriter returns a ZIP writer for out.
 func NewWriter(out io.Writer) *archivezip.Writer { return archivezip.NewWriter(out) }
@@ -191,11 +384,11 @@ func ZipFilesFilterWithOptions(dest string, withSrcDir bool, filter FileFilter, 
 	if cfg.setFilter {
 		filter = cfg.filter
 	}
-	if err := validateZipTarget(dest, srcFiles...); err != nil {
+	if err := validateZipTarget(cfg, dest, srcFiles...); err != nil {
 		return err
 	}
 	if dir := filepath.Dir(dest); dir != "." {
-		if err := os.MkdirAll(dir, cfg.dirPerm); err != nil {
+		if err := cfg.mkdirAll(dir, cfg.dirPerm); err != nil {
 			return err
 		}
 	}
@@ -203,7 +396,7 @@ func ZipFilesFilterWithOptions(dest string, withSrcDir bool, filter FileFilter, 
 	if !cfg.overwrite {
 		flag |= os.O_EXCL
 	}
-	out, err := os.OpenFile(dest, flag, cfg.filePerm) // #nosec G304 -- destination path is an explicit caller-provided archive output.
+	out, err := cfg.openFile(dest, flag, cfg.filePerm)
 	if err != nil {
 		return err
 	}
@@ -241,7 +434,7 @@ func ZipToWriterWithOptions(out io.Writer, srcFiles []string, opts ...ArchiveOpt
 		if src == "" {
 			continue
 		}
-		info, err := os.Lstat(src)
+		info, err := cfg.lstat(src)
 		if err != nil {
 			return err
 		}
@@ -277,7 +470,7 @@ func ZipEntries(zipFile string, entries ...EntryData) (err error) {
 func ZipEntriesWithOptions(zipFile string, entries []EntryData, opts ...ArchiveOption) (err error) {
 	cfg := applyArchiveOptions(opts)
 	if dir := filepath.Dir(zipFile); dir != "." {
-		if err := os.MkdirAll(dir, cfg.dirPerm); err != nil {
+		if err := cfg.mkdirAll(dir, cfg.dirPerm); err != nil {
 			return err
 		}
 	}
@@ -285,7 +478,7 @@ func ZipEntriesWithOptions(zipFile string, entries []EntryData, opts ...ArchiveO
 	if !cfg.overwrite {
 		flag |= os.O_EXCL
 	}
-	out, err := os.OpenFile(zipFile, flag, cfg.filePerm) // #nosec G304 -- destination path is an explicit caller-provided archive output.
+	out, err := cfg.openFile(zipFile, flag, cfg.filePerm)
 	if err != nil {
 		return err
 	}
@@ -320,7 +513,7 @@ func ZipStreams(zipFile string, entries ...StreamEntry) (err error) {
 func ZipStreamsWithOptions(zipFile string, entries []StreamEntry, opts ...ArchiveOption) (err error) {
 	cfg := applyArchiveOptions(opts)
 	if dir := filepath.Dir(zipFile); dir != "." {
-		if err := os.MkdirAll(dir, cfg.dirPerm); err != nil {
+		if err := cfg.mkdirAll(dir, cfg.dirPerm); err != nil {
 			return err
 		}
 	}
@@ -328,7 +521,7 @@ func ZipStreamsWithOptions(zipFile string, entries []StreamEntry, opts ...Archiv
 	if !cfg.overwrite {
 		flag |= os.O_EXCL
 	}
-	out, err := os.OpenFile(zipFile, flag, cfg.filePerm) // #nosec G304 -- destination path is an explicit caller-provided archive output.
+	out, err := cfg.openFile(zipFile, flag, cfg.filePerm)
 	if err != nil {
 		return err
 	}
@@ -393,7 +586,8 @@ func UnzipToLimit(zipFile, destDir string, limit int64) error {
 
 // UnzipToWithOptions extracts zipFile into destDir with per-call options.
 func UnzipToWithOptions(zipFile, destDir string, opts ...ArchiveOption) error {
-	r, err := archivezip.OpenReader(zipFile)
+	cfg := applyArchiveOptions(opts)
+	r, err := cfg.openZipReader(zipFile)
 	if err != nil {
 		return err
 	}
@@ -417,7 +611,7 @@ func UnzipReaderToWithOptions(r *archivezip.Reader, destDir string, opts ...Arch
 	if r == nil {
 		return invalidInputf("zip reader is nil")
 	}
-	if err := os.MkdirAll(destDir, cfg.dirPerm); err != nil {
+	if err := cfg.mkdirAll(destDir, cfg.dirPerm); err != nil {
 		return err
 	}
 	var total int64
@@ -444,7 +638,12 @@ func UnzipReaderToWithOptions(r *archivezip.Reader, destDir string, opts ...Arch
 
 // Get returns a reader for the named entry in zipFile.
 func Get(zipFile, name string) (io.ReadCloser, error) {
-	r, err := archivezip.OpenReader(zipFile)
+	return GetWithOptions(zipFile, name)
+}
+
+// GetWithOptions returns a reader for the named entry in zipFile with per-call options.
+func GetWithOptions(zipFile, name string, opts ...ArchiveOption) (io.ReadCloser, error) {
+	r, err := applyArchiveOptions(opts).openZipReader(zipFile)
 	if err != nil {
 		return nil, err
 	}
@@ -469,7 +668,7 @@ func GetBytes(zipFile, name string) ([]byte, error) {
 
 // GetBytesWithOptions returns the content of the named entry in zipFile with per-call options.
 func GetBytesWithOptions(zipFile, name string, opts ...ArchiveOption) ([]byte, error) {
-	rc, err := Get(zipFile, name)
+	rc, err := GetWithOptions(zipFile, name, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -479,7 +678,12 @@ func GetBytesWithOptions(zipFile, name string, opts ...ArchiveOption) ([]byte, e
 
 // Read walks every archive entry and calls consumer.
 func Read(zipFile string, consumer func(*archivezip.File) error) error {
-	r, err := archivezip.OpenReader(zipFile)
+	return ReadWithOptions(zipFile, consumer)
+}
+
+// ReadWithOptions walks every archive entry and calls consumer using per-call options.
+func ReadWithOptions(zipFile string, consumer func(*archivezip.File) error, opts ...ArchiveOption) error {
+	r, err := applyArchiveOptions(opts).openZipReader(zipFile)
 	if err != nil {
 		return err
 	}
@@ -494,7 +698,12 @@ func Read(zipFile string, consumer func(*archivezip.File) error) error {
 
 // ListFileNames returns direct file names under dir inside zipFile.
 func ListFileNames(zipFile, dir string) ([]string, error) {
-	r, err := archivezip.OpenReader(zipFile)
+	return ListFileNamesWithOptions(zipFile, dir)
+}
+
+// ListFileNamesWithOptions returns direct file names under dir inside zipFile using per-call options.
+func ListFileNamesWithOptions(zipFile, dir string, opts ...ArchiveOption) ([]string, error) {
+	r, err := applyArchiveOptions(opts).openZipReader(zipFile)
 	if err != nil {
 		return nil, err
 	}
@@ -531,17 +740,22 @@ func GzipString(content string) ([]byte, error) { return Gzip([]byte(content)) }
 
 // GzipFile compresses a file using gzip and returns compressed bytes.
 func GzipFile(path string) ([]byte, error) {
-	// #nosec G304 -- SDK file helper intentionally opens the caller-provided path.
-	f, err := os.Open(path)
+	return GzipFileWithOptions(path)
+}
+
+// GzipFileWithOptions compresses a file using gzip and per-call options.
+func GzipFileWithOptions(path string, opts ...ArchiveOption) ([]byte, error) {
+	cfg := applyArchiveOptions(opts)
+	f, err := cfg.open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer func() { _ = f.Close() }()
-	info, err := f.Stat()
+	info, err := cfg.stat(path)
 	if err != nil {
 		return nil, err
 	}
-	return GzipReader(f, int(info.Size()))
+	return GzipReaderWithOptions(f, int(info.Size()), opts...)
 }
 
 // GzipReader compresses all bytes from r using gzip.
@@ -618,13 +832,18 @@ func ZlibString(content string, level int) ([]byte, error) { return ZlibLevel([]
 
 // ZlibFile compresses a file using zlib with the specified compression level.
 func ZlibFile(path string, level int) ([]byte, error) {
-	// #nosec G304 -- SDK file helper intentionally opens the caller-provided path.
-	f, err := os.Open(path)
+	return ZlibFileWithOptions(path, level)
+}
+
+// ZlibFileWithOptions compresses a file using zlib with the specified compression level and per-call options.
+func ZlibFileWithOptions(path string, level int, opts ...ArchiveOption) ([]byte, error) {
+	cfg := applyArchiveOptions(opts)
+	f, err := cfg.open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer func() { _ = f.Close() }()
-	info, err := f.Stat()
+	info, err := cfg.stat(path)
 	if err != nil {
 		return nil, err
 	}
@@ -699,7 +918,7 @@ func UnZlibReaderWithOptions(r io.Reader, estimatedLength int, opts ...ArchiveOp
 func appendWithFilter(zipPath, srcPath string, opts ...ArchiveOption) error {
 	cfg := applyArchiveOptions(opts)
 	filter := cfg.filter
-	tmp, err := os.CreateTemp(filepath.Dir(zipPath), ".zip-append-*.zip")
+	tmp, err := cfg.createTemp(filepath.Dir(zipPath), ".zip-append-*.zip")
 	if err != nil {
 		return err
 	}
@@ -710,12 +929,12 @@ func appendWithFilter(zipPath, srcPath string, opts ...ArchiveOption) error {
 			return flate.NewWriter(w, cfg.compressionLevel)
 		})
 	}
-	if _, err := os.Stat(zipPath); err == nil {
-		r, err := archivezip.OpenReader(zipPath)
+	if _, err := cfg.stat(zipPath); err == nil {
+		r, err := cfg.openZipReader(zipPath)
 		if err != nil {
 			_ = zw.Close()
 			_ = tmp.Close()
-			_ = os.Remove(tmpPath)
+			_ = cfg.remove(tmpPath)
 			return err
 		}
 		for _, f := range r.File {
@@ -723,17 +942,17 @@ func appendWithFilter(zipPath, srcPath string, opts ...ArchiveOption) error {
 				_ = r.Close()
 				_ = zw.Close()
 				_ = tmp.Close()
-				_ = os.Remove(tmpPath)
+				_ = cfg.remove(tmpPath)
 				return err
 			}
 		}
 		_ = r.Close()
 	}
-	info, err := os.Lstat(srcPath)
+	info, err := cfg.lstat(srcPath)
 	if err != nil {
 		_ = zw.Close()
 		_ = tmp.Close()
-		_ = os.Remove(tmpPath)
+		_ = cfg.remove(tmpPath)
 		return err
 	}
 	base := filepath.Dir(srcPath)
@@ -745,23 +964,23 @@ func appendWithFilter(zipPath, srcPath string, opts ...ArchiveOption) error {
 	if err := addPath(zw, srcPath, base, name, filter, cfg); err != nil {
 		_ = zw.Close()
 		_ = tmp.Close()
-		_ = os.Remove(tmpPath)
+		_ = cfg.remove(tmpPath)
 		return err
 	}
 	if err := zw.Close(); err != nil {
 		_ = tmp.Close()
-		_ = os.Remove(tmpPath)
+		_ = cfg.remove(tmpPath)
 		return err
 	}
 	if err := tmp.Close(); err != nil {
-		_ = os.Remove(tmpPath)
+		_ = cfg.remove(tmpPath)
 		return err
 	}
-	return os.Rename(tmpPath, zipPath)
+	return cfg.rename(tmpPath, zipPath)
 }
 
 func addPath(zw *archivezip.Writer, path, base, name string, filter FileFilter, cfg archiveConfig) error {
-	info, err := os.Lstat(path)
+	info, err := cfg.lstat(path)
 	if err != nil {
 		return err
 	}
@@ -801,7 +1020,7 @@ func addPath(zw *archivezip.Writer, path, base, name string, filter FileFilter, 
 				return err
 			}
 		}
-		entries, err := os.ReadDir(path)
+		entries, err := cfg.readDir(path)
 		if err != nil {
 			return err
 		}
@@ -833,14 +1052,14 @@ func addFile(zw *archivezip.Writer, path, zipName string, info os.FileInfo, cfg 
 		return err
 	}
 	if info.Mode()&os.ModeSymlink != 0 {
-		linkTarget, err := os.Readlink(path)
+		linkTarget, err := cfg.readlink(path)
 		if err != nil {
 			return err
 		}
 		_, err = io.WriteString(w, linkTarget)
 		return err
 	}
-	r, err := os.Open(path) // #nosec G304 -- archive creation intentionally reads caller-provided source paths.
+	r, err := cfg.open(path)
 	if err != nil {
 		return err
 	}
@@ -859,9 +1078,9 @@ func extractFile(f *archivezip.File, destDir string, cfg archiveConfig) error {
 		if cfg.preserveMode {
 			perm = f.Mode()
 		}
-		return os.MkdirAll(target, perm)
+		return cfg.mkdirAll(target, perm)
 	}
-	if err := os.MkdirAll(filepath.Dir(target), cfg.dirPerm); err != nil {
+	if err := cfg.mkdirAll(filepath.Dir(target), cfg.dirPerm); err != nil {
 		return err
 	}
 	r, err := f.Open()
@@ -877,7 +1096,7 @@ func extractFile(f *archivezip.File, destDir string, cfg archiveConfig) error {
 	if !cfg.overwrite {
 		flag |= os.O_EXCL
 	}
-	w, err := os.OpenFile(target, flag, perm) // #nosec G304 -- target is validated by safeZipTarget before extraction.
+	w, err := cfg.openFile(target, flag, perm)
 	if err != nil {
 		return err
 	}
@@ -969,8 +1188,8 @@ func safeZipTarget(destDir, name string) (string, error) {
 	return target, nil
 }
 
-func validateZipTarget(zipFile string, srcFiles ...string) error {
-	info, err := os.Stat(zipFile)
+func validateZipTarget(cfg archiveConfig, zipFile string, srcFiles ...string) error {
+	info, err := cfg.stat(zipFile)
 	if err == nil && info.IsDir() {
 		return invalidInputf("zip file %q must not be a directory", zipFile)
 	}
@@ -983,7 +1202,7 @@ func validateZipTarget(zipFile string, srcFiles ...string) error {
 		if src == "" {
 			continue
 		}
-		info, err := os.Stat(src)
+		info, err := cfg.stat(src)
 		if err != nil {
 			return err
 		}

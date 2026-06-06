@@ -32,6 +32,21 @@ type StreamEntry = zipimpl.StreamEntry
 // ArchiveOption customizes archive helpers per call.
 type ArchiveOption = zipimpl.ArchiveOption
 
+type (
+	OpenFunc          = zipimpl.OpenFunc
+	OpenFileFunc      = zipimpl.OpenFileFunc
+	StatFunc          = zipimpl.StatFunc
+	LstatFunc         = zipimpl.LstatFunc
+	ReadDirFunc       = zipimpl.ReadDirFunc
+	ReadlinkFunc      = zipimpl.ReadlinkFunc
+	MkdirAllFunc      = zipimpl.MkdirAllFunc
+	RemoveFunc        = zipimpl.RemoveFunc
+	RenameFunc        = zipimpl.RenameFunc
+	OpenZipReaderFunc = zipimpl.OpenZipReaderFunc
+	CreateTempFunc    = zipimpl.CreateTempFunc
+	TempFile          = zipimpl.TempFile
+)
+
 // WithDirPerm sets the directory permission used when creating archive output/extract directories.
 func WithDirPerm(perm os.FileMode) ArchiveOption { return zipimpl.WithDirPerm(perm) }
 
@@ -59,8 +74,50 @@ func WithCompressionLevel(level int) ArchiveOption { return zipimpl.WithCompress
 // WithMaxBytes limits bytes read from archive entries or decompressed streams.
 func WithMaxBytes(n int64) ArchiveOption { return zipimpl.WithMaxBytes(n) }
 
+// WithOpen sets the function used to open source files for reading.
+func WithOpen(open OpenFunc) ArchiveOption { return zipimpl.WithOpen(open) }
+
+// WithOpenFile sets the function used to open archive/extracted files for writing.
+func WithOpenFile(openFile OpenFileFunc) ArchiveOption { return zipimpl.WithOpenFile(openFile) }
+
+// WithStat sets the function used to inspect existing archive paths.
+func WithStat(stat StatFunc) ArchiveOption { return zipimpl.WithStat(stat) }
+
+// WithLstat sets the function used to inspect source paths without following symlinks.
+func WithLstat(lstat LstatFunc) ArchiveOption { return zipimpl.WithLstat(lstat) }
+
+// WithReadDir sets the function used to enumerate source directories.
+func WithReadDir(readDir ReadDirFunc) ArchiveOption { return zipimpl.WithReadDir(readDir) }
+
+// WithReadlink sets the function used to read symlink targets.
+func WithReadlink(readlink ReadlinkFunc) ArchiveOption { return zipimpl.WithReadlink(readlink) }
+
+// WithMkdirAll sets the function used to create directory trees.
+func WithMkdirAll(mkdirAll MkdirAllFunc) ArchiveOption { return zipimpl.WithMkdirAll(mkdirAll) }
+
+// WithRemove sets the function used to remove temporary files.
+func WithRemove(remove RemoveFunc) ArchiveOption { return zipimpl.WithRemove(remove) }
+
+// WithRename sets the function used to move completed temporary archives into place.
+func WithRename(rename RenameFunc) ArchiveOption { return zipimpl.WithRename(rename) }
+
+// WithOpenZipReader sets the function used to open existing ZIP archives for reading.
+func WithOpenZipReader(openZipReader OpenZipReaderFunc) ArchiveOption {
+	return zipimpl.WithOpenZipReader(openZipReader)
+}
+
+// WithCreateTemp sets the function used to create temporary archives for append operations.
+func WithCreateTemp(createTemp CreateTempFunc) ArchiveOption {
+	return zipimpl.WithCreateTemp(createTemp)
+}
+
 // Open opens a ZIP file for reading.
 func Open(path string) (*archivezip.ReadCloser, error) { return zipimpl.Open(path) }
+
+// OpenWithOptions opens a ZIP file for reading with per-call options.
+func OpenWithOptions(path string, opts ...ArchiveOption) (*archivezip.ReadCloser, error) {
+	return zipimpl.OpenWithOptions(path, opts...)
+}
 
 // NewWriter returns a ZIP writer for out.
 func NewWriter(out io.Writer) *archivezip.Writer { return zipimpl.NewWriter(out) }
@@ -204,6 +261,11 @@ func UnzipReaderToWithOptions(r *archivezip.Reader, destDir string, opts ...Arch
 // Get returns a reader for the named entry in zipFile.
 func Get(zipFile, name string) (io.ReadCloser, error) { return zipimpl.Get(zipFile, name) }
 
+// GetWithOptions returns a reader for the named entry in zipFile with per-call options.
+func GetWithOptions(zipFile, name string, opts ...ArchiveOption) (io.ReadCloser, error) {
+	return zipimpl.GetWithOptions(zipFile, name, opts...)
+}
+
 // GetBytes returns the content of the named entry in zipFile.
 func GetBytes(zipFile, name string) ([]byte, error) { return zipimpl.GetBytes(zipFile, name) }
 
@@ -217,8 +279,18 @@ func Read(zipFile string, consumer func(*archivezip.File) error) error {
 	return zipimpl.Read(zipFile, consumer)
 }
 
+// ReadWithOptions walks every archive entry and calls consumer using per-call options.
+func ReadWithOptions(zipFile string, consumer func(*archivezip.File) error, opts ...ArchiveOption) error {
+	return zipimpl.ReadWithOptions(zipFile, consumer, opts...)
+}
+
 // ListFileNames returns direct file names under dir inside zipFile.
 func ListFileNames(zipFile, dir string) ([]string, error) { return zipimpl.ListFileNames(zipFile, dir) }
+
+// ListFileNamesWithOptions returns direct file names under dir inside zipFile using per-call options.
+func ListFileNamesWithOptions(zipFile, dir string, opts ...ArchiveOption) ([]string, error) {
+	return zipimpl.ListFileNamesWithOptions(zipFile, dir, opts...)
+}
 
 // Gzip compresses data using gzip.
 func Gzip(data []byte) ([]byte, error) { return zipimpl.Gzip(data) }
@@ -233,6 +305,11 @@ func GzipString(content string) ([]byte, error) { return zipimpl.GzipString(cont
 
 // GzipFile compresses a file using gzip and returns compressed bytes.
 func GzipFile(path string) ([]byte, error) { return zipimpl.GzipFile(path) }
+
+// GzipFileWithOptions compresses a file using gzip and per-call options.
+func GzipFileWithOptions(path string, opts ...ArchiveOption) ([]byte, error) {
+	return zipimpl.GzipFileWithOptions(path, opts...)
+}
 
 // GzipReader compresses all bytes from r using gzip.
 func GzipReader(r io.Reader, estimatedLength int) ([]byte, error) {
@@ -276,6 +353,11 @@ func ZlibString(content string, level int) ([]byte, error) { return zipimpl.Zlib
 
 // ZlibFile compresses a file using zlib with the specified compression level.
 func ZlibFile(path string, level int) ([]byte, error) { return zipimpl.ZlibFile(path, level) }
+
+// ZlibFileWithOptions compresses a file using zlib with the specified compression level and per-call options.
+func ZlibFileWithOptions(path string, level int, opts ...ArchiveOption) ([]byte, error) {
+	return zipimpl.ZlibFileWithOptions(path, level, opts...)
+}
 
 // ZlibLevel compresses data using zlib with the specified compression level.
 func ZlibLevel(data []byte, level int) ([]byte, error) { return zipimpl.ZlibLevel(data, level) }

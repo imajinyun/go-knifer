@@ -11,6 +11,7 @@ import (
 
 // Singleton caches avoid repeated collection.
 var (
+	infoMu      sync.Mutex
 	hostOnce    sync.Once
 	hostInfo    *HostInfo
 	osOnce      sync.Once
@@ -22,6 +23,22 @@ var (
 	runtimeOnce sync.Once
 	runtimeRef  *RuntimeInfo
 )
+
+// ResetInfoCache clears cached singleton system information.
+func ResetInfoCache() {
+	infoMu.Lock()
+	defer infoMu.Unlock()
+	hostOnce = sync.Once{}
+	hostInfo = nil
+	osOnce = sync.Once{}
+	osInfo = nil
+	userOnce = sync.Once{}
+	userInfo = nil
+	goOnce = sync.Once{}
+	goInfo = nil
+	runtimeOnce = sync.Once{}
+	runtimeRef = nil
+}
 
 type processConfig struct {
 	pid          func() int
@@ -109,6 +126,8 @@ func applyEnvOptions(opts []EnvOption) envConfig {
 
 // GetHostInfo returns cached host information.
 func GetHostInfo() *HostInfo {
+	infoMu.Lock()
+	defer infoMu.Unlock()
 	hostOnce.Do(func() { hostInfo = NewHostInfo() })
 	return hostInfo
 }
@@ -120,6 +139,8 @@ func GetHostInfoWithOptions(opts ...HostInfoOption) *HostInfo {
 
 // GetOsInfo returns cached OS information.
 func GetOsInfo() *OsInfo {
+	infoMu.Lock()
+	defer infoMu.Unlock()
 	osOnce.Do(func() { osInfo = NewOsInfo() })
 	return osInfo
 }
@@ -131,6 +152,8 @@ func GetOsInfoWithOptions(opts ...OsInfoOption) *OsInfo {
 
 // GetUserInfo returns cached user information.
 func GetUserInfo() *UserInfo {
+	infoMu.Lock()
+	defer infoMu.Unlock()
 	userOnce.Do(func() { userInfo = NewUserInfo() })
 	return userInfo
 }
@@ -142,6 +165,8 @@ func GetUserInfoWithOptions(opts ...UserInfoOption) *UserInfo {
 
 // GetGoInfo returns cached Go runtime metadata.
 func GetGoInfo() *GoInfo {
+	infoMu.Lock()
+	defer infoMu.Unlock()
 	goOnce.Do(func() { goInfo = NewGoInfo() })
 	return goInfo
 }
@@ -153,6 +178,8 @@ func GetGoInfoWithOptions(opts ...GoInfoOption) *GoInfo {
 
 // GetRuntimeInfo returns runtime memory information and refreshes it on each call.
 func GetRuntimeInfo() *RuntimeInfo {
+	infoMu.Lock()
+	defer infoMu.Unlock()
 	runtimeOnce.Do(func() { runtimeRef = NewRuntimeInfo() })
 	return runtimeRef.Refresh()
 }

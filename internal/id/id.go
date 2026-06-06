@@ -119,6 +119,8 @@ type snowflakeConfig struct {
 	datacenterID  int64
 	timeFunc      func() int64
 	tilNextMillis func(lastTimestamp int64, now func() int64) int64
+	interfaces    func() ([]net.Interface, error)
+	pid           func() int
 	workerSet     bool
 	datacenterSet bool
 }
@@ -194,8 +196,26 @@ func WithSnowflakeWaitFunc(waitFunc func(lastTimestamp int64, now func() int64) 
 	}
 }
 
+// WithSnowflakeInterfacesFunc sets the network interface provider used to derive the default datacenter id.
+func WithSnowflakeInterfacesFunc(interfaces func() ([]net.Interface, error)) SnowflakeOption {
+	return func(c *snowflakeConfig) {
+		if interfaces != nil {
+			c.interfaces = interfaces
+		}
+	}
+}
+
+// WithSnowflakePIDFunc sets the process-id provider used to derive the default worker id.
+func WithSnowflakePIDFunc(pid func() int) SnowflakeOption {
+	return func(c *snowflakeConfig) {
+		if pid != nil {
+			c.pid = pid
+		}
+	}
+}
+
 func applySnowflakeOptions(opts []SnowflakeOption) snowflakeConfig {
-	cfg := snowflakeConfig{timeFunc: currentMillis, tilNextMillis: waitNextMillis}
+	cfg := snowflakeConfig{timeFunc: currentMillis, tilNextMillis: waitNextMillis, interfaces: net.Interfaces, pid: os.Getpid}
 	for _, opt := range opts {
 		if opt != nil {
 			opt(&cfg)
@@ -207,16 +227,22 @@ func applySnowflakeOptions(opts []SnowflakeOption) snowflakeConfig {
 	if cfg.tilNextMillis == nil {
 		cfg.tilNextMillis = waitNextMillis
 	}
+	if cfg.interfaces == nil {
+		cfg.interfaces = net.Interfaces
+	}
+	if cfg.pid == nil {
+		cfg.pid = os.Getpid
+	}
 	return cfg
 }
 
 func applyDefaultSnowflakeOptions(opts []SnowflakeOption) snowflakeConfig {
 	cfg := applySnowflakeOptions(opts)
 	if !cfg.datacenterSet {
-		cfg.datacenterID = GetDataCenterID(snowflakeMaxDatacenterID)
+		cfg.datacenterID = getDataCenterID(snowflakeMaxDatacenterID, cfg.interfaces)
 	}
 	if !cfg.workerSet {
-		cfg.workerID = GetWorkerID(cfg.datacenterID, snowflakeMaxWorkerID)
+		cfg.workerID = getWorkerID(cfg.datacenterID, snowflakeMaxWorkerID, cfg.pid)
 	}
 	return cfg
 }
@@ -433,13 +459,17 @@ func (s *Snowflake) NextIDStr() string { return strconv.FormatInt(s.NextID(), 10
 
 // GetDataCenterID derives a datacenter id from the local MAC address.
 func GetDataCenterID(maxDatacenterID int64) int64 {
+	return getDataCenterID(maxDatacenterID, net.Interfaces)
+}
+
+func getDataCenterID(maxDatacenterID int64, interfaces func() ([]net.Interface, error)) int64 {
 	if maxDatacenterID <= 0 {
 		return 1
 	}
 	if maxDatacenterID == int64(^uint64(0)>>1) {
 		maxDatacenterID--
 	}
-	for _, iface := range networkInterfaces() {
+	for _, iface := range networkInterfaces(interfaces) {
 		mac := iface.HardwareAddr
 		if len(mac) >= 2 {
 			id := ((0x000000FF & int64(mac[len(mac)-2])) | (0x0000FF00 & (int64(mac[len(mac)-1]) << 8))) >> 6
@@ -451,12 +481,19 @@ func GetDataCenterID(maxDatacenterID int64) int64 {
 
 // GetWorkerID derives a worker id from datacenter id and process id.
 func GetWorkerID(datacenterID, maxWorkerID int64) int64 {
+	return getWorkerID(datacenterID, maxWorkerID, os.Getpid)
+}
+
+func getWorkerID(datacenterID, maxWorkerID int64, pid func() int) int64 {
 	if maxWorkerID <= 0 {
 		return 0
 	}
+	if pid == nil {
+		pid = os.Getpid
+	}
 	h := fnv.New32a()
 	_, _ = h.Write([]byte(strconv.FormatInt(datacenterID, 10)))
-	_, _ = h.Write([]byte(strconv.Itoa(os.Getpid())))
+	_, _ = h.Write([]byte(strconv.Itoa(pid())))
 	return int64(h.Sum32()&0xffff) % (maxWorkerID + 1)
 }
 
@@ -545,8 +582,11 @@ func waitNextMillis(lastTimestamp int64, now func() int64) int64 {
 	return timestamp
 }
 
-func networkInterfaces() []net.Interface {
-	ifaces, err := net.Interfaces()
+func networkInterfaces(interfaces func() ([]net.Interface, error)) []net.Interface {
+	if interfaces == nil {
+		interfaces = net.Interfaces
+	}
+	ifaces, err := interfaces()
 	if err != nil {
 		return nil
 	}

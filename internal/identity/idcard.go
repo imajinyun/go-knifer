@@ -350,7 +350,7 @@ func BirthDate(idCard string) (time.Time, bool) {
 }
 
 // Age returns the current age encoded in idCard.
-func Age(idCard string) (int, bool) { return AgeAt(idCard, time.Now()) }
+func Age(idCard string) (int, bool) { return AgeWithOptions(idCard) }
 
 // AgeWithOptions returns the age encoded in idCard using custom time options.
 func AgeWithOptions(idCard string, opts ...AgeOption) (int, bool) {

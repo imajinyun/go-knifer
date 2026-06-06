@@ -154,6 +154,9 @@ func WithTempDirFunc(fn func() string) UserInfoOption { return system.WithTempDi
 // SystemHostInfo returns cached host information.
 func SystemHostInfo() *HostInfo { return system.GetHostInfo() }
 
+// ResetInfoCache clears cached singleton system information.
+func ResetInfoCache() { system.ResetInfoCache() }
+
 // SysHostInfoWithOptions returns uncached host information collected with per-call options.
 func SysHostInfoWithOptions(opts ...HostInfoOption) *HostInfo {
 	return system.GetHostInfoWithOptions(opts...)

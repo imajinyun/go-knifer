@@ -1,6 +1,7 @@
 package http
 
 import (
+	"net/http"
 	"sync"
 	"time"
 )
@@ -17,6 +18,39 @@ var (
 	globalTrustAnyHost     = false
 	globalBoundary         = "--------------------gokitFormBoundary"
 )
+
+// GlobalConfig is an immutable snapshot of package-level HTTP defaults.
+type GlobalConfig struct {
+	Timeout          time.Duration
+	MaxRedirects     int
+	IgnoreEOFError   bool
+	DecodeURL        bool
+	FollowRedirects  bool
+	DefaultUserAgent string
+	TrustAnyHost     bool
+	Boundary         string
+	Headers          http.Header
+	CookieJar        http.CookieJar
+}
+
+// SnapshotGlobalConfig returns a consistent copy of the current package-level HTTP defaults.
+func SnapshotGlobalConfig() GlobalConfig {
+	globalMu.RLock()
+	cfg := GlobalConfig{
+		Timeout:          globalTimeout,
+		MaxRedirects:     globalMaxRedirects,
+		IgnoreEOFError:   globalIgnoreEOFError,
+		DecodeURL:        globalDecodeURL,
+		FollowRedirects:  globalFollowRedirects,
+		DefaultUserAgent: globalDefaultUserAgent,
+		TrustAnyHost:     globalTrustAnyHost,
+		Boundary:         globalBoundary,
+	}
+	globalMu.RUnlock()
+	cfg.Headers = CloneGlobalHeaders()
+	cfg.CookieJar = GetCookieJar()
+	return cfg
+}
 
 // SetGlobalTimeout sets the global default timeout.
 func SetGlobalTimeout(d time.Duration) {

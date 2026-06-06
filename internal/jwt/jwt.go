@@ -341,20 +341,21 @@ func (j *JWT) VerifyWith(signer JWTSigner) bool {
 // Validate 在 Verify 基础上校验 nbf/exp/iat 时间字段。
 // leeway 为容忍秒数。
 func (j *JWT) Validate(leeway int64) bool {
-	if !j.Verify() {
-		return false
-	}
-	return j.ValidateAt(time.Now(), leeway)
+	return j.ValidateWithOptions(WithValidateLeeway(leeway))
 }
 
 // ValidateWithOptions validates signature and time claims using custom validation options.
 func (j *JWT) ValidateWithOptions(opts ...ValidateOption) bool {
 	cfg := applyValidateOptions(opts)
-	return j.ValidateAt(cfg.now(), cfg.leeway)
+	return j.validateAt(cfg.now(), cfg.leeway)
 }
 
 // ValidateAt validates signature and time claims at the provided time.
 func (j *JWT) ValidateAt(now time.Time, leeway int64) bool {
+	return j.validateAt(now, leeway)
+}
+
+func (j *JWT) validateAt(now time.Time, leeway int64) bool {
 	if !j.Verify() {
 		return false
 	}

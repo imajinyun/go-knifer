@@ -25,6 +25,9 @@ func RemoveGlobalHeader(name string) { httpx.RemoveGlobalHeader(name) }
 // CloneGlobalHeaders returns cloned global headers.
 func CloneGlobalHeaders() http.Header { return httpx.CloneGlobalHeaders() }
 
+// SnapshotGlobalConfig returns a consistent copy of the current package-level HTTP defaults.
+func SnapshotGlobalConfig() GlobalConfig { return httpx.SnapshotGlobalConfig() }
+
 // SetGlobalMaxRedirects delegates to the internal httpx implementation.
 func SetGlobalMaxRedirects(n int) {
 	httpx.SetGlobalMaxRedirects(n)

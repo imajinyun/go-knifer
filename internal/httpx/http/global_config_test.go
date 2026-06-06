@@ -120,3 +120,39 @@ func TestGlobalCookieJar(t *testing.T) {
 	}
 	SetCookieJar(jar)
 }
+
+func TestSnapshotGlobalConfigClonesMutableDefaults(t *testing.T) {
+	oldUA := GetGlobalUserAgent()
+	oldTimeout := GetGlobalTimeout()
+	oldFollow := GetGlobalFollowRedirects()
+	oldMax := GetGlobalMaxRedirects()
+	oldTrust := IsTrustAnyHost()
+	jar := GetCookieJar()
+	defer SetGlobalUserAgent(oldUA)
+	defer SetGlobalTimeout(oldTimeout)
+	defer SetGlobalFollowRedirects(oldFollow)
+	defer SetGlobalMaxRedirects(oldMax)
+	defer SetTrustAnyHost(oldTrust)
+	defer SetCookieJar(jar)
+	defer RemoveGlobalHeader("X-Snapshot")
+
+	SetGlobalUserAgent("snapshot-agent")
+	SetGlobalTimeout(9 * time.Second)
+	SetGlobalFollowRedirects(false)
+	SetGlobalMaxRedirects(2)
+	SetTrustAnyHost(true)
+	SetGlobalHeader("X-Snapshot", "old")
+	CloseCookie()
+
+	cfg := SnapshotGlobalConfig()
+	if cfg.DefaultUserAgent != "snapshot-agent" || cfg.Timeout != 9*time.Second || cfg.FollowRedirects || cfg.MaxRedirects != 2 || !cfg.TrustAnyHost {
+		t.Fatalf("snapshot scalar config = %#v", cfg)
+	}
+	if cfg.CookieJar != nil || cfg.Headers.Get("X-Snapshot") != "old" {
+		t.Fatalf("snapshot mutable config cookie=%v header=%q", cfg.CookieJar, cfg.Headers.Get("X-Snapshot"))
+	}
+	cfg.Headers.Set("X-Snapshot", "changed")
+	if got := CloneGlobalHeaders().Get("X-Snapshot"); got != "old" {
+		t.Fatalf("snapshot headers should be cloned; global header = %q", got)
+	}
+}
