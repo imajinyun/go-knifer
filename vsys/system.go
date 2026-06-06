@@ -69,6 +69,16 @@ func WithGoCompilerFunc(fn func() string) GoInfoOption { return system.WithGoCom
 // WithGoRootFunc sets the function used to collect GOROOT.
 func WithGoRootFunc(fn func() string) GoInfoOption { return system.WithGoRootFunc(fn) }
 
+// WithGoEnvOutputFunc sets the command runner used by the default GOROOT collector.
+func WithGoEnvOutputFunc(fn func(string, ...string) ([]byte, error)) GoInfoOption {
+	return system.WithGoEnvOutputFunc(fn)
+}
+
+// WithGoRootEnvLookupFunc sets the environment lookup used by the default GOROOT collector.
+func WithGoRootEnvLookupFunc(fn func(string) string) GoInfoOption {
+	return system.WithGoRootEnvLookupFunc(fn)
+}
+
 // WithGoOSFunc sets the function used to collect GOOS.
 func WithGoOSFunc(fn func() string) GoInfoOption { return system.WithGoOSFunc(fn) }
 
@@ -91,6 +101,9 @@ func WithOSArchFunc(fn func() string) OsInfoOption { return system.WithOSArchFun
 
 // WithOSVersionFunc sets the function used to collect the OS version.
 func WithOSVersionFunc(fn func() string) OsInfoOption { return system.WithOSVersionFunc(fn) }
+
+// WithOSEnvLookupFunc sets the environment lookup used by the default OS version collector.
+func WithOSEnvLookupFunc(fn func(string) string) OsInfoOption { return system.WithOSEnvLookupFunc(fn) }
 
 // WithOSFileSeparatorFunc sets the function used to collect the file separator.
 func WithOSFileSeparatorFunc(fn func() string) OsInfoOption {

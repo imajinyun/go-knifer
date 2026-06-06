@@ -167,16 +167,33 @@ func WithSaveOpenFile(openFile func(string, int, fs.FileMode) (io.WriteCloser, e
 }
 
 // GetString sends a GET request and returns response body as string.
-func GetString(rawURL string) string { return restyimpl.GetString(rawURL) }
+func GetString(rawURL string) string { return GetStringWithOptions(rawURL) }
+
+// GetStringWithOptions sends a GET request with options and returns response body as string.
+func GetStringWithOptions(rawURL string, opts ...RequestOption) string {
+	return restyimpl.GetStringWithOptions(rawURL, opts...)
+}
 
 // PostForm posts form parameters and returns response body as string.
-func PostForm(rawURL string, params map[string]any) string { return restyimpl.PostForm(rawURL, params) }
+func PostForm(rawURL string, params map[string]any) string {
+	return PostFormWithOptions(rawURL, params)
+}
+
+// PostFormWithOptions posts form parameters with options and returns response body as string.
+func PostFormWithOptions(rawURL string, params map[string]any, opts ...RequestOption) string {
+	return restyimpl.PostFormWithOptions(rawURL, params, opts...)
+}
 
 // PostJSON posts JSON body and returns response body as string.
-func PostJSON(rawURL, jsonStr string) string { return restyimpl.PostJSON(rawURL, jsonStr) }
+func PostJSON(rawURL, jsonStr string) string { return PostJSONWithOptions(rawURL, jsonStr) }
+
+// PostJSONWithOptions posts JSON body with options and returns response body as string.
+func PostJSONWithOptions(rawURL, jsonStr string, opts ...RequestOption) string {
+	return restyimpl.PostJSONWithOptions(rawURL, jsonStr, opts...)
+}
 
 // Download downloads rawURL into w.
-func Download(rawURL string, w io.Writer) (int64, error) { return restyimpl.Download(rawURL, w) }
+func Download(rawURL string, w io.Writer) (int64, error) { return DownloadWithOptions(rawURL, w) }
 
 // DownloadWithOptions downloads rawURL into w with per-request options.
 func DownloadWithOptions(rawURL string, w io.Writer, opts ...RequestOption) (int64, error) {
@@ -185,7 +202,7 @@ func DownloadWithOptions(rawURL string, w io.Writer, opts ...RequestOption) (int
 
 // DownloadFile downloads rawURL to dest.
 func DownloadFile(rawURL, dest string, opts ...SaveOption) (int64, error) {
-	return restyimpl.DownloadFile(rawURL, dest, opts...)
+	return DownloadFileWithOptions(rawURL, dest, nil, opts...)
 }
 
 // DownloadFileWithOptions downloads rawURL to dest with per-request and per-save options.
@@ -194,7 +211,7 @@ func DownloadFileWithOptions(rawURL, dest string, requestOpts []RequestOption, s
 }
 
 // DownloadBytes downloads and returns bytes.
-func DownloadBytes(rawURL string) []byte { return restyimpl.DownloadBytes(rawURL) }
+func DownloadBytes(rawURL string) []byte { return DownloadBytesWithOptions(rawURL) }
 
 // DownloadBytesWithOptions downloads and returns bytes with per-request options.
 func DownloadBytesWithOptions(rawURL string, opts ...RequestOption) []byte {
@@ -203,7 +220,7 @@ func DownloadBytesWithOptions(rawURL string, opts ...RequestOption) []byte {
 
 // DownloadString downloads remote text.
 func DownloadString(rawURL, customCharset string) string {
-	return restyimpl.DownloadString(rawURL, customCharset)
+	return DownloadStringWithOptions(rawURL, customCharset)
 }
 
 // DownloadStringWithOptions downloads remote text with per-request options.

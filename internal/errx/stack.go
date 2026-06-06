@@ -7,12 +7,21 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type stackTraceConfig struct {
-	skip  int
-	depth int
+	skip      int
+	depth     int
+	callers   CallersFunc
+	funcForPC FuncForPCFunc
 }
+
+// CallersFunc captures call stack PCs.
+type CallersFunc func(skip int, pc []uintptr) int
+
+// FuncForPCFunc resolves a PC into file, line, and function name.
+type FuncForPCFunc func(pc uintptr) (file string, line int, name string, ok bool)
 
 // StackTraceOption customizes stack trace capture.
 type StackTraceOption func(*stackTraceConfig)
@@ -27,8 +36,26 @@ func WithStackDepth(depth int) StackTraceOption {
 	return func(c *stackTraceConfig) { c.depth = depth }
 }
 
+// WithCallersFunc sets the function used to capture stack PCs.
+func WithCallersFunc(callers CallersFunc) StackTraceOption {
+	return func(c *stackTraceConfig) {
+		if callers != nil {
+			c.callers = callers
+		}
+	}
+}
+
+// WithFuncForPCFunc sets the resolver used to format captured stack frames.
+func WithFuncForPCFunc(fn FuncForPCFunc) StackTraceOption {
+	return func(c *stackTraceConfig) {
+		if fn != nil {
+			c.funcForPC = fn
+		}
+	}
+}
+
 func applyStackTraceOptions(skip int, opts []StackTraceOption) stackTraceConfig {
-	cfg := stackTraceConfig{skip: skip, depth: 32}
+	cfg := stackTraceConfig{skip: skip, depth: 32, callers: runtime.Callers, funcForPC: defaultFuncForPC}
 	for _, opt := range opts {
 		if opt != nil {
 			opt(&cfg)
@@ -40,7 +67,39 @@ func applyStackTraceOptions(skip int, opts []StackTraceOption) stackTraceConfig 
 	if cfg.depth <= 0 {
 		cfg.depth = 32
 	}
+	if cfg.callers == nil {
+		cfg.callers = runtime.Callers
+	}
+	if cfg.funcForPC == nil {
+		cfg.funcForPC = defaultFuncForPC
+	}
 	return cfg
+}
+
+type frameInfo struct {
+	file string
+	line int
+	name string
+	ok   bool
+}
+
+var capturedFrameInfo sync.Map
+
+func defaultFuncForPC(pc uintptr) (string, int, string, bool) {
+	fn := runtime.FuncForPC(pc)
+	if fn == nil {
+		return "unknown", 0, "unknown", false
+	}
+	file, line := fn.FileLine(pc)
+	return file, line, fn.Name(), true
+}
+
+func resolveFrame(pc uintptr) frameInfo {
+	if info, ok := capturedFrameInfo.Load(pc); ok {
+		return info.(frameInfo)
+	}
+	file, line, name, ok := defaultFuncForPC(pc)
+	return frameInfo{file: file, line: line, name: name, ok: ok}
 }
 
 // WithStackTrace is implemented by errors that expose structured stack frames.
@@ -56,29 +115,27 @@ type Frame uintptr
 func (f Frame) pc() uintptr { return uintptr(f) - 1 }
 
 func (f Frame) file() string {
-	fn := runtime.FuncForPC(f.pc())
-	if fn == nil {
+	info := resolveFrame(f.pc())
+	if !info.ok {
 		return "unknown"
 	}
-	file, _ := fn.FileLine(f.pc())
-	return file
+	return info.file
 }
 
 func (f Frame) line() int {
-	fn := runtime.FuncForPC(f.pc())
-	if fn == nil {
+	info := resolveFrame(f.pc())
+	if !info.ok {
 		return 0
 	}
-	_, line := fn.FileLine(f.pc())
-	return line
+	return info.line
 }
 
 func (f Frame) name() string {
-	fn := runtime.FuncForPC(f.pc())
-	if fn == nil {
+	info := resolveFrame(f.pc())
+	if !info.ok {
 		return "unknown"
 	}
-	return fn.Name()
+	return info.name
 }
 
 // Format formats the frame according to fmt.Formatter.
@@ -147,10 +204,13 @@ func GetStackTrace(skip int) StackTrace {
 func GetStackTraceWithOptions(opts ...StackTraceOption) StackTrace {
 	cfg := applyStackTraceOptions(0, opts)
 	pcs := make([]uintptr, cfg.depth)
-	n := runtime.Callers(cfg.skip, pcs)
+	n := cfg.callers(cfg.skip, pcs)
 	stack := make(StackTrace, n)
 	for idx, frame := range pcs[:n] {
 		stack[idx] = Frame(frame)
+		pc := Frame(frame).pc()
+		file, line, name, ok := cfg.funcForPC(pc)
+		capturedFrameInfo.Store(pc, frameInfo{file: file, line: line, name: name, ok: ok})
 	}
 	return stack
 }

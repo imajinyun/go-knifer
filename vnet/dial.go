@@ -10,7 +10,7 @@ import (
 
 // NetCat sends data to host:port over TCP.
 func NetCat(host string, port int, data []byte, timeout time.Duration) error {
-	return netimpl.NetCat(host, port, data, timeout)
+	return NetCatWithOptions(host, port, data, WithConnectTimeout(timeout))
 }
 
 // NetCatWithOptions sends data to host:port using custom connection options.
@@ -33,7 +33,9 @@ func WithConnectNetwork(network string) ConnectOption { return netimpl.WithConne
 func WithConnectDialer(d Dialer) ConnectOption { return netimpl.WithConnectDialer(d) }
 
 // Ping checks whether an IP or host is reachable by opening a TCP connection to common ports.
-func Ping(ip string, timeout time.Duration) bool { return netimpl.Ping(ip, timeout) }
+func Ping(ip string, timeout time.Duration) bool {
+	return PingWithOptions(ip, WithPingTimeout(timeout))
+}
 
 // WithPingContext sets the context used by PingWithOptions.
 func WithPingContext(ctx context.Context) PingOption { return netimpl.WithPingContext(ctx) }
@@ -55,7 +57,7 @@ func PingWithOptions(ip string, opts ...PingOption) bool { return netimpl.PingWi
 
 // IsOpen reports whether address can be opened within timeout.
 func IsOpen(address *stdnet.TCPAddr, timeout time.Duration) bool {
-	return netimpl.IsOpen(address, timeout)
+	return IsOpenWithOptions(address, WithConnectTimeout(timeout))
 }
 
 // IsOpenWithOptions reports whether address can be opened with custom connection options.
@@ -65,7 +67,7 @@ func IsOpenWithOptions(address *stdnet.TCPAddr, opts ...ConnectOption) bool {
 
 // Connect opens a TCP connection to host:port.
 func Connect(hostname string, port int, timeout time.Duration) (stdnet.Conn, error) {
-	return netimpl.Connect(hostname, port, timeout)
+	return ConnectWithOptions(hostname, port, WithConnectTimeout(timeout))
 }
 
 // ConnectWithOptions opens a connection to host:port using custom connection options.

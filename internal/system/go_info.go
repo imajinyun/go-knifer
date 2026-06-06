@@ -11,10 +11,30 @@ type goInfoConfig struct {
 	version     func() string
 	compiler    func() string
 	goRoot      func() string
+	goEnvOutput func(string, ...string) ([]byte, error)
+	getenv      func(string) string
 	goos        func() string
 	goarch      func() string
 	numCPU      func() int
 	numCgoCalls func() int64
+}
+
+// WithGoEnvOutputFunc sets the command runner used by the default GOROOT collector.
+func WithGoEnvOutputFunc(fn func(string, ...string) ([]byte, error)) GoInfoOption {
+	return func(c *goInfoConfig) {
+		if fn != nil {
+			c.goEnvOutput = fn
+		}
+	}
+}
+
+// WithGoRootEnvLookupFunc sets the environment lookup used by the default GOROOT collector.
+func WithGoRootEnvLookupFunc(fn func(string) string) GoInfoOption {
+	return func(c *goInfoConfig) {
+		if fn != nil {
+			c.getenv = fn
+		}
+	}
 }
 
 // GoInfoOption customizes Go runtime metadata collection per call.
@@ -87,7 +107,8 @@ func applyGoInfoOptions(opts []GoInfoOption) goInfoConfig {
 	cfg := goInfoConfig{
 		version:     runtime.Version,
 		compiler:    func() string { return runtime.Compiler },
-		goRoot:      goRoot,
+		goEnvOutput: defaultGoEnvOutput,
+		getenv:      os.Getenv,
 		goos:        func() string { return runtime.GOOS },
 		goarch:      func() string { return runtime.GOARCH },
 		numCPU:      runtime.NumCPU,
@@ -104,8 +125,14 @@ func applyGoInfoOptions(opts []GoInfoOption) goInfoConfig {
 	if cfg.compiler == nil {
 		cfg.compiler = func() string { return runtime.Compiler }
 	}
+	if cfg.goEnvOutput == nil {
+		cfg.goEnvOutput = defaultGoEnvOutput
+	}
+	if cfg.getenv == nil {
+		cfg.getenv = os.Getenv
+	}
 	if cfg.goRoot == nil {
-		cfg.goRoot = goRoot
+		cfg.goRoot = func() string { return goRoot(cfg.goEnvOutput, cfg.getenv) }
 	}
 	if cfg.goos == nil {
 		cfg.goos = func() string { return runtime.GOOS }
@@ -184,12 +211,17 @@ func (g *GoInfo) String() string {
 	return b.String()
 }
 
-func goRoot() string {
-	out, err := exec.Command("go", "env", "GOROOT").Output()
+func defaultGoEnvOutput(name string, args ...string) ([]byte, error) {
+	// #nosec G204 -- default provider intentionally shells out to `go env`; callers can inject WithGoEnvOutputFunc.
+	return exec.Command(name, args...).Output()
+}
+
+func goRoot(commandOutput func(string, ...string) ([]byte, error), getenv func(string) string) string {
+	out, err := commandOutput("go", "env", "GOROOT")
 	if err == nil {
 		if root := strings.TrimSpace(string(out)); root != "" {
 			return root
 		}
 	}
-	return os.Getenv("GOROOT")
+	return getenv("GOROOT")
 }

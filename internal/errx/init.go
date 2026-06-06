@@ -29,6 +29,7 @@ type initConfig struct {
 	setReportCaller func(bool)
 	setOutput       func(io.Writer)
 	setFormatter    func(logrus.Formatter)
+	logError        func(error, string)
 }
 
 // InitOption customizes logrus/Sentry initialization.
@@ -118,6 +119,17 @@ func WithLogrusConfigurer(setReportCaller func(bool), setOutput func(io.Writer),
 	}
 }
 
+// WithInitErrorLogger sets the logger used for initialization failures.
+func WithInitErrorLogger(logError func(error, string)) InitOption {
+	return func(c *initConfig) {
+		if logError != nil {
+			c.logError = logError
+		}
+	}
+}
+
+func defaultInitErrorLogger(err error, msg string) { logrus.WithError(err).Error(msg) }
+
 func applyInitOptions(dsn string, opts []InitOption) initConfig {
 	cfg := initConfig{
 		dsn:             dsn,
@@ -134,6 +146,7 @@ func applyInitOptions(dsn string, opts []InitOption) initConfig {
 		setReportCaller: logrus.SetReportCaller,
 		setOutput:       logrus.SetOutput,
 		setFormatter:    logrus.SetFormatter,
+		logError:        defaultInitErrorLogger,
 	}
 	for _, opt := range opts {
 		if opt != nil {
@@ -173,6 +186,9 @@ func applyInitOptions(dsn string, opts []InitOption) initConfig {
 	if cfg.setFormatter == nil {
 		cfg.setFormatter = logrus.SetFormatter
 	}
+	if cfg.logError == nil {
+		cfg.logError = defaultInitErrorLogger
+	}
 	return cfg
 }
 
@@ -196,7 +212,7 @@ func InitWithOptions(opts ...InitOption) {
 		return
 	}
 	if err := cfg.setDSN(cfg.dsn); err != nil {
-		logrus.WithError(err).Error("raven init failed")
+		cfg.logError(err, "raven init failed")
 		return
 	}
 
@@ -205,7 +221,7 @@ func InitWithOptions(opts ...InitOption) {
 		cfg.levels,
 	)
 	if err != nil {
-		logrus.WithError(err).Error("sentry hook init failed")
+		cfg.logError(err, "sentry hook init failed")
 		return
 	}
 	sentry.StacktraceConfiguration.Enable = true

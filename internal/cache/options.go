@@ -8,6 +8,8 @@ type cacheConfig[K comparable, V any] struct {
 	listener      CacheListener[K, V]
 	clock         func() time.Time
 	tickerFactory TickerFactory
+	finalizer     any
+	finalizerOff  bool
 }
 
 // Ticker stops a scheduled cache pruning ticker created by TickerFactory.
@@ -44,6 +46,20 @@ func WithClock[K comparable, V any](clock func() time.Time) Option[K, V] {
 // WithTickerFactory sets the ticker factory used by scheduled pruning.
 func WithTickerFactory[K comparable, V any](factory TickerFactory) Option[K, V] {
 	return func(c *cacheConfig[K, V]) { c.tickerFactory = factory }
+}
+
+// WithWeakFinalizerFunc sets the finalizer provider used by WeakCache.
+func WithWeakFinalizerFunc[K comparable, V any](finalizer func(*V, func(*V))) Option[K, *V] {
+	return func(c *cacheConfig[K, *V]) {
+		if finalizer != nil {
+			c.finalizer = finalizer
+		}
+	}
+}
+
+// WithWeakFinalizerEnabled controls whether WeakCache registers GC finalizers.
+func WithWeakFinalizerEnabled[K comparable, V any](enabled bool) Option[K, *V] {
+	return func(c *cacheConfig[K, *V]) { c.finalizerOff = !enabled }
 }
 
 func applyOptions[K comparable, V any](opts []Option[K, V]) cacheConfig[K, V] {

@@ -93,7 +93,7 @@ var (
 )
 
 // SheetNames returns all worksheet names in path.
-func SheetNames(path string) ([]string, error) { return poiimpl.SheetNames(path) }
+func SheetNames(path string) ([]string, error) { return SheetNamesWithOptions(path) }
 
 // SheetNamesWithOptions returns all worksheet names in path with custom open options.
 func SheetNamesWithOptions(path string, opts ...ReadOption) ([]string, error) {
@@ -107,7 +107,7 @@ func ReadRows(path string, opts ...ReadOption) ([][]string, error) {
 
 // ReadSheetRows reads rows from sheet in path.
 func ReadSheetRows(path, sheet string) ([][]string, error) {
-	return poiimpl.ReadSheetRows(path, sheet)
+	return ReadSheetRowsWithOptions(path, sheet)
 }
 
 // ReadSheetRowsWithOptions reads rows from sheet in path with custom open options.

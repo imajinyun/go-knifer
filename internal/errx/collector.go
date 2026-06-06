@@ -17,6 +17,8 @@ type Collector struct {
 	level        logrus.Level
 	ctx          context.Context
 	timerFactory TimerFactory
+	logFunc      LogFunc
+	stackOptions []StackOption
 
 	swg sync.WaitGroup
 	mux sync.Mutex
@@ -29,6 +31,7 @@ func NewCollector() *Collector {
 		level:        logrus.ErrorLevel,
 		ctx:          context.Background(),
 		timerFactory: newCollectorTimer,
+		logFunc:      defaultLogFunc,
 	}
 }
 
@@ -84,6 +87,24 @@ func (c *Collector) WithTimerFactory(factory TimerFactory) *Collector {
 	if factory != nil {
 		c.timerFactory = factory
 	}
+	return c
+}
+
+// WithLogFunc sets the logger used for recovered or returned errors.
+func (c *Collector) WithLogFunc(logFunc LogFunc) *Collector {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	if logFunc != nil {
+		c.logFunc = logFunc
+	}
+	return c
+}
+
+// WithStackOptions sets stack capture options used by Collector logging.
+func (c *Collector) WithStackOptions(opts ...StackOption) *Collector {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	c.stackOptions = append([]StackOption(nil), opts...)
 	return c
 }
 
@@ -203,12 +224,13 @@ func (c *Collector) log(err error, format string, args ...any) {
 		format = "operation failed"
 	}
 	c.mux.Lock()
-	ctx, level := c.ctx, c.level
+	ctx, level, logFunc := c.ctx, c.level, c.logFunc
+	stackOptions := append([]StackOption(nil), c.stackOptions...)
 	c.mux.Unlock()
-	logrus.WithContext(ctx).
-		WithError(err).
-		WithField("stack", GetStack(err)).
-		Logf(level, format, args...)
+	if logFunc == nil {
+		logFunc = defaultLogFunc
+	}
+	logFunc(ctx, level, err, GetStackWithOptions(err, stackOptions...), format, args...)
 }
 
 func (c *Collector) error() error {

@@ -28,31 +28,61 @@ func CreateGet(rawURL string, followRedirects bool) *HTTPRequest {
 func CreatePost(rawURL string) *HTTPRequest { return Post(rawURL) }
 
 // GetString sends a GET request and returns the response body as a string.
-func GetString(rawURL string) string { return Get(rawURL).Execute().Body() }
+func GetString(rawURL string) string { return GetStringWithOptions(rawURL) }
+
+// GetStringWithOptions sends a GET request with options and returns the response body as a string.
+func GetStringWithOptions(rawURL string, opts ...RequestOption) string {
+	return Get(rawURL, opts...).Execute().Body()
+}
 
 // GetWithTimeout sends a GET request with a timeout.
 func GetWithTimeout(rawURL string, timeout time.Duration) string {
-	return Get(rawURL).Timeout(timeout).Execute().Body()
+	return GetWithTimeoutWithOptions(rawURL, timeout)
+}
+
+// GetWithTimeoutWithOptions sends a GET request with a timeout and custom options.
+func GetWithTimeoutWithOptions(rawURL string, timeout time.Duration, opts ...RequestOption) string {
+	return Get(rawURL, opts...).Timeout(timeout).Execute().Body()
 }
 
 // GetWithParams sends a GET request with form parameters.
 func GetWithParams(rawURL string, params map[string]any) string {
-	return Get(rawURL).Form(params).Execute().Body()
+	return GetWithParamsWithOptions(rawURL, params)
+}
+
+// GetWithParamsWithOptions sends a GET request with form parameters and custom options.
+func GetWithParamsWithOptions(rawURL string, params map[string]any, opts ...RequestOption) string {
+	return Get(rawURL, opts...).Form(params).Execute().Body()
 }
 
 // PostString sends a POST request with a string body.
 func PostString(rawURL, body string) string {
-	return Post(rawURL).BodyString(body).Execute().Body()
+	return PostStringWithOptions(rawURL, body)
+}
+
+// PostStringWithOptions sends a POST request with a string body and custom options.
+func PostStringWithOptions(rawURL, body string, opts ...RequestOption) string {
+	return Post(rawURL, opts...).BodyString(body).Execute().Body()
 }
 
 // PostForm sends a POST request with form parameters.
 func PostForm(rawURL string, params map[string]any) string {
-	return Post(rawURL).Form(params).Execute().Body()
+	return PostFormWithOptions(rawURL, params)
+}
+
+// PostFormWithOptions sends a POST request with form parameters and custom options.
+func PostFormWithOptions(rawURL string, params map[string]any, opts ...RequestOption) string {
+	return Post(rawURL, opts...).Form(params).Execute().Body()
 }
 
 // PostJSON sends a POST request with a JSON string body.
 func PostJSON(rawURL, jsonStr string) string {
-	return Post(rawURL).BodyJSON(jsonStr).Execute().Body()
+	return PostJSONWithOptions(rawURL, jsonStr)
+}
+
+// PostJSONWithOptions sends a POST request with a JSON string body and custom options.
+func PostJSONWithOptions(rawURL, jsonStr string, opts ...RequestOption) string {
+	return Post(rawURL, opts...).BodyJSON(jsonStr).Execute().Body()
 }
 
 // DownloadString downloads remote text and detects charset from response headers when customCharset is empty.

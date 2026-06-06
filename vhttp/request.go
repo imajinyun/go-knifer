@@ -34,6 +34,16 @@ func NewRequest(method Method, rawURL string, opts ...RequestOption) *Request {
 	return httpx.NewRequest(method, rawURL, opts...)
 }
 
+// NewIsolatedRequest creates a request without reading package-level global defaults.
+func NewIsolatedRequest(method Method, rawURL string, opts ...RequestOption) *Request {
+	return httpx.NewIsolatedRequest(method, rawURL, opts...)
+}
+
+// NewRequestWithConfig creates a request from an explicit global configuration snapshot.
+func NewRequestWithConfig(method Method, rawURL string, cfg GlobalConfig, opts ...RequestOption) *Request {
+	return httpx.NewRequestWithConfig(method, rawURL, cfg, opts...)
+}
+
 // CreateRequest delegates to the internal httpx implementation.
 func CreateRequest(method Method, rawURL string, opts ...RequestOption) *Request {
 	return CreateRequestWithOptions(method, rawURL, opts...)
@@ -55,25 +65,57 @@ func CreatePost(rawURL string) *Request {
 }
 
 // GetString sends a GET request and returns response body as string.
-func GetString(rawURL string) string { return httpx.GetString(rawURL) }
+func GetString(rawURL string) string { return GetStringWithOptions(rawURL) }
+
+// GetStringWithOptions sends a GET request with options and returns response body as string.
+func GetStringWithOptions(rawURL string, opts ...RequestOption) string {
+	return httpx.GetStringWithOptions(rawURL, opts...)
+}
 
 // GetWithTimeout delegates to the internal httpx implementation.
 func GetWithTimeout(rawURL string, timeout time.Duration) string {
-	return httpx.GetWithTimeout(rawURL, timeout)
+	return GetWithTimeoutWithOptions(rawURL, timeout)
+}
+
+// GetWithTimeoutWithOptions delegates to the internal httpx implementation with options.
+func GetWithTimeoutWithOptions(rawURL string, timeout time.Duration, opts ...RequestOption) string {
+	return httpx.GetWithTimeoutWithOptions(rawURL, timeout, opts...)
 }
 
 // GetWithParams delegates to the internal httpx implementation.
 func GetWithParams(rawURL string, params map[string]any) string {
-	return httpx.GetWithParams(rawURL, params)
+	return GetWithParamsWithOptions(rawURL, params)
+}
+
+// GetWithParamsWithOptions delegates to the internal httpx implementation with options.
+func GetWithParamsWithOptions(rawURL string, params map[string]any, opts ...RequestOption) string {
+	return httpx.GetWithParamsWithOptions(rawURL, params, opts...)
 }
 
 // PostForm posts form parameters and returns response body as string.
-func PostForm(rawURL string, params map[string]any) string { return httpx.PostForm(rawURL, params) }
+func PostForm(rawURL string, params map[string]any) string {
+	return PostFormWithOptions(rawURL, params)
+}
+
+// PostFormWithOptions posts form parameters with options and returns response body as string.
+func PostFormWithOptions(rawURL string, params map[string]any, opts ...RequestOption) string {
+	return httpx.PostFormWithOptions(rawURL, params, opts...)
+}
 
 // PostJSON posts JSON body and returns response body as string.
-func PostJSON(rawURL, jsonStr string) string { return httpx.PostJSON(rawURL, jsonStr) }
+func PostJSON(rawURL, jsonStr string) string { return PostJSONWithOptions(rawURL, jsonStr) }
+
+// PostJSONWithOptions posts JSON body with options and returns response body as string.
+func PostJSONWithOptions(rawURL, jsonStr string, opts ...RequestOption) string {
+	return httpx.PostJSONWithOptions(rawURL, jsonStr, opts...)
+}
 
 // PostString delegates to the internal httpx implementation.
 func PostString(rawURL, body string) string {
-	return httpx.PostString(rawURL, body)
+	return PostStringWithOptions(rawURL, body)
+}
+
+// PostStringWithOptions delegates to the internal httpx implementation with options.
+func PostStringWithOptions(rawURL, body string, opts ...RequestOption) string {
+	return httpx.PostStringWithOptions(rawURL, body, opts...)
 }

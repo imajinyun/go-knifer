@@ -45,7 +45,7 @@ const (
 func New() *Conf { return confimpl.New() }
 
 // Load 读取并解析 setting/properties 配置文件。Load reads and parses a setting/properties file.
-func Load(path string) (*Conf, error) { return confimpl.Load(path) }
+func Load(path string) (*Conf, error) { return LoadWithOptions(path, LoadOptions{}) }
 
 // LoadWithOptions reads and parses a configuration file with advanced options.
 func LoadWithOptions(path string, opts LoadOptions) (*Conf, error) {
@@ -53,7 +53,7 @@ func LoadWithOptions(path string, opts LoadOptions) (*Conf, error) {
 }
 
 // LoadFiles loads multiple configuration files and merges them in order.
-func LoadFiles(paths ...string) (*Conf, error) { return confimpl.LoadFiles(paths...) }
+func LoadFiles(paths ...string) (*Conf, error) { return LoadFilesWithOptions(LoadOptions{}, paths...) }
 
 // LoadFilesWithOptions loads multiple configuration files using opts and merges them in order.
 func LoadFilesWithOptions(opts LoadOptions, paths ...string) (*Conf, error) {
@@ -61,7 +61,7 @@ func LoadFilesWithOptions(opts LoadOptions, paths ...string) (*Conf, error) {
 }
 
 // LoadRemote loads configuration from an HTTP(S) URL.
-func LoadRemote(rawURL string) (*Conf, error) { return confimpl.LoadRemote(rawURL) }
+func LoadRemote(rawURL string) (*Conf, error) { return LoadRemoteWithOptions(rawURL, LoadOptions{}) }
 
 // LoadRemoteWithOptions loads configuration from an HTTP(S) URL with options.
 func LoadRemoteWithOptions(rawURL string, opts LoadOptions) (*Conf, error) {
@@ -105,7 +105,7 @@ func ParseTOML(content string) (*Conf, error) { return confimpl.ParseTOML(conten
 
 // Watch polls path and calls onChange after successful reloads.
 func Watch(path string, interval time.Duration, onChange func(*Conf, error)) (func(), error) {
-	return confimpl.Watch(path, interval, onChange)
+	return WatchWithOptions(path, WatchOptions{Interval: interval}, onChange)
 }
 
 // WatchWithOptions polls path with options and calls onChange after successful reloads.

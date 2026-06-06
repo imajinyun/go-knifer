@@ -11,9 +11,19 @@ type osInfoConfig struct {
 	name          func() string
 	arch          func() string
 	version       func() string
+	getenv        func(string) string
 	fileSeparator func() string
 	lineSeparator func() string
 	pathSeparator func() string
+}
+
+// WithOSEnvLookupFunc sets the environment lookup used by the default OS version collector.
+func WithOSEnvLookupFunc(fn func(string) string) OsInfoOption {
+	return func(c *osInfoConfig) {
+		if fn != nil {
+			c.getenv = fn
+		}
+	}
 }
 
 // OsInfoOption customizes OS information collection per call.
@@ -77,7 +87,7 @@ func applyOsInfoOptions(opts []OsInfoOption) osInfoConfig {
 	cfg := osInfoConfig{
 		name:          func() string { return runtime.GOOS },
 		arch:          func() string { return runtime.GOARCH },
-		version:       readOsVersion,
+		getenv:        os.Getenv,
 		fileSeparator: func() string { return string(filepath.Separator) },
 		lineSeparator: lineSeparator,
 		pathSeparator: func() string { return string(os.PathListSeparator) },
@@ -93,8 +103,11 @@ func applyOsInfoOptions(opts []OsInfoOption) osInfoConfig {
 	if cfg.arch == nil {
 		cfg.arch = func() string { return runtime.GOARCH }
 	}
+	if cfg.getenv == nil {
+		cfg.getenv = os.Getenv
+	}
 	if cfg.version == nil {
-		cfg.version = readOsVersion
+		cfg.version = func() string { return readOsVersion(cfg.getenv) }
 	}
 	if cfg.fileSeparator == nil {
 		cfg.fileSeparator = func() string { return string(filepath.Separator) }
@@ -197,11 +210,11 @@ func lineSeparator() string {
 
 // readOsVersion detects the OS version from environment variables or common fallbacks.
 // The Go standard library has no unified API for this, so this is best-effort.
-func readOsVersion() string {
-	if v := os.Getenv("OSVERSION"); v != "" {
+func readOsVersion(getenv func(string) string) string {
+	if v := getenv("OSVERSION"); v != "" {
 		return v
 	}
-	if v := os.Getenv("OSTYPE"); v != "" {
+	if v := getenv("OSTYPE"); v != "" {
 		return v
 	}
 	return strings.TrimSpace(runtime.GOOS)

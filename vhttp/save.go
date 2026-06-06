@@ -37,7 +37,7 @@ func WithSaveOpenFile(openFile func(string, int, fs.FileMode) (io.WriteCloser, e
 }
 
 // Download downloads rawURL into w.
-func Download(rawURL string, w io.Writer) (int64, error) { return httpx.Download(rawURL, w) }
+func Download(rawURL string, w io.Writer) (int64, error) { return DownloadWithOptions(rawURL, w) }
 
 // DownloadWithOptions downloads rawURL into w with per-request options.
 func DownloadWithOptions(rawURL string, w io.Writer, opts ...RequestOption) (int64, error) {
@@ -46,7 +46,7 @@ func DownloadWithOptions(rawURL string, w io.Writer, opts ...RequestOption) (int
 
 // DownloadFile downloads rawURL to dest.
 func DownloadFile(rawURL, dest string, opts ...SaveOption) (int64, error) {
-	return httpx.DownloadFile(rawURL, dest, opts...)
+	return DownloadFileWithOptions(rawURL, dest, nil, opts...)
 }
 
 // DownloadFileWithOptions downloads rawURL to dest with per-request and per-save options.

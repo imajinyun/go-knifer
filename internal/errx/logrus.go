@@ -19,10 +19,12 @@ func (*emptyFormatter) Format(*logrus.Entry) ([]byte, error) { return []byte{}, 
 type Wrapper struct {
 	f func() error
 
-	log    bool
-	level  logrus.Level
-	format string
-	args   []any
+	log          bool
+	level        logrus.Level
+	format       string
+	args         []any
+	logger       LogFunc
+	stackOptions []StackOption
 }
 
 // Wrap creates a recoverable function wrapper.
@@ -56,16 +58,31 @@ func (w *Wrapper) Exec(ctx context.Context) (err error) {
 			err = multierror.Append(err, panicError(v))
 		}
 		if err != nil && w.log {
-			logrus.WithContext(ctx).
-				WithError(err).
-				WithField("stack", GetStack(err)).
-				Logf(w.level, w.format, w.args...)
+			logger := w.logger
+			if logger == nil {
+				logger = defaultLogFunc
+			}
+			logger(ctx, w.level, err, GetStackWithOptions(err, w.stackOptions...), w.format, w.args...)
 		}
 	}()
 	if w.f == nil {
 		return nil
 	}
 	return w.f()
+}
+
+// WithLogFunc sets the logger used by this wrapper.
+func (w *Wrapper) WithLogFunc(logFunc LogFunc) *Wrapper {
+	if logFunc != nil {
+		w.logger = logFunc
+	}
+	return w
+}
+
+// WithStackOptions sets stack capture options used by wrapper logging.
+func (w *Wrapper) WithStackOptions(opts ...StackOption) *Wrapper {
+	w.stackOptions = append([]StackOption(nil), opts...)
+	return w
 }
 
 // Recover executes f with panic recovery and logs failures at error level.

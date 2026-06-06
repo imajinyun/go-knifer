@@ -86,7 +86,16 @@ func WithGlobalConfig(cfg GlobalConfig) RequestOption {
 
 // NewRequest creates a request with the specified method and URL.
 func NewRequest(method Method, rawURL string, opts ...RequestOption) *HTTPRequest {
-	cfg := SnapshotGlobalConfig()
+	return NewRequestWithConfig(method, rawURL, SnapshotGlobalConfig(), opts...)
+}
+
+// NewIsolatedRequest creates a request without reading package-level global defaults.
+func NewIsolatedRequest(method Method, rawURL string, opts ...RequestOption) *HTTPRequest {
+	return NewRequestWithConfig(method, rawURL, GlobalConfig{FollowRedirects: true, MaxRedirects: 10}, opts...)
+}
+
+// NewRequestWithConfig creates a request from an explicit global configuration snapshot.
+func NewRequestWithConfig(method Method, rawURL string, cfg GlobalConfig, opts ...RequestOption) *HTTPRequest {
 	follow := cfg.FollowRedirects
 	r := &HTTPRequest{
 		method:       method,

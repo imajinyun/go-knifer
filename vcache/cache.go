@@ -94,6 +94,16 @@ func WithTickerFactory[K comparable, V any](factory TickerFactory) Option[K, V] 
 	return cache.WithTickerFactory[K, V](factory)
 }
 
+// WithWeakFinalizerFunc sets the finalizer provider used by WeakCache.
+func WithWeakFinalizerFunc[K comparable, V any](finalizer func(*V, func(*V))) Option[K, *V] {
+	return cache.WithWeakFinalizerFunc[K, V](finalizer)
+}
+
+// WithWeakFinalizerEnabled controls whether WeakCache registers GC finalizers.
+func WithWeakFinalizerEnabled[K comparable, V any](enabled bool) Option[K, *V] {
+	return cache.WithWeakFinalizerEnabled[K, V](enabled)
+}
+
 // NewFIFO creates a FIFO cache.
 func NewFIFO[K comparable, V any](capacity int) *FIFOCache[K, V] {
 	return NewFIFOWithOptions[K, V](WithCapacity[K, V](capacity))

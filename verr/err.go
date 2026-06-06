@@ -38,6 +38,24 @@ type StackTrace = errimpl.StackTrace
 // StackTraceOption customizes stack trace capture.
 type StackTraceOption = errimpl.StackTraceOption
 
+// StackOption customizes fallback stack capture.
+type StackOption = errimpl.StackOption
+
+// LogFunc writes an error log entry for errx helpers.
+type LogFunc = errimpl.LogFunc
+
+// DebugStackFunc captures the current goroutine stack.
+type DebugStackFunc = errimpl.DebugStackFunc
+
+// CallersFunc captures call stack PCs.
+type CallersFunc = errimpl.CallersFunc
+
+// FuncForPCFunc resolves a PC into file, line, and function name.
+type FuncForPCFunc = errimpl.FuncForPCFunc
+
+// ExitOption customizes MustExitWithOptions.
+type ExitOption = errimpl.ExitOption
+
 // InitOption customizes logrus/Sentry initialization.
 type InitOption = errimpl.InitOption
 
@@ -67,6 +85,11 @@ func ErrorIs(err error, target error) bool { return errimpl.ErrorIs(err, target)
 
 // MustExit logs err and panics when err is non-nil.
 func MustExit(ctx context.Context, err error) { errimpl.MustExit(ctx, err) }
+
+// MustExitWithOptions logs err and panics when err is non-nil with custom options.
+func MustExitWithOptions(ctx context.Context, err error, opts ...ExitOption) {
+	errimpl.MustExitWithOptions(ctx, err, opts...)
+}
 
 // Init configures logrus output and optional Sentry forwarding.
 func Init(sentryDSN string) { errimpl.Init(sentryDSN) }
@@ -119,6 +142,11 @@ func WithLogrusConfigurer(setReportCaller func(bool), setOutput func(io.Writer),
 	return errimpl.WithLogrusConfigurer(setReportCaller, setOutput, setFormatter)
 }
 
+// WithInitErrorLogger sets the logger used for initialization failures.
+func WithInitErrorLogger(logError func(error, string)) InitOption {
+	return errimpl.WithInitErrorLogger(logError)
+}
+
 // InitWithOptions configures logrus output and optional Sentry forwarding with options.
 func InitWithOptions(opts ...InitOption) { errimpl.InitWithOptions(opts...) }
 
@@ -144,6 +172,26 @@ func WithStackSkip(skip int) StackTraceOption { return errimpl.WithStackSkip(ski
 // WithStackDepth limits the number of captured stack frames.
 func WithStackDepth(depth int) StackTraceOption { return errimpl.WithStackDepth(depth) }
 
+// WithCallersFunc sets the function used to capture stack PCs.
+func WithCallersFunc(callers CallersFunc) StackTraceOption { return errimpl.WithCallersFunc(callers) }
+
+// WithFuncForPCFunc sets the resolver used to format captured stack frames.
+func WithFuncForPCFunc(fn FuncForPCFunc) StackTraceOption { return errimpl.WithFuncForPCFunc(fn) }
+
+// WithDebugStackFunc sets the function used when err does not carry a stack.
+func WithDebugStackFunc(fn DebugStackFunc) StackOption { return errimpl.WithDebugStackFunc(fn) }
+
+// GetStackWithOptions returns the stack attached to err, or captures a stack with options.
+func GetStackWithOptions(err error, opts ...StackOption) string {
+	return errimpl.GetStackWithOptions(err, opts...)
+}
+
+// WithExitLogFunc sets the logger used by MustExitWithOptions.
+func WithExitLogFunc(logFunc LogFunc) ExitOption { return errimpl.WithExitLogFunc(logFunc) }
+
+// WithExitPanicFunc sets the panic function used by MustExitWithOptions.
+func WithExitPanicFunc(panicFunc func(error)) ExitOption { return errimpl.WithExitPanicFunc(panicFunc) }
+
 // GetStackTraceWithOptions captures the current goroutine stack trace with options.
 func GetStackTraceWithOptions(opts ...StackTraceOption) StackTrace {
 	return errimpl.GetStackTraceWithOptions(opts...)
@@ -155,6 +203,14 @@ func WithLevel(c *Collector, level logrus.Level) *Collector { return c.WithLevel
 // WithTimerFactory sets the default timer factory used by Collector.WaitUntil.
 func WithTimerFactory(c *Collector, factory TimerFactory) *Collector {
 	return c.WithTimerFactory(factory)
+}
+
+// WithLogFunc sets the logger used by Collector.
+func WithLogFunc(c *Collector, logFunc LogFunc) *Collector { return c.WithLogFunc(logFunc) }
+
+// WithCollectorStackOptions sets stack capture options used by Collector logging.
+func WithCollectorStackOptions(c *Collector, opts ...StackOption) *Collector {
+	return c.WithStackOptions(opts...)
 }
 
 // WithWaitContext sets a context that can cancel a single WaitUntilWithOptions call.

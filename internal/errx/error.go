@@ -1,13 +1,57 @@
 package errx
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"runtime/debug"
 
 	"github.com/hashicorp/go-multierror"
 	knifer "github.com/imajinyun/go-knifer"
+	"github.com/sirupsen/logrus"
 )
+
+// LogFunc writes an error log entry for errx helpers.
+type LogFunc func(ctx context.Context, level logrus.Level, err error, stack string, format string, args ...any)
+
+// DebugStackFunc captures the current goroutine stack.
+type DebugStackFunc func() []byte
+
+type stackConfig struct {
+	debugStack DebugStackFunc
+}
+
+// StackOption customizes fallback stack capture.
+type StackOption func(*stackConfig)
+
+// WithDebugStackFunc sets the function used when err does not carry a stack.
+func WithDebugStackFunc(fn DebugStackFunc) StackOption {
+	return func(c *stackConfig) {
+		if fn != nil {
+			c.debugStack = fn
+		}
+	}
+}
+
+func applyStackOptions(opts []StackOption) stackConfig {
+	cfg := stackConfig{debugStack: debug.Stack}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.debugStack == nil {
+		cfg.debugStack = debug.Stack
+	}
+	return cfg
+}
+
+func defaultLogFunc(ctx context.Context, level logrus.Level, err error, stack string, format string, args ...any) {
+	logrus.WithContext(ctx).
+		WithError(err).
+		WithField("stack", stack).
+		Logf(level, format, args...)
+}
 
 // WithStack is implemented by errors that can expose a string stack trace.
 type WithStack interface {
@@ -72,6 +116,11 @@ func (e *PanicError) Stack() string {
 
 // GetStack returns the stack attached to err, or the current goroutine stack.
 func GetStack(err error) string {
+	return GetStackWithOptions(err)
+}
+
+// GetStackWithOptions returns the stack attached to err, or captures a stack with options.
+func GetStackWithOptions(err error, opts ...StackOption) string {
 	if err == nil {
 		return ""
 	}
@@ -79,7 +128,8 @@ func GetStack(err error) string {
 	if errors.As(err, &ws) {
 		return ws.Stack()
 	}
-	return string(debug.Stack())
+	cfg := applyStackOptions(opts)
+	return string(cfg.debugStack())
 }
 
 // ErrorIs is like errors.Is, but it also checks each member of a multierror.

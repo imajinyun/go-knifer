@@ -17,13 +17,14 @@ import (
 // should treat GC-based cleanup as eventual cleanup. TTL checks and explicit
 // Prune/Remove/Clear remain deterministic.
 type WeakCache[K comparable, V any] struct {
-	mu       sync.Mutex
-	entries  map[K]*weakEntry[V]
-	timeout  time.Duration
-	listener CacheListener[K, *V]
-	hits     int64
-	misses   int64
-	clock    func() time.Time
+	mu        sync.Mutex
+	entries   map[K]*weakEntry[V]
+	timeout   time.Duration
+	listener  CacheListener[K, *V]
+	hits      int64
+	misses    int64
+	clock     func() time.Time
+	finalizer func(*V, func(*V))
 }
 
 type weakEntry[V any] struct {
@@ -54,7 +55,18 @@ func newWeakCacheWithConfig[K comparable, V any](cfg cacheConfig[K, *V]) *WeakCa
 		listener: cfg.listener,
 		clock:    clock,
 	}
+	if !cfg.finalizerOff {
+		if finalizer, ok := cfg.finalizer.(func(*V, func(*V))); ok && finalizer != nil {
+			c.finalizer = finalizer
+		} else {
+			c.finalizer = defaultWeakFinalizer[V]
+		}
+	}
 	return c
+}
+
+func defaultWeakFinalizer[V any](value *V, finalizer func(*V)) {
+	runtime.SetFinalizer(value, finalizer)
 }
 
 func (c *WeakCache[K, V]) now() time.Time {
@@ -94,9 +106,11 @@ func (c *WeakCache[K, V]) PutWithTimeout(key K, value *V, timeout time.Duration)
 	// Use a finalizer to remove the entry after the pointed value is collected.
 	keyCopy := key
 	cache := c
-	runtime.SetFinalizer(value, func(v *V) {
-		cache.removeIfRefIs(keyCopy, v)
-	})
+	if c.finalizer != nil {
+		c.finalizer(value, func(v *V) {
+			cache.removeIfRefIs(keyCopy, v)
+		})
+	}
 }
 
 // Get returns a cached pointer, or nil and false when missing or expired.

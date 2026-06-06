@@ -10,37 +10,37 @@ import (
 
 // NewFIFOCache delegates to the internal cache implementation.
 func NewFIFOCache[K comparable, V any](capacity int) *FIFOCache[K, V] {
-	return &FIFOCache[K, V]{FIFOCache: cache.NewFIFOCache[K, V](capacity)}
+	return NewFIFOWithOptions[K, V](WithCapacity[K, V](capacity))
 }
 
 // NewFIFOCacheWithTimeout delegates to the internal cache implementation.
 func NewFIFOCacheWithTimeout[K comparable, V any](capacity int, timeout time.Duration) *FIFOCache[K, V] {
-	return &FIFOCache[K, V]{FIFOCache: cache.NewFIFOCacheWithTimeout[K, V](capacity, timeout)}
+	return NewFIFOWithOptions[K, V](WithCapacity[K, V](capacity), WithTimeout[K, V](timeout))
 }
 
 // NewLFUCache delegates to the internal cache implementation.
 func NewLFUCache[K comparable, V any](capacity int) *LFUCache[K, V] {
-	return &LFUCache[K, V]{LFUCache: cache.NewLFUCache[K, V](capacity)}
+	return NewLFUWithOptions[K, V](WithCapacity[K, V](capacity))
 }
 
 // NewLFUCacheWithTimeout delegates to the internal cache implementation.
 func NewLFUCacheWithTimeout[K comparable, V any](capacity int, timeout time.Duration) *LFUCache[K, V] {
-	return &LFUCache[K, V]{LFUCache: cache.NewLFUCacheWithTimeout[K, V](capacity, timeout)}
+	return NewLFUWithOptions[K, V](WithCapacity[K, V](capacity), WithTimeout[K, V](timeout))
 }
 
 // NewLRUCache delegates to the internal cache implementation.
 func NewLRUCache[K comparable, V any](capacity int) *LRUCache[K, V] {
-	return &LRUCache[K, V]{LRUCache: cache.NewLRUCache[K, V](capacity)}
+	return NewLRUWithOptions[K, V](WithCapacity[K, V](capacity))
 }
 
 // NewLRUCacheWithTimeout delegates to the internal cache implementation.
 func NewLRUCacheWithTimeout[K comparable, V any](capacity int, timeout time.Duration) *LRUCache[K, V] {
-	return &LRUCache[K, V]{LRUCache: cache.NewLRUCacheWithTimeout[K, V](capacity, timeout)}
+	return NewLRUWithOptions[K, V](WithCapacity[K, V](capacity), WithTimeout[K, V](timeout))
 }
 
 // NewTimedCache delegates to the internal cache implementation.
 func NewTimedCache[K comparable, V any](timeout time.Duration) *TimedCache[K, V] {
-	return &TimedCache[K, V]{TimedCache: cache.NewTimedCache[K, V](timeout)}
+	return NewTimedWithOptions[K, V](WithTimeout[K, V](timeout))
 }
 
 // NewNo delegates to the internal cache implementation.
@@ -50,5 +50,5 @@ func NewNo[K comparable, V any]() *NoCache[K, V] {
 
 // NewWeakCache delegates to the internal cache implementation.
 func NewWeakCache[K comparable, V any](timeout time.Duration) *WeakCache[K, V] {
-	return &WeakCache[K, V]{WeakCache: cache.NewWeakCache[K, V](timeout)}
+	return NewWeakWithOptions[K, V](WithTimeout[K, *V](timeout))
 }

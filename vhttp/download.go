@@ -4,7 +4,7 @@ import httpx "github.com/imajinyun/go-knifer/internal/httpx/http"
 
 // DownloadString delegates to the internal httpx implementation.
 func DownloadString(rawURL, customCharset string) string {
-	return httpx.DownloadString(rawURL, customCharset)
+	return DownloadStringWithOptions(rawURL, customCharset)
 }
 
 // DownloadStringWithOptions downloads remote text with per-request options.
@@ -14,7 +14,7 @@ func DownloadStringWithOptions(rawURL, customCharset string, opts ...RequestOpti
 
 // DownloadBytes delegates to the internal httpx implementation.
 func DownloadBytes(rawURL string) []byte {
-	return httpx.DownloadBytes(rawURL)
+	return DownloadBytesWithOptions(rawURL)
 }
 
 // DownloadBytesWithOptions downloads and returns bytes with per-request options.
