@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -14,13 +15,19 @@ const defaultReadHeaderTimeout = 10 * time.Second
 
 // SimpleServer is a simple HTTP server, aligned with the utility toolkit-http SimpleServer.
 type SimpleServer struct {
-	addr   string
-	mux    *http.ServeMux
-	server *http.Server
+	addr           string
+	mux            *http.ServeMux
+	server         *http.Server
+	listenAndServe ListenAndServeFunc
 }
 
 // ServerOption customizes SimpleServer construction.
 type ServerOption func(*http.Server)
+
+// ListenAndServeFunc starts serving with the provided HTTP server.
+type ListenAndServeFunc func(*http.Server) error
+
+var serverStarters sync.Map
 
 // NewSimpleServer creates a simple server on the specified port.
 func NewSimpleServer(port int) *SimpleServer {
@@ -56,10 +63,26 @@ func NewSimpleServerAddrWithOptions(addr string, opts ...ServerOption) *SimpleSe
 	if server.Handler == nil {
 		server.Handler = mux
 	}
+	listenAndServe := defaultListenAndServe
+	if starter, ok := serverStarters.LoadAndDelete(server); ok {
+		listenAndServe = starter.(ListenAndServeFunc)
+	}
 	return &SimpleServer{
-		addr:   server.Addr,
-		mux:    mux,
-		server: server,
+		addr:           server.Addr,
+		mux:            mux,
+		server:         server,
+		listenAndServe: listenAndServe,
+	}
+}
+
+func defaultListenAndServe(server *http.Server) error { return server.ListenAndServe() }
+
+// WithListenAndServeFunc sets the function used to start serving.
+func WithListenAndServeFunc(listenAndServe ListenAndServeFunc) ServerOption {
+	return func(s *http.Server) {
+		if listenAndServe != nil {
+			serverStarters.Store(s, listenAndServe)
+		}
 	}
 }
 
@@ -149,14 +172,22 @@ func (s *SimpleServer) SetRoot(dir string) *SimpleServer {
 
 // Start starts the server synchronously and blocks.
 func (s *SimpleServer) Start() error {
-	return s.server.ListenAndServe()
+	listenAndServe := s.listenAndServe
+	if listenAndServe == nil {
+		listenAndServe = defaultListenAndServe
+	}
+	return listenAndServe(s.server)
 }
 
 // StartAsync starts the server asynchronously and returns an error channel.
 func (s *SimpleServer) StartAsync() <-chan error {
 	ch := make(chan error, 1)
 	go func() {
-		err := s.server.ListenAndServe()
+		listenAndServe := s.listenAndServe
+		if listenAndServe == nil {
+			listenAndServe = defaultListenAndServe
+		}
+		err := listenAndServe(s.server)
 		if err != nil && err != http.ErrServerClosed {
 			ch <- err
 		}

@@ -248,7 +248,7 @@ func applyDefaultSnowflakeOptions(opts []SnowflakeOption) snowflakeConfig {
 }
 
 // RandomUUID returns a standard random UUID string in 8-4-4-4-12 format.
-func RandomUUID() string { return formatUUID(randomUUIDBytes(), false) }
+func RandomUUID() string { return RandomUUIDWithOptions() }
 
 // RandomUUIDWithOptions returns a standard random UUID string using custom random options.
 func RandomUUIDWithOptions(opts ...RandomOption) string {
@@ -257,7 +257,7 @@ func RandomUUIDWithOptions(opts ...RandomOption) string {
 }
 
 // SimpleUUID returns a 32-character UUID without hyphens.
-func SimpleUUID() string { return formatUUID(randomUUIDBytes(), true) }
+func SimpleUUID() string { return SimpleUUIDWithOptions() }
 
 // SimpleUUIDWithOptions returns a 32-character UUID without hyphens using custom random options.
 func SimpleUUIDWithOptions(opts ...RandomOption) string {
@@ -272,10 +272,6 @@ func FastUUID() string { return RandomUUID() }
 // FastSimpleUUID returns a 32-character UUID without hyphens.
 // Go uses crypto/rand directly here; the name is kept as a convenient alias.
 func FastSimpleUUID() string { return SimpleUUID() }
-
-func randomUUIDBytes() []byte {
-	return randomUUIDBytesFrom(cryptorand.Reader)
-}
 
 func randomUUIDBytesFrom(reader io.Reader) []byte {
 	b := make([]byte, 16)
@@ -333,7 +329,7 @@ type Snowflake struct {
 // CreateSnowflake creates a standalone Snowflake generator.
 // Multiple standalone generators with the same worker/datacenter pair may produce duplicate IDs.
 func CreateSnowflake(workerID, datacenterID int64) *Snowflake {
-	return newSnowflake(workerID, datacenterID)
+	return CreateSnowflakeWithOptions(WithSnowflakeWorkerID(workerID), WithSnowflakeDatacenterID(datacenterID))
 }
 
 // CreateSnowflakeWithOptions creates a standalone Snowflake generator customized by options.
@@ -376,31 +372,40 @@ func ConfigureDefaultSnowflake(opts ...SnowflakeOption) *Snowflake {
 
 // GetSnowflakeWithWorker returns a singleton Snowflake generator for workerID.
 func GetSnowflakeWithWorker(workerID int64) *Snowflake {
-	return GetSnowflakeWithWorkerDataCenter(workerID, GetDataCenterID(snowflakeMaxDatacenterID))
+	return GetSnowflakeWithWorkerWithOptions(workerID)
+}
+
+// GetSnowflakeWithWorkerWithOptions returns a singleton Snowflake generator for workerID using custom defaults.
+func GetSnowflakeWithWorkerWithOptions(workerID int64, opts ...SnowflakeOption) *Snowflake {
+	allOpts := append([]SnowflakeOption{WithSnowflakeWorkerID(workerID)}, opts...)
+	cfg := applySnowflakeOptions(allOpts)
+	if !cfg.datacenterSet {
+		cfg.datacenterID = getDataCenterID(snowflakeMaxDatacenterID, cfg.interfaces)
+	}
+	return getCachedSnowflakeWithConfig(cfg)
 }
 
 // GetSnowflakeWithWorkerDataCenter returns a singleton Snowflake generator for worker/datacenter pair.
 func GetSnowflakeWithWorkerDataCenter(workerID, datacenterID int64) *Snowflake {
-	workerID = normalizeSnowflakeID(workerID, snowflakeMaxWorkerID)
-	datacenterID = normalizeSnowflakeID(datacenterID, snowflakeMaxDatacenterID)
-	key := fmt.Sprintf("%d:%d", workerID, datacenterID)
+	return GetSnowflakeWithWorkerDataCenterWithOptions(workerID, datacenterID)
+}
+
+// GetSnowflakeWithWorkerDataCenterWithOptions returns a singleton Snowflake generator for worker/datacenter pair using custom clock options.
+func GetSnowflakeWithWorkerDataCenterWithOptions(workerID, datacenterID int64, opts ...SnowflakeOption) *Snowflake {
+	allOpts := append([]SnowflakeOption{WithSnowflakeWorkerID(workerID), WithSnowflakeDatacenterID(datacenterID)}, opts...)
+	return getCachedSnowflakeWithConfig(applySnowflakeOptions(allOpts))
+}
+
+func getCachedSnowflakeWithConfig(cfg snowflakeConfig) *Snowflake {
+	cfg.workerID = normalizeSnowflakeID(cfg.workerID, snowflakeMaxWorkerID)
+	cfg.datacenterID = normalizeSnowflakeID(cfg.datacenterID, snowflakeMaxDatacenterID)
+	key := fmt.Sprintf("%d:%d", cfg.workerID, cfg.datacenterID)
 	if v, ok := snowflakeCache.Load(key); ok {
 		return v.(*Snowflake)
 	}
-	sf := newSnowflake(workerID, datacenterID)
+	sf := newSnowflakeWithConfig(cfg)
 	actual, _ := snowflakeCache.LoadOrStore(key, sf)
 	return actual.(*Snowflake)
-}
-
-func newSnowflake(workerID, datacenterID int64) *Snowflake {
-	workerID = normalizeSnowflakeID(workerID, snowflakeMaxWorkerID)
-	datacenterID = normalizeSnowflakeID(datacenterID, snowflakeMaxDatacenterID)
-	return newSnowflakeWithConfig(snowflakeConfig{
-		workerID:      workerID,
-		datacenterID:  datacenterID,
-		timeFunc:      currentMillis,
-		tilNextMillis: waitNextMillis,
-	})
 }
 
 func newSnowflakeWithConfig(cfg snowflakeConfig) *Snowflake {
@@ -459,7 +464,12 @@ func (s *Snowflake) NextIDStr() string { return strconv.FormatInt(s.NextID(), 10
 
 // GetDataCenterID derives a datacenter id from the local MAC address.
 func GetDataCenterID(maxDatacenterID int64) int64 {
-	return getDataCenterID(maxDatacenterID, net.Interfaces)
+	return GetDataCenterIDWithOptions(maxDatacenterID)
+}
+
+// GetDataCenterIDWithOptions derives a datacenter id using custom Snowflake providers.
+func GetDataCenterIDWithOptions(maxDatacenterID int64, opts ...SnowflakeOption) int64 {
+	return getDataCenterID(maxDatacenterID, applySnowflakeOptions(opts).interfaces)
 }
 
 func getDataCenterID(maxDatacenterID int64, interfaces func() ([]net.Interface, error)) int64 {
@@ -481,7 +491,12 @@ func getDataCenterID(maxDatacenterID int64, interfaces func() ([]net.Interface, 
 
 // GetWorkerID derives a worker id from datacenter id and process id.
 func GetWorkerID(datacenterID, maxWorkerID int64) int64 {
-	return getWorkerID(datacenterID, maxWorkerID, os.Getpid)
+	return GetWorkerIDWithOptions(datacenterID, maxWorkerID)
+}
+
+// GetWorkerIDWithOptions derives a worker id using custom Snowflake providers.
+func GetWorkerIDWithOptions(datacenterID, maxWorkerID int64, opts ...SnowflakeOption) int64 {
+	return getWorkerID(datacenterID, maxWorkerID, applySnowflakeOptions(opts).pid)
 }
 
 func getWorkerID(datacenterID, maxWorkerID int64, pid func() int) int64 {

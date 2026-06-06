@@ -13,24 +13,23 @@ type ShearCaptcha struct {
 
 // NewShearCaptcha creates a captcha with 5 characters and line width 4 by default.
 func NewShearCaptcha(width, height int) *ShearCaptcha {
-	return NewShearCaptchaWith(width, height, 5, 4)
+	return NewShearCaptchaWithOptions(width, height)
 }
 
 // NewShearCaptchaWithOptions creates a shear captcha customized by options.
 func NewShearCaptchaWithOptions(width, height int, opts ...CaptchaOption) *ShearCaptcha {
-	c := NewShearCaptcha(width, height)
+	c := &ShearCaptcha{}
+	c.Width = width
+	c.Height = height
+	c.InterfereCount = 4
+	c.SetGenerator(NewRandomGenerator(5))
 	applyCaptchaOptions(&c.AbstractCaptcha, opts)
 	return c
 }
 
 // NewShearCaptchaWith creates a captcha with custom character count and line width.
 func NewShearCaptchaWith(width, height, codeCount, thickness int) *ShearCaptcha {
-	c := &ShearCaptcha{}
-	c.Width = width
-	c.Height = height
-	c.InterfereCount = thickness
-	c.SetGenerator(NewRandomGenerator(codeCount))
-	return c
+	return NewShearCaptchaWithOptions(width, height, WithGenerator(NewRandomGenerator(codeCount)), WithInterfereCount(thickness))
 }
 
 // CreateCode generates a captcha text and image.

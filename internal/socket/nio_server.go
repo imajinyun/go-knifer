@@ -24,7 +24,7 @@ type NioServer struct {
 
 // NewNioServer creates and initializes a server on the given port.
 func NewNioServer(port int) (*NioServer, error) {
-	return NewNioServerWithConfig(port, NewSocketConfig())
+	return NewNioServerWithOptions(port)
 }
 
 // NewNioServerWithOptions creates and initializes a server on the given port with custom config options.

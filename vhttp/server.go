@@ -58,6 +58,11 @@ func WithConnContext(connContext func(context.Context, net.Conn) context.Context
 // WithHTTPServer copies supported settings from server into the created SimpleServer.
 func WithHTTPServer(server *http.Server) ServerOption { return httpx.WithHTTPServer(server) }
 
+// WithListenAndServeFunc sets the function used to start serving.
+func WithListenAndServeFunc(listenAndServe ListenAndServeFunc) ServerOption {
+	return httpx.WithListenAndServeFunc(listenAndServe)
+}
+
 // CreateServer delegates to the internal httpx implementation.
 func CreateServer(port int) *SimpleServer {
 	return httpx.CreateServer(port)

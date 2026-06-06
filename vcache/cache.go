@@ -96,7 +96,7 @@ func WithTickerFactory[K comparable, V any](factory TickerFactory) Option[K, V] 
 
 // NewFIFO creates a FIFO cache.
 func NewFIFO[K comparable, V any](capacity int) *FIFOCache[K, V] {
-	return &FIFOCache[K, V]{FIFOCache: cache.NewFIFO[K, V](capacity)}
+	return NewFIFOWithOptions[K, V](WithCapacity[K, V](capacity))
 }
 
 // NewFIFOWithOptions creates a FIFO cache customized by options.
@@ -106,12 +106,12 @@ func NewFIFOWithOptions[K comparable, V any](opts ...Option[K, V]) *FIFOCache[K,
 
 // NewFIFOWithTimeout creates a FIFO cache with timeout.
 func NewFIFOWithTimeout[K comparable, V any](capacity int, timeout time.Duration) *FIFOCache[K, V] {
-	return &FIFOCache[K, V]{FIFOCache: cache.NewFIFOWithTimeout[K, V](capacity, timeout)}
+	return NewFIFOWithOptions[K, V](WithCapacity[K, V](capacity), WithTimeout[K, V](timeout))
 }
 
 // NewLFU creates an LFU cache.
 func NewLFU[K comparable, V any](capacity int) *LFUCache[K, V] {
-	return &LFUCache[K, V]{LFUCache: cache.NewLFU[K, V](capacity)}
+	return NewLFUWithOptions[K, V](WithCapacity[K, V](capacity))
 }
 
 // NewLFUWithOptions creates an LFU cache customized by options.
@@ -121,12 +121,12 @@ func NewLFUWithOptions[K comparable, V any](opts ...Option[K, V]) *LFUCache[K, V
 
 // NewLFUWithTimeout creates an LFU cache with timeout.
 func NewLFUWithTimeout[K comparable, V any](capacity int, timeout time.Duration) *LFUCache[K, V] {
-	return &LFUCache[K, V]{LFUCache: cache.NewLFUWithTimeout[K, V](capacity, timeout)}
+	return NewLFUWithOptions[K, V](WithCapacity[K, V](capacity), WithTimeout[K, V](timeout))
 }
 
 // NewLRU creates an LRU cache.
 func NewLRU[K comparable, V any](capacity int) *LRUCache[K, V] {
-	return &LRUCache[K, V]{LRUCache: cache.NewLRU[K, V](capacity)}
+	return NewLRUWithOptions[K, V](WithCapacity[K, V](capacity))
 }
 
 // NewLRUWithOptions creates an LRU cache customized by options.
@@ -136,7 +136,7 @@ func NewLRUWithOptions[K comparable, V any](opts ...Option[K, V]) *LRUCache[K, V
 
 // NewLRUWithTimeout creates an LRU cache with timeout.
 func NewLRUWithTimeout[K comparable, V any](capacity int, timeout time.Duration) *LRUCache[K, V] {
-	return &LRUCache[K, V]{LRUCache: cache.NewLRUWithTimeout[K, V](capacity, timeout)}
+	return NewLRUWithOptions[K, V](WithCapacity[K, V](capacity), WithTimeout[K, V](timeout))
 }
 
 // NewNoCache creates a no-op cache.
@@ -146,7 +146,7 @@ func NewNoCache[K comparable, V any]() *NoCache[K, V] {
 
 // NewTimed creates a timed cache.
 func NewTimed[K comparable, V any](timeout time.Duration) *TimedCache[K, V] {
-	return &TimedCache[K, V]{TimedCache: cache.NewTimed[K, V](timeout)}
+	return NewTimedWithOptions[K, V](WithTimeout[K, V](timeout))
 }
 
 // NewTimedWithOptions creates a timed cache customized by options.
@@ -156,12 +156,14 @@ func NewTimedWithOptions[K comparable, V any](opts ...Option[K, V]) *TimedCache[
 
 // NewTimedScheduled creates a timed cache with scheduled pruning.
 func NewTimedScheduled[K comparable, V any](timeout, schedulePruneDelay time.Duration) *TimedCache[K, V] {
-	return &TimedCache[K, V]{TimedCache: cache.NewTimedScheduled[K, V](timeout, schedulePruneDelay)}
+	c := NewTimedWithOptions[K, V](WithTimeout[K, V](timeout))
+	c.SchedulePrune(schedulePruneDelay)
+	return c
 }
 
 // NewWeak creates a weak-style timed cache.
 func NewWeak[K comparable, V any](timeout time.Duration) *WeakCache[K, V] {
-	return &WeakCache[K, V]{WeakCache: cache.NewWeak[K, V](timeout)}
+	return NewWeakWithOptions[K, V](WithTimeout[K, *V](timeout))
 }
 
 // NewWeakWithOptions creates a weak-style timed cache customized by options.

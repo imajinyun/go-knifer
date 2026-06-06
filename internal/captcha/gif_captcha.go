@@ -23,12 +23,18 @@ type GifCaptcha struct {
 
 // NewGifCaptcha creates a captcha with 5 characters and 10 interference elements by default.
 func NewGifCaptcha(width, height int) *GifCaptcha {
-	return NewGifCaptchaWith(width, height, 5)
+	return NewGifCaptchaWithOptions(width, height)
 }
 
 // NewGifCaptchaWithOptions creates a GIF captcha customized by options.
 func NewGifCaptchaWithOptions(width, height int, opts ...CaptchaOption) *GifCaptcha {
-	c := NewGifCaptcha(width, height)
+	c := &GifCaptcha{}
+	c.Width = width
+	c.Height = height
+	c.InterfereCount = 10
+	c.Repeat = 0
+	c.Delay = 10
+	c.SetGenerator(NewRandomGenerator(5))
 	cfg := applyCaptchaOptions(&c.AbstractCaptcha, opts)
 	if cfg.setGIFRepeat {
 		c.Repeat = cfg.gifRepeat
@@ -41,14 +47,7 @@ func NewGifCaptchaWithOptions(width, height int, opts ...CaptchaOption) *GifCapt
 
 // NewGifCaptchaWith creates a captcha with a custom character count.
 func NewGifCaptchaWith(width, height, codeCount int) *GifCaptcha {
-	c := &GifCaptcha{}
-	c.Width = width
-	c.Height = height
-	c.InterfereCount = 10
-	c.Repeat = 0
-	c.Delay = 10
-	c.SetGenerator(NewRandomGenerator(codeCount))
-	return c
+	return NewGifCaptchaWithOptions(width, height, WithGenerator(NewRandomGenerator(codeCount)))
 }
 
 // CreateCode generates a new captcha text and GIF image.

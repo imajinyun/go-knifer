@@ -44,10 +44,24 @@ var (
 type readConfig struct {
 	sheet       string
 	openOptions []excelize.Options
+	openFile    OpenFileFunc
+	openReader  OpenReaderFunc
 }
 
 // ReadOption customizes Excel read helpers.
 type ReadOption func(*readConfig)
+
+// OpenFileFunc opens an Excel workbook from a file path.
+type OpenFileFunc func(string, ...excelize.Options) (*excelize.File, error)
+
+// OpenReaderFunc opens an Excel workbook from a reader.
+type OpenReaderFunc func(io.Reader, ...excelize.Options) (*excelize.File, error)
+
+// NewFileFunc creates a new Excel workbook.
+type NewFileFunc func() *excelize.File
+
+// SaveAsFunc saves an Excel workbook to path.
+type SaveAsFunc func(*excelize.File, string, ...excelize.Options) error
 
 type writeConfig struct {
 	sheet         string
@@ -61,15 +75,33 @@ type writeConfig struct {
 	mkdirAll      func(string, fs.FileMode) error
 	stat          func(string) (os.FileInfo, error)
 	chmod         func(string, fs.FileMode) error
+	newFile       NewFileFunc
+	saveAs        SaveAsFunc
 }
 
 // WriteOption customizes Excel write helpers.
 type WriteOption func(*writeConfig)
 
-func defaultReadConfig() readConfig { return readConfig{} }
+func defaultOpenFile(path string, opts ...excelize.Options) (*excelize.File, error) {
+	return excelize.OpenFile(path, opts...)
+}
+
+func defaultOpenReader(r io.Reader, opts ...excelize.Options) (*excelize.File, error) {
+	return excelize.OpenReader(r, opts...)
+}
+
+func defaultNewFile() *excelize.File { return excelize.NewFile() }
+
+func defaultSaveAs(f *excelize.File, path string, opts ...excelize.Options) error {
+	return f.SaveAs(path, opts...)
+}
+
+func defaultReadConfig() readConfig {
+	return readConfig{openFile: defaultOpenFile, openReader: defaultOpenReader}
+}
 
 func defaultWriteConfig() writeConfig {
-	return writeConfig{sheet: DefaultSheetName, startRow: 1, startCol: 1, dirPerm: 0o750, filePerm: 0o644, overwrite: true, createParents: true, mkdirAll: os.MkdirAll, stat: os.Stat, chmod: os.Chmod}
+	return writeConfig{sheet: DefaultSheetName, startRow: 1, startCol: 1, dirPerm: 0o750, filePerm: 0o644, overwrite: true, createParents: true, mkdirAll: os.MkdirAll, stat: os.Stat, chmod: os.Chmod, newFile: defaultNewFile, saveAs: defaultSaveAs}
 }
 
 // WithReadSheet selects the worksheet read by read helpers.
@@ -78,6 +110,24 @@ func WithReadSheet(sheet string) ReadOption { return func(c *readConfig) { c.she
 // WithOpenOptions sets excelize options used when opening workbooks.
 func WithOpenOptions(opts ...excelize.Options) ReadOption {
 	return func(c *readConfig) { c.openOptions = append([]excelize.Options(nil), opts...) }
+}
+
+// WithOpenFileFunc sets the workbook opener used by path-based read helpers.
+func WithOpenFileFunc(openFile OpenFileFunc) ReadOption {
+	return func(c *readConfig) {
+		if openFile != nil {
+			c.openFile = openFile
+		}
+	}
+}
+
+// WithOpenReaderFunc sets the workbook opener used by reader-based read helpers.
+func WithOpenReaderFunc(openReader OpenReaderFunc) ReadOption {
+	return func(c *readConfig) {
+		if openReader != nil {
+			c.openReader = openReader
+		}
+	}
 }
 
 // WithWriteSheet selects the worksheet written by write helpers.
@@ -131,12 +181,36 @@ func WithChmod(chmod func(string, fs.FileMode) error) WriteOption {
 	return func(c *writeConfig) { c.chmod = chmod }
 }
 
+// WithNewFileFunc sets the workbook factory used by write helpers.
+func WithNewFileFunc(newFile NewFileFunc) WriteOption {
+	return func(c *writeConfig) {
+		if newFile != nil {
+			c.newFile = newFile
+		}
+	}
+}
+
+// WithSaveAsFunc sets the workbook saver used by write helpers.
+func WithSaveAsFunc(saveAs SaveAsFunc) WriteOption {
+	return func(c *writeConfig) {
+		if saveAs != nil {
+			c.saveAs = saveAs
+		}
+	}
+}
+
 func applyReadOptions(opts []ReadOption) readConfig {
 	cfg := defaultReadConfig()
 	for _, opt := range opts {
 		if opt != nil {
 			opt(&cfg)
 		}
+	}
+	if cfg.openFile == nil {
+		cfg.openFile = defaultOpenFile
+	}
+	if cfg.openReader == nil {
+		cfg.openReader = defaultOpenReader
 	}
 	return cfg
 }
@@ -157,6 +231,12 @@ func applyWriteOptions(opts []WriteOption) writeConfig {
 	if cfg.chmod == nil {
 		cfg.chmod = os.Chmod
 	}
+	if cfg.newFile == nil {
+		cfg.newFile = defaultNewFile
+	}
+	if cfg.saveAs == nil {
+		cfg.saveAs = defaultSaveAs
+	}
 	return cfg
 }
 
@@ -168,7 +248,7 @@ func SheetNames(path string) ([]string, error) {
 // SheetNamesWithOptions returns all worksheet names in path with custom open options.
 func SheetNamesWithOptions(path string, opts ...ReadOption) ([]string, error) {
 	cfg := applyReadOptions(opts)
-	f, err := excelize.OpenFile(path, cfg.openOptions...)
+	f, err := cfg.openFile(path, cfg.openOptions...)
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +259,7 @@ func SheetNamesWithOptions(path string, opts ...ReadOption) ([]string, error) {
 // ReadRows reads rows from the first worksheet in path.
 func ReadRows(path string, opts ...ReadOption) ([][]string, error) {
 	cfg := applyReadOptions(opts)
-	f, err := excelize.OpenFile(path, cfg.openOptions...)
+	f, err := cfg.openFile(path, cfg.openOptions...)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +275,7 @@ func ReadSheetRows(path, sheet string) ([][]string, error) {
 // ReadSheetRowsWithOptions reads rows from sheet in path with custom open options.
 func ReadSheetRowsWithOptions(path, sheet string, opts ...ReadOption) ([][]string, error) {
 	cfg := applyReadOptions(opts)
-	f, err := excelize.OpenFile(path, cfg.openOptions...)
+	f, err := cfg.openFile(path, cfg.openOptions...)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +286,7 @@ func ReadSheetRowsWithOptions(path, sheet string, opts ...ReadOption) ([][]strin
 // ReadRowsFromReader reads rows from the first worksheet in r.
 func ReadRowsFromReader(r io.Reader, opts ...ReadOption) ([][]string, error) {
 	cfg := applyReadOptions(opts)
-	f, err := excelize.OpenReader(r, cfg.openOptions...)
+	f, err := cfg.openReader(r, cfg.openOptions...)
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +310,7 @@ func writeRows(path string, rows [][]string, cfg writeConfig) error {
 	if sheet == "" {
 		return ErrEmptySheetName
 	}
-	f := excelize.NewFile()
+	f := cfg.newFile()
 	defer func() { _ = f.Close() }()
 	if err := replaceDefaultSheet(f, sheet); err != nil {
 		return err
@@ -249,7 +329,7 @@ func writeRows(path string, rows [][]string, cfg writeConfig) error {
 // WriteSheets writes multiple worksheets into path.
 func WriteSheets(path string, sheets map[string][][]string, opts ...WriteOption) error {
 	cfg := applyWriteOptions(opts)
-	f := excelize.NewFile()
+	f := cfg.newFile()
 	defer func() { _ = f.Close() }()
 
 	if len(sheets) == 0 {
@@ -294,7 +374,7 @@ func WriteRowsToBuffer(sheet string, rows [][]string, opts ...WriteOption) (*byt
 	if sheet == "" {
 		return nil, ErrEmptySheetName
 	}
-	f := excelize.NewFile()
+	f := cfg.newFile()
 	defer func() { _ = f.Close() }()
 	if err := replaceDefaultSheet(f, sheet); err != nil {
 		return nil, err
@@ -374,7 +454,7 @@ func saveWorkbook(f *excelize.File, path string, cfg writeConfig) error {
 			return err
 		}
 	}
-	if err := f.SaveAs(path, cfg.saveOptions...); err != nil {
+	if err := cfg.saveAs(f, path, cfg.saveOptions...); err != nil {
 		return err
 	}
 	if cfg.filePerm != 0 {

@@ -38,6 +38,11 @@ func WithUploadMkdirAll(mkdirAll func(string, fs.FileMode) error) UploadSaveOpti
 	return netimpl.WithUploadMkdirAll(mkdirAll)
 }
 
+// WithUploadOpenSource sets the source opener used when reading uploaded files.
+func WithUploadOpenSource(openSource OpenUploadedFileFunc) UploadSaveOption {
+	return netimpl.WithUploadOpenSource(openSource)
+}
+
 // WithUploadOpenFile sets the file opener used when saving uploaded files.
 func WithUploadOpenFile(openFile func(string, int, fs.FileMode) (io.WriteCloser, error)) UploadSaveOption {
 	return netimpl.WithUploadOpenFile(openFile)

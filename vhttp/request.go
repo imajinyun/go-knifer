@@ -36,7 +36,12 @@ func NewRequest(method Method, rawURL string, opts ...RequestOption) *Request {
 
 // CreateRequest delegates to the internal httpx implementation.
 func CreateRequest(method Method, rawURL string, opts ...RequestOption) *Request {
-	return httpx.NewRequest(method, rawURL, opts...)
+	return CreateRequestWithOptions(method, rawURL, opts...)
+}
+
+// CreateRequestWithOptions delegates to the internal httpx implementation.
+func CreateRequestWithOptions(method Method, rawURL string, opts ...RequestOption) *Request {
+	return httpx.CreateRequest(method, rawURL, opts...)
 }
 
 // CreateGet delegates to the internal httpx implementation.

@@ -110,13 +110,34 @@ func GetSnowflakeWithWorker(workerID int64) *Snowflake {
 	return idimpl.GetSnowflakeWithWorker(workerID)
 }
 
+// GetSnowflakeWithWorkerWithOptions returns a singleton Snowflake generator for workerID using custom defaults.
+func GetSnowflakeWithWorkerWithOptions(workerID int64, opts ...SnowflakeOption) *Snowflake {
+	return idimpl.GetSnowflakeWithWorkerWithOptions(workerID, opts...)
+}
+
 func GetSnowflakeWithWorkerDataCenter(workerID, datacenterID int64) *Snowflake {
 	return idimpl.GetSnowflakeWithWorkerDataCenter(workerID, datacenterID)
 }
 
+// GetSnowflakeWithWorkerDataCenterWithOptions returns a singleton Snowflake generator for worker/datacenter pair using custom clock options.
+func GetSnowflakeWithWorkerDataCenterWithOptions(workerID, datacenterID int64, opts ...SnowflakeOption) *Snowflake {
+	return idimpl.GetSnowflakeWithWorkerDataCenterWithOptions(workerID, datacenterID, opts...)
+}
+
 func GetDataCenterID(maxDatacenterID int64) int64 { return idimpl.GetDataCenterID(maxDatacenterID) }
+
+// GetDataCenterIDWithOptions derives a datacenter id using custom Snowflake providers.
+func GetDataCenterIDWithOptions(maxDatacenterID int64, opts ...SnowflakeOption) int64 {
+	return idimpl.GetDataCenterIDWithOptions(maxDatacenterID, opts...)
+}
+
 func GetWorkerID(datacenterID, maxWorkerID int64) int64 {
 	return idimpl.GetWorkerID(datacenterID, maxWorkerID)
+}
+
+// GetWorkerIDWithOptions derives a worker id using custom Snowflake providers.
+func GetWorkerIDWithOptions(datacenterID, maxWorkerID int64, opts ...SnowflakeOption) int64 {
+	return idimpl.GetWorkerIDWithOptions(datacenterID, maxWorkerID, opts...)
 }
 
 func NanoId() string       { return idimpl.NanoId() }

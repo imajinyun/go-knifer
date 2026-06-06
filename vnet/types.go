@@ -20,16 +20,17 @@ const (
 )
 
 type (
-	TLSConfigBuilder   = netimpl.TLSConfigBuilder
-	Dialer             = netimpl.Dialer
-	ConnectOption      = netimpl.ConnectOption
-	PingOption         = netimpl.PingOption
-	ResolveOption      = netimpl.ResolveOption
-	PortOption         = netimpl.PortOption
-	InterfaceOption    = netimpl.InterfaceOption
-	TLSFileOption      = netimpl.TLSFileOption
-	UploadSetting      = netimpl.UploadSetting
-	UploadSaveOption   = netimpl.UploadSaveOption
-	MultipartFormData  = netimpl.MultipartFormData
-	LocalPortGenerator = netimpl.LocalPortGenerator
+	TLSConfigBuilder     = netimpl.TLSConfigBuilder
+	Dialer               = netimpl.Dialer
+	ConnectOption        = netimpl.ConnectOption
+	PingOption           = netimpl.PingOption
+	ResolveOption        = netimpl.ResolveOption
+	PortOption           = netimpl.PortOption
+	InterfaceOption      = netimpl.InterfaceOption
+	TLSFileOption        = netimpl.TLSFileOption
+	UploadSetting        = netimpl.UploadSetting
+	UploadSaveOption     = netimpl.UploadSaveOption
+	OpenUploadedFileFunc = netimpl.OpenUploadedFileFunc
+	MultipartFormData    = netimpl.MultipartFormData
+	LocalPortGenerator   = netimpl.LocalPortGenerator
 )

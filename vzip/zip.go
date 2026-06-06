@@ -34,6 +34,7 @@ type ArchiveOption = zipimpl.ArchiveOption
 
 type (
 	OpenFunc          = zipimpl.OpenFunc
+	ReadFileFunc      = zipimpl.ReadFileFunc
 	OpenFileFunc      = zipimpl.OpenFileFunc
 	StatFunc          = zipimpl.StatFunc
 	LstatFunc         = zipimpl.LstatFunc
@@ -76,6 +77,9 @@ func WithMaxBytes(n int64) ArchiveOption { return zipimpl.WithMaxBytes(n) }
 
 // WithOpen sets the function used to open source files for reading.
 func WithOpen(open OpenFunc) ArchiveOption { return zipimpl.WithOpen(open) }
+
+// WithReadFile sets the function used to read a complete source file.
+func WithReadFile(readFile ReadFileFunc) ArchiveOption { return zipimpl.WithReadFile(readFile) }
 
 // WithOpenFile sets the function used to open archive/extracted files for writing.
 func WithOpenFile(openFile OpenFileFunc) ArchiveOption { return zipimpl.WithOpenFile(openFile) }
@@ -392,7 +396,9 @@ func UnZlibReaderWithOptions(r io.Reader, estimatedLength int, opts ...ArchiveOp
 }
 
 // ReadFile reads a file from disk. It is useful when composing in-memory archive entries.
-func ReadFile(path string) ([]byte, error) {
-	// #nosec G304 -- public file helper intentionally reads the caller-provided path.
-	return os.ReadFile(path)
+func ReadFile(path string) ([]byte, error) { return zipimpl.ReadFile(path) }
+
+// ReadFileWithOptions reads a file using per-call archive options.
+func ReadFileWithOptions(path string, opts ...ArchiveOption) ([]byte, error) {
+	return zipimpl.ReadFileWithOptions(path, opts...)
 }

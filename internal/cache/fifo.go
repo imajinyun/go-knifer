@@ -9,23 +9,26 @@ type FIFOCache[K comparable, V any] struct {
 
 // NewFIFOCache creates a FIFO cache with the given capacity and no default timeout.
 func NewFIFOCache[K comparable, V any](capacity int) *FIFOCache[K, V] {
-	return NewFIFOCacheWithTimeout[K, V](capacity, 0)
+	return NewFIFOCacheWithOptions[K, V](WithCapacity[K, V](capacity))
 }
 
 // NewFIFOCacheWithOptions creates a FIFO cache customized by options.
 func NewFIFOCacheWithOptions[K comparable, V any](opts ...Option[K, V]) *FIFOCache[K, V] {
-	cfg := applyOptions(opts)
-	c := NewFIFOCacheWithTimeout[K, V](cfg.capacity, cfg.timeout)
+	return newFIFOCacheWithConfig(applyOptions(opts))
+}
+
+func newFIFOCacheWithConfig[K comparable, V any](cfg cacheConfig[K, V]) *FIFOCache[K, V] {
+	c := &FIFOCache[K, V]{}
+	c.init(cfg.capacity, cfg.timeout, fifoPrune[K, V])
 	applyListener(&c.abstractCache, cfg.listener)
 	applyClock(&c.abstractCache, cfg.clock)
+	applyTickerFactory(&c.abstractCache, cfg.tickerFactory)
 	return c
 }
 
 // NewFIFOCacheWithTimeout creates a FIFO cache with a default timeout.
 func NewFIFOCacheWithTimeout[K comparable, V any](capacity int, timeout time.Duration) *FIFOCache[K, V] {
-	c := &FIFOCache[K, V]{}
-	c.init(capacity, timeout, fifoPrune[K, V])
-	return c
+	return NewFIFOCacheWithOptions[K, V](WithCapacity[K, V](capacity), WithTimeout[K, V](timeout))
 }
 
 // SetListener sets the removal listener and returns the cache for chaining.

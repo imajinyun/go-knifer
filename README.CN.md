@@ -131,6 +131,17 @@ facade 规则：
 - `vvalid`、`vmask`、`vsem`、`vskt`、`vblf`、`vver` 等短命名继续保留，通过上方模块表说明含义，
   不再通过改名破坏已有导入路径。
 
+可配置 API 与 Provider 注入：
+
+- 多个子包通过 `WithXxx` helper 与 `XxxWithOptions` 变体暴露 Functional Options 模式。既有固定参数 API
+  保持稳定，option 变体用于为需要高级控制的调用方提供扩展能力。
+- 该模式已覆盖布隆过滤器、缓存、验证码、配置加载/监听、定时任务、加密、数据库、日期时间、DFA、错误处理、
+  文件、HTTP/Resty、ID、身份解析、JSON/JWT、日志、网络、数字、POI、随机数、socket、系统信息、URL、XML、ZIP 等运行时敏感能力。
+- Provider 风格的 option 允许调用方注入文件系统函数、网络/TLS dialer 或 reader、clock、timer/ticker、随机源、
+  Sentry/logrus hook 等进程全局依赖，便于确定性测试与受控运行时行为。
+- 包级默认值必须显式治理。例如 HTTP 全局默认值可通过 `vhttp.SnapshotGlobalConfig` 读取不可变快照；单次调用 option
+  不应隐式修改隐藏的全局状态。
+
 领域边界规则：
 
 - `vhash` 面向非加密 hash 能力，例如 Additive/FNV（分桶、布隆过滤器等场景）；`vcrypto` 独占所有

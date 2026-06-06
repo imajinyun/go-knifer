@@ -513,7 +513,7 @@ func GetNetworkInterfacesWithOptions(opts ...InterfaceOption) ([]stdnet.Interfac
 }
 
 // LocalIPv4s returns local IPv4 addresses.
-func LocalIPv4s() []string { return ToIPList(LocalAddressList(nil)) }
+func LocalIPv4s() []string { return LocalIPv4sWithOptions() }
 
 // LocalIPv4sWithOptions returns local IPv4 addresses using custom providers.
 func LocalIPv4sWithOptions(opts ...InterfaceOption) []string {
@@ -522,7 +522,7 @@ func LocalIPv4sWithOptions(opts ...InterfaceOption) []string {
 
 // LocalIPv6s returns local IPv6 addresses.
 func LocalIPv6s() []string {
-	return ToIPList(LocalAddressList(func(ip stdnet.IP) bool { return ip.To4() == nil && ip.To16() != nil }))
+	return LocalIPv6sWithOptions()
 }
 
 // LocalIPv6sWithOptions returns local IPv6 addresses using custom providers.
@@ -532,7 +532,7 @@ func LocalIPv6sWithOptions(opts ...InterfaceOption) []string {
 
 // LocalIPs returns all local IP addresses.
 func LocalIPs() []string {
-	return ToIPList(LocalAddressList(func(ip stdnet.IP) bool { return ip != nil }))
+	return LocalIPsWithOptions()
 }
 
 // LocalIPsWithOptions returns all local IP addresses using custom providers.
@@ -559,7 +559,7 @@ func ToIPList(addressList []stdnet.IP) []string {
 
 // LocalAddressList returns local IP addresses matching addressFilter. nil means non-loopback IPv4.
 func LocalAddressList(addressFilter func(stdnet.IP) bool) []stdnet.IP {
-	return LocalAddressListByInterface(nil, addressFilter)
+	return LocalAddressListWithOptions(addressFilter)
 }
 
 // LocalAddressListWithOptions returns local IP addresses matching addressFilter using custom providers.
@@ -621,7 +621,7 @@ func GetLocalhostStrWithOptions(opts ...InterfaceOption) string {
 }
 
 // GetLocalhost returns a preferred local host IP.
-func GetLocalhost() stdnet.IP { return stdnet.ParseIP(GetLocalhostStr()) }
+func GetLocalhost() stdnet.IP { return GetLocalhostWithOptions() }
 
 // GetLocalhostWithOptions returns a preferred local host IP using custom providers.
 func GetLocalhostWithOptions(opts ...InterfaceOption) stdnet.IP {

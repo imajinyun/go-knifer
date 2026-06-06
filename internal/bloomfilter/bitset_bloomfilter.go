@@ -76,7 +76,7 @@ func NewBitSetBloomFilterWithOptions(opts ...BitSetBloomFilterOption) *BitSetBlo
 			opt(&cfg)
 		}
 	}
-	return NewBitSetBloomFilter(cfg.c, cfg.n, cfg.k)
+	return newBitSetBloomFilterWithConfig(cfg)
 }
 
 // NewBitSetBloomFilter creates a Bloom filter with c*k bits.
@@ -85,21 +85,25 @@ func NewBitSetBloomFilterWithOptions(opts ...BitSetBloomFilterOption) *BitSetBlo
 // n is the expected record count.
 // k is the number of hash functions, in range [1, 8].
 func NewBitSetBloomFilter(c, n, k int) *BitSetBloomFilter {
-	if c <= 0 {
+	return NewBitSetBloomFilterWithOptions(WithBitSetCapacity(c), WithExpectedElements(n), WithHashFunctionNumber(k))
+}
+
+func newBitSetBloomFilterWithConfig(cfg bitSetBloomFilterConfig) *BitSetBloomFilter {
+	if cfg.c <= 0 {
 		panic("Parameter c must be positive")
 	}
-	if n <= 0 {
+	if cfg.n <= 0 {
 		panic("Parameter n must be positive")
 	}
-	if k < 1 || k > 8 {
+	if cfg.k < 1 || cfg.k > 8 {
 		panic("hashFunctionNumber must be between 1 and 8")
 	}
-	size := c * k
+	size := cfg.c * cfg.k
 	return &BitSetBloomFilter{
 		bits:               make([]uint64, (size+63)/64),
 		bitSetSize:         size,
-		addedElements:      n,
-		hashFunctionNumber: k,
+		addedElements:      cfg.n,
+		hashFunctionNumber: cfg.k,
 	}
 }
 

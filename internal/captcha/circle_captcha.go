@@ -13,24 +13,23 @@ type CircleCaptcha struct {
 
 // NewCircleCaptcha creates a captcha with 5 characters and 15 circles by default.
 func NewCircleCaptcha(width, height int) *CircleCaptcha {
-	return NewCircleCaptchaWith(width, height, 5, 15)
+	return NewCircleCaptchaWithOptions(width, height)
 }
 
 // NewCircleCaptchaWithOptions creates a circle captcha customized by options.
 func NewCircleCaptchaWithOptions(width, height int, opts ...CaptchaOption) *CircleCaptcha {
-	c := NewCircleCaptcha(width, height)
+	c := &CircleCaptcha{}
+	c.Width = width
+	c.Height = height
+	c.InterfereCount = 15
+	c.SetGenerator(NewRandomGenerator(5))
 	applyCaptchaOptions(&c.AbstractCaptcha, opts)
 	return c
 }
 
 // NewCircleCaptchaWith creates a captcha with custom character and circle counts.
 func NewCircleCaptchaWith(width, height, codeCount, circleCount int) *CircleCaptcha {
-	c := &CircleCaptcha{}
-	c.Width = width
-	c.Height = height
-	c.InterfereCount = circleCount
-	c.SetGenerator(NewRandomGenerator(codeCount))
-	return c
+	return NewCircleCaptchaWithOptions(width, height, WithGenerator(NewRandomGenerator(codeCount)), WithInterfereCount(circleCount))
 }
 
 // CreateCode generates a new captcha text and image.

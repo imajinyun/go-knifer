@@ -41,6 +41,8 @@ type HTTPRequest struct {
 	basicPass    string
 	hasBasic     bool
 	httpClient   *http.Client
+	newRequest   NewRequestFunc
+	multipartNew MultipartWriterFactory
 	decodeConfig responseDecodeConfig
 }
 
@@ -53,6 +55,20 @@ type formFile struct {
 
 // RequestOption customizes one HTTP request at construction time.
 type RequestOption func(*HTTPRequest)
+
+// NewRequestFunc creates an outgoing HTTP request.
+type NewRequestFunc func(method, url string, body io.Reader) (*http.Request, error)
+
+// MultipartWriterFactory creates a multipart writer for request bodies.
+type MultipartWriterFactory func(io.Writer) MultipartWriter
+
+// MultipartWriter is the subset of multipart.Writer used by request construction.
+type MultipartWriter interface {
+	WriteField(string, string) error
+	CreateFormFile(string, string) (io.Writer, error)
+	Close() error
+	FormDataContentType() string
+}
 
 // WithGlobalConfig initializes request defaults from a captured global configuration snapshot.
 func WithGlobalConfig(cfg GlobalConfig) RequestOption {
@@ -84,6 +100,8 @@ func NewRequest(method Method, rawURL string, opts ...RequestOption) *HTTPReques
 		maxRedirects: cfg.MaxRedirects,
 		tlsSkip:      cfg.TrustAnyHost,
 		userAgent:    cfg.DefaultUserAgent,
+		newRequest:   http.NewRequest,
+		multipartNew: newMultipartWriter,
 		decodeConfig: defaultResponseDecodeConfig(),
 	}
 	for _, opt := range opts {
@@ -182,6 +200,24 @@ func WithCharset(charset string) RequestOption { return func(r *HTTPRequest) { r
 // WithAutoDecodeResponse controls whether response bodies are decoded by Content-Encoding.
 func WithAutoDecodeResponse(autoDecode bool) RequestOption {
 	return func(r *HTTPRequest) { r.decodeConfig.autoDecode = autoDecode }
+}
+
+// WithRequestFactory sets the HTTP request factory used at execution time.
+func WithRequestFactory(newRequest NewRequestFunc) RequestOption {
+	return func(r *HTTPRequest) {
+		if newRequest != nil {
+			r.newRequest = newRequest
+		}
+	}
+}
+
+// WithMultipartWriterFactory sets the multipart writer factory used when building multipart request bodies.
+func WithMultipartWriterFactory(factory MultipartWriterFactory) RequestOption {
+	return func(r *HTTPRequest) {
+		if factory != nil {
+			r.multipartNew = factory
+		}
+	}
 }
 
 // WithContentDecoder registers a per-request response body decoder for encoding.
@@ -393,7 +429,7 @@ func (r *HTTPRequest) prepareBody() (io.Reader, string, error) {
 	case len(r.body) > 0:
 		return bytes.NewReader(r.body), r.contentType, nil
 	case r.multipart || len(r.multipartFs) > 0:
-		reader, ct, err := buildMultipartBody(r.form, r.multipartFs)
+		reader, ct, err := buildMultipartBody(r.form, r.multipartFs, r.multipartNew)
 		if err != nil {
 			return nil, "", err
 		}
@@ -480,7 +516,11 @@ func (r *HTTPRequest) doExecute() (*HTTPResponse, error) {
 		}
 	}
 
-	req, err := http.NewRequest(string(r.method), finalURL, bodyReader)
+	newRequest := r.newRequest
+	if newRequest == nil {
+		newRequest = http.NewRequest
+	}
+	req, err := newRequest(string(r.method), finalURL, bodyReader)
 	if err != nil {
 		return nil, NewHTTPError("build request failed", err)
 	}

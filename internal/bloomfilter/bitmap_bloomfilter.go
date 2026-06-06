@@ -37,34 +37,40 @@ func NewBitMapBloomFilterWithOptions(opts ...BitMapBloomFilterOption) *BitMapBlo
 			opt(&cfg)
 		}
 	}
-	return NewBitMapBloomFilterWithFilters(cfg.m, cfg.filters...)
+	return newBitMapBloomFilterWithConfig(cfg)
 }
 
 // NewBitMapBloomFilter uses five default filters: Default, ELF, JS, PJW, and SDBM.
 //
 // m is the M value in MB and controls the underlying BitMap size. Final bits = m/5 * 1024 * 1024 * 8.
 func NewBitMapBloomFilter(m int) *BitMapBloomFilter {
+	return NewBitMapBloomFilterWithOptions(WithBitMapSize(m))
+}
+
+func newBitMapBloomFilterWithConfig(cfg bitMapBloomFilterConfig) *BitMapBloomFilter {
+	filters := cfg.filters
+	if len(filters) == 0 {
+		filters = defaultBitMapBloomFilters(cfg.m)
+	}
+	return &BitMapBloomFilter{filters: filters}
+}
+
+func defaultBitMapBloomFilters(m int) []BloomFilter {
 	mNum := int64(m) / 5
 	size := mNum * 1024 * 1024 * 8
-	return &BitMapBloomFilter{
-		filters: []BloomFilter{
-			NewDefaultFilter(size),
-			NewELFFilter(size),
-			NewJSFilter(size),
-			NewPJWFilter(size),
-			NewSDBMFilter(size),
-		},
+	return []BloomFilter{
+		NewDefaultFilter(size),
+		NewELFFilter(size),
+		NewJSFilter(size),
+		NewPJWFilter(size),
+		NewSDBMFilter(size),
 	}
 }
 
 // NewBitMapBloomFilterWithFilters creates a BitMapBloomFilter with custom filters.
 // It keeps the utility toolkit-compatible m validation while replacing the default filter set.
 func NewBitMapBloomFilterWithFilters(m int, filters ...BloomFilter) *BitMapBloomFilter {
-	b := NewBitMapBloomFilter(m)
-	if len(filters) > 0 {
-		b.filters = filters
-	}
-	return b
+	return NewBitMapBloomFilterWithOptions(WithBitMapSize(m), WithBloomFilters(filters...))
 }
 
 // Add implements BloomFilter.Add. The value is considered added if any filter changes.

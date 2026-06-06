@@ -8,6 +8,9 @@ import (
 // Option customizes database helpers.
 type Option func(*Options)
 
+// SQLOpenFunc opens a database/sql DB.
+type SQLOpenFunc func(driverName, dataSourceName string) (*sql.DB, error)
+
 // Options contains database helper settings.
 type Options struct {
 	Dialect         Dialect
@@ -16,6 +19,7 @@ type Options struct {
 	MaxIdleConns    int
 	ConnMaxLifetime time.Duration
 	ConnMaxIdleTime time.Duration
+	SQLOpen         SQLOpenFunc
 }
 
 // NewOptions returns default settings.
@@ -48,12 +52,24 @@ func WithConnMaxLifetime(d time.Duration) Option { return func(o *Options) { o.C
 // WithConnMaxIdleTime sets database/sql max idle time.
 func WithConnMaxIdleTime(d time.Duration) Option { return func(o *Options) { o.ConnMaxIdleTime = d } }
 
+// WithSQLOpenFunc sets the function used to open database/sql DBs.
+func WithSQLOpenFunc(open SQLOpenFunc) Option {
+	return func(o *Options) {
+		if open != nil {
+			o.SQLOpen = open
+		}
+	}
+}
+
 func applyOptions(opts ...Option) Options {
 	cfg := NewOptions()
 	for _, opt := range opts {
 		if opt != nil {
 			opt(&cfg)
 		}
+	}
+	if cfg.SQLOpen == nil {
+		cfg.SQLOpen = sql.Open
 	}
 	return cfg
 }

@@ -90,6 +90,16 @@ func NewRequest(method Method, rawURL string, opts ...RequestOption) *Request {
 	return restyimpl.NewRequest(method, rawURL, opts...)
 }
 
+// CreateRequest creates a request by method.
+func CreateRequest(method Method, rawURL string, opts ...RequestOption) *Request {
+	return CreateRequestWithOptions(method, rawURL, opts...)
+}
+
+// CreateRequestWithOptions creates a request by method with per-call options.
+func CreateRequestWithOptions(method Method, rawURL string, opts ...RequestOption) *Request {
+	return restyimpl.CreateRequest(method, rawURL, opts...)
+}
+
 // WithTimeout sets a per-request timeout.
 func WithTimeout(d time.Duration) RequestOption { return restyimpl.WithTimeout(d) }
 

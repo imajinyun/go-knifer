@@ -24,7 +24,7 @@ type AioServer struct {
 
 // NewAioServer creates a server on the given port.
 func NewAioServer(port int) (*AioServer, error) {
-	return NewAioServerAddr(&net.TCPAddr{Port: port}, NewSocketConfig())
+	return NewAioServerWithOptions(port)
 }
 
 // NewAioServerWithOptions creates a server on the given port with custom config options.

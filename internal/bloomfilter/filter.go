@@ -67,22 +67,26 @@ func NewFuncFilterWithOptions(opts ...FuncFilterOption) *FuncFilter {
 			opt(&cfg)
 		}
 	}
-	return NewFuncFilterWithMachineNum(cfg.maxValue, cfg.machineNum, cfg.hashFunc)
+	return newFuncFilterWithConfig(cfg)
 }
 
 // NewFuncFilter creates a FuncFilter with the default machine word size.
 func NewFuncFilter(maxValue int64, hashFunc HashFunc) *FuncFilter {
-	return NewFuncFilterWithMachineNum(maxValue, DefaultMachineNum, hashFunc)
+	return NewFuncFilterWithOptions(WithMaxValue(maxValue), WithHashFunc(hashFunc))
 }
 
 // NewFuncFilterWithMachineNum creates a FuncFilter with the specified machine word size.
 func NewFuncFilterWithMachineNum(maxValue int64, machineNum int, hashFunc HashFunc) *FuncFilter {
-	if maxValue < 1 || maxValue > 0x7FFFFFFF {
+	return NewFuncFilterWithOptions(WithMaxValue(maxValue), WithMachineNum(machineNum), WithHashFunc(hashFunc))
+}
+
+func newFuncFilterWithConfig(cfg funcFilterConfig) *FuncFilter {
+	if cfg.maxValue < 1 || cfg.maxValue > 0x7FFFFFFF {
 		panic(fmt.Sprintf("maxValue must be between 1 and %d", int64(0x7FFFFFFF)))
 	}
-	capacity := int((maxValue + int64(machineNum) - 1) / int64(machineNum))
+	capacity := int((cfg.maxValue + int64(cfg.machineNum) - 1) / int64(cfg.machineNum))
 	var bm BitMap
-	switch machineNum {
+	switch cfg.machineNum {
 	case Machine32:
 		bm = NewIntMap(capacity)
 	case Machine64:
@@ -90,7 +94,7 @@ func NewFuncFilterWithMachineNum(maxValue int64, machineNum int, hashFunc HashFu
 	default:
 		panic("Error Machine number!")
 	}
-	return &FuncFilter{bm: bm, size: maxValue, hashFunc: hashFunc}
+	return &FuncFilter{bm: bm, size: cfg.maxValue, hashFunc: cfg.hashFunc}
 }
 
 // hash calls the underlying hash function, applies modulo size, and returns an absolute value.

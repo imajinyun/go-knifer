@@ -60,3 +60,13 @@ func WithAutoDecodeResponse(autoDecode bool) RequestOption {
 func WithContentDecoder(encoding string, decoder func(io.Reader) (io.ReadCloser, error)) RequestOption {
 	return httpx.WithContentDecoder(encoding, decoder)
 }
+
+// WithRequestFactory sets the HTTP request factory used at execution time.
+func WithRequestFactory(newRequest NewRequestFunc) RequestOption {
+	return httpx.WithRequestFactory(newRequest)
+}
+
+// WithMultipartWriterFactory sets the multipart writer factory used when building multipart request bodies.
+func WithMultipartWriterFactory(factory MultipartWriterFactory) RequestOption {
+	return httpx.WithMultipartWriterFactory(factory)
+}

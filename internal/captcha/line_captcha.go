@@ -13,24 +13,23 @@ type LineCaptcha struct {
 
 // NewLineCaptcha creates a captcha with 5 characters and 150 lines by default.
 func NewLineCaptcha(width, height int) *LineCaptcha {
-	return NewLineCaptchaWith(width, height, 5, 150)
+	return NewLineCaptchaWithOptions(width, height)
 }
 
 // NewLineCaptchaWithOptions creates a line captcha customized by options.
 func NewLineCaptchaWithOptions(width, height int, opts ...CaptchaOption) *LineCaptcha {
-	c := NewLineCaptcha(width, height)
+	c := &LineCaptcha{}
+	c.Width = width
+	c.Height = height
+	c.InterfereCount = 150
+	c.SetGenerator(NewRandomGenerator(5))
 	applyCaptchaOptions(&c.AbstractCaptcha, opts)
 	return c
 }
 
 // NewLineCaptchaWith creates a captcha with custom character and line counts.
 func NewLineCaptchaWith(width, height, codeCount, lineCount int) *LineCaptcha {
-	c := &LineCaptcha{}
-	c.Width = width
-	c.Height = height
-	c.InterfereCount = lineCount
-	c.SetGenerator(NewRandomGenerator(codeCount))
-	return c
+	return NewLineCaptchaWithOptions(width, height, WithGenerator(NewRandomGenerator(codeCount)), WithInterfereCount(lineCount))
 }
 
 // CreateCode generates a new captcha text and image.

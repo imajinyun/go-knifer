@@ -189,7 +189,7 @@ func ChannelDialWithOptions(addr *net.TCPAddr, opts ...ConnectOption) (net.Conn,
 }
 
 // NewNioServer creates a NIO-style TCP server on port.
-func NewNioServer(port int) (*NioServer, error) { return socketx.NewNioServer(port) }
+func NewNioServer(port int) (*NioServer, error) { return NewNioServerWithOptions(port) }
 
 // NewNioServerWithOptions creates a NIO-style TCP server on port with custom config options.
 func NewNioServerWithOptions(port int, opts ...ConfigOption) (*NioServer, error) {
@@ -215,7 +215,9 @@ func NewNioServerAddrWithConfig(addr *net.TCPAddr, cfg *SocketConfig) (*NioServe
 }
 
 // NewNioClient creates a NIO-style TCP client.
-func NewNioClient(host string, port int) (*NioClient, error) { return socketx.NewNioClient(host, port) }
+func NewNioClient(host string, port int) (*NioClient, error) {
+	return NewNioClientWithOptions(host, port)
+}
 
 // NewNioClientWithOptions creates a NIO-style TCP client with custom config options.
 func NewNioClientWithOptions(host string, port int, opts ...ConfigOption) (*NioClient, error) {
@@ -231,7 +233,7 @@ func NewNioClientAddrWithOptions(addr *net.TCPAddr, opts ...ConfigOption) (*NioC
 }
 
 // NewAioServer creates an AIO-style TCP server on port.
-func NewAioServer(port int) (*AioServer, error) { return socketx.NewAioServer(port) }
+func NewAioServer(port int) (*AioServer, error) { return NewAioServerWithOptions(port) }
 
 // NewAioServerWithOptions creates an AIO-style TCP server on port with custom config options.
 func NewAioServerWithOptions(port int, opts ...ConfigOption) (*AioServer, error) {

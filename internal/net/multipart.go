@@ -26,15 +26,21 @@ type uploadSaveConfig struct {
 	overwrite     bool
 	createParents bool
 	mkdirAll      func(string, fs.FileMode) error
+	openSource    OpenUploadedFileFunc
 	openFile      func(string, int, fs.FileMode) (io.WriteCloser, error)
 }
 
 // UploadSaveOption customizes uploaded-file saving.
 type UploadSaveOption func(*uploadSaveConfig)
 
+// OpenUploadedFileFunc opens an uploaded multipart file for reading.
+type OpenUploadedFileFunc func(*multipart.FileHeader) (multipart.File, error)
+
 func defaultUploadSaveConfig() uploadSaveConfig {
-	return uploadSaveConfig{filePerm: 0o644, dirPerm: 0o750, overwrite: true, createParents: true, mkdirAll: os.MkdirAll, openFile: defaultOpenUploadFile}
+	return uploadSaveConfig{filePerm: 0o644, dirPerm: 0o750, overwrite: true, createParents: true, mkdirAll: os.MkdirAll, openSource: defaultOpenUploadedFile, openFile: defaultOpenUploadFile}
 }
+
+func defaultOpenUploadedFile(file *multipart.FileHeader) (multipart.File, error) { return file.Open() }
 
 func defaultOpenUploadFile(path string, flag int, perm fs.FileMode) (io.WriteCloser, error) {
 	// #nosec G304 -- upload helpers intentionally write to the caller-provided destination path.
@@ -66,6 +72,15 @@ func WithUploadMkdirAll(mkdirAll func(string, fs.FileMode) error) UploadSaveOpti
 	return func(c *uploadSaveConfig) { c.mkdirAll = mkdirAll }
 }
 
+// WithUploadOpenSource sets the source opener used when reading uploaded files.
+func WithUploadOpenSource(openSource OpenUploadedFileFunc) UploadSaveOption {
+	return func(c *uploadSaveConfig) {
+		if openSource != nil {
+			c.openSource = openSource
+		}
+	}
+}
+
 // WithUploadOpenFile sets the file opener used when saving uploaded files.
 func WithUploadOpenFile(openFile func(string, int, fs.FileMode) (io.WriteCloser, error)) UploadSaveOption {
 	return func(c *uploadSaveConfig) { c.openFile = openFile }
@@ -80,6 +95,9 @@ func applyUploadSaveOptions(opts []UploadSaveOption) uploadSaveConfig {
 	}
 	if cfg.mkdirAll == nil {
 		cfg.mkdirAll = os.MkdirAll
+	}
+	if cfg.openSource == nil {
+		cfg.openSource = defaultOpenUploadedFile
 	}
 	if cfg.openFile == nil {
 		cfg.openFile = defaultOpenUploadFile
@@ -278,7 +296,7 @@ func SaveUploadedFile(file *multipart.FileHeader, destPath string, opts ...Uploa
 			return err
 		}
 	}
-	src, err := file.Open()
+	src, err := cfg.openSource(file)
 	if err != nil {
 		return err
 	}

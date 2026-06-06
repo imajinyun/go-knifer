@@ -15,6 +15,7 @@ type (
 	Condition         = dbimpl.Condition
 	NamedSQL          = dbimpl.NamedSQL
 	SQLBuilder        = dbimpl.SQLBuilder
+	SQLOpenFunc       = dbimpl.SQLOpenFunc
 	Options           = dbimpl.Options
 	Option            = dbimpl.Option
 	DB                = dbimpl.DB

@@ -20,8 +20,20 @@ type SaveOption = httpx.SaveOption
 // ContentDecoder decodes a response body for a Content-Encoding value.
 type ContentDecoder = httpx.ContentDecoder
 
+// NewRequestFunc creates an outgoing HTTP request.
+type NewRequestFunc = httpx.NewRequestFunc
+
+// MultipartWriterFactory creates a multipart writer for request bodies.
+type MultipartWriterFactory = httpx.MultipartWriterFactory
+
+// MultipartWriter is the subset of multipart.Writer used by request construction.
+type MultipartWriter = httpx.MultipartWriter
+
 // ServerOption customizes SimpleServer construction.
 type ServerOption = httpx.ServerOption
+
+// ListenAndServeFunc starts serving with the provided HTTP server.
+type ListenAndServeFunc = httpx.ListenAndServeFunc
 
 // Method represents an HTTP method.
 type Method = httpx.Method

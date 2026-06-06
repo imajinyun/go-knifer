@@ -43,6 +43,7 @@ type StreamEntry struct {
 
 type (
 	OpenFunc          func(string) (io.ReadCloser, error)
+	ReadFileFunc      func(string) ([]byte, error)
 	OpenFileFunc      func(string, int, os.FileMode) (io.WriteCloser, error)
 	StatFunc          func(string) (os.FileInfo, error)
 	LstatFunc         func(string) (os.FileInfo, error)
@@ -74,6 +75,7 @@ type archiveConfig struct {
 	compressionLevel  int
 	maxBytes          int64
 	open              OpenFunc
+	readFile          ReadFileFunc
 	openFile          OpenFileFunc
 	stat              StatFunc
 	lstat             LstatFunc
@@ -98,6 +100,7 @@ func defaultArchiveConfig() archiveConfig {
 		compressionMethod: archivezip.Deflate,
 		compressionLevel:  flate.DefaultCompression,
 		open:              defaultOpen,
+		readFile:          defaultReadFile,
 		openFile:          defaultOpenFile,
 		stat:              os.Stat,
 		lstat:             os.Lstat,
@@ -114,6 +117,11 @@ func defaultArchiveConfig() archiveConfig {
 func defaultOpen(path string) (io.ReadCloser, error) {
 	// #nosec G304 -- archive helpers intentionally read caller-provided paths.
 	return os.Open(path)
+}
+
+func defaultReadFile(path string) ([]byte, error) {
+	// #nosec G304 -- archive helpers intentionally read caller-provided paths.
+	return os.ReadFile(path)
 }
 
 func defaultOpenFile(path string, flag int, perm os.FileMode) (io.WriteCloser, error) {
@@ -177,6 +185,15 @@ func WithOpen(open OpenFunc) ArchiveOption {
 	return func(c *archiveConfig) {
 		if open != nil {
 			c.open = open
+		}
+	}
+}
+
+// WithReadFile sets the function used to read a complete source file.
+func WithReadFile(readFile ReadFileFunc) ArchiveOption {
+	return func(c *archiveConfig) {
+		if readFile != nil {
+			c.readFile = readFile
 		}
 	}
 }
@@ -287,6 +304,9 @@ func applyArchiveOptions(opts []ArchiveOption) archiveConfig {
 	if cfg.open == nil {
 		cfg.open = defaultOpen
 	}
+	if cfg.readFile == nil {
+		cfg.readFile = defaultReadFile
+	}
 	if cfg.openFile == nil {
 		cfg.openFile = defaultOpenFile
 	}
@@ -326,6 +346,14 @@ func Open(path string) (*archivezip.ReadCloser, error) { return OpenWithOptions(
 // OpenWithOptions opens a ZIP file for reading with per-call options.
 func OpenWithOptions(path string, opts ...ArchiveOption) (*archivezip.ReadCloser, error) {
 	return applyArchiveOptions(opts).openZipReader(path)
+}
+
+// ReadFile reads a file from disk. It is useful when composing in-memory archive entries.
+func ReadFile(path string) ([]byte, error) { return ReadFileWithOptions(path) }
+
+// ReadFileWithOptions reads a file using per-call archive options.
+func ReadFileWithOptions(path string, opts ...ArchiveOption) ([]byte, error) {
+	return applyArchiveOptions(opts).readFile(path)
 }
 
 // NewWriter returns a ZIP writer for out.

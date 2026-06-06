@@ -26,3 +26,6 @@ func WithConnMaxLifetime(d time.Duration) Option { return dbimpl.WithConnMaxLife
 
 // WithConnMaxIdleTime sets database/sql max idle time when opening or wrapping a DB.
 func WithConnMaxIdleTime(d time.Duration) Option { return dbimpl.WithConnMaxIdleTime(d) }
+
+// WithSQLOpenFunc sets the function used to open database/sql DBs.
+func WithSQLOpenFunc(open SQLOpenFunc) Option { return dbimpl.WithSQLOpenFunc(open) }

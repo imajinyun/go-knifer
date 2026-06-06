@@ -9,23 +9,26 @@ type LFUCache[K comparable, V any] struct {
 
 // NewLFUCache creates an LFU cache with no default timeout.
 func NewLFUCache[K comparable, V any](capacity int) *LFUCache[K, V] {
-	return NewLFUCacheWithTimeout[K, V](capacity, 0)
+	return NewLFUCacheWithOptions[K, V](WithCapacity[K, V](capacity))
 }
 
 // NewLFUCacheWithOptions creates an LFU cache customized by options.
 func NewLFUCacheWithOptions[K comparable, V any](opts ...Option[K, V]) *LFUCache[K, V] {
-	cfg := applyOptions(opts)
-	c := NewLFUCacheWithTimeout[K, V](cfg.capacity, cfg.timeout)
+	return newLFUCacheWithConfig(applyOptions(opts))
+}
+
+func newLFUCacheWithConfig[K comparable, V any](cfg cacheConfig[K, V]) *LFUCache[K, V] {
+	c := &LFUCache[K, V]{}
+	c.init(cfg.capacity, cfg.timeout, lfuPrune[K, V])
 	applyListener(&c.abstractCache, cfg.listener)
 	applyClock(&c.abstractCache, cfg.clock)
+	applyTickerFactory(&c.abstractCache, cfg.tickerFactory)
 	return c
 }
 
 // NewLFUCacheWithTimeout creates an LFU cache with a default timeout.
 func NewLFUCacheWithTimeout[K comparable, V any](capacity int, timeout time.Duration) *LFUCache[K, V] {
-	c := &LFUCache[K, V]{}
-	c.init(capacity, timeout, lfuPrune[K, V])
-	return c
+	return NewLFUCacheWithOptions[K, V](WithCapacity[K, V](capacity), WithTimeout[K, V](timeout))
 }
 
 // SetListener sets the removal listener and returns the cache for chaining.

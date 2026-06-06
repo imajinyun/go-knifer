@@ -22,11 +22,13 @@ type DB struct {
 
 // Open opens a database using database/sql and applies pool options.
 func Open(driverName, dataSourceName string, opts ...Option) (*DB, error) {
-	sqlDB, err := sql.Open(driverName, dataSourceName)
+	cfg := applyOptions(append([]Option{WithDialect(NormalizeDialect(driverName))}, opts...)...)
+	sqlDB, err := cfg.SQLOpen(driverName, dataSourceName)
 	if err != nil {
 		return nil, wrapInternal("db: open database", err)
 	}
-	return Use(sqlDB, append([]Option{WithDialect(NormalizeDialect(driverName))}, opts...)...), nil
+	applyPoolOptions(sqlDB, cfg)
+	return &DB{sqlDB: sqlDB, dialect: cfg.Dialect, wrapper: cfg.Wrapper}, nil
 }
 
 // Use wraps an existing *sql.DB.

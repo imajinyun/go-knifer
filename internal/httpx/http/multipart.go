@@ -7,9 +7,12 @@ import (
 )
 
 // buildMultipartBody builds a multipart request body from form fields and files.
-func buildMultipartBody(form map[string]any, files []*formFile) (io.Reader, string, error) {
+func buildMultipartBody(form map[string]any, files []*formFile, newWriter MultipartWriterFactory) (io.Reader, string, error) {
 	buf := &bytes.Buffer{}
-	w := multipart.NewWriter(buf)
+	if newWriter == nil {
+		newWriter = newMultipartWriter
+	}
+	w := newWriter(buf)
 
 	for k, v := range form {
 		if err := w.WriteField(k, toString(v)); err != nil {
@@ -34,3 +37,5 @@ func buildMultipartBody(form map[string]any, files []*formFile) (io.Reader, stri
 	}
 	return buf, w.FormDataContentType(), nil
 }
+
+func newMultipartWriter(w io.Writer) MultipartWriter { return multipart.NewWriter(w) }

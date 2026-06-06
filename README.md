@@ -134,6 +134,23 @@ Facade rules:
   `vblf`, and `vver`; their meaning is documented in the module table above
   instead of changing established import paths.
 
+Configurable APIs and provider injection:
+
+- Many packages expose functional options through `WithXxx` helpers and
+  `XxxWithOptions` variants. Existing fixed-argument APIs stay stable, while
+  option-based variants add advanced control for callers that need it.
+- The option pattern is available across runtime-sensitive helpers such as
+  bloom filters, cache, captcha, config loading/watching, cron, crypto, DB,
+  date/time, DFA, errors, files, HTTP/Resty, IDs, identity, JSON/JWT, logging,
+  network, numbers, POI, random, socket, system, URL, XML, and ZIP helpers.
+- Provider-style options let callers inject file-system functions, network/TLS
+  dialers or readers, clocks, timers/tickers, random sources, Sentry/logrus
+  hooks, and other process-global dependencies for deterministic tests and
+  controlled runtime behavior.
+- Package-level defaults remain explicit. For example, HTTP global defaults can
+  be read as an immutable snapshot via `vhttp.SnapshotGlobalConfig`, while
+  per-call options should not mutate hidden global state.
+
 Domain boundary rules:
 
 - `vhash` is for non-cryptographic hash helpers such as additive/FNV (bucketing,

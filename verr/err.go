@@ -5,6 +5,8 @@ import (
 	"io"
 	"time"
 
+	"github.com/evalphobia/logrus_sentry"
+	"github.com/getsentry/raven-go"
 	"github.com/sirupsen/logrus"
 
 	errimpl "github.com/imajinyun/go-knifer/internal/errx"
@@ -88,6 +90,34 @@ func WithReportCaller(reportCaller bool) InitOption { return errimpl.WithReportC
 
 // WithSentryLevels sets which log levels are forwarded to Sentry.
 func WithSentryLevels(levels ...logrus.Level) InitOption { return errimpl.WithSentryLevels(levels...) }
+
+// WithEnvLookupFunc sets the environment lookup used to override the Sentry DSN.
+func WithEnvLookupFunc(getenv func(string) string) InitOption {
+	return errimpl.WithEnvLookupFunc(getenv)
+}
+
+// WithRavenSetDSNFunc sets the function used to configure raven's global DSN.
+func WithRavenSetDSNFunc(setDSN func(string) error) InitOption {
+	return errimpl.WithRavenSetDSNFunc(setDSN)
+}
+
+// WithSentryClient sets the raven client passed to the Sentry hook factory.
+func WithSentryClient(client *raven.Client) InitOption { return errimpl.WithSentryClient(client) }
+
+// WithSentryHookFactory sets the factory used to create the Sentry logrus hook.
+func WithSentryHookFactory(factory func(*raven.Client, []logrus.Level) (*logrus_sentry.SentryHook, error)) InitOption {
+	return errimpl.WithSentryHookFactory(factory)
+}
+
+// WithLogHookAdder sets the function used to register the Sentry hook.
+func WithLogHookAdder(addHook func(logrus.Hook)) InitOption {
+	return errimpl.WithLogHookAdder(addHook)
+}
+
+// WithLogrusConfigurer sets the logrus global configuration functions used during initialization.
+func WithLogrusConfigurer(setReportCaller func(bool), setOutput func(io.Writer), setFormatter func(logrus.Formatter)) InitOption {
+	return errimpl.WithLogrusConfigurer(setReportCaller, setOutput, setFormatter)
+}
 
 // InitWithOptions configures logrus output and optional Sentry forwarding with options.
 func InitWithOptions(opts ...InitOption) { errimpl.InitWithOptions(opts...) }

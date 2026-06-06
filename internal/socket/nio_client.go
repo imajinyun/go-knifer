@@ -19,7 +19,7 @@ type NioClient struct {
 
 // NewNioClient creates a client and connects to the specified host and port.
 func NewNioClient(host string, port int) (*NioClient, error) {
-	return NewNioClientAddr(&net.TCPAddr{IP: net.ParseIP(host), Port: port})
+	return NewNioClientWithOptions(host, port)
 }
 
 // NewNioClientWithOptions creates a client and connects to the specified host and port with custom config options.

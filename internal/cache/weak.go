@@ -35,28 +35,26 @@ type weakEntry[V any] struct {
 // NewWeakCache creates a weak-reference-like cache with timeout as default TTL.
 // A zero timeout means entries do not expire by time.
 func NewWeakCache[K comparable, V any](timeout time.Duration) *WeakCache[K, V] {
-	return &WeakCache[K, V]{
-		entries: make(map[K]*weakEntry[V]),
-		timeout: timeout,
-		clock:   time.Now,
-	}
+	return NewWeakCacheWithOptions[K, V](WithTimeout[K, *V](timeout))
 }
 
 // NewWeakCacheWithOptions creates a weak-reference-like cache customized by options.
 func NewWeakCacheWithOptions[K comparable, V any](opts ...Option[K, *V]) *WeakCache[K, V] {
-	cfg := applyOptions(opts)
-	c := NewWeakCache[K, V](cfg.timeout)
-	if cfg.listener != nil {
-		c.listener = cfg.listener
-	}
-	c.setClock(cfg.clock)
-	return c
+	return newWeakCacheWithConfig[K, V](applyOptions(opts))
 }
 
-func (c *WeakCache[K, V]) setClock(clock func() time.Time) {
-	if clock != nil {
-		c.clock = clock
+func newWeakCacheWithConfig[K comparable, V any](cfg cacheConfig[K, *V]) *WeakCache[K, V] {
+	clock := cfg.clock
+	if clock == nil {
+		clock = time.Now
 	}
+	c := &WeakCache[K, V]{
+		entries:  make(map[K]*weakEntry[V]),
+		timeout:  cfg.timeout,
+		listener: cfg.listener,
+		clock:    clock,
+	}
+	return c
 }
 
 func (c *WeakCache[K, V]) now() time.Time {

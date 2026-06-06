@@ -16,11 +16,31 @@ type ReadOption = poiimpl.ReadOption
 // WriteOption customizes Excel write helpers.
 type WriteOption = poiimpl.WriteOption
 
+// OpenFileFunc opens an Excel workbook from a file path.
+type OpenFileFunc = poiimpl.OpenFileFunc
+
+// OpenReaderFunc opens an Excel workbook from a reader.
+type OpenReaderFunc = poiimpl.OpenReaderFunc
+
+// NewFileFunc creates a new Excel workbook.
+type NewFileFunc = poiimpl.NewFileFunc
+
+// SaveAsFunc saves an Excel workbook to path.
+type SaveAsFunc = poiimpl.SaveAsFunc
+
 // WithReadSheet selects the worksheet read by read helpers.
 func WithReadSheet(sheet string) ReadOption { return poiimpl.WithReadSheet(sheet) }
 
 // WithOpenOptions sets excelize options used when opening workbooks.
 func WithOpenOptions(opts ...excelize.Options) ReadOption { return poiimpl.WithOpenOptions(opts...) }
+
+// WithOpenFileFunc sets the workbook opener used by path-based read helpers.
+func WithOpenFileFunc(openFile OpenFileFunc) ReadOption { return poiimpl.WithOpenFileFunc(openFile) }
+
+// WithOpenReaderFunc sets the workbook opener used by reader-based read helpers.
+func WithOpenReaderFunc(openReader OpenReaderFunc) ReadOption {
+	return poiimpl.WithOpenReaderFunc(openReader)
+}
 
 // WithWriteSheet selects the worksheet written by write helpers.
 func WithWriteSheet(sheet string) WriteOption { return poiimpl.WithWriteSheet(sheet) }
@@ -53,6 +73,12 @@ func WithStat(stat func(string) (os.FileInfo, error)) WriteOption { return poiim
 
 // WithChmod sets the chmod provider used after saving workbooks.
 func WithChmod(chmod func(string, fs.FileMode) error) WriteOption { return poiimpl.WithChmod(chmod) }
+
+// WithNewFileFunc sets the workbook factory used by write helpers.
+func WithNewFileFunc(newFile NewFileFunc) WriteOption { return poiimpl.WithNewFileFunc(newFile) }
+
+// WithSaveAsFunc sets the workbook saver used by write helpers.
+func WithSaveAsFunc(saveAs SaveAsFunc) WriteOption { return poiimpl.WithSaveAsFunc(saveAs) }
 
 const (
 	// DefaultSheetName is the default worksheet name used for read/write helpers.

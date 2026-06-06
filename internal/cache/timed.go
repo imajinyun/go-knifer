@@ -17,16 +17,18 @@ type TimedCache[K comparable, V any] struct {
 
 // NewTimedCache creates a timed cache with timeout as the default TTL.
 func NewTimedCache[K comparable, V any](timeout time.Duration) *TimedCache[K, V] {
-	c := &TimedCache[K, V]{}
-	c.init(0, timeout, timedPrune[K, V])
-	return c
+	return NewTimedCacheWithOptions[K, V](WithTimeout[K, V](timeout))
 }
 
 // NewTimedCacheWithOptions creates a timed cache customized by options.
 // Capacity is ignored because TimedCache is expiration-only and has no capacity limit.
 func NewTimedCacheWithOptions[K comparable, V any](opts ...Option[K, V]) *TimedCache[K, V] {
-	cfg := applyOptions(opts)
-	c := NewTimedCache[K, V](cfg.timeout)
+	return newTimedCacheWithConfig(applyOptions(opts))
+}
+
+func newTimedCacheWithConfig[K comparable, V any](cfg cacheConfig[K, V]) *TimedCache[K, V] {
+	c := &TimedCache[K, V]{}
+	c.init(0, cfg.timeout, timedPrune[K, V])
 	applyListener(&c.abstractCache, cfg.listener)
 	applyClock(&c.abstractCache, cfg.clock)
 	applyTickerFactory(&c.abstractCache, cfg.tickerFactory)

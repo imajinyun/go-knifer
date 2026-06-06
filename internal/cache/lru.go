@@ -9,24 +9,27 @@ type LRUCache[K comparable, V any] struct {
 
 // NewLRUCache creates an LRU cache with no default timeout.
 func NewLRUCache[K comparable, V any](capacity int) *LRUCache[K, V] {
-	return NewLRUCacheWithTimeout[K, V](capacity, 0)
+	return NewLRUCacheWithOptions[K, V](WithCapacity[K, V](capacity))
 }
 
 // NewLRUCacheWithOptions creates an LRU cache customized by options.
 func NewLRUCacheWithOptions[K comparable, V any](opts ...Option[K, V]) *LRUCache[K, V] {
-	cfg := applyOptions(opts)
-	c := NewLRUCacheWithTimeout[K, V](cfg.capacity, cfg.timeout)
+	return newLRUCacheWithConfig(applyOptions(opts))
+}
+
+func newLRUCacheWithConfig[K comparable, V any](cfg cacheConfig[K, V]) *LRUCache[K, V] {
+	c := &LRUCache[K, V]{}
+	c.init(cfg.capacity, cfg.timeout, lruPrune[K, V])
+	c.moveToBackOnGet = true
 	applyListener(&c.abstractCache, cfg.listener)
 	applyClock(&c.abstractCache, cfg.clock)
+	applyTickerFactory(&c.abstractCache, cfg.tickerFactory)
 	return c
 }
 
 // NewLRUCacheWithTimeout creates an LRU cache with a default timeout.
 func NewLRUCacheWithTimeout[K comparable, V any](capacity int, timeout time.Duration) *LRUCache[K, V] {
-	c := &LRUCache[K, V]{}
-	c.init(capacity, timeout, lruPrune[K, V])
-	c.moveToBackOnGet = true
-	return c
+	return NewLRUCacheWithOptions[K, V](WithCapacity[K, V](capacity), WithTimeout[K, V](timeout))
 }
 
 // SetListener sets the removal listener and returns the cache for chaining.
