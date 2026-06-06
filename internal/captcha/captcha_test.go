@@ -5,6 +5,9 @@ import (
 	"image/color"
 	"image/gif"
 	"image/png"
+	"io"
+	"io/fs"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -207,6 +210,39 @@ func TestCaptchaOptionsAndWriteOptions(t *testing.T) {
 		t.Fatalf("gif options not applied: repeat=%d delay=%d code=%q", g.Repeat, g.Delay, g.Code())
 	}
 }
+
+func TestCaptchaWriteProviderOptions(t *testing.T) {
+	c := NewLineCaptchaWithOptions(100, 40, WithGenerator(fixedGenerator{code: "ABCD"}), WithInterfereCount(0))
+	c.CreateCode()
+
+	var mkdirPath string
+	var mkdirPerm fs.FileMode
+	var openPath string
+	var openFlag int
+	var openPerm fs.FileMode
+	var written bytes.Buffer
+	err := c.WriteToFileWithOptions("/virtual/captcha.png",
+		WithMkdirAll(func(path string, perm fs.FileMode) error {
+			mkdirPath, mkdirPerm = path, perm
+			return nil
+		}),
+		WithOpenFile(func(path string, flag int, perm fs.FileMode) (io.WriteCloser, error) {
+			openPath, openFlag, openPerm = path, flag, perm
+			return nopWriteCloser{Writer: &written}, nil
+		}),
+		WithDirPerm(0o700), WithFilePerm(0o600),
+	)
+	if err != nil {
+		t.Fatalf("WriteToFileWithOptions provider: %v", err)
+	}
+	if mkdirPath != "/virtual" || mkdirPerm != 0o700 || openPath != "/virtual/captcha.png" || openPerm != 0o600 || openFlag&os.O_CREATE == 0 || written.Len() == 0 {
+		t.Fatalf("providers mkdir=%q/%v open=%q flag=%#x perm=%v bytes=%d", mkdirPath, mkdirPerm, openPath, openFlag, openPerm, written.Len())
+	}
+}
+
+type nopWriteCloser struct{ io.Writer }
+
+func (w nopWriteCloser) Close() error { return nil }
 
 func TestCaptchaUtilFactories(t *testing.T) {
 	if CreateLineCaptcha(120, 40) == nil {

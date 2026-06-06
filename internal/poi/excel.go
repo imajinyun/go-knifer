@@ -58,6 +58,9 @@ type writeConfig struct {
 	overwrite     bool
 	createParents bool
 	saveOptions   []excelize.Options
+	mkdirAll      func(string, fs.FileMode) error
+	stat          func(string) (os.FileInfo, error)
+	chmod         func(string, fs.FileMode) error
 }
 
 // WriteOption customizes Excel write helpers.
@@ -66,7 +69,7 @@ type WriteOption func(*writeConfig)
 func defaultReadConfig() readConfig { return readConfig{} }
 
 func defaultWriteConfig() writeConfig {
-	return writeConfig{sheet: DefaultSheetName, startRow: 1, startCol: 1, dirPerm: 0o750, filePerm: 0o644, overwrite: true, createParents: true}
+	return writeConfig{sheet: DefaultSheetName, startRow: 1, startCol: 1, dirPerm: 0o750, filePerm: 0o644, overwrite: true, createParents: true, mkdirAll: os.MkdirAll, stat: os.Stat, chmod: os.Chmod}
 }
 
 // WithReadSheet selects the worksheet read by read helpers.
@@ -113,6 +116,21 @@ func WithSaveOptions(opts ...excelize.Options) WriteOption {
 	return func(c *writeConfig) { c.saveOptions = append([]excelize.Options(nil), opts...) }
 }
 
+// WithMkdirAll sets the directory creator used when saving workbooks.
+func WithMkdirAll(mkdirAll func(string, fs.FileMode) error) WriteOption {
+	return func(c *writeConfig) { c.mkdirAll = mkdirAll }
+}
+
+// WithStat sets the stat provider used when checking workbook overwrite behavior.
+func WithStat(stat func(string) (os.FileInfo, error)) WriteOption {
+	return func(c *writeConfig) { c.stat = stat }
+}
+
+// WithChmod sets the chmod provider used after saving workbooks.
+func WithChmod(chmod func(string, fs.FileMode) error) WriteOption {
+	return func(c *writeConfig) { c.chmod = chmod }
+}
+
 func applyReadOptions(opts []ReadOption) readConfig {
 	cfg := defaultReadConfig()
 	for _, opt := range opts {
@@ -129,6 +147,15 @@ func applyWriteOptions(opts []WriteOption) writeConfig {
 		if opt != nil {
 			opt(&cfg)
 		}
+	}
+	if cfg.mkdirAll == nil {
+		cfg.mkdirAll = os.MkdirAll
+	}
+	if cfg.stat == nil {
+		cfg.stat = os.Stat
+	}
+	if cfg.chmod == nil {
+		cfg.chmod = os.Chmod
 	}
 	return cfg
 }
@@ -212,7 +239,7 @@ func writeRows(path string, rows [][]string, cfg writeConfig) error {
 		return err
 	}
 	if cfg.createParents {
-		if err := ensureParentDir(path, cfg.dirPerm); err != nil {
+		if err := ensureParentDir(path, cfg); err != nil {
 			return err
 		}
 	}
@@ -227,7 +254,7 @@ func WriteSheets(path string, sheets map[string][][]string, opts ...WriteOption)
 
 	if len(sheets) == 0 {
 		if cfg.createParents {
-			if err := ensureParentDir(path, cfg.dirPerm); err != nil {
+			if err := ensureParentDir(path, cfg); err != nil {
 				return err
 			}
 		}
@@ -252,7 +279,7 @@ func WriteSheets(path string, sheets map[string][][]string, opts ...WriteOption)
 		}
 	}
 	if cfg.createParents {
-		if err := ensureParentDir(path, cfg.dirPerm); err != nil {
+		if err := ensureParentDir(path, cfg); err != nil {
 			return err
 		}
 	}
@@ -331,17 +358,17 @@ func setRows(f *excelize.File, sheet string, rows [][]string, startRow, startCol
 	return nil
 }
 
-func ensureParentDir(path string, perm fs.FileMode) error {
+func ensureParentDir(path string, cfg writeConfig) error {
 	dir := filepath.Dir(path)
 	if dir == "." || dir == "" {
 		return nil
 	}
-	return os.MkdirAll(dir, perm)
+	return cfg.mkdirAll(dir, cfg.dirPerm)
 }
 
 func saveWorkbook(f *excelize.File, path string, cfg writeConfig) error {
 	if !cfg.overwrite {
-		if _, err := os.Stat(path); err == nil {
+		if _, err := cfg.stat(path); err == nil {
 			return fmt.Errorf("poi: file already exists: %s", path)
 		} else if !os.IsNotExist(err) {
 			return err
@@ -351,7 +378,7 @@ func saveWorkbook(f *excelize.File, path string, cfg writeConfig) error {
 		return err
 	}
 	if cfg.filePerm != 0 {
-		return os.Chmod(path, cfg.filePerm)
+		return cfg.chmod(path, cfg.filePerm)
 	}
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	stdxml "encoding/xml"
 	"errors"
 	"io"
+	"io/fs"
 	"os"
 	"reflect"
 	"strings"
@@ -170,6 +171,59 @@ func TestFacadeSAXTransformWriteAndFormat(t *testing.T) {
 		t.Fatal("WriteTo should reject unsupported values")
 	}
 }
+
+func TestFacadeXMLFileProviderOptions(t *testing.T) {
+	openedPath := ""
+	doc, err := ReadXMLFile("virtual.xml", WithOpenFile(func(path string) (io.ReadCloser, error) {
+		openedPath = path
+		return io.NopCloser(strings.NewReader(`<root><from>facade</from></root>`)), nil
+	}))
+	if err != nil || ElementText(doc.Root, "from") != "facade" || openedPath != "virtual.xml" {
+		t.Fatalf("ReadXMLFile provider doc=%#v path=%q err=%v", doc, openedPath, err)
+	}
+
+	var starts []string
+	openedPath = ""
+	if err := ReadBySAXFileWithOptions("sax.xml", func(tok stdxml.Token) error {
+		if start, ok := tok.(stdxml.StartElement); ok {
+			starts = append(starts, start.Name.Local)
+		}
+		return nil
+	}, WithOpenFile(func(path string) (io.ReadCloser, error) {
+		openedPath = path
+		return io.NopCloser(strings.NewReader(`<root><a/></root>`)), nil
+	})); err != nil || !reflect.DeepEqual(starts, []string{"root", "a"}) || openedPath != "sax.xml" {
+		t.Fatalf("ReadBySAXFileWithOptions provider starts=%v path=%q err=%v", starts, openedPath, err)
+	}
+
+	var mkdirPath string
+	var mkdirPerm fs.FileMode
+	var openPath string
+	var openFlag int
+	var openPerm fs.FileMode
+	var written strings.Builder
+	err = WriteFile("/virtual/out.xml", CreateXMLWithRoot("root"), WithOmitDeclaration(true),
+		WithMkdirAll(func(path string, perm fs.FileMode) error {
+			mkdirPath, mkdirPerm = path, perm
+			return nil
+		}),
+		WithOpenWriteFile(func(path string, flag int, perm fs.FileMode) (io.WriteCloser, error) {
+			openPath, openFlag, openPerm = path, flag, perm
+			return nopWriteCloser{Writer: &written}, nil
+		}),
+		WithDirPerm(0o700), WithFilePerm(0o600),
+	)
+	if err != nil {
+		t.Fatalf("WriteFile provider: %v", err)
+	}
+	if mkdirPath != "/virtual" || mkdirPerm != 0o700 || openPath != "/virtual/out.xml" || openPerm != 0o600 || openFlag&os.O_CREATE == 0 || written.String() != `<root/>` {
+		t.Fatalf("providers mkdir=%q/%v open=%q flag=%#x perm=%v content=%q", mkdirPath, mkdirPerm, openPath, openFlag, openPerm, written.String())
+	}
+}
+
+type nopWriteCloser struct{ io.Writer }
+
+func (w nopWriteCloser) Close() error { return nil }
 
 func TestFacadeMapBeanXPathAndNamespace(t *testing.T) {
 	xmlStr, err := MarshalBean(facadeBean{Name: "bob", Age: 20}, WithRootName("user"), WithIgnoreNullFields(true), WithOmitDeclaration(true))

@@ -2,6 +2,7 @@ package vcaptcha
 
 import (
 	"image/color"
+	"io"
 	"io/fs"
 
 	"github.com/imajinyun/go-knifer/internal/captcha"
@@ -93,6 +94,16 @@ func WithOverwrite(overwrite bool) WriteOption { return captcha.WithOverwrite(ov
 
 // WithCreateParents controls whether WriteToFileWithOptions creates parent directories.
 func WithCreateParents(create bool) WriteOption { return captcha.WithCreateParents(create) }
+
+// WithMkdirAll sets the directory creator used by WriteToFileWithOptions.
+func WithMkdirAll(mkdirAll func(string, fs.FileMode) error) WriteOption {
+	return captcha.WithMkdirAll(mkdirAll)
+}
+
+// WithOpenFile sets the file opener used by WriteToFileWithOptions.
+func WithOpenFile(openFile func(string, int, fs.FileMode) (io.WriteCloser, error)) WriteOption {
+	return captcha.WithOpenFile(openFile)
+}
 
 // NewRandomGenerator creates a random captcha generator.
 func NewRandomGenerator(length int) *RandomGenerator { return captcha.NewRandomGenerator(length) }

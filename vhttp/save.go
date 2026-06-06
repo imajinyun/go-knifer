@@ -3,6 +3,7 @@ package vhttp
 import (
 	"io"
 	"io/fs"
+	"os"
 
 	httpx "github.com/imajinyun/go-knifer/internal/httpx/http"
 )
@@ -21,6 +22,19 @@ func WithSaveCreateParents(create bool) SaveOption { return httpx.WithSaveCreate
 
 // WithSaveDefaultFilename sets the fallback file name used when dest is a directory.
 func WithSaveDefaultFilename(name string) SaveOption { return httpx.WithSaveDefaultFilename(name) }
+
+// WithSaveStat sets the stat provider used to resolve directory destinations.
+func WithSaveStat(stat func(string) (os.FileInfo, error)) SaveOption { return httpx.WithSaveStat(stat) }
+
+// WithSaveMkdirAll sets the directory creator used when saving responses.
+func WithSaveMkdirAll(mkdirAll func(string, fs.FileMode) error) SaveOption {
+	return httpx.WithSaveMkdirAll(mkdirAll)
+}
+
+// WithSaveOpenFile sets the file opener used when saving responses.
+func WithSaveOpenFile(openFile func(string, int, fs.FileMode) (io.WriteCloser, error)) SaveOption {
+	return httpx.WithSaveOpenFile(openFile)
+}
 
 // Download downloads rawURL into w.
 func Download(rawURL string, w io.Writer) (int64, error) { return httpx.Download(rawURL, w) }

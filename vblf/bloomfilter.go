@@ -1,6 +1,10 @@
 package vblf
 
-import "github.com/imajinyun/go-knifer/internal/bloomfilter"
+import (
+	"io"
+
+	"github.com/imajinyun/go-knifer/internal/bloomfilter"
+)
 
 // BitMap is the bitmap abstraction used by bloom filters.
 type BitMap = bloomfilter.BitMap
@@ -37,6 +41,9 @@ type BitMapBloomFilterOption = bloomfilter.BitMapBloomFilterOption
 
 // BitSetBloomFilterOption customizes BitSetBloomFilter construction.
 type BitSetBloomFilterOption = bloomfilter.BitSetBloomFilterOption
+
+// FileOption customizes bloom filter file helpers.
+type FileOption = bloomfilter.FileOption
 
 const (
 	// BloomMachine32 uses 32-bit bitmap words.
@@ -105,6 +112,19 @@ func WithExpectedElements(n int) BitSetBloomFilterOption { return bloomfilter.Wi
 func WithHashFunctionNumber(k int) BitSetBloomFilterOption {
 	return bloomfilter.WithHashFunctionNumber(k)
 }
+
+// WithOpenFile sets the file opener used by bloom filter file helpers.
+func WithOpenFile(openFile func(string) (io.ReadCloser, error)) FileOption {
+	return bloomfilter.WithOpenFile(openFile)
+}
+
+// InitFromFileWithOptions initializes a bitset bloom filter from a file using options.
+func InitFromFileWithOptions(b *BitSetBloomFilter, path string, opts ...FileOption) error {
+	return b.InitFromFileWithOptions(path, opts...)
+}
+
+// InitFromReader initializes a bitset bloom filter from a reader.
+func InitFromReader(b *BitSetBloomFilter, reader io.Reader) error { return b.InitFromReader(reader) }
 
 // NewDefaultBloomFilter creates a default bloom filter.
 func NewDefaultBloomFilter(maxValue int64) *FuncFilter { return bloomfilter.NewDefaultFilter(maxValue) }

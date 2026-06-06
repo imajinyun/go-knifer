@@ -45,11 +45,14 @@ const (
 )
 
 type resourceConfig struct {
-	ctx         context.Context
-	client      *http.Client
-	headers     http.Header
-	timeout     time.Duration
-	checkStatus bool
+	ctx            context.Context
+	client         *http.Client
+	headers        http.Header
+	timeout        time.Duration
+	checkStatus    bool
+	openFile       func(string) (io.ReadCloser, error)
+	stat           func(string) (os.FileInfo, error)
+	requestFactory func(context.Context, string, string) (*http.Request, error)
 }
 
 // ResourceOption customizes URL resource helpers such as OpenWithOptions and ContentLengthWithOptions.
@@ -97,8 +100,23 @@ func WithCheckStatus(check bool) ResourceOption {
 	return func(c *resourceConfig) { c.checkStatus = check }
 }
 
+// WithOpenFile sets the file opener used by local file resource helpers.
+func WithOpenFile(openFile func(string) (io.ReadCloser, error)) ResourceOption {
+	return func(c *resourceConfig) { c.openFile = openFile }
+}
+
+// WithStat sets the stat provider used by local file resource helpers.
+func WithStat(stat func(string) (os.FileInfo, error)) ResourceOption {
+	return func(c *resourceConfig) { c.stat = stat }
+}
+
+// WithRequestFactory sets the HTTP request factory used by resource helpers.
+func WithRequestFactory(factory func(context.Context, string, string) (*http.Request, error)) ResourceOption {
+	return func(c *resourceConfig) { c.requestFactory = factory }
+}
+
 func applyResourceOptions(opts []ResourceOption) resourceConfig {
-	cfg := resourceConfig{ctx: context.Background(), client: http.DefaultClient}
+	cfg := resourceConfig{ctx: context.Background(), client: http.DefaultClient, openFile: defaultOpenFile, stat: os.Stat, requestFactory: defaultRequestFactory}
 	for _, opt := range opts {
 		if opt != nil {
 			opt(&cfg)
@@ -110,7 +128,22 @@ func applyResourceOptions(opts []ResourceOption) resourceConfig {
 	if cfg.client == nil {
 		cfg.client = http.DefaultClient
 	}
+	if cfg.openFile == nil {
+		cfg.openFile = defaultOpenFile
+	}
+	if cfg.stat == nil {
+		cfg.stat = os.Stat
+	}
+	if cfg.requestFactory == nil {
+		cfg.requestFactory = defaultRequestFactory
+	}
 	return cfg
+}
+
+func defaultOpenFile(path string) (io.ReadCloser, error) { return os.Open(path) }
+
+func defaultRequestFactory(ctx context.Context, method, raw string) (*http.Request, error) {
+	return http.NewRequestWithContext(ctx, method, raw, nil)
 }
 
 type normalizeConfig struct {
@@ -370,12 +403,13 @@ func Open(raw string) (io.ReadCloser, error) {
 
 // OpenWithOptions opens a URL resource with per-call options.
 func OpenWithOptions(raw string, opts ...ResourceOption) (io.ReadCloser, error) {
+	cfg := applyResourceOptions(opts)
 	u, err := neturl.Parse(raw)
 	if err != nil {
 		return nil, err
 	}
 	if u.Scheme == "http" || u.Scheme == "https" {
-		resp, err := doResourceRequest(raw, http.MethodGet, applyResourceOptions(opts))
+		resp, err := doResourceRequest(raw, http.MethodGet, cfg)
 		if err != nil {
 			return nil, err
 		}
@@ -386,7 +420,7 @@ func OpenWithOptions(raw string, opts ...ResourceOption) (io.ReadCloser, error) 
 		path = u.Path
 	}
 	// #nosec G304 -- URL utility intentionally opens the caller-provided file URL or path.
-	return os.Open(path)
+	return cfg.openFile(path)
 }
 
 // ContentLength returns the resource content length. Unknown lengths return -1.
@@ -396,6 +430,7 @@ func ContentLength(raw string) (int64, error) {
 
 // ContentLengthWithOptions returns the resource content length with per-call options.
 func ContentLengthWithOptions(raw string, opts ...ResourceOption) (int64, error) {
+	cfg := applyResourceOptions(opts)
 	if raw == "" {
 		return -1, nil
 	}
@@ -404,7 +439,7 @@ func ContentLengthWithOptions(raw string, opts ...ResourceOption) (int64, error)
 		return -1, err
 	}
 	if u.Scheme == "http" || u.Scheme == "https" {
-		resp, err := doResourceRequest(raw, http.MethodHead, applyResourceOptions(opts))
+		resp, err := doResourceRequest(raw, http.MethodHead, cfg)
 		if err != nil {
 			return -1, err
 		}
@@ -415,7 +450,7 @@ func ContentLengthWithOptions(raw string, opts ...ResourceOption) (int64, error)
 	if IsFileURL(u) {
 		path = u.Path
 	}
-	info, err := os.Stat(path)
+	info, err := cfg.stat(path)
 	if err != nil {
 		return -1, err
 	}
@@ -437,9 +472,15 @@ func doResourceRequest(raw, method string, cfg resourceConfig) (*http.Response, 
 		ctx, cancel = context.WithTimeout(ctx, cfg.timeout)
 		defer cancel()
 	}
-	req, err := http.NewRequestWithContext(ctx, method, raw, nil)
+	req, err := cfg.requestFactory(ctx, method, raw)
 	if err != nil {
 		return nil, err
+	}
+	if req == nil {
+		return nil, fmt.Errorf("request factory returned nil for %s %s", method, raw)
+	}
+	if req.Context() != ctx {
+		req = req.WithContext(ctx)
 	}
 	for key, values := range cfg.headers {
 		for _, value := range values {

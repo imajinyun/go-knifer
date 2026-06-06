@@ -22,8 +22,35 @@ type bitSetBloomFilterConfig struct {
 	k int
 }
 
+type bloomFileConfig struct {
+	openFile func(string) (io.ReadCloser, error)
+}
+
 // BitSetBloomFilterOption customizes BitSetBloomFilter construction.
 type BitSetBloomFilterOption func(*bitSetBloomFilterConfig)
+
+// FileOption customizes bloom filter file helpers.
+type FileOption func(*bloomFileConfig)
+
+// WithOpenFile sets the file opener used by bloom filter file helpers.
+func WithOpenFile(openFile func(string) (io.ReadCloser, error)) FileOption {
+	return func(c *bloomFileConfig) { c.openFile = openFile }
+}
+
+func applyFileOptions(opts []FileOption) bloomFileConfig {
+	cfg := bloomFileConfig{openFile: defaultOpenFile}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.openFile == nil {
+		cfg.openFile = defaultOpenFile
+	}
+	return cfg
+}
+
+func defaultOpenFile(path string) (io.ReadCloser, error) { return os.Open(path) }
 
 // WithBitSetCapacity sets the preallocated maximum record count.
 func WithBitSetCapacity(c int) BitSetBloomFilterOption {
@@ -84,12 +111,22 @@ func (b *BitSetBloomFilter) getBit(pos int) bool {
 
 // InitFromFile initializes the filter from a file by adding each line.
 func (b *BitSetBloomFilter) InitFromFile(path string) error {
-	f, err := os.Open(path)
+	return b.InitFromFileWithOptions(path)
+}
+
+// InitFromFileWithOptions initializes the filter from a file using options.
+func (b *BitSetBloomFilter) InitFromFileWithOptions(path string, opts ...FileOption) error {
+	f, err := applyFileOptions(opts).openFile(path)
 	if err != nil {
 		return wrapBloomFilterIO("open bloom filter file "+path, err)
 	}
 	defer func() { _ = f.Close() }()
-	r := bufio.NewReader(f)
+	return b.InitFromReader(f)
+}
+
+// InitFromReader initializes the filter from a reader by adding each line.
+func (b *BitSetBloomFilter) InitFromReader(reader io.Reader) error {
+	r := bufio.NewReader(reader)
 	for {
 		line, err := r.ReadString('\n')
 		if len(line) > 0 {
@@ -103,7 +140,7 @@ func (b *BitSetBloomFilter) InitFromFile(path string) error {
 			if err == io.EOF {
 				return nil
 			}
-			return wrapBloomFilterIO("read bloom filter file "+path, err)
+			return wrapBloomFilterIO("read bloom filter data", err)
 		}
 	}
 }

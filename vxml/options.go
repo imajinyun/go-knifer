@@ -24,6 +24,11 @@ func WithEntity(entity map[string]string) ParseOption { return xmlimpl.WithEntit
 // WithMaxBytes bounds XML input read from readers and files. Non-positive values mean unlimited.
 func WithMaxBytes(maxBytes int64) ParseOption { return xmlimpl.WithMaxBytes(maxBytes) }
 
+// WithOpenFile sets the file opener used by XML file read helpers.
+func WithOpenFile(openFile func(string) (io.ReadCloser, error)) ParseOption {
+	return xmlimpl.WithOpenFile(openFile)
+}
+
 // WithCharset sets the XML declaration charset.
 func WithCharset(s string) WriteOption { return xmlimpl.WithCharset(s) }
 
@@ -56,3 +61,13 @@ func WithOverwrite(overwrite bool) WriteOption { return xmlimpl.WithOverwrite(ov
 
 // WithCreateParents controls whether WriteFile creates parent directories.
 func WithCreateParents(create bool) WriteOption { return xmlimpl.WithCreateParents(create) }
+
+// WithMkdirAll sets the directory creator used by WriteFile.
+func WithMkdirAll(mkdirAll func(string, fs.FileMode) error) WriteOption {
+	return xmlimpl.WithMkdirAll(mkdirAll)
+}
+
+// WithOpenWriteFile sets the file opener used by WriteFile.
+func WithOpenWriteFile(openFile func(string, int, fs.FileMode) (io.WriteCloser, error)) WriteOption {
+	return xmlimpl.WithOpenWriteFile(openFile)
+}

@@ -12,6 +12,9 @@ type Error = dateimpl.DateError
 // ParseOption customizes date parsing helpers.
 type ParseOption = dateimpl.ParseOption
 
+// NowOption customizes current-time helpers.
+type NowOption = dateimpl.NowOption
+
 const (
 	NormPattern         = dateimpl.NormPattern
 	NormDatePattern     = dateimpl.NormDatePattern
@@ -24,7 +27,9 @@ const (
 )
 
 func Now() time.Time                                   { return dateimpl.Now() }
+func NowWithOptions(opts ...NowOption) time.Time       { return dateimpl.NowWithOptions(opts...) }
 func Today() time.Time                                 { return dateimpl.Today() }
+func TodayWithOptions(opts ...NowOption) time.Time     { return dateimpl.TodayWithOptions(opts...) }
 func Format(t time.Time, layout string) string         { return dateimpl.FormatDate(t, layout) }
 func FormatNorm(t time.Time) string                    { return dateimpl.FormatDateNorm(t) }
 func FormatDateOnly(t time.Time) string                { return dateimpl.FormatDateOnly(t) }
@@ -32,6 +37,7 @@ func FormatTimeOnly(t time.Time) string                { return dateimpl.FormatT
 func Parse(s string) (time.Time, error)                { return dateimpl.ParseDate(s) }
 func ParseLayout(s, layout string) (time.Time, error)  { return dateimpl.ParseDateLayout(s, layout) }
 func WithLocation(location *time.Location) ParseOption { return dateimpl.WithLocation(location) }
+func WithClock(clock func() time.Time) NowOption       { return dateimpl.WithClock(clock) }
 func ParseWithOptions(s string, opts ...ParseOption) (time.Time, error) {
 	return dateimpl.ParseDateWithOptions(s, opts...)
 }

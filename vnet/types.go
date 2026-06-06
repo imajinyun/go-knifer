@@ -27,6 +27,7 @@ type (
 	ResolveOption      = netimpl.ResolveOption
 	PortOption         = netimpl.PortOption
 	InterfaceOption    = netimpl.InterfaceOption
+	TLSFileOption      = netimpl.TLSFileOption
 	UploadSetting      = netimpl.UploadSetting
 	UploadSaveOption   = netimpl.UploadSaveOption
 	MultipartFormData  = netimpl.MultipartFormData

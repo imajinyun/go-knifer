@@ -3,8 +3,34 @@ package net
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"io"
 	"os"
 )
+
+type tlsFileConfig struct {
+	readFile func(string) ([]byte, error)
+}
+
+// TLSFileOption customizes TLS file loading helpers.
+type TLSFileOption func(*tlsFileConfig)
+
+// WithTLSReadFile sets the file reader used by TLS file helpers.
+func WithTLSReadFile(readFile func(string) ([]byte, error)) TLSFileOption {
+	return func(c *tlsFileConfig) { c.readFile = readFile }
+}
+
+func applyTLSFileOptions(opts []TLSFileOption) tlsFileConfig {
+	cfg := tlsFileConfig{readFile: os.ReadFile}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.readFile == nil {
+		cfg.readFile = os.ReadFile
+	}
+	return cfg
+}
 
 const (
 	// SSL is a legacy SSL protocol label.
@@ -65,10 +91,30 @@ func (b *TLSConfigBuilder) SetRootCAs(pool *x509.CertPool) *TLSConfigBuilder {
 
 // AddRootCAFile appends PEM certificates from path to RootCAs.
 func (b *TLSConfigBuilder) AddRootCAFile(path string) error {
-	pem, err := os.ReadFile(path) // #nosec G304 -- caller controls certificate path.
+	return b.AddRootCAFileWithOptions(path)
+}
+
+// AddRootCAFileWithOptions appends PEM certificates from path to RootCAs using options.
+func (b *TLSConfigBuilder) AddRootCAFileWithOptions(path string, opts ...TLSFileOption) error {
+	cfg := applyTLSFileOptions(opts)
+	pem, err := cfg.readFile(path) // #nosec G304 -- caller controls certificate path.
 	if err != nil {
 		return err
 	}
+	return b.AddRootCABytes(pem)
+}
+
+// AddRootCAReader appends PEM certificates from r to RootCAs.
+func (b *TLSConfigBuilder) AddRootCAReader(r io.Reader) error {
+	pem, err := io.ReadAll(r)
+	if err != nil {
+		return err
+	}
+	return b.AddRootCABytes(pem)
+}
+
+// AddRootCABytes appends PEM certificates from bytes to RootCAs.
+func (b *TLSConfigBuilder) AddRootCABytes(pem []byte) error {
 	pool := b.config.RootCAs
 	if pool == nil {
 		pool = x509.NewCertPool()

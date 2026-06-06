@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"io"
 	"io/fs"
+	"os"
 	"time"
 
 	restyimpl "github.com/imajinyun/go-knifer/internal/httpx/resty"
@@ -139,6 +140,21 @@ func WithSaveCreateParents(create bool) SaveOption { return restyimpl.WithSaveCr
 
 // WithSaveDefaultFilename sets the fallback file name used when dest is a directory.
 func WithSaveDefaultFilename(name string) SaveOption { return restyimpl.WithSaveDefaultFilename(name) }
+
+// WithSaveStat sets the stat provider used to resolve directory destinations.
+func WithSaveStat(stat func(string) (os.FileInfo, error)) SaveOption {
+	return restyimpl.WithSaveStat(stat)
+}
+
+// WithSaveMkdirAll sets the directory creator used when saving responses.
+func WithSaveMkdirAll(mkdirAll func(string, fs.FileMode) error) SaveOption {
+	return restyimpl.WithSaveMkdirAll(mkdirAll)
+}
+
+// WithSaveOpenFile sets the file opener used when saving responses.
+func WithSaveOpenFile(openFile func(string, int, fs.FileMode) (io.WriteCloser, error)) SaveOption {
+	return restyimpl.WithSaveOpenFile(openFile)
+}
 
 // GetString sends a GET request and returns response body as string.
 func GetString(rawURL string) string { return restyimpl.GetString(rawURL) }

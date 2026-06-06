@@ -145,6 +145,8 @@ type writeConfig struct {
 	dirPerm       fs.FileMode
 	overwrite     bool
 	createParents bool
+	mkdirAll      func(string, fs.FileMode) error
+	openFile      func(string, int, fs.FileMode) (io.WriteCloser, error)
 }
 
 // WriteOption customizes captcha file output.
@@ -166,14 +168,34 @@ func WithCreateParents(create bool) WriteOption {
 	return func(c *writeConfig) { c.createParents = create }
 }
 
+// WithMkdirAll sets the directory creator used by WriteToFileWithOptions.
+func WithMkdirAll(mkdirAll func(string, fs.FileMode) error) WriteOption {
+	return func(c *writeConfig) { c.mkdirAll = mkdirAll }
+}
+
+// WithOpenFile sets the file opener used by WriteToFileWithOptions.
+func WithOpenFile(openFile func(string, int, fs.FileMode) (io.WriteCloser, error)) WriteOption {
+	return func(c *writeConfig) { c.openFile = openFile }
+}
+
 func applyWriteOptions(opts []WriteOption) writeConfig {
-	cfg := writeConfig{filePerm: 0o644, dirPerm: 0o750, overwrite: true, createParents: true}
+	cfg := writeConfig{filePerm: 0o644, dirPerm: 0o750, overwrite: true, createParents: true, mkdirAll: os.MkdirAll, openFile: defaultOpenWriteFile}
 	for _, opt := range opts {
 		if opt != nil {
 			opt(&cfg)
 		}
 	}
+	if cfg.mkdirAll == nil {
+		cfg.mkdirAll = os.MkdirAll
+	}
+	if cfg.openFile == nil {
+		cfg.openFile = defaultOpenWriteFile
+	}
 	return cfg
+}
+
+func defaultOpenWriteFile(path string, flag int, perm fs.FileMode) (io.WriteCloser, error) {
+	return os.OpenFile(path, flag, perm)
 }
 
 // Code returns the current captcha text.
@@ -225,7 +247,7 @@ func (a *AbstractCaptcha) WriteToFileWithOptions(path string, opts ...WriteOptio
 	}
 	cfg := applyWriteOptions(opts)
 	if cfg.createParents {
-		if err := os.MkdirAll(filepath.Dir(path), cfg.dirPerm); err != nil {
+		if err := cfg.mkdirAll(filepath.Dir(path), cfg.dirPerm); err != nil {
 			return err
 		}
 	}
@@ -233,7 +255,7 @@ func (a *AbstractCaptcha) WriteToFileWithOptions(path string, opts ...WriteOptio
 	if !cfg.overwrite {
 		flag |= os.O_EXCL
 	}
-	f, err := os.OpenFile(path, flag, cfg.filePerm) // #nosec G304 -- caller controls destination path.
+	f, err := cfg.openFile(path, flag, cfg.filePerm) // #nosec G304 -- caller controls destination path.
 	if err != nil {
 		return err
 	}

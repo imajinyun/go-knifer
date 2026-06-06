@@ -1,6 +1,7 @@
 package vnet
 
 import (
+	"io"
 	"io/fs"
 	"mime/multipart"
 	"net/http"
@@ -30,6 +31,16 @@ func WithUploadOverwrite(overwrite bool) UploadSaveOption {
 // WithUploadCreateParents controls whether parent directories are created automatically.
 func WithUploadCreateParents(create bool) UploadSaveOption {
 	return netimpl.WithUploadCreateParents(create)
+}
+
+// WithUploadMkdirAll sets the directory creator used when saving uploaded files.
+func WithUploadMkdirAll(mkdirAll func(string, fs.FileMode) error) UploadSaveOption {
+	return netimpl.WithUploadMkdirAll(mkdirAll)
+}
+
+// WithUploadOpenFile sets the file opener used when saving uploaded files.
+func WithUploadOpenFile(openFile func(string, int, fs.FileMode) (io.WriteCloser, error)) UploadSaveOption {
+	return netimpl.WithUploadOpenFile(openFile)
 }
 
 // SaveUploadedFile saves file to destPath.

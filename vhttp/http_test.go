@@ -6,8 +6,10 @@ import (
 	"context"
 	"errors"
 	"io"
+	"io/fs"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -155,6 +157,41 @@ func TestFacadeErrorNamesWithoutHTTPPrefix(t *testing.T) {
 		t.Fatalf("Errorf().Error() = %q, want status 500", got)
 	}
 }
+
+func TestFacadeSaveProviderOptions(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("vhttp-save"))
+	}))
+	defer server.Close()
+
+	var mkdirPath string
+	var mkdirPerm fs.FileMode
+	var openPath string
+	var openFlag int
+	var openPerm fs.FileMode
+	var written bytes.Buffer
+	n, err := vhttp.Get(server.URL).Execute().SaveAs("/virtual/out.txt",
+		vhttp.WithSaveMkdirAll(func(path string, perm fs.FileMode) error {
+			mkdirPath, mkdirPerm = path, perm
+			return nil
+		}),
+		vhttp.WithSaveOpenFile(func(path string, flag int, perm fs.FileMode) (io.WriteCloser, error) {
+			openPath, openFlag, openPerm = path, flag, perm
+			return nopWriteCloser{Writer: &written}, nil
+		}),
+		vhttp.WithSaveDirPerm(0o700), vhttp.WithSaveFilePerm(0o600),
+	)
+	if err != nil || n != int64(len("vhttp-save")) {
+		t.Fatalf("SaveAs provider n=%d err=%v", n, err)
+	}
+	if mkdirPath != "/virtual" || mkdirPerm != 0o700 || openPath != "/virtual/out.txt" || openPerm != 0o600 || openFlag&os.O_CREATE == 0 || written.String() != "vhttp-save" {
+		t.Fatalf("providers mkdir=%q/%v open=%q flag=%#x perm=%v content=%q", mkdirPath, mkdirPerm, openPath, openFlag, openPerm, written.String())
+	}
+}
+
+type nopWriteCloser struct{ io.Writer }
+
+func (w nopWriteCloser) Close() error { return nil }
 
 func executeRequest(req *vhttp.Request) *vhttp.Response {
 	return req.Execute()

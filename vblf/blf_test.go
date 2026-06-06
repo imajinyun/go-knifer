@@ -2,8 +2,10 @@ package vblf_test
 
 import (
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	knifer "github.com/imajinyun/go-knifer"
@@ -57,6 +59,26 @@ func TestFacadeOptionsConstructors(t *testing.T) {
 	)
 	if !fn.Add("test") || !fn.Contains("test") {
 		t.Fatal("expected options-created func filter to contain value")
+	}
+}
+
+func TestFacadeBloomFilterFileOptions(t *testing.T) {
+	bf := vblf.NewBitSetBloomFilter(1000, 5, 3)
+	openedPath := ""
+	err := bf.InitFromFileWithOptions("virtual.txt", vblf.WithOpenFile(func(path string) (io.ReadCloser, error) {
+		openedPath = path
+		return io.NopCloser(strings.NewReader("facade\n")), nil
+	}))
+	if err != nil {
+		t.Fatalf("InitFromFileWithOptions: %v", err)
+	}
+	if openedPath != "virtual.txt" || !bf.Contains("facade") {
+		t.Fatalf("custom open not applied path=%q contains=%v", openedPath, bf.Contains("facade"))
+	}
+
+	bf = vblf.NewBitSetBloomFilter(1000, 5, 3)
+	if err := bf.InitFromReader(strings.NewReader("reader\n")); err != nil || !bf.Contains("reader") {
+		t.Fatalf("InitFromReader contains=%v err=%v", bf.Contains("reader"), err)
 	}
 }
 

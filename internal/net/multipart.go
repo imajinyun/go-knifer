@@ -25,13 +25,19 @@ type uploadSaveConfig struct {
 	dirPerm       fs.FileMode
 	overwrite     bool
 	createParents bool
+	mkdirAll      func(string, fs.FileMode) error
+	openFile      func(string, int, fs.FileMode) (io.WriteCloser, error)
 }
 
 // UploadSaveOption customizes uploaded-file saving.
 type UploadSaveOption func(*uploadSaveConfig)
 
 func defaultUploadSaveConfig() uploadSaveConfig {
-	return uploadSaveConfig{filePerm: 0o644, dirPerm: 0o750, overwrite: true, createParents: true}
+	return uploadSaveConfig{filePerm: 0o644, dirPerm: 0o750, overwrite: true, createParents: true, mkdirAll: os.MkdirAll, openFile: defaultOpenUploadFile}
+}
+
+func defaultOpenUploadFile(path string, flag int, perm fs.FileMode) (io.WriteCloser, error) {
+	return os.OpenFile(path, flag, perm)
 }
 
 // WithUploadFilePerm sets the file permission used when creating the destination file.
@@ -54,12 +60,28 @@ func WithUploadCreateParents(create bool) UploadSaveOption {
 	return func(c *uploadSaveConfig) { c.createParents = create }
 }
 
+// WithUploadMkdirAll sets the directory creator used when saving uploaded files.
+func WithUploadMkdirAll(mkdirAll func(string, fs.FileMode) error) UploadSaveOption {
+	return func(c *uploadSaveConfig) { c.mkdirAll = mkdirAll }
+}
+
+// WithUploadOpenFile sets the file opener used when saving uploaded files.
+func WithUploadOpenFile(openFile func(string, int, fs.FileMode) (io.WriteCloser, error)) UploadSaveOption {
+	return func(c *uploadSaveConfig) { c.openFile = openFile }
+}
+
 func applyUploadSaveOptions(opts []UploadSaveOption) uploadSaveConfig {
 	cfg := defaultUploadSaveConfig()
 	for _, opt := range opts {
 		if opt != nil {
 			opt(&cfg)
 		}
+	}
+	if cfg.mkdirAll == nil {
+		cfg.mkdirAll = os.MkdirAll
+	}
+	if cfg.openFile == nil {
+		cfg.openFile = defaultOpenUploadFile
 	}
 	return cfg
 }
@@ -251,7 +273,7 @@ func SaveUploadedFile(file *multipart.FileHeader, destPath string, opts ...Uploa
 	}
 	cfg := applyUploadSaveOptions(opts)
 	if cfg.createParents {
-		if err := os.MkdirAll(filepath.Dir(destPath), cfg.dirPerm); err != nil {
+		if err := cfg.mkdirAll(filepath.Dir(destPath), cfg.dirPerm); err != nil {
 			return err
 		}
 	}
@@ -264,7 +286,7 @@ func SaveUploadedFile(file *multipart.FileHeader, destPath string, opts ...Uploa
 	if !cfg.overwrite {
 		flag |= os.O_EXCL
 	}
-	dst, err := os.OpenFile(destPath, flag, cfg.filePerm) // #nosec G304 -- caller controls destination path.
+	dst, err := cfg.openFile(destPath, flag, cfg.filePerm) // #nosec G304 -- caller controls destination path.
 	if err != nil {
 		return err
 	}

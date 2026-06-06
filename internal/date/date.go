@@ -24,8 +24,18 @@ type parseConfig struct {
 	location *time.Location
 }
 
+type nowConfig struct {
+	clock func() time.Time
+}
+
 // ParseOption customizes date parsing helpers.
 type ParseOption func(*parseConfig)
+
+// NowOption customizes current-time helpers.
+type NowOption func(*nowConfig)
+
+// WithClock sets the time source used by NowWithOptions and TodayWithOptions.
+func WithClock(clock func() time.Time) NowOption { return func(c *nowConfig) { c.clock = clock } }
 
 // WithLocation sets the time zone used when parsing layouts without zone information.
 func WithLocation(location *time.Location) ParseOption {
@@ -45,11 +55,30 @@ func applyParseOptions(opts []ParseOption) parseConfig {
 	return cfg
 }
 
+func applyNowOptions(opts []NowOption) nowConfig {
+	cfg := nowConfig{clock: time.Now}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.clock == nil {
+		cfg.clock = time.Now
+	}
+	return cfg
+}
+
 // Now returns the current local time.
-func Now() time.Time { return time.Now() }
+func Now() time.Time { return NowWithOptions() }
+
+// NowWithOptions returns the current time using options.
+func NowWithOptions(opts ...NowOption) time.Time { return applyNowOptions(opts).clock() }
 
 // Today returns the start of the current day.
-func Today() time.Time { return BeginOfDay(time.Now()) }
+func Today() time.Time { return TodayWithOptions() }
+
+// TodayWithOptions returns the start of the current day using options.
+func TodayWithOptions(opts ...NowOption) time.Time { return BeginOfDay(applyNowOptions(opts).clock()) }
 
 // FormatDate formats t with layout. An empty layout falls back to NormPattern.
 func FormatDate(t time.Time, layout string) string {

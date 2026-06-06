@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"io/fs"
+	"os"
 
 	poiimpl "github.com/imajinyun/go-knifer/internal/poi"
 	"github.com/xuri/excelize/v2"
@@ -41,6 +42,17 @@ func WithCreateParents(create bool) WriteOption { return poiimpl.WithCreateParen
 
 // WithSaveOptions sets excelize options used when saving workbooks.
 func WithSaveOptions(opts ...excelize.Options) WriteOption { return poiimpl.WithSaveOptions(opts...) }
+
+// WithMkdirAll sets the directory creator used when saving workbooks.
+func WithMkdirAll(mkdirAll func(string, fs.FileMode) error) WriteOption {
+	return poiimpl.WithMkdirAll(mkdirAll)
+}
+
+// WithStat sets the stat provider used when checking workbook overwrite behavior.
+func WithStat(stat func(string) (os.FileInfo, error)) WriteOption { return poiimpl.WithStat(stat) }
+
+// WithChmod sets the chmod provider used after saving workbooks.
+func WithChmod(chmod func(string, fs.FileMode) error) WriteOption { return poiimpl.WithChmod(chmod) }
 
 const (
 	// DefaultSheetName is the default worksheet name used for read/write helpers.

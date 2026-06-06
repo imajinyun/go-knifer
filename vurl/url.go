@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"time"
 
 	urlimpl "github.com/imajinyun/go-knifer/internal/url"
@@ -71,6 +72,19 @@ func WithTimeout(timeout time.Duration) ResourceOption { return urlimpl.WithTime
 
 // WithCheckStatus makes HTTP resource helpers reject non-2xx responses.
 func WithCheckStatus(check bool) ResourceOption { return urlimpl.WithCheckStatus(check) }
+
+// WithOpenFile sets the file opener used by local file resource helpers.
+func WithOpenFile(openFile func(string) (io.ReadCloser, error)) ResourceOption {
+	return urlimpl.WithOpenFile(openFile)
+}
+
+// WithStat sets the stat provider used by local file resource helpers.
+func WithStat(stat func(string) (os.FileInfo, error)) ResourceOption { return urlimpl.WithStat(stat) }
+
+// WithRequestFactory sets the HTTP request factory used by resource helpers.
+func WithRequestFactory(factory func(context.Context, string, string) (*http.Request, error)) ResourceOption {
+	return urlimpl.WithRequestFactory(factory)
+}
 
 // WithDefaultScheme sets the scheme used when NormalizeWithOptions receives a URL without scheme.
 func WithDefaultScheme(scheme string) NormalizeOption { return urlimpl.WithDefaultScheme(scheme) }

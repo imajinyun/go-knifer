@@ -84,6 +84,7 @@ type parseConfig struct {
 	charsetReader  func(charset string, input io.Reader) (io.Reader, error)
 	entity         map[string]string
 	maxBytes       int64
+	openFile       func(string) (io.ReadCloser, error)
 }
 
 func defaultParseConfig() parseConfig {
@@ -97,8 +98,13 @@ func applyParse(opts []ParseOption) parseConfig {
 			opt(&cfg)
 		}
 	}
+	if cfg.openFile == nil {
+		cfg.openFile = defaultOpenFile
+	}
 	return cfg
 }
+
+func defaultOpenFile(path string) (io.ReadCloser, error) { return os.Open(path) }
 
 // WithNamespaceAware controls whether parsed element names keep namespace URIs.
 func WithNamespaceAware(b bool) ParseOption {
@@ -125,6 +131,11 @@ func WithMaxBytes(maxBytes int64) ParseOption {
 	return func(c *parseConfig) { c.maxBytes = maxBytes }
 }
 
+// WithOpenFile sets the file opener used by XML file read helpers.
+func WithOpenFile(openFile func(string) (io.ReadCloser, error)) ParseOption {
+	return func(c *parseConfig) { c.openFile = openFile }
+}
+
 // ---------------------------------------------------------------------------
 // Write options
 // ---------------------------------------------------------------------------
@@ -143,6 +154,8 @@ type writeConfig struct {
 	dirPerm            fs.FileMode
 	overwrite          bool
 	createParents      bool
+	mkdirAll           func(string, fs.FileMode) error
+	openFile           func(string, int, fs.FileMode) (io.WriteCloser, error)
 }
 
 func defaultWriteConfig() writeConfig {
@@ -159,7 +172,17 @@ func applyWrite(opts []WriteOption) writeConfig {
 	if cfg.charset == "" {
 		cfg.charset = DefaultCharset
 	}
+	if cfg.mkdirAll == nil {
+		cfg.mkdirAll = os.MkdirAll
+	}
+	if cfg.openFile == nil {
+		cfg.openFile = defaultOpenWriteFile
+	}
 	return cfg
+}
+
+func defaultOpenWriteFile(path string, flag int, perm fs.FileMode) (io.WriteCloser, error) {
+	return os.OpenFile(path, flag, perm)
 }
 
 // WithCharset sets the XML declaration charset.
@@ -201,6 +224,16 @@ func WithCreateParents(create bool) WriteOption {
 	return func(c *writeConfig) { c.createParents = create }
 }
 
+// WithMkdirAll sets the directory creator used by WriteFile.
+func WithMkdirAll(mkdirAll func(string, fs.FileMode) error) WriteOption {
+	return func(c *writeConfig) { c.mkdirAll = mkdirAll }
+}
+
+// WithOpenWriteFile sets the file opener used by WriteFile.
+func WithOpenWriteFile(openFile func(string, int, fs.FileMode) (io.WriteCloser, error)) WriteOption {
+	return func(c *writeConfig) { c.openFile = openFile }
+}
+
 // ---------------------------------------------------------------------------
 // Reading
 // ---------------------------------------------------------------------------
@@ -216,12 +249,13 @@ func ReadXML(pathOrContent string, opts ...ParseOption) (*Document, error) {
 
 // ReadXMLFile parses an XML file.
 func ReadXMLFile(path string, opts ...ParseOption) (*Document, error) {
-	f, err := os.Open(path) // #nosec G304 -- SDK file helper intentionally reads the caller-provided XML path.
+	cfg := applyParse(opts)
+	f, err := cfg.openFile(path) // #nosec G304 -- SDK file helper intentionally reads the caller-provided XML path.
 	if err != nil {
 		return nil, err
 	}
 	defer func() { _ = f.Close() }()
-	return ReadXMLReader(f, opts...)
+	return readXMLReader(f, cfg)
 }
 
 // ReadXMLBytes parses XML bytes.
@@ -298,32 +332,7 @@ func ReadBySAX(r io.Reader, handler TokenHandler) error {
 
 // ReadBySAXWithOptions streams XML tokens from reader to handler with custom parse options.
 func ReadBySAXWithOptions(r io.Reader, handler TokenHandler, opts ...ParseOption) error {
-	if handler == nil {
-		return nil
-	}
-	cfg := applyParse(opts)
-	if cfg.maxBytes > 0 {
-		r = io.LimitReader(r, cfg.maxBytes)
-	}
-	dec := stdxml.NewDecoder(r)
-	dec.Strict = cfg.strict
-	dec.CharsetReader = cfg.charsetReader
-	dec.Entity = cfg.entity
-	for {
-		tok, err := dec.Token()
-		if errors.Is(err, io.EOF) {
-			return nil
-		}
-		if err != nil {
-			return wrapInvalidInput("vxml: sax decode", err)
-		}
-		if !cfg.namespaceAware {
-			tok = stripTokenNamespace(tok)
-		}
-		if err := handler(tok); err != nil {
-			return err
-		}
-	}
+	return readBySAXWithConfig(r, handler, applyParse(opts))
 }
 
 func stripTokenNamespace(tok stdxml.Token) stdxml.Token {
@@ -349,8 +358,9 @@ func ReadBySAXFile(path string, handler TokenHandler) (err error) {
 
 // ReadBySAXFileWithOptions streams XML tokens from file with custom parse options.
 func ReadBySAXFileWithOptions(path string, handler TokenHandler, opts ...ParseOption) (err error) {
+	cfg := applyParse(opts)
 	// #nosec G304 -- SDK file helper intentionally opens the caller-provided XML path.
-	f, err := os.Open(path)
+	f, err := cfg.openFile(path)
 	if err != nil {
 		return err
 	}
@@ -359,7 +369,35 @@ func ReadBySAXFileWithOptions(path string, handler TokenHandler, opts ...ParseOp
 			err = closeErr
 		}
 	}()
-	return ReadBySAXWithOptions(f, handler, opts...)
+	return readBySAXWithConfig(f, handler, cfg)
+}
+
+func readBySAXWithConfig(r io.Reader, handler TokenHandler, cfg parseConfig) error {
+	if handler == nil {
+		return nil
+	}
+	if cfg.maxBytes > 0 {
+		r = io.LimitReader(r, cfg.maxBytes)
+	}
+	dec := stdxml.NewDecoder(r)
+	dec.Strict = cfg.strict
+	dec.CharsetReader = cfg.charsetReader
+	dec.Entity = cfg.entity
+	for {
+		tok, err := dec.Token()
+		if errors.Is(err, io.EOF) {
+			return nil
+		}
+		if err != nil {
+			return wrapInvalidInput("vxml: sax decode", err)
+		}
+		if !cfg.namespaceAware {
+			tok = stripTokenNamespace(tok)
+		}
+		if err := handler(tok); err != nil {
+			return err
+		}
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -387,7 +425,7 @@ func MarshalString(v any, opts ...WriteOption) (string, error) {
 func WriteFile(path string, v any, opts ...WriteOption) (err error) {
 	cfg := applyWrite(opts)
 	if cfg.createParents {
-		if err := os.MkdirAll(filepath.Dir(path), cfg.dirPerm); err != nil {
+		if err := cfg.mkdirAll(filepath.Dir(path), cfg.dirPerm); err != nil {
 			return err
 		}
 	}
@@ -396,7 +434,7 @@ func WriteFile(path string, v any, opts ...WriteOption) (err error) {
 		flag |= os.O_EXCL
 	}
 	// #nosec G304 -- SDK file helper intentionally creates the caller-provided XML path.
-	f, err := os.OpenFile(path, flag, cfg.filePerm)
+	f, err := cfg.openFile(path, flag, cfg.filePerm)
 	if err != nil {
 		return err
 	}

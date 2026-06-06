@@ -1,7 +1,10 @@
 package vcaptcha_test
 
 import (
+	"bytes"
 	"image/color"
+	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
@@ -161,4 +164,31 @@ func TestFacadeCaptchaWriteOptions(t *testing.T) {
 	if err := c.WriteToFileWithOptions(path, vcaptcha.WithOverwrite(false)); err == nil {
 		t.Fatal("WriteToFileWithOptions should reject overwrite=false for existing file")
 	}
+
+	var mkdirPath string
+	var mkdirPerm fs.FileMode
+	var openPath string
+	var openFlag int
+	var openPerm fs.FileMode
+	var written bytes.Buffer
+	if err := c.WriteToFileWithOptions("/virtual/captcha.png",
+		vcaptcha.WithMkdirAll(func(path string, perm fs.FileMode) error {
+			mkdirPath, mkdirPerm = path, perm
+			return nil
+		}),
+		vcaptcha.WithOpenFile(func(path string, flag int, perm fs.FileMode) (io.WriteCloser, error) {
+			openPath, openFlag, openPerm = path, flag, perm
+			return nopWriteCloser{Writer: &written}, nil
+		}),
+		vcaptcha.WithDirPerm(0o700), vcaptcha.WithFilePerm(0o600),
+	); err != nil {
+		t.Fatalf("WriteToFileWithOptions provider: %v", err)
+	}
+	if mkdirPath != "/virtual" || mkdirPerm != 0o700 || openPath != "/virtual/captcha.png" || openPerm != 0o600 || openFlag&os.O_CREATE == 0 || written.Len() == 0 {
+		t.Fatalf("providers mkdir=%q/%v open=%q flag=%#x perm=%v bytes=%d", mkdirPath, mkdirPerm, openPath, openFlag, openPerm, written.Len())
+	}
 }
+
+type nopWriteCloser struct{ io.Writer }
+
+func (w nopWriteCloser) Close() error { return nil }

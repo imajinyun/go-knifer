@@ -89,13 +89,20 @@ type saveConfig struct {
 	overwrite       bool
 	createParents   bool
 	defaultFilename string
+	stat            func(string) (os.FileInfo, error)
+	mkdirAll        func(string, fs.FileMode) error
+	openFile        func(string, int, fs.FileMode) (io.WriteCloser, error)
 }
 
 // SaveOption customizes response file saving.
 type SaveOption func(*saveConfig)
 
 func defaultSaveConfig() saveConfig {
-	return saveConfig{filePerm: 0o644, dirPerm: 0o750, overwrite: true, createParents: true, defaultFilename: "download.bin"}
+	return saveConfig{filePerm: 0o644, dirPerm: 0o750, overwrite: true, createParents: true, defaultFilename: "download.bin", stat: os.Stat, mkdirAll: os.MkdirAll, openFile: defaultOpenWriteFile}
+}
+
+func defaultOpenWriteFile(path string, flag int, perm fs.FileMode) (io.WriteCloser, error) {
+	return os.OpenFile(path, flag, perm)
 }
 
 // WithSaveFilePerm sets the file permission used when creating the destination file.
@@ -123,12 +130,36 @@ func WithSaveDefaultFilename(name string) SaveOption {
 	}
 }
 
+// WithSaveStat sets the stat provider used to resolve directory destinations.
+func WithSaveStat(stat func(string) (os.FileInfo, error)) SaveOption {
+	return func(c *saveConfig) { c.stat = stat }
+}
+
+// WithSaveMkdirAll sets the directory creator used when saving responses.
+func WithSaveMkdirAll(mkdirAll func(string, fs.FileMode) error) SaveOption {
+	return func(c *saveConfig) { c.mkdirAll = mkdirAll }
+}
+
+// WithSaveOpenFile sets the file opener used when saving responses.
+func WithSaveOpenFile(openFile func(string, int, fs.FileMode) (io.WriteCloser, error)) SaveOption {
+	return func(c *saveConfig) { c.openFile = openFile }
+}
+
 func applySaveOptions(opts []SaveOption) saveConfig {
 	cfg := defaultSaveConfig()
 	for _, opt := range opts {
 		if opt != nil {
 			opt(&cfg)
 		}
+	}
+	if cfg.stat == nil {
+		cfg.stat = os.Stat
+	}
+	if cfg.mkdirAll == nil {
+		cfg.mkdirAll = os.MkdirAll
+	}
+	if cfg.openFile == nil {
+		cfg.openFile = defaultOpenWriteFile
 	}
 	return cfg
 }
@@ -244,7 +275,7 @@ func (r *HTTPResponse) SaveAs(dest string, opts ...SaveOption) (n int64, err err
 	}
 	cfg := applySaveOptions(opts)
 	target := dest
-	if info, err := os.Stat(dest); err == nil && info.IsDir() {
+	if info, err := cfg.stat(dest); err == nil && info.IsDir() {
 		fileName := r.fileName()
 		if fileName == "" {
 			fileName = cfg.defaultFilename
@@ -252,7 +283,7 @@ func (r *HTTPResponse) SaveAs(dest string, opts ...SaveOption) (n int64, err err
 		target = filepath.Join(dest, fileName)
 	}
 	if cfg.createParents {
-		if err := os.MkdirAll(filepath.Dir(target), cfg.dirPerm); err != nil {
+		if err := cfg.mkdirAll(filepath.Dir(target), cfg.dirPerm); err != nil {
 			return 0, NewHTTPError("create parent directory failed", err)
 		}
 	}
@@ -262,7 +293,7 @@ func (r *HTTPResponse) SaveAs(dest string, opts ...SaveOption) (n int64, err err
 	}
 	// #nosec G304 -- SaveAs intentionally writes to the caller-provided path after
 	// optional directory resolution; callers control the download destination.
-	f, err := os.OpenFile(target, flag, cfg.filePerm)
+	f, err := cfg.openFile(target, flag, cfg.filePerm)
 	if err != nil {
 		return 0, NewHTTPError("create file failed", err)
 	}

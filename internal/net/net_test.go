@@ -6,12 +6,15 @@ import (
 	"crypto/tls"
 	"errors"
 	"io"
+	"io/fs"
 	"math/big"
 	"mime/multipart"
 	stdnet "net"
 	"net/http"
+	"os"
 	"reflect"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 )
@@ -333,6 +336,46 @@ func TestMultipartFileExts(t *testing.T) {
 	}
 }
 
+func TestSaveUploadedFileProviderOptions(t *testing.T) {
+	req := multipartRequest(t, "avatar", "a.txt", "hello")
+	form, err := ParseMultipartForm(req, NewUploadSetting())
+	if err != nil {
+		t.Fatalf("ParseMultipartForm: %v", err)
+	}
+	file := form.GetFile("avatar")
+	if file == nil {
+		t.Fatal("uploaded file is nil")
+	}
+
+	var mkdirPath string
+	var mkdirPerm fs.FileMode
+	var openPath string
+	var openFlag int
+	var openPerm fs.FileMode
+	var written bytes.Buffer
+	err = SaveUploadedFile(file, "/virtual/upload/a.txt",
+		WithUploadMkdirAll(func(path string, perm fs.FileMode) error {
+			mkdirPath, mkdirPerm = path, perm
+			return nil
+		}),
+		WithUploadOpenFile(func(path string, flag int, perm fs.FileMode) (io.WriteCloser, error) {
+			openPath, openFlag, openPerm = path, flag, perm
+			return nopWriteCloser{Writer: &written}, nil
+		}),
+		WithUploadDirPerm(0o700), WithUploadFilePerm(0o600),
+	)
+	if err != nil {
+		t.Fatalf("SaveUploadedFile provider: %v", err)
+	}
+	if mkdirPath != "/virtual/upload" || mkdirPerm != 0o700 || openPath != "/virtual/upload/a.txt" || openPerm != 0o600 || openFlag&os.O_CREATE == 0 || written.String() != "hello" {
+		t.Fatalf("providers mkdir=%q/%v open=%q flag=%#x perm=%v content=%q", mkdirPath, mkdirPerm, openPath, openFlag, openPerm, written.String())
+	}
+}
+
+type nopWriteCloser struct{ io.Writer }
+
+func (w nopWriteCloser) Close() error { return nil }
+
 func multipartRequest(t *testing.T, field, filename, content string) *http.Request {
 	t.Helper()
 	body := &bytes.Buffer{}
@@ -362,5 +405,37 @@ func TestTLSHelpers(t *testing.T) {
 	}
 	if TLSVersion(TLSv13) != tls.VersionTLS13 {
 		t.Fatal("TLSVersion failed")
+	}
+}
+
+func TestTLSRootCAProviderOptions(t *testing.T) {
+	const certPEM = `-----BEGIN CERTIFICATE-----
+MIIBhTCCASugAwIBAgIRAPWQSq0Qr7yZD5twH61BxFIwCgYIKoZIzj0EAwIwEjEQ
+MA4GA1UEChMHZ28tdGVzdDAeFw0yNjA2MDYwMDAwMDBaFw0yNzA2MDYwMDAwMDBa
+MBIxEDAOBgNVBAoTB2dvLXRlc3QwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASm
+1YPqMC7UTw4R7ovbHYgk4+LALoU6hr61VnsBiKCdsMCMScpLob8ldIl+6o4f/ntM
+5kmXvEFd9Mp6FfaHkgnbo0IwQDAOBgNVHQ8BAf8EBAMCAqQwDwYDVR0TAQH/BAUw
+AwEB/zAdBgNVHQ4EFgQUX90U1OkOXbGUzD2JNoWlqQtk3/0wCgYIKoZIzj0EAwID
+SQAwRgIhANw7UzN0vtxOfygWqANg00uGOo7y98q1/Ac3N1wQxVBkAiEA7QjQRHtH
+LA6wKo8yoCnW36b+nvxlhHvzrIxwWCgwCWM=
+-----END CERTIFICATE-----`
+	readPath := ""
+	b := NewTLSConfigBuilder()
+	if err := b.AddRootCAFileWithOptions("ca.pem", WithTLSReadFile(func(path string) ([]byte, error) {
+		readPath = path
+		return []byte(certPEM), nil
+	})); err != nil {
+		t.Fatalf("AddRootCAFileWithOptions: %v", err)
+	}
+	if readPath != "ca.pem" || b.Build().RootCAs == nil {
+		t.Fatalf("TLS read provider not applied path=%q cfg=%#v", readPath, b.Build())
+	}
+
+	b = NewTLSConfigBuilder()
+	if err := b.AddRootCAReader(strings.NewReader(certPEM)); err != nil {
+		t.Fatalf("AddRootCAReader: %v", err)
+	}
+	if b.Build().RootCAs == nil {
+		t.Fatal("AddRootCAReader should initialize RootCAs")
 	}
 }

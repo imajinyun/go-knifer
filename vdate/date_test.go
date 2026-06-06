@@ -49,6 +49,16 @@ func TestDateFacade(t *testing.T) {
 	}
 }
 
+func TestDateFacadeClockOptions(t *testing.T) {
+	fixed := time.Date(2026, 6, 6, 12, 34, 56, 0, time.FixedZone("facade-clock", 8*60*60))
+	if got := NowWithOptions(WithClock(func() time.Time { return fixed })); !got.Equal(fixed) {
+		t.Fatalf("NowWithOptions = %v, want %v", got, fixed)
+	}
+	if got := TodayWithOptions(WithClock(func() time.Time { return fixed })); !got.Equal(time.Date(2026, 6, 6, 0, 0, 0, 0, fixed.Location())) {
+		t.Fatalf("TodayWithOptions = %v", got)
+	}
+}
+
 func TestDateFacadeErrorContract(t *testing.T) {
 	_, err := Parse("")
 	assertFacadeDateCode(t, err, knifer.ErrCodeInvalidInput)

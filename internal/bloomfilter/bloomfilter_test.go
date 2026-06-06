@@ -2,8 +2,10 @@ package bloomfilter
 
 import (
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	knifer "github.com/imajinyun/go-knifer"
@@ -42,6 +44,29 @@ func TestBitSetBloomFilterWithOptions(t *testing.T) {
 	}
 	if !bf.Add("hello") || !bf.Contains("hello") {
 		t.Fatal("options-created bitset filter should add and contain value")
+	}
+}
+
+func TestBitSetBloomFilterFileOptions(t *testing.T) {
+	bf := NewBitSetBloomFilter(1000, 5, 3)
+	openedPath := ""
+	err := bf.InitFromFileWithOptions("virtual.txt", WithOpenFile(func(path string) (io.ReadCloser, error) {
+		openedPath = path
+		return io.NopCloser(strings.NewReader("alpha\nbeta\n")), nil
+	}))
+	if err != nil {
+		t.Fatalf("InitFromFileWithOptions: %v", err)
+	}
+	if openedPath != "virtual.txt" || !bf.Contains("alpha") || !bf.Contains("beta") {
+		t.Fatalf("custom open not applied path=%q alpha=%v beta=%v", openedPath, bf.Contains("alpha"), bf.Contains("beta"))
+	}
+
+	bf = NewBitSetBloomFilter(1000, 5, 3)
+	if err := bf.InitFromReader(strings.NewReader("reader\n")); err != nil {
+		t.Fatalf("InitFromReader: %v", err)
+	}
+	if !bf.Contains("reader") {
+		t.Fatal("InitFromReader should add reader line")
 	}
 }
 

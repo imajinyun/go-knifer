@@ -5,12 +5,14 @@ import (
 	"context"
 	"errors"
 	"io"
+	"io/fs"
 	"mime/multipart"
 	stdnet "net"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -221,7 +223,64 @@ func TestVNetUploadSaveOptionsFacade(t *testing.T) {
 	if err := vnet.SaveUploadedFile(file, missingParent, vnet.WithUploadCreateParents(false)); err == nil {
 		t.Fatal("SaveUploadedFile should reject missing parent when parent creation is disabled")
 	}
+
+	var mkdirPath string
+	var mkdirPerm fs.FileMode
+	var openPath string
+	var openFlag int
+	var openPerm fs.FileMode
+	var written bytes.Buffer
+	err = vnet.SaveUploadedFile(file, "/virtual/upload/a.txt",
+		vnet.WithUploadMkdirAll(func(path string, perm fs.FileMode) error {
+			mkdirPath, mkdirPerm = path, perm
+			return nil
+		}),
+		vnet.WithUploadOpenFile(func(path string, flag int, perm fs.FileMode) (io.WriteCloser, error) {
+			openPath, openFlag, openPerm = path, flag, perm
+			return nopWriteCloser{Writer: &written}, nil
+		}),
+		vnet.WithUploadDirPerm(0o700), vnet.WithUploadFilePerm(0o600),
+	)
+	if err != nil {
+		t.Fatalf("SaveUploadedFile provider: %v", err)
+	}
+	if mkdirPath != "/virtual/upload" || mkdirPerm != 0o700 || openPath != "/virtual/upload/a.txt" || openPerm != 0o600 || openFlag&os.O_CREATE == 0 || written.String() != "hello" {
+		t.Fatalf("providers mkdir=%q/%v open=%q flag=%#x perm=%v content=%q", mkdirPath, mkdirPerm, openPath, openFlag, openPerm, written.String())
+	}
 }
+
+func TestVNetTLSFileOptionsFacade(t *testing.T) {
+	const certPEM = `-----BEGIN CERTIFICATE-----
+MIIBhTCCASugAwIBAgIRAPWQSq0Qr7yZD5twH61BxFIwCgYIKoZIzj0EAwIwEjEQ
+MA4GA1UEChMHZ28tdGVzdDAeFw0yNjA2MDYwMDAwMDBaFw0yNzA2MDYwMDAwMDBa
+MBIxEDAOBgNVBAoTB2dvLXRlc3QwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASm
+1YPqMC7UTw4R7ovbHYgk4+LALoU6hr61VnsBiKCdsMCMScpLob8ldIl+6o4f/ntM
+5kmXvEFd9Mp6FfaHkgnbo0IwQDAOBgNVHQ8BAf8EBAMCAqQwDwYDVR0TAQH/BAUw
+AwEB/zAdBgNVHQ4EFgQUX90U1OkOXbGUzD2JNoWlqQtk3/0wCgYIKoZIzj0EAwID
+SQAwRgIhANw7UzN0vtxOfygWqANg00uGOo7y98q1/Ac3N1wQxVBkAiEA7QjQRHtH
+LA6wKo8yoCnW36b+nvxlhHvzrIxwWCgwCWM=
+-----END CERTIFICATE-----`
+	readPath := ""
+	b := vnet.NewTLSConfigBuilder()
+	if err := b.AddRootCAFileWithOptions("ca.pem", vnet.WithTLSReadFile(func(path string) ([]byte, error) {
+		readPath = path
+		return []byte(certPEM), nil
+	})); err != nil {
+		t.Fatalf("AddRootCAFileWithOptions: %v", err)
+	}
+	if readPath != "ca.pem" || b.Build().RootCAs == nil {
+		t.Fatalf("TLS read provider not applied path=%q cfg=%#v", readPath, b.Build())
+	}
+
+	b = vnet.NewTLSConfigBuilder()
+	if err := b.AddRootCAReader(strings.NewReader(certPEM)); err != nil || b.Build().RootCAs == nil {
+		t.Fatalf("AddRootCAReader rootCAs=%#v err=%v", b.Build().RootCAs, err)
+	}
+}
+
+type nopWriteCloser struct{ io.Writer }
+
+func (w nopWriteCloser) Close() error { return nil }
 
 func multipartRequest(t *testing.T, field, filename, content string) *http.Request {
 	t.Helper()
