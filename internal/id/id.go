@@ -134,6 +134,9 @@ type snowflakeConfig struct {
 	pid           func() int
 	workerSet     bool
 	datacenterSet bool
+	cache         bool
+	cacheSet      bool
+	runtimeSet    bool
 }
 
 // NanoIDOption customizes NanoIdWithOptions.
@@ -199,6 +202,7 @@ func WithSnowflakeTimeFunc(timeFunc func() int64) SnowflakeOption {
 	return func(c *snowflakeConfig) {
 		if timeFunc != nil {
 			c.timeFunc = timeFunc
+			c.runtimeSet = true
 		}
 	}
 }
@@ -208,7 +212,16 @@ func WithSnowflakeWaitFunc(waitFunc func(lastTimestamp int64, now func() int64) 
 	return func(c *snowflakeConfig) {
 		if waitFunc != nil {
 			c.tilNextMillis = waitFunc
+			c.runtimeSet = true
 		}
+	}
+}
+
+// WithSnowflakeCache controls whether singleton helper variants may reuse package-level cached generators.
+func WithSnowflakeCache(enabled bool) SnowflakeOption {
+	return func(c *snowflakeConfig) {
+		c.cache = enabled
+		c.cacheSet = true
 	}
 }
 
@@ -231,11 +244,14 @@ func WithSnowflakePIDFunc(pid func() int) SnowflakeOption {
 }
 
 func applySnowflakeOptions(opts []SnowflakeOption) snowflakeConfig {
-	cfg := snowflakeConfig{timeFunc: currentMillis, tilNextMillis: waitNextMillis, interfaces: net.Interfaces, pid: os.Getpid}
+	cfg := snowflakeConfig{timeFunc: currentMillis, tilNextMillis: waitNextMillis, interfaces: net.Interfaces, pid: os.Getpid, cache: true}
 	for _, opt := range opts {
 		if opt != nil {
 			opt(&cfg)
 		}
+	}
+	if cfg.runtimeSet && !cfg.cacheSet {
+		cfg.cache = false
 	}
 	if cfg.timeFunc == nil {
 		cfg.timeFunc = currentMillis
@@ -360,6 +376,11 @@ func CreateSnowflakeWithOptions(opts ...SnowflakeOption) *Snowflake {
 	return newSnowflakeWithConfig(cfg)
 }
 
+// NewIsolatedSnowflake creates a standalone Snowflake generator without singleton/cache lookup.
+func NewIsolatedSnowflake(opts ...SnowflakeOption) *Snowflake {
+	return newSnowflakeWithConfig(applyDefaultSnowflakeOptions(opts))
+}
+
 // GetSnowflake returns the default singleton Snowflake generator.
 func GetSnowflake() *Snowflake {
 	return GetSnowflakeWithOptions()
@@ -370,10 +391,13 @@ func GetSnowflake() *Snowflake {
 // datacenter, clock, and wait strategy. Once created, later calls return the
 // existing singleton; use ConfigureDefaultSnowflake to replace it deliberately.
 func GetSnowflakeWithOptions(opts ...SnowflakeOption) *Snowflake {
+	cfg := applyDefaultSnowflakeOptions(opts)
+	if !cfg.cache {
+		return newSnowflakeWithConfig(cfg)
+	}
 	if v := defaultSnowflake.Load(); v != nil {
 		return v.(*Snowflake)
 	}
-	cfg := applyDefaultSnowflakeOptions(opts)
 	sf := newSnowflakeWithConfig(cfg)
 	if defaultSnowflake.CompareAndSwap(nil, sf) {
 		return sf
@@ -421,6 +445,9 @@ func GetSnowflakeWithWorkerDataCenterWithOptions(workerID, datacenterID int64, o
 func getCachedSnowflakeWithConfig(cfg snowflakeConfig) *Snowflake {
 	cfg.workerID = normalizeSnowflakeID(cfg.workerID, snowflakeMaxWorkerID)
 	cfg.datacenterID = normalizeSnowflakeID(cfg.datacenterID, snowflakeMaxDatacenterID)
+	if !cfg.cache {
+		return newSnowflakeWithConfig(cfg)
+	}
 	key := fmt.Sprintf("%d:%d", cfg.workerID, cfg.datacenterID)
 	if v, ok := snowflakeCache.Load(key); ok {
 		return v.(*Snowflake)

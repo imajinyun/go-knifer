@@ -8,6 +8,17 @@ import (
 // HeaderValues stores HTTP header values without depending on net/http types.
 type HeaderValues map[string][]string
 
+// GlobalConfig captures resty package-level defaults for explicit request construction.
+type GlobalConfig struct {
+	Timeout          time.Duration
+	MaxRedirects     int
+	FollowRedirects  bool
+	DefaultUserAgent string
+	TrustAnyHost     bool
+	Headers          HeaderValues
+	CookieDisabled   bool
+}
+
 var (
 	globalMu               sync.RWMutex
 	globalTimeout          time.Duration
@@ -30,6 +41,34 @@ func init() {
 	setHeader(globalHeaders, string(HeaderUserAgent),
 		"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) "+
 			"Chrome/72.0.3626.109 Safari/537.36")
+}
+
+// SnapshotGlobalConfig returns a copy of the package-level resty defaults.
+func SnapshotGlobalConfig() GlobalConfig {
+	globalMu.RLock()
+	cfg := GlobalConfig{
+		Timeout:          globalTimeout,
+		MaxRedirects:     globalMaxRedirects,
+		FollowRedirects:  globalFollowRedirects,
+		DefaultUserAgent: globalDefaultUserAgent,
+		TrustAnyHost:     globalTrustAnyHost,
+	}
+	globalMu.RUnlock()
+	cfg.Headers = CloneGlobalHeaders()
+	cfg.CookieDisabled = isCookieDisabled()
+	return cfg
+}
+
+func isolatedGlobalConfig() GlobalConfig {
+	return GlobalConfig{FollowRedirects: true, MaxRedirects: 10}
+}
+
+func cloneHeaders(headers HeaderValues) HeaderValues {
+	out := HeaderValues{}
+	for k, v := range headers {
+		out[k] = append([]string(nil), v...)
+	}
+	return out
 }
 
 // SetGlobalTimeout sets the global default timeout.
@@ -111,11 +150,7 @@ func RemoveGlobalHeader(name string) {
 func CloneGlobalHeaders() HeaderValues {
 	globalHeadersMu.RLock()
 	defer globalHeadersMu.RUnlock()
-	out := HeaderValues{}
-	for k, v := range globalHeaders {
-		out[k] = append([]string(nil), v...)
-	}
-	return out
+	return cloneHeaders(globalHeaders)
 }
 
 // CloseCookie disables global cookie management.

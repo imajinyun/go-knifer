@@ -199,12 +199,22 @@ func SysHostInfoWithOptions(opts ...HostInfoOption) *HostInfo {
 	return system.GetHostInfoWithOptions(opts...)
 }
 
+// SystemHostInfoWithOptions returns uncached host information collected with per-call options.
+func SystemHostInfoWithOptions(opts ...HostInfoOption) *HostInfo {
+	return SysHostInfoWithOptions(opts...)
+}
+
 // SystemOsInfo returns cached operating system information.
 func SystemOsInfo() *OsInfo { return system.GetOsInfo() }
 
 // SysOsInfoWithOptions returns uncached operating system information collected with per-call options.
 func SysOsInfoWithOptions(opts ...OsInfoOption) *OsInfo {
 	return system.GetOsInfoWithOptions(opts...)
+}
+
+// SystemOsInfoWithOptions returns uncached operating system information collected with per-call options.
+func SystemOsInfoWithOptions(opts ...OsInfoOption) *OsInfo {
+	return SysOsInfoWithOptions(opts...)
 }
 
 // SystemUserInfo returns cached user information.
@@ -228,12 +238,22 @@ func SysGoInfoWithOptions(opts ...GoInfoOption) *GoInfo {
 	return system.GetGoInfoWithOptions(opts...)
 }
 
+// SystemGoInfoWithOptions returns uncached Go runtime metadata collected with per-call options.
+func SystemGoInfoWithOptions(opts ...GoInfoOption) *GoInfo {
+	return SysGoInfoWithOptions(opts...)
+}
+
 // SystemRuntimeInfo returns refreshed runtime statistics.
 func SystemRuntimeInfo() *RuntimeInfo { return system.GetRuntimeInfo() }
 
 // SysRuntimeInfoWithOptions returns uncached runtime statistics collected with per-call options.
 func SysRuntimeInfoWithOptions(opts ...RuntimeInfoOption) *RuntimeInfo {
 	return system.GetRuntimeInfoWithOptions(opts...)
+}
+
+// SystemRuntimeInfoWithOptions returns uncached runtime statistics collected with per-call options.
+func SystemRuntimeInfoWithOptions(opts ...RuntimeInfoOption) *RuntimeInfo {
+	return SysRuntimeInfoWithOptions(opts...)
 }
 
 // CurrentPID returns the current process id.

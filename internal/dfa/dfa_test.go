@@ -68,6 +68,38 @@ func TestInitWithOptions(t *testing.T) {
 	}
 }
 
+func TestMatcherOptionsBypassPackageMatcher(t *testing.T) {
+	Init([]string{"global"})
+	matcher := NewWordTree().AddWords("local")
+	if ContainsWithOptions("local", WithMatcher(matcher)) != true {
+		t.Fatal("ContainsWithOptions should use provided matcher")
+	}
+	if Contains("local") {
+		t.Fatal("per-call matcher should not mutate package matcher")
+	}
+	if got := FilterWithOptions("a local word", WithMatcher(matcher)); got != "a ***** word" {
+		t.Fatalf("FilterWithOptions = %q", got)
+	}
+	found, ok := GetFoundFirstWithOptions("a local word", WithMatcherWords([]string{"local"}))
+	if !ok || found.Word != "local" {
+		t.Fatalf("GetFoundFirstWithOptions = %#v ok=%v", found, ok)
+	}
+}
+
+func TestFilterAnyWithMatcherOptions(t *testing.T) {
+	type payload struct {
+		Text string `json:"text"`
+	}
+	Init([]string{"global"})
+	got, err := FilterAnyWithOptions(payload{Text: "a local"}, true, nil, WithMatcherWords([]string{"local"}))
+	if err != nil {
+		t.Fatalf("FilterAnyWithOptions: %v", err)
+	}
+	if got.Text != "a *****" || Contains("local") {
+		t.Fatalf("FilterAnyWithOptions = %#v globalContainsLocal=%v", got, Contains("local"))
+	}
+}
+
 func TestAddWordWithFilteredRune(t *testing.T) {
 	tree := NewWordTree().AddWord("hello(")
 	if got := tree.MatchAllLimit("hello", -1); !reflect.DeepEqual(got, []string{"hello"}) {

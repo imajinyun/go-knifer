@@ -47,19 +47,29 @@ type RequestOption func(*HTTPRequest)
 
 // NewRequest creates a request with the specified method and URL.
 func NewRequest(method Method, rawURL string, opts ...RequestOption) *HTTPRequest {
-	follow := GetGlobalFollowRedirects()
+	return NewRequestWithConfig(method, rawURL, SnapshotGlobalConfig(), opts...)
+}
+
+// NewIsolatedRequest creates a request without reading package-level global defaults.
+func NewIsolatedRequest(method Method, rawURL string, opts ...RequestOption) *HTTPRequest {
+	return NewRequestWithConfig(method, rawURL, isolatedGlobalConfig(), opts...)
+}
+
+// NewRequestWithConfig creates a request from an explicit global configuration snapshot.
+func NewRequestWithConfig(method Method, rawURL string, cfg GlobalConfig, opts ...RequestOption) *HTTPRequest {
+	follow := cfg.FollowRedirects
 	r := &HTTPRequest{
 		method:       method,
 		rawURL:       rawURL,
 		queryParams:  url.Values{},
-		headers:      CloneGlobalHeaders(),
+		headers:      cloneHeaders(cfg.Headers),
 		charset:      "UTF-8",
-		timeout:      GetGlobalTimeout(),
+		timeout:      cfg.Timeout,
 		followRedir:  &follow,
-		maxRedirects: GetGlobalMaxRedirects(),
-		tlsSkip:      IsTrustAnyHost(),
-		userAgent:    GetGlobalUserAgent(),
-		cookieOff:    isCookieDisabled(),
+		maxRedirects: cfg.MaxRedirects,
+		tlsSkip:      cfg.TrustAnyHost,
+		userAgent:    cfg.DefaultUserAgent,
+		cookieOff:    cfg.CookieDisabled,
 	}
 	for _, opt := range opts {
 		if opt != nil {
@@ -67,6 +77,20 @@ func NewRequest(method Method, rawURL string, opts ...RequestOption) *HTTPReques
 		}
 	}
 	return r
+}
+
+// WithGlobalConfig initializes request defaults from a captured global configuration snapshot.
+func WithGlobalConfig(cfg GlobalConfig) RequestOption {
+	return func(r *HTTPRequest) {
+		follow := cfg.FollowRedirects
+		r.headers = cloneHeaders(cfg.Headers)
+		r.timeout = cfg.Timeout
+		r.followRedir = &follow
+		r.maxRedirects = cfg.MaxRedirects
+		r.tlsSkip = cfg.TrustAnyHost
+		r.userAgent = cfg.DefaultUserAgent
+		r.cookieOff = cfg.CookieDisabled
+	}
 }
 
 // Get creates a GET request.

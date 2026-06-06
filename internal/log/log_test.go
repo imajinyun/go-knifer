@@ -291,6 +291,56 @@ func TestSetFactoryReplacesCache(t *testing.T) {
 	}
 }
 
+func TestGetWithOptionsBypassesGlobalFactoryAndCache(t *testing.T) {
+	SetFactory(LogFactoryFunc(func(name string) Log { return NewConsoleLog("global:" + name) }))
+	defer SetFactory(LogFactoryFunc(func(name string) Log { return NewConsoleLog(name) }))
+
+	one := GetWithOptions("factory.option", WithLoggerFactory(LogFactoryFunc(func(name string) Log {
+		return NewConsoleLog("local:" + name)
+	})))
+	two := GetWithOptions("factory.option", WithLoggerFactory(LogFactoryFunc(func(name string) Log {
+		return NewConsoleLog("local:" + name)
+	})))
+	if one.GetName() != "local:factory.option" || two.GetName() != "local:factory.option" {
+		t.Fatalf("local factory not used: %q %q", one.GetName(), two.GetName())
+	}
+	if one == two {
+		t.Fatal("expected per-call factory lookup to bypass package cache")
+	}
+
+	cached := Get("factory.option")
+	if cached.GetName() != "global:factory.option" {
+		t.Fatalf("global factory/cache should remain isolated, got %q", cached.GetName())
+	}
+}
+
+func TestNewIsolatedLoggerDoesNotReadGlobalFactory(t *testing.T) {
+	SetFactory(LogFactoryFunc(func(name string) Log { return NewConsoleLog("global:" + name) }))
+	defer SetFactory(LogFactoryFunc(func(name string) Log { return NewConsoleLog(name) }))
+
+	log := NewIsolatedLogger("isolated")
+	if log.GetName() != "isolated" {
+		t.Fatalf("isolated logger leaked global factory: %q", log.GetName())
+	}
+}
+
+func TestLoggerConsoleOptionsForStaticLog(t *testing.T) {
+	prevLevel := GetConsoleLevel()
+	SetConsoleLevel(LevelInfo)
+	defer SetConsoleLevel(prevLevel)
+
+	out := &bytes.Buffer{}
+	fixed := time.Date(2024, 6, 7, 8, 9, 10, 0, time.UTC)
+	InfoWithOptions([]LoggerOption{WithLoggerConsoleOptions(
+		WithLogOutput(out, &bytes.Buffer{}),
+		WithLogClock(func() time.Time { return fixed }),
+		WithLogTimeLayout(time.RFC3339),
+	)}, "static-option")
+	if !strings.Contains(out.String(), "2024-06-07T08:09:10Z") || !strings.Contains(out.String(), "static-option") {
+		t.Fatalf("static logger options not applied: %q", out.String())
+	}
+}
+
 func TestStaticLogPipeline(t *testing.T) {
 	out := &bytes.Buffer{}
 	errOut := &bytes.Buffer{}

@@ -11,6 +11,10 @@ func staticLogger() Log {
 	return Get(staticLogName)
 }
 
+func staticLoggerWithOptions(opts ...LoggerOption) Log {
+	return GetWithOptions(staticLogName, opts...)
+}
+
 // Trace 打印 trace 级别日志。
 func Trace(args ...any) { staticLogger().Trace(args...) }
 
@@ -49,4 +53,64 @@ func LogAt(level Level, format string, args ...any) {
 // LogAtE 在指定级别打印日志，并附带错误对象。
 func LogAtE(level Level, err error, format string, args ...any) {
 	staticLogger().LogE(level, err, format, args...)
+}
+
+// TraceWithOptions prints trace-level output through a per-call logger configuration.
+func TraceWithOptions(opts []LoggerOption, args ...any) {
+	staticLoggerWithOptions(opts...).Trace(args...)
+}
+
+// TracefWithOptions prints formatted trace-level output through a per-call logger configuration.
+func TracefWithOptions(opts []LoggerOption, format string, args ...any) {
+	staticLoggerWithOptions(opts...).Tracef(format, args...)
+}
+
+// DebugWithOptions prints debug-level output through a per-call logger configuration.
+func DebugWithOptions(opts []LoggerOption, args ...any) {
+	staticLoggerWithOptions(opts...).Debug(args...)
+}
+
+// DebugfWithOptions prints formatted debug-level output through a per-call logger configuration.
+func DebugfWithOptions(opts []LoggerOption, format string, args ...any) {
+	staticLoggerWithOptions(opts...).Debugf(format, args...)
+}
+
+// InfoWithOptions prints info-level output through a per-call logger configuration.
+func InfoWithOptions(opts []LoggerOption, args ...any) {
+	staticLoggerWithOptions(opts...).Info(args...)
+}
+
+// InfofWithOptions prints formatted info-level output through a per-call logger configuration.
+func InfofWithOptions(opts []LoggerOption, format string, args ...any) {
+	staticLoggerWithOptions(opts...).Infof(format, args...)
+}
+
+// WarnWithOptions prints warn-level output through a per-call logger configuration.
+func WarnWithOptions(opts []LoggerOption, args ...any) {
+	staticLoggerWithOptions(opts...).Warn(args...)
+}
+
+// WarnfWithOptions prints formatted warn-level output through a per-call logger configuration.
+func WarnfWithOptions(opts []LoggerOption, format string, args ...any) {
+	staticLoggerWithOptions(opts...).Warnf(format, args...)
+}
+
+// ErrorLogWithOptions prints error-level output through a per-call logger configuration.
+func ErrorLogWithOptions(opts []LoggerOption, args ...any) {
+	staticLoggerWithOptions(opts...).Error(args...)
+}
+
+// ErrorfWithOptions prints formatted error-level output through a per-call logger configuration.
+func ErrorfWithOptions(opts []LoggerOption, format string, args ...any) {
+	staticLoggerWithOptions(opts...).Errorf(format, args...)
+}
+
+// LogAtWithOptions logs output at the provided level through a per-call logger configuration.
+func LogAtWithOptions(opts []LoggerOption, level Level, format string, args ...any) {
+	staticLoggerWithOptions(opts...).Log(level, format, args...)
+}
+
+// LogAtEWithOptions logs output at the provided level with an error through a per-call logger configuration.
+func LogAtEWithOptions(opts []LoggerOption, level Level, err error, format string, args ...any) {
+	staticLoggerWithOptions(opts...).LogE(level, err, format, args...)
 }

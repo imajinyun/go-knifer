@@ -98,6 +98,9 @@ func WithSnowflakeWaitFunc(waitFunc func(lastTimestamp int64, now func() int64) 
 	return idimpl.WithSnowflakeWaitFunc(waitFunc)
 }
 
+// WithSnowflakeCache controls whether singleton helper variants may reuse cached generators.
+func WithSnowflakeCache(enabled bool) SnowflakeOption { return idimpl.WithSnowflakeCache(enabled) }
+
 // WithSnowflakeInterfacesFunc sets the network interface provider used to derive the default datacenter ID.
 func WithSnowflakeInterfacesFunc(interfaces func() ([]net.Interface, error)) SnowflakeOption {
 	return idimpl.WithSnowflakeInterfacesFunc(interfaces)
@@ -111,6 +114,11 @@ func WithSnowflakePIDFunc(pid func() int) SnowflakeOption {
 // CreateSnowflakeWithOptions creates a Snowflake generator from options.
 func CreateSnowflakeWithOptions(opts ...SnowflakeOption) *Snowflake {
 	return idimpl.CreateSnowflakeWithOptions(opts...)
+}
+
+// NewIsolatedSnowflake creates a standalone Snowflake generator without singleton/cache lookup.
+func NewIsolatedSnowflake(opts ...SnowflakeOption) *Snowflake {
+	return idimpl.NewIsolatedSnowflake(opts...)
 }
 
 func GetSnowflake() *Snowflake { return GetSnowflakeWithOptions() }

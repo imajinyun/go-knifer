@@ -301,6 +301,46 @@ var defaultMatcher = struct {
 	tree *WordTree
 }{tree: NewWordTree()}
 
+// MatcherOption customizes one package-level matcher operation.
+type MatcherOption func(*matcherConfig)
+
+type matcherConfig struct {
+	tree *WordTree
+}
+
+// WithMatcher sets the word tree used by one package-level matcher operation.
+func WithMatcher(tree *WordTree) MatcherOption {
+	return func(cfg *matcherConfig) {
+		if tree != nil {
+			cfg.tree = tree
+		}
+	}
+}
+
+// WithMatcherWords creates an isolated word tree for one package-level matcher operation.
+func WithMatcherWords(words []string, opts ...WordTreeOption) MatcherOption {
+	return WithMatcher(NewWordTreeWithOptions(opts...).AddWords(words...))
+}
+
+func currentMatcher() *WordTree {
+	defaultMatcher.RLock()
+	defer defaultMatcher.RUnlock()
+	return defaultMatcher.tree
+}
+
+func applyMatcherOptions(opts []MatcherOption) *WordTree {
+	cfg := matcherConfig{tree: currentMatcher()}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.tree == nil {
+		return NewWordTree()
+	}
+	return cfg.tree
+}
+
 // IsInited reports whether the package-level matcher contains words.
 func IsInited() bool {
 	defaultMatcher.RLock()
@@ -365,44 +405,101 @@ func SetCharFilter(filter CharFilter) {
 
 // Contains reports whether text contains a word from the package-level matcher.
 func Contains(text string) bool {
+	return ContainsWithOptions(text)
+}
+
+// ContainsWithOptions reports whether text contains a word from the selected matcher.
+func ContainsWithOptions(text string, opts ...MatcherOption) bool {
+	if len(opts) > 0 {
+		return applyMatcherOptions(opts).IsMatch(text)
+	}
 	defaultMatcher.RLock()
 	defer defaultMatcher.RUnlock()
 	return defaultMatcher.tree.IsMatch(text)
 }
 
 // ContainsAny marshals value as JSON and checks it with the package-level matcher.
-func ContainsAny(value any) bool { return Contains(jsonText(value)) }
+func ContainsAny(value any) bool { return ContainsAnyWithOptions(value) }
+
+// ContainsAnyWithOptions marshals value as JSON and checks it with the selected matcher.
+func ContainsAnyWithOptions(value any, opts ...MatcherOption) bool {
+	return ContainsWithOptions(jsonText(value), opts...)
+}
 
 // GetFoundFirst returns the first found word from the package-level matcher.
 func GetFoundFirst(text string) (FoundWord, bool) {
+	return GetFoundFirstWithOptions(text)
+}
+
+// GetFoundFirstWithOptions returns the first found word from the selected matcher.
+func GetFoundFirstWithOptions(text string, opts ...MatcherOption) (FoundWord, bool) {
+	if len(opts) > 0 {
+		return applyMatcherOptions(opts).MatchWord(text)
+	}
 	defaultMatcher.RLock()
 	defer defaultMatcher.RUnlock()
 	return defaultMatcher.tree.MatchWord(text)
 }
 
 // GetFoundFirstAny marshals value as JSON and returns the first found word.
-func GetFoundFirstAny(value any) (FoundWord, bool) { return GetFoundFirst(jsonText(value)) }
+func GetFoundFirstAny(value any) (FoundWord, bool) { return GetFoundFirstAnyWithOptions(value) }
+
+// GetFoundFirstAnyWithOptions marshals value as JSON and returns the first found word from the selected matcher.
+func GetFoundFirstAnyWithOptions(value any, opts ...MatcherOption) (FoundWord, bool) {
+	return GetFoundFirstWithOptions(jsonText(value), opts...)
+}
 
 // GetFoundAll returns all found words from the package-level matcher.
 func GetFoundAll(text string) []FoundWord {
-	return GetFoundAllMode(text, false, false)
+	return GetFoundAllWithOptions(text)
+}
+
+// GetFoundAllWithOptions returns all found words from the selected matcher.
+func GetFoundAllWithOptions(text string, opts ...MatcherOption) []FoundWord {
+	return GetFoundAllModeWithOptions(text, false, false, opts...)
 }
 
 // GetFoundAllMode returns all found words with dense and greedy matching controls.
 func GetFoundAllMode(text string, densityMatch, greedMatch bool) []FoundWord {
+	return GetFoundAllModeWithOptions(text, densityMatch, greedMatch)
+}
+
+// GetFoundAllModeWithOptions returns all found words from the selected matcher with dense and greedy matching controls.
+func GetFoundAllModeWithOptions(text string, densityMatch, greedMatch bool, opts ...MatcherOption) []FoundWord {
+	if len(opts) > 0 {
+		return applyMatcherOptions(opts).MatchAllWords(text, -1, densityMatch, greedMatch)
+	}
 	defaultMatcher.RLock()
 	defer defaultMatcher.RUnlock()
 	return defaultMatcher.tree.MatchAllWords(text, -1, densityMatch, greedMatch)
 }
 
 // GetFoundAllAny marshals value as JSON and returns all found words.
-func GetFoundAllAny(value any) []FoundWord { return GetFoundAll(jsonText(value)) }
+func GetFoundAllAny(value any) []FoundWord { return GetFoundAllAnyWithOptions(value) }
+
+// GetFoundAllAnyWithOptions marshals value as JSON and returns all found words from the selected matcher.
+func GetFoundAllAnyWithOptions(value any, opts ...MatcherOption) []FoundWord {
+	return GetFoundAllWithOptions(jsonText(value), opts...)
+}
 
 // Filter replaces words found by the package-level matcher.
-func Filter(text string) string { return FilterMode(text, true, nil) }
+func Filter(text string) string { return FilterWithOptions(text) }
+
+// FilterWithOptions replaces words found by the selected matcher.
+func FilterWithOptions(text string, opts ...MatcherOption) string {
+	return FilterModeWithOptions(text, true, nil, opts...)
+}
 
 // FilterMode replaces words found by the package-level matcher using processor.
 func FilterMode(text string, greedMatch bool, processor Processor) string {
+	return FilterModeWithOptions(text, greedMatch, processor)
+}
+
+// FilterModeWithOptions replaces words found by the selected matcher using processor.
+func FilterModeWithOptions(text string, greedMatch bool, processor Processor, opts ...MatcherOption) string {
+	if len(opts) > 0 {
+		return applyMatcherOptions(opts).Filter(text, greedMatch, processor)
+	}
 	defaultMatcher.RLock()
 	defer defaultMatcher.RUnlock()
 	return defaultMatcher.tree.Filter(text, greedMatch, processor)
@@ -410,15 +507,20 @@ func FilterMode(text string, greedMatch bool, processor Processor) string {
 
 // FilterAny marshals value as JSON, filters matched text, and unmarshals it back.
 func FilterAny[T any](value T, greedMatch bool, processor Processor) (T, error) {
+	return FilterAnyWithOptions(value, greedMatch, processor)
+}
+
+// FilterAnyWithOptions marshals value, filters matched text with the selected matcher, and unmarshals it back.
+func FilterAnyWithOptions[T any](value T, greedMatch bool, processor Processor, opts ...MatcherOption) (T, error) {
 	if s, ok := any(value).(string); ok {
-		return any(FilterMode(s, greedMatch, processor)).(T), nil
+		return any(FilterModeWithOptions(s, greedMatch, processor, opts...)).(T), nil
 	}
 	var result T
 	data, err := json.Marshal(value)
 	if err != nil {
 		return result, err
 	}
-	filtered := FilterMode(string(data), greedMatch, processor)
+	filtered := FilterModeWithOptions(string(data), greedMatch, processor, opts...)
 	if err := json.Unmarshal([]byte(filtered), &result); err != nil {
 		return result, err
 	}

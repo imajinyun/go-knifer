@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/imajinyun/go-knifer/vresty"
 )
@@ -55,6 +56,39 @@ func TestFacadeRequestOptions(t *testing.T) {
 	}
 	if got := resp.Body(); got != "yes:vresty-test/1.0" {
 		t.Fatalf("Body() = %q, want option headers", got)
+	}
+}
+
+func TestFacadeRequestGlobalConfigAPIs(t *testing.T) {
+	vresty.SetGlobalTimeout(321 * time.Millisecond)
+	vresty.SetGlobalHeader("X-Facade-Config", "global")
+	defer vresty.SetGlobalTimeout(0)
+	defer vresty.RemoveGlobalHeader("X-Facade-Config")
+
+	cfg := vresty.SnapshotGlobalConfig()
+	cfg.Headers["X-Facade-Config"][0] = "snapshot"
+	cfg.DefaultUserAgent = "facade-config-agent"
+	cfg.Headers["User-Agent"] = []string{"facade-config-agent"}
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(r.Header.Get("X-Facade-Config") + ":" + r.Header.Get("User-Agent")))
+	}))
+	defer srv.Close()
+
+	resp := vresty.NewRequestWithConfig(vresty.MethodGet, srv.URL, cfg).Execute()
+	if resp.Err() != nil {
+		t.Fatal(resp.Err())
+	}
+	if got := resp.Body(); got != "snapshot:facade-config-agent" {
+		t.Fatalf("NewRequestWithConfig body = %q", got)
+	}
+
+	resp = vresty.NewIsolatedRequest(vresty.MethodGet, srv.URL, vresty.WithGlobalConfig(cfg)).Execute()
+	if resp.Err() != nil {
+		t.Fatal(resp.Err())
+	}
+	if got := resp.Body(); got != "snapshot:facade-config-agent" {
+		t.Fatalf("NewIsolatedRequest WithGlobalConfig body = %q", got)
 	}
 }
 

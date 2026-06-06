@@ -34,7 +34,17 @@ func Get(name string) Log {
 	return logx.Get(name)
 }
 
+// GetWithOptions delegates to the internal logx implementation.
+func GetWithOptions(name string, opts ...LoggerOption) Log {
+	return logx.GetWithOptions(name, opts...)
+}
+
 // GetDefault delegates to the internal logx implementation.
 func GetDefault() Log {
 	return logx.GetDefault()
+}
+
+// GetDefaultWithOptions delegates to the internal logx implementation.
+func GetDefaultWithOptions(opts ...LoggerOption) Log {
+	return logx.GetDefaultWithOptions(opts...)
 }

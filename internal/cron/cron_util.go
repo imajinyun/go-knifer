@@ -8,9 +8,57 @@ var (
 	defaultScheduler = NewScheduler()
 )
 
+// DefaultSchedulerOption customizes one package-level scheduler operation.
+type DefaultSchedulerOption func(*defaultSchedulerConfig)
+
+type defaultSchedulerConfig struct {
+	scheduler *Scheduler
+}
+
+// WithDefaultScheduler sets the scheduler used by one package-level operation.
+func WithDefaultScheduler(s *Scheduler) DefaultSchedulerOption {
+	return func(cfg *defaultSchedulerConfig) {
+		if s != nil {
+			cfg.scheduler = s
+		}
+	}
+}
+
+// WithDefaultSchedulerOptions creates an isolated scheduler for one package-level operation.
+func WithDefaultSchedulerOptions(opts ...SchedulerOption) DefaultSchedulerOption {
+	return WithDefaultScheduler(NewSchedulerWithOptions(opts...))
+}
+
+func getDefaultScheduler() *Scheduler {
+	defaultMu.Lock()
+	defer defaultMu.Unlock()
+	if defaultScheduler == nil {
+		defaultScheduler = NewScheduler()
+	}
+	return defaultScheduler
+}
+
+func applyDefaultSchedulerOptions(opts []DefaultSchedulerOption) *Scheduler {
+	cfg := defaultSchedulerConfig{scheduler: getDefaultScheduler()}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.scheduler == nil {
+		return getDefaultScheduler()
+	}
+	return cfg.scheduler
+}
+
 // DefaultScheduler returns the package-level scheduler.
 func DefaultScheduler() *Scheduler {
-	return defaultScheduler
+	return DefaultSchedulerWithOptions()
+}
+
+// DefaultSchedulerWithOptions returns the package-level scheduler or a per-call override.
+func DefaultSchedulerWithOptions(opts ...DefaultSchedulerOption) *Scheduler {
+	return applyDefaultSchedulerOptions(opts)
 }
 
 // ConfigureDefaultScheduler replaces the package-level scheduler with one created from options.
@@ -26,36 +74,74 @@ func ConfigureDefaultScheduler(opts ...SchedulerOption) *Scheduler {
 
 // SetMatchSecond sets whether the package-level scheduler matches seconds.
 func SetMatchSecond(b bool) {
-	defaultScheduler.SetMatchSecond(b)
+	SetMatchSecondWithOptions(b)
+}
+
+// SetMatchSecondWithOptions sets whether the selected default scheduler matches seconds.
+func SetMatchSecondWithOptions(b bool, opts ...DefaultSchedulerOption) {
+	applyDefaultSchedulerOptions(opts).SetMatchSecond(b)
 }
 
 // Schedule registers a task on the package-level scheduler and returns its id.
 func Schedule(pattern string, task Task) (string, error) {
-	return defaultScheduler.Schedule(pattern, task)
+	return ScheduleWithOptions(pattern, task)
+}
+
+// ScheduleWithOptions registers a task on the selected default scheduler and returns its id.
+func ScheduleWithOptions(pattern string, task Task, opts ...DefaultSchedulerOption) (string, error) {
+	return applyDefaultSchedulerOptions(opts).Schedule(pattern, task)
 }
 
 // ScheduleFunc registers a function task on the package-level scheduler.
 func ScheduleFunc(pattern string, fn func()) (string, error) {
-	return defaultScheduler.ScheduleFunc(pattern, fn)
+	return ScheduleFuncWithOptions(pattern, fn)
+}
+
+// ScheduleFuncWithOptions registers a function task on the selected default scheduler.
+func ScheduleFuncWithOptions(pattern string, fn func(), opts ...DefaultSchedulerOption) (string, error) {
+	return applyDefaultSchedulerOptions(opts).ScheduleFunc(pattern, fn)
 }
 
 // ScheduleWithID registers a task with the specified id on the package-level scheduler.
 func ScheduleWithID(id, pattern string, task Task) error {
-	return defaultScheduler.ScheduleWithID(id, pattern, task)
+	return ScheduleWithIDWithOptions(id, pattern, task)
+}
+
+// ScheduleWithIDWithOptions registers a task with the specified id on the selected default scheduler.
+func ScheduleWithIDWithOptions(id, pattern string, task Task, opts ...DefaultSchedulerOption) error {
+	return applyDefaultSchedulerOptions(opts).ScheduleWithID(id, pattern, task)
 }
 
 // Remove deletes a task from the package-level scheduler.
 func Remove(id string) bool {
-	return defaultScheduler.Deschedule(id)
+	return RemoveWithOptions(id)
+}
+
+// RemoveWithOptions deletes a task from the selected default scheduler.
+func RemoveWithOptions(id string, opts ...DefaultSchedulerOption) bool {
+	return applyDefaultSchedulerOptions(opts).Deschedule(id)
 }
 
 // UpdatePattern updates a task expression on the package-level scheduler.
 func UpdatePattern(id, pattern string) error {
-	return defaultScheduler.UpdatePattern(id, pattern)
+	return UpdatePatternWithOptions(id, pattern)
+}
+
+// UpdatePatternWithOptions updates a task expression on the selected default scheduler.
+func UpdatePatternWithOptions(id, pattern string, opts ...DefaultSchedulerOption) error {
+	return applyDefaultSchedulerOptions(opts).UpdatePattern(id, pattern)
 }
 
 // Start starts the package-level scheduler.
 func Start() error {
+	return StartWithOptions()
+}
+
+// StartWithOptions starts the selected default scheduler.
+func StartWithOptions(opts ...DefaultSchedulerOption) error {
+	if len(opts) > 0 {
+		return applyDefaultSchedulerOptions(opts).Start()
+	}
 	defaultMu.Lock()
 	defer defaultMu.Unlock()
 	return defaultScheduler.Start()
@@ -63,6 +149,15 @@ func Start() error {
 
 // Stop stops the package-level scheduler.
 func Stop() {
+	StopWithOptions()
+}
+
+// StopWithOptions stops the selected default scheduler.
+func StopWithOptions(opts ...DefaultSchedulerOption) {
+	if len(opts) > 0 {
+		applyDefaultSchedulerOptions(opts).Stop()
+		return
+	}
 	defaultMu.Lock()
 	defer defaultMu.Unlock()
 	defaultScheduler.Stop()
@@ -70,6 +165,16 @@ func Stop() {
 
 // Restart restarts the package-level scheduler.
 func Restart() error {
+	return RestartWithOptions()
+}
+
+// RestartWithOptions restarts the selected default scheduler.
+func RestartWithOptions(opts ...DefaultSchedulerOption) error {
+	if len(opts) > 0 {
+		s := applyDefaultSchedulerOptions(opts)
+		s.Stop()
+		return s.Start()
+	}
 	defaultMu.Lock()
 	defer defaultMu.Unlock()
 	defaultScheduler.Stop()

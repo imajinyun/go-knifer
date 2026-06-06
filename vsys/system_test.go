@@ -45,6 +45,10 @@ func TestFacadeOsInfo(t *testing.T) {
 	if info.GetName() != "linux" {
 		t.Fatalf("SysOsInfoWithOptions name = %q", info.GetName())
 	}
+	info = vsys.SystemOsInfoWithOptions(vsys.WithOSNameFunc(func() string { return "windows" }))
+	if info.GetName() != "windows" {
+		t.Fatalf("SystemOsInfoWithOptions name = %q", info.GetName())
+	}
 }
 
 func TestFacadeUserInfo(t *testing.T) {
@@ -93,6 +97,10 @@ func TestFacadeGoInfo(t *testing.T) {
 	if info.GetVersion() != "go-sys" {
 		t.Fatalf("SysGoInfoWithOptions version = %q", info.GetVersion())
 	}
+	info = vsys.SystemGoInfoWithOptions(vsys.WithGoVersionFunc(func() string { return "go-system" }))
+	if info.GetVersion() != "go-system" {
+		t.Fatalf("SystemGoInfoWithOptions version = %q", info.GetVersion())
+	}
 	info = vsys.NewGoInfoWithOptions(
 		vsys.WithGoVersionFunc(func() string { return "go-facade" }),
 		vsys.WithGoCompilerFunc(func() string { return "compiler-facade" }),
@@ -138,6 +146,10 @@ func TestFacadeRuntimeInfo(t *testing.T) {
 	)
 	if info.GetMaxMemory() != 4096 || info.GetTotalMemory() != 1024 || info.GetGoroutineCount() != 5 {
 		t.Fatalf("SysRuntimeInfoWithOptions = %#v", info)
+	}
+	info = vsys.SystemRuntimeInfoWithOptions(vsys.WithReadMemStatsFunc(func(stats *runtime.MemStats) { stats.Sys = 1234 }))
+	if info.GetMaxMemory() != 1234 {
+		t.Fatalf("SystemRuntimeInfoWithOptions max = %d", info.GetMaxMemory())
 	}
 
 	info = vsys.NewRuntimeInfoWithOptions(vsys.WithReadMemStatsFunc(func(stats *runtime.MemStats) { stats.Sys = 8192 }))

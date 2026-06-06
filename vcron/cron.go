@@ -27,6 +27,9 @@ type Scheduler = cron.Scheduler
 // SchedulerOption customizes scheduler construction.
 type SchedulerOption = cron.SchedulerOption
 
+// DefaultSchedulerOption customizes one package-level scheduler operation.
+type DefaultSchedulerOption = cron.DefaultSchedulerOption
+
 // ConfigOption customizes cron config construction.
 type ConfigOption = cron.ConfigOption
 
@@ -102,6 +105,14 @@ func WithSleeper(sleeper func(time.Duration, <-chan struct{}) bool) SchedulerOpt
 	return cron.WithSleeper(sleeper)
 }
 
+// WithDefaultScheduler sets the scheduler used by one package-level operation.
+func WithDefaultScheduler(s *Scheduler) DefaultSchedulerOption { return cron.WithDefaultScheduler(s) }
+
+// WithDefaultSchedulerOptions creates an isolated scheduler for one package-level operation.
+func WithDefaultSchedulerOptions(opts ...SchedulerOption) DefaultSchedulerOption {
+	return cron.WithDefaultSchedulerOptions(opts...)
+}
+
 // NewSchedulerWithOptions creates a cron scheduler customized by options.
 func NewSchedulerWithOptions(opts ...SchedulerOption) *Scheduler {
 	return cron.NewSchedulerWithOptions(opts...)
@@ -109,6 +120,11 @@ func NewSchedulerWithOptions(opts ...SchedulerOption) *Scheduler {
 
 // DefaultScheduler returns the package-level scheduler.
 func DefaultScheduler() *Scheduler { return cron.DefaultScheduler() }
+
+// DefaultSchedulerWithOptions returns the package-level scheduler or a per-call override.
+func DefaultSchedulerWithOptions(opts ...DefaultSchedulerOption) *Scheduler {
+	return cron.DefaultSchedulerWithOptions(opts...)
+}
 
 // ConfigureDefaultScheduler replaces the package-level scheduler with one created from options.
 func ConfigureDefaultScheduler(opts ...SchedulerOption) *Scheduler {
@@ -118,9 +134,19 @@ func ConfigureDefaultScheduler(opts ...SchedulerOption) *Scheduler {
 // CronSchedule schedules a task on the default scheduler.
 func CronSchedule(pattern string, task Task) (string, error) { return cron.Schedule(pattern, task) }
 
+// CronScheduleWithOptions schedules a task on the selected default scheduler.
+func CronScheduleWithOptions(pattern string, task Task, opts ...DefaultSchedulerOption) (string, error) {
+	return cron.ScheduleWithOptions(pattern, task, opts...)
+}
+
 // CronScheduleFunc schedules fn on the default scheduler.
 func CronScheduleFunc(pattern string, fn func()) (string, error) {
 	return cron.ScheduleFunc(pattern, fn)
+}
+
+// CronScheduleFuncWithOptions schedules fn on the selected default scheduler.
+func CronScheduleFuncWithOptions(pattern string, fn func(), opts ...DefaultSchedulerOption) (string, error) {
+	return cron.ScheduleFuncWithOptions(pattern, fn, opts...)
 }
 
 // CronScheduleWithID schedules task with id.
@@ -128,20 +154,53 @@ func CronScheduleWithID(id, pattern string, task Task) error {
 	return cron.ScheduleWithID(id, pattern, task)
 }
 
+// CronScheduleWithIDWithOptions schedules task with id on the selected default scheduler.
+func CronScheduleWithIDWithOptions(id, pattern string, task Task, opts ...DefaultSchedulerOption) error {
+	return cron.ScheduleWithIDWithOptions(id, pattern, task, opts...)
+}
+
 // CronRemove removes a task by id.
 func CronRemove(id string) bool { return cron.Remove(id) }
+
+// CronRemoveWithOptions removes a task by id from the selected default scheduler.
+func CronRemoveWithOptions(id string, opts ...DefaultSchedulerOption) bool {
+	return cron.RemoveWithOptions(id, opts...)
+}
 
 // CronUpdatePattern updates the pattern for a task.
 func CronUpdatePattern(id, pattern string) error { return cron.UpdatePattern(id, pattern) }
 
+// CronUpdatePatternWithOptions updates the pattern for a task on the selected default scheduler.
+func CronUpdatePatternWithOptions(id, pattern string, opts ...DefaultSchedulerOption) error {
+	return cron.UpdatePatternWithOptions(id, pattern, opts...)
+}
+
 // CronStart starts the default scheduler.
 func CronStart() error { return cron.Start() }
+
+// CronStartWithOptions starts the selected default scheduler.
+func CronStartWithOptions(opts ...DefaultSchedulerOption) error {
+	return cron.StartWithOptions(opts...)
+}
 
 // CronStop stops the default scheduler.
 func CronStop() { cron.Stop() }
 
+// CronStopWithOptions stops the selected default scheduler.
+func CronStopWithOptions(opts ...DefaultSchedulerOption) { cron.StopWithOptions(opts...) }
+
 // CronRestart restarts the default scheduler.
 func CronRestart() error { return cron.Restart() }
 
+// CronRestartWithOptions restarts the selected default scheduler.
+func CronRestartWithOptions(opts ...DefaultSchedulerOption) error {
+	return cron.RestartWithOptions(opts...)
+}
+
 // CronSetMatchSecond sets whether expressions include seconds.
 func CronSetMatchSecond(b bool) { cron.SetMatchSecond(b) }
+
+// CronSetMatchSecondWithOptions sets whether expressions include seconds on the selected default scheduler.
+func CronSetMatchSecondWithOptions(b bool, opts ...DefaultSchedulerOption) {
+	cron.SetMatchSecondWithOptions(b, opts...)
+}

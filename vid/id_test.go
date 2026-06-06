@@ -91,6 +91,22 @@ func TestDefaultSnowflakeFacadeOptions(t *testing.T) {
 	}
 }
 
+func TestSnowflakeFacadeRuntimeOptionsBypassCache(t *testing.T) {
+	t.Cleanup(func() { ConfigureDefaultSnowflake() })
+	configured := ConfigureDefaultSnowflake(WithSnowflakeWorkerID(1), WithSnowflakeDatacenterID(1))
+	now := int64(1288834974657)
+	one := GetSnowflakeWithOptions(WithSnowflakeWorkerID(2), WithSnowflakeDatacenterID(3), WithSnowflakeTimeFunc(func() int64 { return now }))
+	two := GetSnowflakeWithOptions(WithSnowflakeWorkerID(2), WithSnowflakeDatacenterID(3), WithSnowflakeTimeFunc(func() int64 { return now }))
+	if one == configured || two == configured || one == two {
+		t.Fatal("facade runtime snowflake options should bypass singleton/cache")
+	}
+
+	isolated := NewIsolatedSnowflake(WithSnowflakeWorkerID(4), WithSnowflakeDatacenterID(5))
+	if isolated.WorkerID() != 4 || isolated.DatacenterID() != 5 {
+		t.Fatalf("isolated snowflake ids: worker=%d datacenter=%d", isolated.WorkerID(), isolated.DatacenterID())
+	}
+}
+
 func TestIDFacadeOptions(t *testing.T) {
 	reader := bytes.NewReader(bytes.Repeat([]byte{0x11}, 32))
 	u := SimpleUUIDWithOptions(WithRandomReader(reader))

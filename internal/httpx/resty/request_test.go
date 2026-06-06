@@ -148,6 +148,91 @@ func TestRequestOptionsOverrideGlobalDefaults(t *testing.T) {
 	}
 }
 
+func TestSnapshotGlobalConfigAndExplicitRequestConfig(t *testing.T) {
+	oldTimeout := GetGlobalTimeout()
+	oldMaxRedirects := GetGlobalMaxRedirects()
+	oldFollow := GetGlobalFollowRedirects()
+	oldUA := GetGlobalUserAgent()
+	oldTrust := IsTrustAnyHost()
+	defer SetGlobalTimeout(oldTimeout)
+	defer SetGlobalMaxRedirects(oldMaxRedirects)
+	defer SetGlobalFollowRedirects(oldFollow)
+	defer SetGlobalUserAgent(oldUA)
+	defer SetTrustAnyHost(oldTrust)
+	defer RemoveGlobalHeader("X-Snapshot")
+
+	SetGlobalTimeout(123 * time.Millisecond)
+	SetGlobalMaxRedirects(3)
+	SetGlobalFollowRedirects(false)
+	SetGlobalUserAgent("snapshot-agent")
+	SetTrustAnyHost(true)
+	SetGlobalHeader("X-Snapshot", "one")
+
+	cfg := SnapshotGlobalConfig()
+	SetGlobalHeader("X-Snapshot", "mutated")
+	cfg.Headers["X-Snapshot"][0] = "cfg"
+
+	req := NewRequestWithConfig(MethodGet, "http://example.com", cfg)
+	if req.timeout != 123*time.Millisecond || req.maxRedirects != 3 || req.followRedir == nil || *req.followRedir || !req.tlsSkip || req.userAgent != "snapshot-agent" {
+		t.Fatalf("request config not applied: timeout=%v max=%d follow=%v tls=%v ua=%q", req.timeout, req.maxRedirects, req.followRedir, req.tlsSkip, req.userAgent)
+	}
+	if got := req.headers["X-Snapshot"]; len(got) != 1 || got[0] != "cfg" {
+		t.Fatalf("explicit config headers = %v, want [cfg]", got)
+	}
+	if got := CloneGlobalHeaders()["X-Snapshot"]; len(got) != 1 || got[0] != "mutated" {
+		t.Fatalf("snapshot should be detached from globals, global header = %v", got)
+	}
+}
+
+func TestNewIsolatedRequestDoesNotReadGlobals(t *testing.T) {
+	oldTimeout := GetGlobalTimeout()
+	oldMaxRedirects := GetGlobalMaxRedirects()
+	oldFollow := GetGlobalFollowRedirects()
+	oldUA := GetGlobalUserAgent()
+	oldTrust := IsTrustAnyHost()
+	defer SetGlobalTimeout(oldTimeout)
+	defer SetGlobalMaxRedirects(oldMaxRedirects)
+	defer SetGlobalFollowRedirects(oldFollow)
+	defer SetGlobalUserAgent(oldUA)
+	defer SetTrustAnyHost(oldTrust)
+	defer RemoveGlobalHeader("X-Isolated")
+
+	SetGlobalTimeout(time.Second)
+	SetGlobalMaxRedirects(1)
+	SetGlobalFollowRedirects(false)
+	SetGlobalUserAgent("global-agent")
+	SetTrustAnyHost(true)
+	SetGlobalHeader("X-Isolated", "global")
+
+	req := NewIsolatedRequest(MethodGet, "http://example.com")
+	if req.timeout != 0 || req.maxRedirects != 10 || req.followRedir == nil || !*req.followRedir || req.tlsSkip || req.userAgent != "" {
+		t.Fatalf("isolated request leaked globals: timeout=%v max=%d follow=%v tls=%v ua=%q", req.timeout, req.maxRedirects, req.followRedir, req.tlsSkip, req.userAgent)
+	}
+	if got := req.headers["X-Isolated"]; len(got) != 0 {
+		t.Fatalf("isolated request should not include global header: %v", got)
+	}
+}
+
+func TestWithGlobalConfigOptionOverridesConstructionDefaults(t *testing.T) {
+	cfg := GlobalConfig{
+		Timeout:          250 * time.Millisecond,
+		MaxRedirects:     2,
+		FollowRedirects:  false,
+		DefaultUserAgent: "option-agent",
+		Headers:          HeaderValues{"X-Config": []string{"yes"}},
+	}
+	req := NewIsolatedRequest(MethodGet, "http://example.com", WithGlobalConfig(cfg), WithHeader("X-Req", "ok"))
+	if req.timeout != 250*time.Millisecond || req.maxRedirects != 2 || req.followRedir == nil || *req.followRedir || req.userAgent != "option-agent" {
+		t.Fatalf("WithGlobalConfig not applied: timeout=%v max=%d follow=%v ua=%q", req.timeout, req.maxRedirects, req.followRedir, req.userAgent)
+	}
+	if got := req.headers["X-Config"]; len(got) != 1 || got[0] != "yes" {
+		t.Fatalf("config header = %v, want [yes]", got)
+	}
+	if got := req.headers["X-Req"]; len(got) != 1 || got[0] != "ok" {
+		t.Fatalf("request header after config = %v, want [ok]", got)
+	}
+}
+
 func TestRequestOptionContentTypeAndCharset(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(r.Header.Get("Content-Type")))

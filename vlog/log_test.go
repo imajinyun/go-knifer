@@ -39,6 +39,22 @@ func TestFacadeLoggerByName(t *testing.T) {
 	}
 }
 
+func TestFacadeLoggerWithOptions(t *testing.T) {
+	log := vlog.LoggerWithOptions("facade.logger.option", vlog.WithLoggerFactory(vlog.LogFactoryFunc(func(name string) vlog.Log {
+		return vlog.NewConsoleLog("facade:" + name)
+	})))
+	if log.GetName() != "facade:facade.logger.option" {
+		t.Fatalf("LoggerWithOptions name = %q", log.GetName())
+	}
+
+	vlog.SetLogFactory(vlog.LogFactoryFunc(func(name string) vlog.Log { return vlog.NewConsoleLog("global:" + name) }))
+	defer vlog.SetLogFactory(vlog.LogFactoryFunc(func(name string) vlog.Log { return vlog.NewConsoleLog(name) }))
+	isolated := vlog.NewIsolatedLogger("facade.isolated")
+	if isolated.GetName() != "facade.isolated" {
+		t.Fatalf("NewIsolatedLogger leaked global factory: %q", isolated.GetName())
+	}
+}
+
 func TestFacadeLogLevel(t *testing.T) {
 	old := vlog.GetLogLevel()
 	vlog.SetLogLevel(vlog.LogLevelDebug)
@@ -74,6 +90,23 @@ func TestFacadeConsoleLogOptions(t *testing.T) {
 	colorLog.Info("color")
 	if !strings.Contains(colorOut.String(), "06:07") || !strings.Contains(colorOut.String(), "color") {
 		t.Fatalf("color log options not applied: %q", colorOut.String())
+	}
+}
+
+func TestFacadeStaticLogWithOptions(t *testing.T) {
+	old := vlog.GetLogLevel()
+	vlog.SetLogLevel(vlog.LogLevelInfo)
+	defer vlog.SetLogLevel(old)
+
+	out := &bytes.Buffer{}
+	fixed := time.Date(2024, 7, 8, 9, 10, 11, 0, time.UTC)
+	vlog.InfoWithOptions([]vlog.LoggerOption{vlog.WithLoggerConsoleOptions(
+		vlog.WithLogClock(func() time.Time { return fixed }),
+		vlog.WithLogTimeLayout(time.RFC3339),
+		vlog.WithLogOutput(out, &bytes.Buffer{}),
+	)}, "facade-static")
+	if !strings.Contains(out.String(), "2024-07-08T09:10:11Z") || !strings.Contains(out.String(), "facade-static") {
+		t.Fatalf("static log options not applied: %q", out.String())
 	}
 }
 

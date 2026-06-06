@@ -35,6 +35,9 @@ type ContentType = restyimpl.ContentType
 // HeaderValues stores HTTP header values.
 type HeaderValues = restyimpl.HeaderValues
 
+// GlobalConfig captures resty package-level defaults for explicit request construction.
+type GlobalConfig = restyimpl.GlobalConfig
+
 // Cookie contains a response cookie name and value.
 type Cookie = restyimpl.Cookie
 
@@ -90,6 +93,16 @@ func NewRequest(method Method, rawURL string, opts ...RequestOption) *Request {
 	return restyimpl.NewRequest(method, rawURL, opts...)
 }
 
+// NewIsolatedRequest creates a request without reading package-level global defaults.
+func NewIsolatedRequest(method Method, rawURL string, opts ...RequestOption) *Request {
+	return restyimpl.NewIsolatedRequest(method, rawURL, opts...)
+}
+
+// NewRequestWithConfig creates a request from an explicit global configuration snapshot.
+func NewRequestWithConfig(method Method, rawURL string, cfg GlobalConfig, opts ...RequestOption) *Request {
+	return restyimpl.NewRequestWithConfig(method, rawURL, cfg, opts...)
+}
+
 // CreateRequest creates a request by method.
 func CreateRequest(method Method, rawURL string, opts ...RequestOption) *Request {
 	return CreateRequestWithOptions(method, rawURL, opts...)
@@ -99,6 +112,9 @@ func CreateRequest(method Method, rawURL string, opts ...RequestOption) *Request
 func CreateRequestWithOptions(method Method, rawURL string, opts ...RequestOption) *Request {
 	return restyimpl.CreateRequest(method, rawURL, opts...)
 }
+
+// WithGlobalConfig initializes request defaults from a captured global configuration snapshot.
+func WithGlobalConfig(cfg GlobalConfig) RequestOption { return restyimpl.WithGlobalConfig(cfg) }
 
 // WithTimeout sets a per-request timeout.
 func WithTimeout(d time.Duration) RequestOption { return restyimpl.WithTimeout(d) }
@@ -233,6 +249,9 @@ func SetGlobalTimeout(d time.Duration) { restyimpl.SetGlobalTimeout(d) }
 
 // GetGlobalTimeout returns the global HTTP timeout.
 func GetGlobalTimeout() time.Duration { return restyimpl.GetGlobalTimeout() }
+
+// SnapshotGlobalConfig returns a copy of the package-level resty defaults.
+func SnapshotGlobalConfig() GlobalConfig { return restyimpl.SnapshotGlobalConfig() }
 
 // SetGlobalHeader sets a global HTTP header.
 func SetGlobalHeader(name, value string) { restyimpl.SetGlobalHeader(name, value) }
