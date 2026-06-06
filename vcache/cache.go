@@ -30,6 +30,12 @@ type CacheObj[K comparable, V any] struct {
 // Option customizes cache construction.
 type Option[K comparable, V any] = cache.Option[K, V]
 
+// Ticker stops a scheduled cache pruning ticker created by TickerFactory.
+type Ticker = cache.Ticker
+
+// TickerFactory creates a ticker channel and stopper for scheduled pruning.
+type TickerFactory = cache.TickerFactory
+
 // FIFOCache is a first-in-first-out cache.
 type FIFOCache[K comparable, V any] struct {
 	*cache.FIFOCache[K, V]
@@ -81,6 +87,11 @@ func WithListener[K comparable, V any](listener CacheListener[K, V]) Option[K, V
 // WithClock sets the time source used for cache expiration checks.
 func WithClock[K comparable, V any](clock func() time.Time) Option[K, V] {
 	return cache.WithClock[K, V](clock)
+}
+
+// WithTickerFactory sets the ticker factory used by scheduled pruning.
+func WithTickerFactory[K comparable, V any](factory TickerFactory) Option[K, V] {
+	return cache.WithTickerFactory[K, V](factory)
 }
 
 // NewFIFO creates a FIFO cache.

@@ -27,6 +27,11 @@ func NewNioServer(port int) (*NioServer, error) {
 	return NewNioServerWithConfig(port, NewSocketConfig())
 }
 
+// NewNioServerWithOptions creates and initializes a server on the given port with custom config options.
+func NewNioServerWithOptions(port int, opts ...ConfigOption) (*NioServer, error) {
+	return NewNioServerAddrWithConfig(&net.TCPAddr{Port: port}, NewSocketConfigWithOptions(opts...))
+}
+
 // NewNioServerWithConfig creates and initializes a server on the given port with config.
 func NewNioServerWithConfig(port int, cfg *SocketConfig) (*NioServer, error) {
 	return NewNioServerAddrWithConfig(&net.TCPAddr{Port: port}, cfg)
@@ -39,11 +44,21 @@ func NewNioServerAddr(addr *net.TCPAddr) (*NioServer, error) {
 
 // NewNioServerAddrWithConfig creates a server from the specified address and configuration.
 func NewNioServerAddrWithConfig(addr *net.TCPAddr, cfg *SocketConfig) (*NioServer, error) {
+	return NewNioServerAddrWithOptions(addr, cfg)
+}
+
+// NewNioServerAddrWithOptions creates a server from the specified address, base config, and custom config options.
+func NewNioServerAddrWithOptions(addr *net.TCPAddr, cfg *SocketConfig, opts ...ConfigOption) (*NioServer, error) {
 	if addr == nil {
 		return nil, NewSocketErrorMsg("address must not be nil")
 	}
 	if cfg == nil {
 		cfg = NewSocketConfig()
+	}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(cfg)
+		}
 	}
 	s := &NioServer{addr: addr, config: cfg, limiter: newConcurrencyLimiter(cfg), done: make(chan struct{})}
 	if err := s.init(addr); err != nil {
@@ -54,7 +69,11 @@ func NewNioServerAddrWithConfig(addr *net.TCPAddr, cfg *SocketConfig) (*NioServe
 
 // init initializes the listener.
 func (s *NioServer) init(addr *net.TCPAddr) error {
-	ln, err := net.ListenTCP("tcp", addr)
+	listenerFactory := func(addr *net.TCPAddr) (net.Listener, error) { return net.ListenTCP("tcp", addr) }
+	if s.config != nil && s.config.ListenerFactory != nil {
+		listenerFactory = s.config.ListenerFactory
+	}
+	ln, err := listenerFactory(addr)
 	if err != nil {
 		return NewSocketError(err)
 	}

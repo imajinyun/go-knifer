@@ -26,6 +26,7 @@ type abstractCache[K comparable, V any] struct {
 	hitCount  int64
 	missCount int64
 	clock     func() time.Time
+	ticker    TickerFactory
 
 	// existCustomTimeout records whether any entry uses a non-default TTL.
 	existCustomTimeout bool
@@ -43,6 +44,7 @@ func (c *abstractCache[K, V]) init(capacity int, timeout time.Duration, prune pr
 	c.pruneFn = prune
 	c.cacheMap = newLinkedMap[K, V](capacity)
 	c.clock = time.Now
+	c.ticker = newTicker
 }
 
 func (c *abstractCache[K, V]) Capacity() int          { return c.capacity }
@@ -61,6 +63,19 @@ func (c *abstractCache[K, V]) now() time.Time {
 		return c.clock()
 	}
 	return time.Now()
+}
+
+func (c *abstractCache[K, V]) setTickerFactory(factory TickerFactory) {
+	if factory != nil {
+		c.ticker = factory
+	}
+}
+
+func (c *abstractCache[K, V]) newTicker(delay time.Duration) (<-chan time.Time, Ticker) {
+	if c.ticker != nil {
+		return c.ticker(delay)
+	}
+	return newTicker(delay)
 }
 
 // IsFull reports whether the cache has reached its configured capacity.

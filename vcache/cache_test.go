@@ -124,3 +124,26 @@ func TestFacadeCacheWithClock(t *testing.T) {
 		t.Fatal("expected weak cache entry to expire with custom clock")
 	}
 }
+
+type facadeTicker struct{}
+
+func (facadeTicker) Stop() {}
+
+func TestFacadeCacheWithTickerFactory(t *testing.T) {
+	called := false
+	ticks := make(chan time.Time)
+	timed := vcache.NewTimedWithOptions[string, int](
+		vcache.WithTickerFactory[string, int](func(delay time.Duration) (<-chan time.Time, vcache.Ticker) {
+			called = true
+			if delay != time.Second {
+				t.Fatalf("ticker delay = %s, want 1s", delay)
+			}
+			return ticks, facadeTicker{}
+		}),
+	)
+	timed.SchedulePrune(time.Second)
+	timed.CancelPruneSchedule()
+	if !called {
+		t.Fatal("facade ticker factory was not called")
+	}
+}

@@ -27,13 +27,28 @@ func NewAioServer(port int) (*AioServer, error) {
 	return NewAioServerAddr(&net.TCPAddr{Port: port}, NewSocketConfig())
 }
 
+// NewAioServerWithOptions creates a server on the given port with custom config options.
+func NewAioServerWithOptions(port int, opts ...ConfigOption) (*AioServer, error) {
+	return NewAioServerAddr(&net.TCPAddr{Port: port}, NewSocketConfigWithOptions(opts...))
+}
+
 // NewAioServerAddr creates a server from an address and configuration.
 func NewAioServerAddr(addr *net.TCPAddr, cfg *SocketConfig) (*AioServer, error) {
+	return NewAioServerAddrWithOptions(addr, cfg)
+}
+
+// NewAioServerAddrWithOptions creates a server from an address, base config, and custom config options.
+func NewAioServerAddrWithOptions(addr *net.TCPAddr, cfg *SocketConfig, opts ...ConfigOption) (*AioServer, error) {
 	if addr == nil {
 		return nil, NewSocketErrorMsg("address must not be nil")
 	}
 	if cfg == nil {
 		cfg = NewSocketConfig()
+	}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(cfg)
+		}
 	}
 	s := &AioServer{config: cfg, limiter: newConcurrencyLimiter(cfg), done: make(chan struct{})}
 	if err := s.init(addr); err != nil {
@@ -44,7 +59,11 @@ func NewAioServerAddr(addr *net.TCPAddr, cfg *SocketConfig) (*AioServer, error) 
 
 // init initializes the listener.
 func (s *AioServer) init(addr *net.TCPAddr) error {
-	ln, err := net.ListenTCP("tcp", addr)
+	listenerFactory := func(addr *net.TCPAddr) (net.Listener, error) { return net.ListenTCP("tcp", addr) }
+	if s.config != nil && s.config.ListenerFactory != nil {
+		listenerFactory = s.config.ListenerFactory
+	}
+	ln, err := listenerFactory(addr)
 	if err != nil {
 		return NewSocketError(err)
 	}

@@ -10,6 +10,7 @@ import (
 type NioClient struct {
 	conn    net.Conn
 	handler ChannelHandler
+	config  *SocketConfig
 
 	closed atomic.Bool
 	mu     sync.Mutex
@@ -21,12 +22,22 @@ func NewNioClient(host string, port int) (*NioClient, error) {
 	return NewNioClientAddr(&net.TCPAddr{IP: net.ParseIP(host), Port: port})
 }
 
+// NewNioClientWithOptions creates a client and connects to the specified host and port with custom config options.
+func NewNioClientWithOptions(host string, port int, opts ...ConfigOption) (*NioClient, error) {
+	return NewNioClientAddrWithOptions(&net.TCPAddr{IP: net.ParseIP(host), Port: port}, opts...)
+}
+
 // NewNioClientAddr creates a client and connects to the specified address.
 func NewNioClientAddr(addr *net.TCPAddr) (*NioClient, error) {
+	return NewNioClientAddrWithOptions(addr)
+}
+
+// NewNioClientAddrWithOptions creates a client and connects to the specified address with custom config options.
+func NewNioClientAddrWithOptions(addr *net.TCPAddr, opts ...ConfigOption) (*NioClient, error) {
 	if addr == nil {
 		return nil, NewSocketErrorMsg("address must not be nil")
 	}
-	c := &NioClient{}
+	c := &NioClient{config: NewSocketConfigWithOptions(opts...)}
 	if err := c.init(addr); err != nil {
 		return nil, err
 	}
@@ -35,7 +46,11 @@ func NewNioClientAddr(addr *net.TCPAddr) (*NioClient, error) {
 
 // init initializes the connection.
 func (c *NioClient) init(addr *net.TCPAddr) error {
-	conn, err := net.DialTCP("tcp", nil, addr)
+	connFactory := func(addr *net.TCPAddr) (net.Conn, error) { return net.DialTCP("tcp", nil, addr) }
+	if c.config != nil && c.config.ConnFactory != nil {
+		connFactory = c.config.ConnFactory
+	}
+	conn, err := connFactory(addr)
 	if err != nil {
 		return NewSocketError(err)
 	}

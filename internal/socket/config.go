@@ -1,6 +1,7 @@
 package socket
 
 import (
+	"net"
 	"runtime"
 	"time"
 )
@@ -26,6 +27,11 @@ type SocketConfig struct {
 
 	// Clock returns the current time used to derive read/write deadlines. nil means time.Now.
 	Clock func() time.Time
+
+	// ListenerFactory creates server listeners. nil means net.ListenTCP("tcp", addr).
+	ListenerFactory func(*net.TCPAddr) (net.Listener, error)
+	// ConnFactory creates client connections. nil means net.DialTCP("tcp", nil, addr).
+	ConnFactory func(*net.TCPAddr) (net.Conn, error)
 }
 
 // ConfigOption customizes SocketConfig creation.
@@ -61,6 +67,24 @@ func WithClock(clock func() time.Time) ConfigOption {
 	return func(c *SocketConfig) {
 		if clock != nil {
 			c.Clock = clock
+		}
+	}
+}
+
+// WithListenerFactory sets the factory used to create server listeners.
+func WithListenerFactory(factory func(*net.TCPAddr) (net.Listener, error)) ConfigOption {
+	return func(c *SocketConfig) {
+		if factory != nil {
+			c.ListenerFactory = factory
+		}
+	}
+}
+
+// WithConnFactory sets the factory used to create client connections.
+func WithConnFactory(factory func(*net.TCPAddr) (net.Conn, error)) ConfigOption {
+	return func(c *SocketConfig) {
+		if factory != nil {
+			c.ConnFactory = factory
 		}
 	}
 }
@@ -144,6 +168,22 @@ func (c *SocketConfig) SetWriteBufferSize(n int) *SocketConfig {
 func (c *SocketConfig) SetClock(clock func() time.Time) *SocketConfig {
 	if clock != nil {
 		c.Clock = clock
+	}
+	return c
+}
+
+// SetListenerFactory sets the factory used to create server listeners.
+func (c *SocketConfig) SetListenerFactory(factory func(*net.TCPAddr) (net.Listener, error)) *SocketConfig {
+	if factory != nil {
+		c.ListenerFactory = factory
+	}
+	return c
+}
+
+// SetConnFactory sets the factory used to create client connections.
+func (c *SocketConfig) SetConnFactory(factory func(*net.TCPAddr) (net.Conn, error)) *SocketConfig {
+	if factory != nil {
+		c.ConnFactory = factory
 	}
 	return c
 }

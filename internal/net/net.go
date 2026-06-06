@@ -198,8 +198,9 @@ func applyResolveOptions(opts []ResolveOption) (resolveConfig, context.CancelFun
 }
 
 type portConfig struct {
-	network string
-	host    string
+	network         string
+	host            string
+	listenerFactory func(network, address string) (stdnet.Listener, error)
 }
 
 // PortOption customizes local port probing helpers.
@@ -211,8 +212,17 @@ func WithPortNetwork(network string) PortOption { return func(c *portConfig) { c
 // WithPortHost sets the local host/address used by local port probes.
 func WithPortHost(host string) PortOption { return func(c *portConfig) { c.host = host } }
 
+// WithPortListenerFactory sets the listener factory used to probe local ports.
+func WithPortListenerFactory(factory func(network, address string) (stdnet.Listener, error)) PortOption {
+	return func(c *portConfig) {
+		if factory != nil {
+			c.listenerFactory = factory
+		}
+	}
+}
+
 func applyPortOptions(opts []PortOption) portConfig {
-	cfg := portConfig{network: "tcp", host: "127.0.0.1"}
+	cfg := portConfig{network: "tcp", host: "127.0.0.1", listenerFactory: stdnet.Listen}
 	for _, opt := range opts {
 		if opt != nil {
 			opt(&cfg)
@@ -225,6 +235,96 @@ func applyPortOptions(opts []PortOption) portConfig {
 	cfg.host = strings.TrimSpace(cfg.host)
 	if cfg.host == "" {
 		cfg.host = "127.0.0.1"
+	}
+	if cfg.listenerFactory == nil {
+		cfg.listenerFactory = stdnet.Listen
+	}
+	return cfg
+}
+
+type interfaceConfig struct {
+	interfaceByName func(string) (*stdnet.Interface, error)
+	interfaces      func() ([]stdnet.Interface, error)
+	interfaceAddrs  func(stdnet.Interface) ([]stdnet.Addr, error)
+	lookupAddr      func(string) ([]string, error)
+	hostname        func() (string, error)
+}
+
+// InterfaceOption customizes local network interface helpers.
+type InterfaceOption func(*interfaceConfig)
+
+// WithInterfaceByNameFunc sets the function used to find a network interface by name.
+func WithInterfaceByNameFunc(fn func(string) (*stdnet.Interface, error)) InterfaceOption {
+	return func(c *interfaceConfig) {
+		if fn != nil {
+			c.interfaceByName = fn
+		}
+	}
+}
+
+// WithInterfacesFunc sets the function used to list local network interfaces.
+func WithInterfacesFunc(fn func() ([]stdnet.Interface, error)) InterfaceOption {
+	return func(c *interfaceConfig) {
+		if fn != nil {
+			c.interfaces = fn
+		}
+	}
+}
+
+// WithInterfaceAddrsFunc sets the function used to collect addresses for an interface.
+func WithInterfaceAddrsFunc(fn func(stdnet.Interface) ([]stdnet.Addr, error)) InterfaceOption {
+	return func(c *interfaceConfig) {
+		if fn != nil {
+			c.interfaceAddrs = fn
+		}
+	}
+}
+
+// WithReverseLookupFunc sets the function used for reverse host lookup.
+func WithReverseLookupFunc(fn func(string) ([]string, error)) InterfaceOption {
+	return func(c *interfaceConfig) {
+		if fn != nil {
+			c.lookupAddr = fn
+		}
+	}
+}
+
+// WithNetHostnameFunc sets the function used to collect the local hostname fallback.
+func WithNetHostnameFunc(fn func() (string, error)) InterfaceOption {
+	return func(c *interfaceConfig) {
+		if fn != nil {
+			c.hostname = fn
+		}
+	}
+}
+
+func applyInterfaceOptions(opts []InterfaceOption) interfaceConfig {
+	cfg := interfaceConfig{
+		interfaceByName: stdnet.InterfaceByName,
+		interfaces:      stdnet.Interfaces,
+		interfaceAddrs:  func(iface stdnet.Interface) ([]stdnet.Addr, error) { return iface.Addrs() },
+		lookupAddr:      stdnet.LookupAddr,
+		hostname:        osHostname,
+	}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.interfaceByName == nil {
+		cfg.interfaceByName = stdnet.InterfaceByName
+	}
+	if cfg.interfaces == nil {
+		cfg.interfaces = stdnet.Interfaces
+	}
+	if cfg.interfaceAddrs == nil {
+		cfg.interfaceAddrs = func(iface stdnet.Interface) ([]stdnet.Addr, error) { return iface.Addrs() }
+	}
+	if cfg.lookupAddr == nil {
+		cfg.lookupAddr = stdnet.LookupAddr
+	}
+	if cfg.hostname == nil {
+		cfg.hostname = osHostname
 	}
 	return cfg
 }
@@ -243,7 +343,7 @@ func IsUsableLocalPortWithOptions(port int, opts ...PortOption) bool {
 		return false
 	}
 	cfg := applyPortOptions(opts)
-	ln, err := stdnet.Listen(cfg.network, stdnet.JoinHostPort(cfg.host, strconvPort(port)))
+	ln, err := cfg.listenerFactory(cfg.network, stdnet.JoinHostPort(cfg.host, strconvPort(port)))
 	if err != nil {
 		return false
 	}
@@ -395,22 +495,49 @@ func GetIPByHostWithOptions(hostName string, opts ...ResolveOption) ([]string, e
 }
 
 // GetNetworkInterface returns a network interface by name.
-func GetNetworkInterface(name string) (*stdnet.Interface, error) { return stdnet.InterfaceByName(name) }
+func GetNetworkInterface(name string) (*stdnet.Interface, error) {
+	return GetNetworkInterfaceWithOptions(name)
+}
+
+// GetNetworkInterfaceWithOptions returns a network interface by name using custom providers.
+func GetNetworkInterfaceWithOptions(name string, opts ...InterfaceOption) (*stdnet.Interface, error) {
+	return applyInterfaceOptions(opts).interfaceByName(name)
+}
 
 // GetNetworkInterfaces returns all network interfaces.
-func GetNetworkInterfaces() ([]stdnet.Interface, error) { return stdnet.Interfaces() }
+func GetNetworkInterfaces() ([]stdnet.Interface, error) { return GetNetworkInterfacesWithOptions() }
+
+// GetNetworkInterfacesWithOptions returns all network interfaces using custom providers.
+func GetNetworkInterfacesWithOptions(opts ...InterfaceOption) ([]stdnet.Interface, error) {
+	return applyInterfaceOptions(opts).interfaces()
+}
 
 // LocalIPv4s returns local IPv4 addresses.
 func LocalIPv4s() []string { return ToIPList(LocalAddressList(nil)) }
+
+// LocalIPv4sWithOptions returns local IPv4 addresses using custom providers.
+func LocalIPv4sWithOptions(opts ...InterfaceOption) []string {
+	return ToIPList(LocalAddressListWithOptions(nil, opts...))
+}
 
 // LocalIPv6s returns local IPv6 addresses.
 func LocalIPv6s() []string {
 	return ToIPList(LocalAddressList(func(ip stdnet.IP) bool { return ip.To4() == nil && ip.To16() != nil }))
 }
 
+// LocalIPv6sWithOptions returns local IPv6 addresses using custom providers.
+func LocalIPv6sWithOptions(opts ...InterfaceOption) []string {
+	return ToIPList(LocalAddressListWithOptions(func(ip stdnet.IP) bool { return ip.To4() == nil && ip.To16() != nil }, opts...))
+}
+
 // LocalIPs returns all local IP addresses.
 func LocalIPs() []string {
 	return ToIPList(LocalAddressList(func(ip stdnet.IP) bool { return ip != nil }))
+}
+
+// LocalIPsWithOptions returns all local IP addresses using custom providers.
+func LocalIPsWithOptions(opts ...InterfaceOption) []string {
+	return ToIPList(LocalAddressListWithOptions(func(ip stdnet.IP) bool { return ip != nil }, opts...))
 }
 
 // ToIPList converts IP addresses to strings.
@@ -435,9 +562,20 @@ func LocalAddressList(addressFilter func(stdnet.IP) bool) []stdnet.IP {
 	return LocalAddressListByInterface(nil, addressFilter)
 }
 
+// LocalAddressListWithOptions returns local IP addresses matching addressFilter using custom providers.
+func LocalAddressListWithOptions(addressFilter func(stdnet.IP) bool, opts ...InterfaceOption) []stdnet.IP {
+	return LocalAddressListByInterfaceWithOptions(nil, addressFilter, opts...)
+}
+
 // LocalAddressListByInterface returns local IP addresses matching interface and address filters.
 func LocalAddressListByInterface(interfaceFilter func(stdnet.Interface) bool, addressFilter func(stdnet.IP) bool) []stdnet.IP {
-	interfaces, err := stdnet.Interfaces()
+	return LocalAddressListByInterfaceWithOptions(interfaceFilter, addressFilter)
+}
+
+// LocalAddressListByInterfaceWithOptions returns local IP addresses matching interface and address filters using custom providers.
+func LocalAddressListByInterfaceWithOptions(interfaceFilter func(stdnet.Interface) bool, addressFilter func(stdnet.IP) bool, opts ...InterfaceOption) []stdnet.IP {
+	cfg := applyInterfaceOptions(opts)
+	interfaces, err := cfg.interfaces()
 	if err != nil {
 		return nil
 	}
@@ -446,7 +584,7 @@ func LocalAddressListByInterface(interfaceFilter func(stdnet.Interface) bool, ad
 		if interfaceFilter != nil && !interfaceFilter(iface) {
 			continue
 		}
-		addrs, err := iface.Addrs()
+		addrs, err := cfg.interfaceAddrs(iface)
 		if err != nil {
 			continue
 		}
@@ -470,7 +608,12 @@ func LocalAddressListByInterface(interfaceFilter func(stdnet.Interface) bool, ad
 
 // GetLocalhostStr returns a preferred local host IP string.
 func GetLocalhostStr() string {
-	ips := LocalAddressList(nil)
+	return GetLocalhostStrWithOptions()
+}
+
+// GetLocalhostStrWithOptions returns a preferred local host IP string using custom providers.
+func GetLocalhostStrWithOptions(opts ...InterfaceOption) string {
+	ips := LocalAddressListWithOptions(nil, opts...)
 	if len(ips) > 0 {
 		return ips[0].String()
 	}
@@ -480,19 +623,35 @@ func GetLocalhostStr() string {
 // GetLocalhost returns a preferred local host IP.
 func GetLocalhost() stdnet.IP { return stdnet.ParseIP(GetLocalhostStr()) }
 
+// GetLocalhostWithOptions returns a preferred local host IP using custom providers.
+func GetLocalhostWithOptions(opts ...InterfaceOption) stdnet.IP {
+	return stdnet.ParseIP(GetLocalhostStrWithOptions(opts...))
+}
+
 // GetLocalHostName returns the OS host name.
 func GetLocalHostName() string {
-	host, err := stdnet.LookupAddr(GetLocalhostStr())
+	return GetLocalHostNameWithOptions()
+}
+
+// GetLocalHostNameWithOptions returns the OS host name using custom providers.
+func GetLocalHostNameWithOptions(opts ...InterfaceOption) string {
+	cfg := applyInterfaceOptions(opts)
+	host, err := cfg.lookupAddr(GetLocalhostStrWithOptions(opts...))
 	if err == nil && len(host) > 0 {
 		return strings.TrimSuffix(host[0], ".")
 	}
-	name, _ := osHostname()
+	name, _ := cfg.hostname()
 	return name
 }
 
 // GetLocalMACAddress returns the first non-empty local hardware address.
 func GetLocalMACAddress(separator ...string) string {
-	hw := GetLocalHardwareAddress()
+	return GetLocalMACAddressWithOptions(nil, separator...)
+}
+
+// GetLocalMACAddressWithOptions returns the first non-empty local hardware address using custom providers.
+func GetLocalMACAddressWithOptions(opts []InterfaceOption, separator ...string) string {
+	hw := GetLocalHardwareAddressWithOptions(opts...)
 	if hw == nil {
 		return ""
 	}
@@ -505,7 +664,12 @@ func GetLocalMACAddress(separator ...string) string {
 
 // GetMACAddress returns the hardware address of the interface owning inetAddress.
 func GetMACAddress(inetAddress stdnet.IP, separator ...string) string {
-	hw := GetHardwareAddress(inetAddress)
+	return GetMACAddressWithOptions(inetAddress, nil, separator...)
+}
+
+// GetMACAddressWithOptions returns the hardware address of the interface owning inetAddress using custom providers.
+func GetMACAddressWithOptions(inetAddress stdnet.IP, opts []InterfaceOption, separator ...string) string {
+	hw := GetHardwareAddressWithOptions(inetAddress, opts...)
 	if hw == nil {
 		return ""
 	}
@@ -518,12 +682,18 @@ func GetMACAddress(inetAddress stdnet.IP, separator ...string) string {
 
 // GetHardwareAddress returns the hardware address of the interface owning inetAddress.
 func GetHardwareAddress(inetAddress stdnet.IP) stdnet.HardwareAddr {
-	interfaces, err := stdnet.Interfaces()
+	return GetHardwareAddressWithOptions(inetAddress)
+}
+
+// GetHardwareAddressWithOptions returns the hardware address of the interface owning inetAddress using custom providers.
+func GetHardwareAddressWithOptions(inetAddress stdnet.IP, opts ...InterfaceOption) stdnet.HardwareAddr {
+	cfg := applyInterfaceOptions(opts)
+	interfaces, err := cfg.interfaces()
 	if err != nil {
 		return nil
 	}
 	for _, iface := range interfaces {
-		addrs, err := iface.Addrs()
+		addrs, err := cfg.interfaceAddrs(iface)
 		if err != nil {
 			continue
 		}
@@ -538,7 +708,12 @@ func GetHardwareAddress(inetAddress stdnet.IP) stdnet.HardwareAddr {
 
 // GetLocalHardwareAddress returns the first non-empty local hardware address.
 func GetLocalHardwareAddress() stdnet.HardwareAddr {
-	interfaces, err := stdnet.Interfaces()
+	return GetLocalHardwareAddressWithOptions()
+}
+
+// GetLocalHardwareAddressWithOptions returns the first non-empty local hardware address using custom providers.
+func GetLocalHardwareAddressWithOptions(opts ...InterfaceOption) stdnet.HardwareAddr {
+	interfaces, err := applyInterfaceOptions(opts).interfaces()
 	if err != nil {
 		return nil
 	}

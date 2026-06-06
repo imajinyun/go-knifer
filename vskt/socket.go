@@ -123,6 +123,16 @@ func WithWriteBufferSize(n int) ConfigOption { return socketx.WithWriteBufferSiz
 // WithClock sets the clock used to derive socket read/write deadlines.
 func WithClock(clock func() time.Time) ConfigOption { return socketx.WithClock(clock) }
 
+// WithListenerFactory sets the factory used to create server listeners.
+func WithListenerFactory(factory func(*net.TCPAddr) (net.Listener, error)) ConfigOption {
+	return socketx.WithListenerFactory(factory)
+}
+
+// WithConnFactory sets the factory used to create client connections.
+func WithConnFactory(factory func(*net.TCPAddr) (net.Conn, error)) ConfigOption {
+	return socketx.WithConnFactory(factory)
+}
+
 // NewSocketConfigWithOptions creates a socket config customized by options.
 func NewSocketConfigWithOptions(opts ...ConfigOption) *SocketConfig {
 	return socketx.NewSocketConfigWithOptions(opts...)
@@ -181,6 +191,11 @@ func ChannelDialWithOptions(addr *net.TCPAddr, opts ...ConnectOption) (net.Conn,
 // NewNioServer creates a NIO-style TCP server on port.
 func NewNioServer(port int) (*NioServer, error) { return socketx.NewNioServer(port) }
 
+// NewNioServerWithOptions creates a NIO-style TCP server on port with custom config options.
+func NewNioServerWithOptions(port int, opts ...ConfigOption) (*NioServer, error) {
+	return socketx.NewNioServerWithOptions(port, opts...)
+}
+
 // NewNioServerWithConfig creates a NIO-style TCP server on port with config.
 func NewNioServerWithConfig(port int, cfg *SocketConfig) (*NioServer, error) {
 	return socketx.NewNioServerWithConfig(port, cfg)
@@ -188,6 +203,11 @@ func NewNioServerWithConfig(port int, cfg *SocketConfig) (*NioServer, error) {
 
 // NewNioServerAddr creates a NIO-style TCP server at addr.
 func NewNioServerAddr(addr *net.TCPAddr) (*NioServer, error) { return socketx.NewNioServerAddr(addr) }
+
+// NewNioServerAddrWithOptions creates a NIO-style TCP server at addr with custom config options.
+func NewNioServerAddrWithOptions(addr *net.TCPAddr, cfg *SocketConfig, opts ...ConfigOption) (*NioServer, error) {
+	return socketx.NewNioServerAddrWithOptions(addr, cfg, opts...)
+}
 
 // NewNioServerAddrWithConfig creates a NIO-style TCP server at addr with config.
 func NewNioServerAddrWithConfig(addr *net.TCPAddr, cfg *SocketConfig) (*NioServer, error) {
@@ -197,15 +217,35 @@ func NewNioServerAddrWithConfig(addr *net.TCPAddr, cfg *SocketConfig) (*NioServe
 // NewNioClient creates a NIO-style TCP client.
 func NewNioClient(host string, port int) (*NioClient, error) { return socketx.NewNioClient(host, port) }
 
+// NewNioClientWithOptions creates a NIO-style TCP client with custom config options.
+func NewNioClientWithOptions(host string, port int, opts ...ConfigOption) (*NioClient, error) {
+	return socketx.NewNioClientWithOptions(host, port, opts...)
+}
+
 // NewNioClientAddr creates a NIO-style TCP client for addr.
 func NewNioClientAddr(addr *net.TCPAddr) (*NioClient, error) { return socketx.NewNioClientAddr(addr) }
+
+// NewNioClientAddrWithOptions creates a NIO-style TCP client for addr with custom config options.
+func NewNioClientAddrWithOptions(addr *net.TCPAddr, opts ...ConfigOption) (*NioClient, error) {
+	return socketx.NewNioClientAddrWithOptions(addr, opts...)
+}
 
 // NewAioServer creates an AIO-style TCP server on port.
 func NewAioServer(port int) (*AioServer, error) { return socketx.NewAioServer(port) }
 
+// NewAioServerWithOptions creates an AIO-style TCP server on port with custom config options.
+func NewAioServerWithOptions(port int, opts ...ConfigOption) (*AioServer, error) {
+	return socketx.NewAioServerWithOptions(port, opts...)
+}
+
 // NewAioServerAddr creates an AIO-style TCP server at addr.
 func NewAioServerAddr(addr *net.TCPAddr, cfg *SocketConfig) (*AioServer, error) {
 	return socketx.NewAioServerAddr(addr, cfg)
+}
+
+// NewAioServerAddrWithOptions creates an AIO-style TCP server at addr with custom config options.
+func NewAioServerAddrWithOptions(addr *net.TCPAddr, cfg *SocketConfig, opts ...ConfigOption) (*AioServer, error) {
+	return socketx.NewAioServerAddrWithOptions(addr, cfg, opts...)
 }
 
 // NewAioClient creates an AIO-style TCP client.

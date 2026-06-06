@@ -3,11 +3,20 @@ package cache
 import "time"
 
 type cacheConfig[K comparable, V any] struct {
-	capacity int
-	timeout  time.Duration
-	listener CacheListener[K, V]
-	clock    func() time.Time
+	capacity      int
+	timeout       time.Duration
+	listener      CacheListener[K, V]
+	clock         func() time.Time
+	tickerFactory TickerFactory
 }
+
+// Ticker stops a scheduled cache pruning ticker created by TickerFactory.
+type Ticker interface {
+	Stop()
+}
+
+// TickerFactory creates a ticker channel and stopper for scheduled pruning.
+type TickerFactory func(time.Duration) (<-chan time.Time, Ticker)
 
 // Option customizes cache construction.
 type Option[K comparable, V any] func(*cacheConfig[K, V])
@@ -32,6 +41,11 @@ func WithClock[K comparable, V any](clock func() time.Time) Option[K, V] {
 	return func(c *cacheConfig[K, V]) { c.clock = clock }
 }
 
+// WithTickerFactory sets the ticker factory used by scheduled pruning.
+func WithTickerFactory[K comparable, V any](factory TickerFactory) Option[K, V] {
+	return func(c *cacheConfig[K, V]) { c.tickerFactory = factory }
+}
+
 func applyOptions[K comparable, V any](opts []Option[K, V]) cacheConfig[K, V] {
 	cfg := cacheConfig[K, V]{}
 	for _, opt := range opts {
@@ -50,4 +64,13 @@ func applyListener[K comparable, V any](c *abstractCache[K, V], listener CacheLi
 
 func applyClock[K comparable, V any](c *abstractCache[K, V], clock func() time.Time) {
 	c.setClock(clock)
+}
+
+func applyTickerFactory[K comparable, V any](c *abstractCache[K, V], factory TickerFactory) {
+	c.setTickerFactory(factory)
+}
+
+func newTicker(delay time.Duration) (<-chan time.Time, Ticker) {
+	ticker := time.NewTicker(delay)
+	return ticker.C, ticker
 }

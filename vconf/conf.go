@@ -27,6 +27,10 @@ type (
 	WatchOptions = confimpl.WatchOptions
 	// WatchEvent describes a detected configuration file change.
 	WatchEvent = confimpl.WatchEvent
+	// WatchTicker stops a watch polling ticker created by WatchTickerFactory.
+	WatchTicker = confimpl.WatchTicker
+	// WatchTickerFactory creates a ticker channel and stopper for WatchWithOptions.
+	WatchTickerFactory = confimpl.WatchTickerFactory
 )
 
 const (

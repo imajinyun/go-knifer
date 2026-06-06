@@ -38,6 +38,23 @@ type fakeDialer struct {
 	server  net.Conn
 }
 
+type factoryFakeAddr string
+
+func (a factoryFakeAddr) Network() string { return "tcp" }
+func (a factoryFakeAddr) String() string  { return string(a) }
+
+type fakeListener struct {
+	addr   net.Addr
+	closed atomic.Bool
+}
+
+func (l *fakeListener) Accept() (net.Conn, error) { return nil, net.ErrClosed }
+func (l *fakeListener) Close() error {
+	l.closed.Store(true)
+	return nil
+}
+func (l *fakeListener) Addr() net.Addr { return l.addr }
+
 func (d *fakeDialer) DialContext(ctx context.Context, network, address string) (net.Conn, error) {
 	d.calls.Add(1)
 	d.network = network
@@ -65,17 +82,74 @@ func TestSocketConfigDefaults(t *testing.T) {
 }
 
 func TestSocketConfigOptions(t *testing.T) {
+	listener := &fakeListener{addr: fakeAddr("listener")}
+	client, server := net.Pipe()
+	defer closeAndReport(t, server.Close)
 	cfg := NewSocketConfigWithOptions(
 		WithThreadPoolSize(2),
 		WithReadTimeout(100),
 		WithWriteTimeout(200),
 		WithReadBufferSize(64),
 		WithWriteBufferSize(128),
+		WithListenerFactory(func(*net.TCPAddr) (net.Listener, error) { return listener, nil }),
+		WithConnFactory(func(*net.TCPAddr) (net.Conn, error) { return client, nil }),
 	)
 	if cfg.ThreadPoolSize != 2 || cfg.ReadTimeout != 100 || cfg.WriteTimeout != 200 ||
 		cfg.ReadBufferSize != 64 || cfg.WriteBufferSize != 128 {
 		t.Fatalf("NewSocketConfigWithOptions not applied: %+v", cfg)
 	}
+	if cfg.ListenerFactory == nil || cfg.ConnFactory == nil {
+		t.Fatal("expected listener and connection factories")
+	}
+}
+
+func TestSocketListenerAndConnFactories(t *testing.T) {
+	addr := &net.TCPAddr{IP: net.ParseIP("127.0.0.1"), Port: 9999}
+	listener := &fakeListener{addr: factoryFakeAddr("aio-listener")}
+	aio, err := NewAioServerAddrWithOptions(addr, nil, WithListenerFactory(func(got *net.TCPAddr) (net.Listener, error) {
+		if got != addr {
+			return nil, errors.New("unexpected aio addr")
+		}
+		return listener, nil
+	}))
+	if err != nil {
+		t.Fatalf("NewAioServerAddrWithOptions: %v", err)
+	}
+	if aio.Listener() != listener || aio.LocalAddr().String() != "aio-listener" {
+		t.Fatalf("aio listener = %#v addr=%v", aio.Listener(), aio.LocalAddr())
+	}
+	closeAndReport(t, aio.Close)
+
+	listener = &fakeListener{addr: factoryFakeAddr("nio-listener")}
+	nio, err := NewNioServerAddrWithOptions(addr, nil, WithListenerFactory(func(got *net.TCPAddr) (net.Listener, error) {
+		if got != addr {
+			return nil, errors.New("unexpected nio addr")
+		}
+		return listener, nil
+	}))
+	if err != nil {
+		t.Fatalf("NewNioServerAddrWithOptions: %v", err)
+	}
+	if nio.Listener() != listener || nio.LocalAddr().String() != "nio-listener" {
+		t.Fatalf("nio listener = %#v addr=%v", nio.Listener(), nio.LocalAddr())
+	}
+	closeAndReport(t, nio.Close)
+
+	client, server := net.Pipe()
+	defer closeAndReport(t, server.Close)
+	nioClient, err := NewNioClientAddrWithOptions(addr, WithConnFactory(func(got *net.TCPAddr) (net.Conn, error) {
+		if got != addr {
+			return nil, errors.New("unexpected client addr")
+		}
+		return client, nil
+	}))
+	if err != nil {
+		t.Fatalf("NewNioClientAddrWithOptions: %v", err)
+	}
+	if nioClient.Channel() != client {
+		t.Fatalf("nio client channel = %#v", nioClient.Channel())
+	}
+	closeAndReport(t, nioClient.Close)
 }
 
 func TestSocketUtilConnect(t *testing.T) {

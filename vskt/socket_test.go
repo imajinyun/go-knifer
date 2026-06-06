@@ -2,6 +2,7 @@ package vskt_test
 
 import (
 	"context"
+	"errors"
 	"net"
 	"sync/atomic"
 	"testing"
@@ -16,6 +17,19 @@ type facadeFakeDialer struct {
 	address string
 	server  net.Conn
 }
+
+type facadeFakeAddr string
+
+func (a facadeFakeAddr) Network() string { return "tcp" }
+func (a facadeFakeAddr) String() string  { return string(a) }
+
+type facadeFakeListener struct {
+	addr net.Addr
+}
+
+func (l *facadeFakeListener) Accept() (net.Conn, error) { return nil, net.ErrClosed }
+func (l *facadeFakeListener) Close() error              { return nil }
+func (l *facadeFakeListener) Addr() net.Addr            { return l.addr }
 
 func (d *facadeFakeDialer) DialContext(ctx context.Context, network, address string) (net.Conn, error) {
 	d.calls.Add(1)
@@ -34,17 +48,74 @@ func TestFacadeSocketConfig(t *testing.T) {
 }
 
 func TestFacadeSocketConfigWithOptions(t *testing.T) {
+	listener := &facadeFakeListener{addr: facadeFakeAddr("listener")}
+	client, server := net.Pipe()
+	defer func() { _ = server.Close() }()
 	cfg := vskt.NewSocketConfigWithOptions(
 		vskt.WithThreadPoolSize(2),
 		vskt.WithReadTimeout(100),
 		vskt.WithWriteTimeout(200),
 		vskt.WithReadBufferSize(64),
 		vskt.WithWriteBufferSize(128),
+		vskt.WithListenerFactory(func(*net.TCPAddr) (net.Listener, error) { return listener, nil }),
+		vskt.WithConnFactory(func(*net.TCPAddr) (net.Conn, error) { return client, nil }),
 	)
 	if cfg.ThreadPoolSize != 2 || cfg.ReadTimeout != 100 || cfg.WriteTimeout != 200 ||
 		cfg.ReadBufferSize != 64 || cfg.WriteBufferSize != 128 {
 		t.Fatalf("NewSocketConfigWithOptions not applied: %+v", cfg)
 	}
+	if cfg.ListenerFactory == nil || cfg.ConnFactory == nil {
+		t.Fatal("expected listener and connection factories")
+	}
+}
+
+func TestFacadeSocketFactories(t *testing.T) {
+	addr := &net.TCPAddr{IP: net.ParseIP("127.0.0.1"), Port: 9999}
+	listener := &facadeFakeListener{addr: facadeFakeAddr("facade-aio")}
+	aio, err := vskt.NewAioServerAddrWithOptions(addr, nil, vskt.WithListenerFactory(func(got *net.TCPAddr) (net.Listener, error) {
+		if got != addr {
+			return nil, errors.New("unexpected aio addr")
+		}
+		return listener, nil
+	}))
+	if err != nil {
+		t.Fatalf("NewAioServerAddrWithOptions: %v", err)
+	}
+	if aio.Listener() != listener || aio.LocalAddr().String() != "facade-aio" {
+		t.Fatalf("aio listener = %#v addr=%v", aio.Listener(), aio.LocalAddr())
+	}
+	_ = aio.Close()
+
+	listener = &facadeFakeListener{addr: facadeFakeAddr("facade-nio")}
+	nio, err := vskt.NewNioServerAddrWithOptions(addr, nil, vskt.WithListenerFactory(func(got *net.TCPAddr) (net.Listener, error) {
+		if got != addr {
+			return nil, errors.New("unexpected nio addr")
+		}
+		return listener, nil
+	}))
+	if err != nil {
+		t.Fatalf("NewNioServerAddrWithOptions: %v", err)
+	}
+	if nio.Listener() != listener || nio.LocalAddr().String() != "facade-nio" {
+		t.Fatalf("nio listener = %#v addr=%v", nio.Listener(), nio.LocalAddr())
+	}
+	_ = nio.Close()
+
+	client, server := net.Pipe()
+	defer func() { _ = server.Close() }()
+	nioClient, err := vskt.NewNioClientAddrWithOptions(addr, vskt.WithConnFactory(func(got *net.TCPAddr) (net.Conn, error) {
+		if got != addr {
+			return nil, errors.New("unexpected client addr")
+		}
+		return client, nil
+	}))
+	if err != nil {
+		t.Fatalf("NewNioClientAddrWithOptions: %v", err)
+	}
+	if nioClient.Channel() != client {
+		t.Fatalf("nio client channel = %#v", nioClient.Channel())
+	}
+	_ = nioClient.Close()
 }
 
 func TestFacadeSocketConnectWithOptions(t *testing.T) {

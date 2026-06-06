@@ -3,6 +3,7 @@ package verr
 import (
 	"context"
 	"io"
+	"time"
 
 	"github.com/sirupsen/logrus"
 
@@ -40,6 +41,15 @@ type InitOption = errimpl.InitOption
 
 // Collector runs functions, recovers panics, logs failures, and aggregates errors.
 type Collector = errimpl.Collector
+
+// Timer stops a wait timer created by TimerFactory.
+type Timer = errimpl.Timer
+
+// TimerFactory creates a timer channel and stopper for Collector waits.
+type TimerFactory = errimpl.TimerFactory
+
+// WaitOption customizes a single Collector wait call.
+type WaitOption = errimpl.WaitOption
 
 // Wrapper executes a function with panic recovery and optional logging.
 type Wrapper = errimpl.Wrapper
@@ -111,3 +121,21 @@ func GetStackTraceWithOptions(opts ...StackTraceOption) StackTrace {
 
 // WithLevel sets the log level used for recovered or returned errors.
 func WithLevel(c *Collector, level logrus.Level) *Collector { return c.WithLevel(level) }
+
+// WithTimerFactory sets the default timer factory used by Collector.WaitUntil.
+func WithTimerFactory(c *Collector, factory TimerFactory) *Collector {
+	return c.WithTimerFactory(factory)
+}
+
+// WithWaitContext sets a context that can cancel a single WaitUntilWithOptions call.
+func WithWaitContext(ctx context.Context) WaitOption { return errimpl.WithWaitContext(ctx) }
+
+// WithWaitTimerFactory sets the timer factory for a single WaitUntilWithOptions call.
+func WithWaitTimerFactory(factory TimerFactory) WaitOption {
+	return errimpl.WithWaitTimerFactory(factory)
+}
+
+// WaitUntilWithOptions waits using per-call wait options.
+func WaitUntilWithOptions(c *Collector, duration time.Duration, opts ...WaitOption) (bool, error) {
+	return c.WaitUntilWithOptions(duration, opts...)
+}

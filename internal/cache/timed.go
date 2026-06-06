@@ -29,6 +29,7 @@ func NewTimedCacheWithOptions[K comparable, V any](opts ...Option[K, V]) *TimedC
 	c := NewTimedCache[K, V](cfg.timeout)
 	applyListener(&c.abstractCache, cfg.listener)
 	applyClock(&c.abstractCache, cfg.clock)
+	applyTickerFactory(&c.abstractCache, cfg.tickerFactory)
 	return c
 }
 
@@ -57,13 +58,13 @@ func (c *TimedCache[K, V]) SchedulePrune(delay time.Duration) {
 	c.pruneWG.Add(1)
 	go func() {
 		defer c.pruneWG.Done()
-		ticker := time.NewTicker(delay)
+		ticks, ticker := c.newTicker(delay)
 		defer ticker.Stop()
 		for {
 			select {
 			case <-c.pruneStop:
 				return
-			case <-ticker.C:
+			case <-ticks:
 				c.Prune()
 			}
 		}

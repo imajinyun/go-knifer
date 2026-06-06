@@ -14,8 +14,9 @@ import (
 // Collector runs functions, recovers panics, logs failures, and aggregates
 // returned errors. It is safe for concurrent use.
 type Collector struct {
-	level logrus.Level
-	ctx   context.Context
+	level        logrus.Level
+	ctx          context.Context
+	timerFactory TimerFactory
 
 	swg sync.WaitGroup
 	mux sync.Mutex
@@ -25,9 +26,36 @@ type Collector struct {
 // NewCollector creates a Collector that logs failures at error level.
 func NewCollector() *Collector {
 	return &Collector{
-		level: logrus.ErrorLevel,
-		ctx:   context.Background(),
+		level:        logrus.ErrorLevel,
+		ctx:          context.Background(),
+		timerFactory: newCollectorTimer,
 	}
+}
+
+// Timer stops a wait timer created by TimerFactory.
+type Timer interface {
+	Stop() bool
+}
+
+// TimerFactory creates a timer channel and stopper for Collector waits.
+type TimerFactory func(time.Duration) (<-chan time.Time, Timer)
+
+type waitConfig struct {
+	ctx          context.Context
+	timerFactory TimerFactory
+}
+
+// WaitOption customizes a single Collector wait call.
+type WaitOption func(*waitConfig)
+
+// WithWaitContext sets a context that can cancel a single WaitUntilWithOptions call.
+func WithWaitContext(ctx context.Context) WaitOption {
+	return func(c *waitConfig) { c.ctx = ctx }
+}
+
+// WithWaitTimerFactory sets the timer factory for a single WaitUntilWithOptions call.
+func WithWaitTimerFactory(factory TimerFactory) WaitOption {
+	return func(c *waitConfig) { c.timerFactory = factory }
 }
 
 // WithContext sets the context attached to log entries.
@@ -46,6 +74,16 @@ func (c *Collector) WithLevel(level logrus.Level) *Collector {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 	c.level = level
+	return c
+}
+
+// WithTimerFactory sets the default timer factory used by WaitUntil.
+func (c *Collector) WithTimerFactory(factory TimerFactory) *Collector {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	if factory != nil {
+		c.timerFactory = factory
+	}
 	return c
 }
 
@@ -68,24 +106,56 @@ func (c *Collector) Error() error {
 // WaitUntil waits until all launched functions finish or duration expires.
 // It returns whether all functions completed and the aggregated error, if any.
 func (c *Collector) WaitUntil(duration time.Duration) (bool, error) {
+	return c.WaitUntilWithOptions(duration)
+}
+
+// WaitUntilWithOptions waits until all launched functions finish, duration expires,
+// or the optional wait context is canceled.
+func (c *Collector) WaitUntilWithOptions(duration time.Duration, opts ...WaitOption) (bool, error) {
 	if duration <= 0 {
 		return false, nil
 	}
+	cfg := c.waitConfig(opts...)
 	done := make(chan struct{})
 	go func() {
 		c.swg.Wait()
 		close(done)
 	}()
 
-	timer := time.NewTimer(duration)
+	timerC, timer := cfg.timerFactory(duration)
 	defer timer.Stop()
 
 	select {
 	case <-done:
 		return true, c.error()
-	case <-timer.C:
+	case <-timerC:
+		return false, nil
+	case <-cfg.ctx.Done():
 		return false, nil
 	}
+}
+
+func (c *Collector) waitConfig(opts ...WaitOption) waitConfig {
+	c.mux.Lock()
+	cfg := waitConfig{ctx: context.Background(), timerFactory: c.timerFactory}
+	c.mux.Unlock()
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.ctx == nil {
+		cfg.ctx = context.Background()
+	}
+	if cfg.timerFactory == nil {
+		cfg.timerFactory = newCollectorTimer
+	}
+	return cfg
+}
+
+func newCollectorTimer(duration time.Duration) (<-chan time.Time, Timer) {
+	timer := time.NewTimer(duration)
+	return timer.C, timer
 }
 
 // Recover executes f in the current goroutine, recovers panics, logs failures,

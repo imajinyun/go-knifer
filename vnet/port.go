@@ -1,6 +1,10 @@
 package vnet
 
-import netimpl "github.com/imajinyun/go-knifer/internal/net"
+import (
+	stdnet "net"
+
+	netimpl "github.com/imajinyun/go-knifer/internal/net"
+)
 
 func IsValidPort(port int) bool { return netimpl.IsValidPort(port) }
 
@@ -9,6 +13,10 @@ func IsUsableLocalPort(port int) bool { return netimpl.IsUsableLocalPort(port) }
 func WithPortNetwork(network string) PortOption { return netimpl.WithPortNetwork(network) }
 
 func WithPortHost(host string) PortOption { return netimpl.WithPortHost(host) }
+
+func WithPortListenerFactory(factory func(network, address string) (stdnet.Listener, error)) PortOption {
+	return netimpl.WithPortListenerFactory(factory)
+}
 
 func IsUsableLocalPortWithOptions(port int, opts ...PortOption) bool {
 	return netimpl.IsUsableLocalPortWithOptions(port, opts...)

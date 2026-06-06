@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	knifer "github.com/imajinyun/go-knifer"
 	"github.com/imajinyun/go-knifer/verr"
@@ -67,6 +68,33 @@ func TestStackTraceWithOptionsFacade(t *testing.T) {
 func TestInitWithOptionsFacade(t *testing.T) {
 	var b strings.Builder
 	verr.InitWithOptions(verr.WithLogOutput(&b), verr.WithReportCaller(false))
+}
+
+type facadeTimer struct{}
+
+func (facadeTimer) Stop() bool { return true }
+
+func TestCollectorWaitOptionsFacade(t *testing.T) {
+	c := verr.NewCollector()
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	called := false
+	done, err := verr.WaitUntilWithOptions(c, time.Second,
+		verr.WithWaitContext(ctx),
+		verr.WithWaitTimerFactory(func(duration time.Duration) (<-chan time.Time, verr.Timer) {
+			called = true
+			if duration != time.Second {
+				t.Fatalf("timer duration = %s, want 1s", duration)
+			}
+			return make(chan time.Time), facadeTimer{}
+		}),
+	)
+	if done || err != nil {
+		t.Fatalf("WaitUntilWithOptions() = (%v, %v), want (false, nil)", done, err)
+	}
+	if !called {
+		t.Fatal("facade wait timer factory was not called")
+	}
 }
 
 func TestMustExitFacade(t *testing.T) {

@@ -34,6 +34,8 @@ type LoadOptions struct {
 	Timeout time.Duration
 	// MaxBytes limits local and remote config bytes. Non-positive means unlimited.
 	MaxBytes int64
+	// ReadFile optionally reads a local config file. Defaults to os.Open plus MaxBytes limiting.
+	ReadFile func(path string, maxBytes int64) ([]byte, error)
 }
 
 // LoadWithOptions reads and parses a configuration file with advanced options.
@@ -101,7 +103,7 @@ func loadFile(path string, opts LoadOptions, seen map[string]bool) (*Conf, error
 	seen[abs] = true
 	defer delete(seen, abs)
 
-	b, err := readFileLimit(path, opts.MaxBytes) // #nosec G304 G703 -- configuration loader intentionally reads caller-provided paths.
+	b, err := readFileWithOptions(path, opts) // #nosec G304 G703 -- configuration loader intentionally reads caller-provided paths.
 	if err != nil {
 		return nil, wrapConfigIO("read config file "+path, err)
 	}
@@ -204,6 +206,13 @@ func readFileLimit(path string, maxBytes int64) ([]byte, error) {
 	}
 	defer func() { _ = f.Close() }()
 	return readAllLimit(f, maxBytes)
+}
+
+func readFileWithOptions(path string, opts LoadOptions) ([]byte, error) {
+	if opts.ReadFile != nil {
+		return opts.ReadFile(path, opts.MaxBytes)
+	}
+	return readFileLimit(path, opts.MaxBytes)
 }
 
 func readAllLimit(r io.Reader, maxBytes int64) ([]byte, error) {

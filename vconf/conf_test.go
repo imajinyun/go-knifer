@@ -220,6 +220,18 @@ func TestLoadProfileAndWatchFacade(t *testing.T) {
 	}
 }
 
+type facadeWatchTicker struct{}
+
+func (facadeWatchTicker) Stop() {}
+
+func TestWatchOptionsProviderTypesFacade(t *testing.T) {
+	ticks := make(chan time.Time)
+	var factory vconf.WatchTickerFactory = func(time.Duration) (<-chan time.Time, vconf.WatchTicker) {
+		return ticks, facadeWatchTicker{}
+	}
+	_ = vconf.WatchOptions{TickerFactory: factory}
+}
+
 func TestAdvancedLoadAndSchemaFacade(t *testing.T) {
 	dir := t.TempDir()
 	base := filepath.Join(dir, "base.setting")

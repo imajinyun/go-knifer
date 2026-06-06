@@ -26,6 +26,7 @@ type (
 	PingOption         = netimpl.PingOption
 	ResolveOption      = netimpl.ResolveOption
 	PortOption         = netimpl.PortOption
+	InterfaceOption    = netimpl.InterfaceOption
 	UploadSetting      = netimpl.UploadSetting
 	UploadSaveOption   = netimpl.UploadSaveOption
 	MultipartFormData  = netimpl.MultipartFormData
