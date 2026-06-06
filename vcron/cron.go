@@ -27,6 +27,9 @@ type Scheduler = cron.Scheduler
 // SchedulerOption customizes scheduler construction.
 type SchedulerOption = cron.SchedulerOption
 
+// ConfigOption customizes cron config construction.
+type ConfigOption = cron.ConfigOption
+
 // CronTask is a scheduled task entry.
 type CronTask = cron.CronTask
 
@@ -55,7 +58,20 @@ type TaskExecutor = cron.TaskExecutor
 type TaskTable = cron.TaskTable
 
 // NewCronConfig creates default cron config.
-func NewCronConfig() *CronConfig { return cron.NewConfig() }
+func NewCronConfig() *CronConfig { return NewCronConfigWithOptions() }
+
+// WithConfigLocation sets the scheduler time zone on CronConfig.
+func WithConfigLocation(loc *time.Location) ConfigOption { return cron.WithConfigLocation(loc) }
+
+// WithConfigMatchSecond sets whether cron expressions match seconds on CronConfig.
+func WithConfigMatchSecond(matchSecond bool) ConfigOption {
+	return cron.WithConfigMatchSecond(matchSecond)
+}
+
+// NewCronConfigWithOptions creates cron config customized by options.
+func NewCronConfigWithOptions(opts ...ConfigOption) *CronConfig {
+	return cron.NewConfigWithOptions(opts...)
+}
 
 // NewCronPattern parses a cron expression.
 func NewCronPattern(expr string) (*CronPattern, error) { return cron.NewPattern(expr) }

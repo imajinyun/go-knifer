@@ -86,4 +86,9 @@ func TestFacadeConfig(t *testing.T) {
 	if cfg == nil {
 		t.Fatal("expected non-nil config")
 	}
+	loc := time.FixedZone("facade-config", 8*3600)
+	cfg = vcron.NewCronConfigWithOptions(vcron.WithConfigLocation(loc), vcron.WithConfigMatchSecond(true))
+	if cfg.Location != loc || !cfg.MatchSecond {
+		t.Fatalf("NewCronConfigWithOptions = %#v", cfg)
+	}
 }

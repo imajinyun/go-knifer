@@ -19,6 +19,14 @@ func TestIDCardFacade(t *testing.T) {
 	if !ok || birth.Format("2006-01-02") != "1949-12-31" {
 		t.Fatalf("BirthDate() = %v, %v", birth, ok)
 	}
+	loc := time.FixedZone("facade", 8*3600)
+	birth, ok = vident.BirthDateWithOptions("11010519491231002X", vident.WithBirthLocation(loc))
+	if !ok || birth.Location() != loc || birth.Format("2006-01-02") != "1949-12-31" {
+		t.Fatalf("BirthDateWithOptions() = %v, %v", birth, ok)
+	}
+	if !vident.IsValidBirthdayWithOptions("19491231", vident.WithBirthLocation(loc)) {
+		t.Fatal("IsValidBirthdayWithOptions should accept valid birthday")
+	}
 	age, ok := vident.AgeAt("11010519491231002X", time.Date(2024, 12, 31, 0, 0, 0, 0, time.Local))
 	if !ok || age != 75 {
 		t.Fatalf("AgeAt() = %d, %v", age, ok)

@@ -121,6 +121,17 @@ func TestVNetFacadeOptions(t *testing.T) {
 
 func TestVNetProviderOptionsFacade(t *testing.T) {
 	var network, address string
+	addr, err := vnet.BuildInetSocketAddressWithOptions("example.com", 8080, vnet.WithAddressNetwork("tcp4"), vnet.WithTCPAddrResolver(func(n, a string) (*stdnet.TCPAddr, error) {
+		network, address = n, a
+		return &stdnet.TCPAddr{IP: stdnet.ParseIP("10.0.0.2"), Port: 8080}, nil
+	}))
+	if err != nil || addr.Port != 8080 {
+		t.Fatalf("BuildInetSocketAddressWithOptions = %#v %v", addr, err)
+	}
+	if network != "tcp4" || address != "example.com:8080" {
+		t.Fatalf("address resolver target = %s %s", network, address)
+	}
+
 	if !vnet.IsUsableLocalPortWithOptions(23456, vnet.WithPortNetwork("tcp4"), vnet.WithPortHost("127.0.0.2"), vnet.WithPortListenerFactory(func(n, a string) (stdnet.Listener, error) {
 		network, address = n, a
 		return stubListener{}, nil

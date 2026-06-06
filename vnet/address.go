@@ -7,10 +7,24 @@ import (
 )
 
 func BuildInetSocketAddress(host string, defaultPort int) (*stdnet.TCPAddr, error) {
-	return netimpl.BuildInetSocketAddress(host, defaultPort)
+	return BuildInetSocketAddressWithOptions(host, defaultPort)
+}
+
+func BuildInetSocketAddressWithOptions(host string, defaultPort int, opts ...AddressOption) (*stdnet.TCPAddr, error) {
+	return netimpl.BuildInetSocketAddressWithOptions(host, defaultPort, opts...)
 }
 
 func CreateAddress(host string, port int) *stdnet.TCPAddr { return netimpl.CreateAddress(host, port) }
+
+func CreateAddressWithOptions(host string, port int, opts ...AddressOption) (*stdnet.TCPAddr, error) {
+	return netimpl.CreateAddressWithOptions(host, port, opts...)
+}
+
+func WithAddressNetwork(network string) AddressOption { return netimpl.WithAddressNetwork(network) }
+
+func WithTCPAddrResolver(resolver func(network, address string) (*stdnet.TCPAddr, error)) AddressOption {
+	return netimpl.WithTCPAddrResolver(resolver)
+}
 
 func GetIPByHost(hostName string) string { return netimpl.GetIPByHost(hostName) }
 

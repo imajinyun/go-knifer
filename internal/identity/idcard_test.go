@@ -103,6 +103,14 @@ func TestIDCardFields(t *testing.T) {
 	if !ok || age != 74 {
 		t.Fatalf("AgeWithOptions(WithAgeClock) = %d, %v", age, ok)
 	}
+	loc := time.FixedZone("birthday", 8*3600)
+	birthDate, ok := BirthDateWithOptions(id, WithBirthLocation(loc))
+	if !ok || birthDate.Location() != loc || birthDate.Format("2006-01-02") != "1949-12-31" {
+		t.Fatalf("BirthDateWithOptions() = %v, %v", birthDate, ok)
+	}
+	if !IsValidBirthdayWithOptions("19491231", WithBirthLocation(loc)) || IsValidBirthdayWithOptions("19490231", WithBirthLocation(loc)) {
+		t.Fatal("IsValidBirthdayWithOptions failed")
+	}
 	gender, ok := GenderOf(id)
 	if !ok || gender != GenderFemale {
 		t.Fatalf("GenderOf() = %d, %v", gender, ok)

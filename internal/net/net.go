@@ -145,8 +145,16 @@ type resolveConfig struct {
 	attrNames []string
 }
 
+type addressConfig struct {
+	network  string
+	resolver func(network, address string) (*stdnet.TCPAddr, error)
+}
+
 // ResolveOption customizes DNS and host resolution helpers.
 type ResolveOption func(*resolveConfig)
+
+// AddressOption customizes TCP address construction helpers.
+type AddressOption func(*addressConfig)
 
 // WithResolveContext sets the context used by DNS lookups.
 func WithResolveContext(ctx context.Context) ResolveOption {
@@ -173,6 +181,20 @@ func WithDNSTypes(attrNames ...string) ResolveOption {
 	return func(c *resolveConfig) { c.attrNames = append([]string(nil), attrNames...) }
 }
 
+// WithAddressNetwork sets the network used by TCP address construction helpers.
+func WithAddressNetwork(network string) AddressOption {
+	return func(c *addressConfig) { c.network = network }
+}
+
+// WithTCPAddrResolver sets the resolver used by TCP address construction helpers.
+func WithTCPAddrResolver(resolver func(network, address string) (*stdnet.TCPAddr, error)) AddressOption {
+	return func(c *addressConfig) {
+		if resolver != nil {
+			c.resolver = resolver
+		}
+	}
+}
+
 func applyResolveOptions(opts []ResolveOption) (resolveConfig, context.CancelFunc) {
 	cfg := resolveConfig{ctx: context.Background(), network: "ip", resolver: stdnet.DefaultResolver}
 	for _, opt := range opts {
@@ -195,6 +217,23 @@ func applyResolveOptions(opts []ResolveOption) (resolveConfig, context.CancelFun
 		cfg.resolver = stdnet.DefaultResolver
 	}
 	return cfg, cancel
+}
+
+func applyAddressOptions(opts []AddressOption) addressConfig {
+	cfg := addressConfig{network: "tcp", resolver: stdnet.ResolveTCPAddr}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	cfg.network = strings.TrimSpace(cfg.network)
+	if cfg.network == "" {
+		cfg.network = "tcp"
+	}
+	if cfg.resolver == nil {
+		cfg.resolver = stdnet.ResolveTCPAddr
+	}
+	return cfg
 }
 
 type portConfig struct {
@@ -458,16 +497,28 @@ func HideIPPartLong(ip uint32) string { return HideIPPart(LongToIPv4(ip)) }
 
 // BuildInetSocketAddress builds a TCP address with a default port when host contains none.
 func BuildInetSocketAddress(host string, defaultPort int) (*stdnet.TCPAddr, error) {
+	return BuildInetSocketAddressWithOptions(host, defaultPort)
+}
+
+// BuildInetSocketAddressWithOptions builds a TCP address with custom address resolution options.
+func BuildInetSocketAddressWithOptions(host string, defaultPort int, opts ...AddressOption) (*stdnet.TCPAddr, error) {
+	cfg := applyAddressOptions(opts)
 	if _, _, err := stdnet.SplitHostPort(host); err == nil {
-		return stdnet.ResolveTCPAddr("tcp", host)
+		return cfg.resolver(cfg.network, host)
 	}
-	return stdnet.ResolveTCPAddr("tcp", stdnet.JoinHostPort(host, strconvPort(defaultPort)))
+	return cfg.resolver(cfg.network, stdnet.JoinHostPort(host, strconvPort(defaultPort)))
 }
 
 // CreateAddress builds a TCP address from host and port.
 func CreateAddress(host string, port int) *stdnet.TCPAddr {
-	addr, _ := stdnet.ResolveTCPAddr("tcp", stdnet.JoinHostPort(host, strconvPort(port)))
+	addr, _ := CreateAddressWithOptions(host, port)
 	return addr
+}
+
+// CreateAddressWithOptions builds a TCP address from host and port with custom address resolution options.
+func CreateAddressWithOptions(host string, port int, opts ...AddressOption) (*stdnet.TCPAddr, error) {
+	cfg := applyAddressOptions(opts)
+	return cfg.resolver(cfg.network, stdnet.JoinHostPort(host, strconvPort(port)))
 }
 
 // GetIPByHost resolves hostName to the first IP string.

@@ -170,6 +170,29 @@ func TestPortOptionsUseListenerFactory(t *testing.T) {
 	}
 }
 
+func TestAddressOptionsUseResolver(t *testing.T) {
+	var network, address string
+	resolver := func(n, a string) (*stdnet.TCPAddr, error) {
+		network, address = n, a
+		return &stdnet.TCPAddr{IP: stdnet.ParseIP("10.0.0.1"), Port: 4321}, nil
+	}
+	addr, err := BuildInetSocketAddressWithOptions("example.com", 8080, WithAddressNetwork("tcp4"), WithTCPAddrResolver(resolver))
+	if err != nil || addr.Port != 4321 {
+		t.Fatalf("BuildInetSocketAddressWithOptions = %#v %v", addr, err)
+	}
+	if network != "tcp4" || address != "example.com:8080" {
+		t.Fatalf("resolver target = %s %s", network, address)
+	}
+
+	addr, err = CreateAddressWithOptions("example.org", 9090, WithTCPAddrResolver(resolver))
+	if err != nil || addr.Port != 4321 {
+		t.Fatalf("CreateAddressWithOptions = %#v %v", addr, err)
+	}
+	if network != "tcp" || address != "example.org:9090" {
+		t.Fatalf("resolver target = %s %s", network, address)
+	}
+}
+
 func TestInterfaceOptions(t *testing.T) {
 	iface := stdnet.Interface{Name: "eth-test", HardwareAddr: stdnet.HardwareAddr{0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff}}
 	_, ipNet, err := stdnet.ParseCIDR("10.2.3.4/24")

@@ -25,6 +25,7 @@ type (
 	ConnectOption        = netimpl.ConnectOption
 	PingOption           = netimpl.PingOption
 	ResolveOption        = netimpl.ResolveOption
+	AddressOption        = netimpl.AddressOption
 	PortOption           = netimpl.PortOption
 	InterfaceOption      = netimpl.InterfaceOption
 	TLSFileOption        = netimpl.TLSFileOption

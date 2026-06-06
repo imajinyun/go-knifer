@@ -15,8 +15,15 @@ type ageConfig struct {
 	clock func() time.Time
 }
 
+type birthConfig struct {
+	location *time.Location
+}
+
 // AgeOption customizes AgeWithOptions.
 type AgeOption func(*ageConfig)
+
+// BirthOption customizes birthday parsing helpers.
+type BirthOption func(*birthConfig)
 
 // WithAgeTime sets the time used by AgeWithOptions.
 func WithAgeTime(at time.Time) AgeOption {
@@ -32,6 +39,15 @@ func WithAgeClock(clock func() time.Time) AgeOption {
 	}
 }
 
+// WithBirthLocation sets the location used to parse yyyyMMdd birthdays.
+func WithBirthLocation(location *time.Location) BirthOption {
+	return func(c *birthConfig) {
+		if location != nil {
+			c.location = location
+		}
+	}
+}
+
 func applyAgeOptions(opts []AgeOption) ageConfig {
 	cfg := ageConfig{clock: time.Now}
 	for _, opt := range opts {
@@ -41,6 +57,19 @@ func applyAgeOptions(opts []AgeOption) ageConfig {
 	}
 	if cfg.clock == nil {
 		cfg.clock = time.Now
+	}
+	return cfg
+}
+
+func applyBirthOptions(opts []BirthOption) birthConfig {
+	cfg := birthConfig{location: time.Local}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.location == nil {
+		cfg.location = time.Local
 	}
 	return cfg
 }
@@ -341,11 +370,17 @@ func BirthString(idCard string) (string, bool) {
 
 // BirthDate returns the birthday encoded in idCard.
 func BirthDate(idCard string) (time.Time, bool) {
+	return BirthDateWithOptions(idCard)
+}
+
+// BirthDateWithOptions returns the birthday encoded in idCard using custom parsing options.
+func BirthDateWithOptions(idCard string, opts ...BirthOption) (time.Time, bool) {
 	birth, ok := BirthString(idCard)
 	if !ok {
 		return time.Time{}, false
 	}
-	t, err := time.ParseInLocation("20060102", birth, time.Local)
+	cfg := applyBirthOptions(opts)
+	t, err := time.ParseInLocation("20060102", birth, cfg.location)
 	return t, err == nil
 }
 
@@ -509,10 +544,16 @@ func CheckCode18(code17 string) byte {
 
 // IsValidBirthday reports whether s is a valid yyyyMMdd date.
 func IsValidBirthday(s string) bool {
+	return IsValidBirthdayWithOptions(s)
+}
+
+// IsValidBirthdayWithOptions reports whether s is a valid yyyyMMdd date using custom parsing options.
+func IsValidBirthdayWithOptions(s string, opts ...BirthOption) bool {
 	if len(s) != 8 || !rxDigits.MatchString(s) {
 		return false
 	}
-	t, err := time.ParseInLocation("20060102", s, time.Local)
+	cfg := applyBirthOptions(opts)
+	t, err := time.ParseInLocation("20060102", s, cfg.location)
 	if err != nil {
 		return false
 	}

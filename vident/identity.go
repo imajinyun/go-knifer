@@ -24,6 +24,9 @@ type IDCardInfo = identityimpl.IDCardInfo
 // AgeOption customizes AgeWithOptions.
 type AgeOption = identityimpl.AgeOption
 
+// BirthOption customizes birthday parsing helpers.
+type BirthOption = identityimpl.BirthOption
+
 // RegionCardInfo contains parsed validation information for Hong Kong, Macau or Taiwan cards.
 type RegionCardInfo = identityimpl.RegionCardInfo
 
@@ -63,6 +66,16 @@ func BirthString(idCard string) (string, bool) { return identityimpl.BirthString
 
 // BirthDate returns the birthday encoded in idCard.
 func BirthDate(idCard string) (time.Time, bool) { return identityimpl.BirthDate(idCard) }
+
+// WithBirthLocation sets the location used to parse yyyyMMdd birthdays.
+func WithBirthLocation(location *time.Location) BirthOption {
+	return identityimpl.WithBirthLocation(location)
+}
+
+// BirthDateWithOptions returns the birthday encoded in idCard using custom parsing options.
+func BirthDateWithOptions(idCard string, opts ...BirthOption) (time.Time, bool) {
+	return identityimpl.BirthDateWithOptions(idCard, opts...)
+}
 
 // Age returns the current age encoded in idCard.
 func Age(idCard string) (int, bool) { return identityimpl.Age(idCard) }
@@ -116,3 +129,8 @@ func CheckCode18(code17 string) byte { return identityimpl.CheckCode18(code17) }
 
 // IsValidBirthday reports whether s is a valid yyyyMMdd date.
 func IsValidBirthday(s string) bool { return identityimpl.IsValidBirthday(s) }
+
+// IsValidBirthdayWithOptions reports whether s is a valid yyyyMMdd date using custom parsing options.
+func IsValidBirthdayWithOptions(s string, opts ...BirthOption) bool {
+	return identityimpl.IsValidBirthdayWithOptions(s, opts...)
+}
