@@ -20,8 +20,9 @@ const (
 )
 
 var (
-	defaultRandMu sync.Mutex
-	defaultRand   *mathrand.Rand
+	defaultRandMu       sync.Mutex
+	defaultRand         *mathrand.Rand
+	defaultRandProvider = newDefaultRand
 )
 
 type randomConfig struct {
@@ -67,6 +68,23 @@ func SetSeed(seed int64) {
 	defer defaultRandMu.Unlock()
 	defaultRand = mathrand.New(mathrand.NewSource(seed))
 }
+
+// ConfigureDefaultRandomSourceProvider sets the provider used to lazily create
+// the package-level pseudo-random source. Passing nil restores the time-seeded
+// default provider and clears the cached source.
+func ConfigureDefaultRandomSourceProvider(provider func() *mathrand.Rand) {
+	defaultRandMu.Lock()
+	defer defaultRandMu.Unlock()
+	defaultRand = nil
+	if provider == nil {
+		defaultRandProvider = newDefaultRand
+		return
+	}
+	defaultRandProvider = provider
+}
+
+// ResetDefaultRandomSource restores the time-seeded default source provider and clears cached state.
+func ResetDefaultRandomSource() { ConfigureDefaultRandomSourceProvider(nil) }
 
 // RandomInt returns a random integer in [0, max). Non-positive max returns 0.
 func RandomInt(max int) int {
@@ -242,7 +260,14 @@ func randomIntn(cfg randomConfig, n int) int {
 
 func defaultRandLocked() *mathrand.Rand {
 	if defaultRand == nil {
-		defaultRand = mathrand.New(mathrand.NewSource(time.Now().UnixNano()))
+		defaultRand = defaultRandProvider()
+		if defaultRand == nil {
+			defaultRand = newDefaultRand()
+		}
 	}
 	return defaultRand
+}
+
+func newDefaultRand() *mathrand.Rand {
+	return mathrand.New(mathrand.NewSource(time.Now().UnixNano()))
 }

@@ -3,6 +3,8 @@ package id
 import (
 	"bytes"
 	"encoding/hex"
+	"errors"
+	mathrand "math/rand"
 	"net"
 	"strings"
 	"testing"
@@ -278,3 +280,39 @@ func TestIDOptions(t *testing.T) {
 		t.Fatalf("NanoIdWithOptions = %q", nid)
 	}
 }
+
+func TestDefaultFallbackRandomSourceProviderCanBeConfiguredAndReset(t *testing.T) {
+	ResetDefaultFallbackRandomSource()
+	t.Cleanup(ResetDefaultFallbackRandomSource)
+
+	ConfigureDefaultFallbackRandomSourceProvider(func() *mathrand.Rand {
+		return mathrand.New(mathrand.NewSource(11))
+	})
+	first := SimpleUUIDWithOptions(WithRandomReader(errReader{}))
+	second := SimpleUUIDWithOptions(WithRandomReader(errReader{}))
+	ConfigureDefaultFallbackRandomSourceProvider(func() *mathrand.Rand {
+		return mathrand.New(mathrand.NewSource(11))
+	})
+	if got := SimpleUUIDWithOptions(WithRandomReader(errReader{})); got != first {
+		t.Fatalf("SimpleUUIDWithOptions after provider reset = %s, want %s", got, first)
+	}
+	if got := SimpleUUIDWithOptions(WithRandomReader(errReader{})); got != second {
+		t.Fatalf("second SimpleUUIDWithOptions after provider reset = %s, want %s", got, second)
+	}
+
+	SetFallbackRandomSeed(12)
+	seeded := SimpleUUIDWithOptions(WithRandomReader(errReader{}))
+	SetFallbackRandomSeed(12)
+	if got := SimpleUUIDWithOptions(WithRandomReader(errReader{})); got != seeded {
+		t.Fatalf("SimpleUUIDWithOptions after seed reset = %s, want %s", got, seeded)
+	}
+
+	ConfigureDefaultFallbackRandomSourceProvider(func() *mathrand.Rand { return nil })
+	if got := SimpleUUIDWithOptions(WithRandomReader(errReader{})); len(got) != 32 || got[12] != '4' {
+		t.Fatalf("nil provider fallback UUID = %s", got)
+	}
+}
+
+type errReader struct{}
+
+func (errReader) Read([]byte) (int, error) { return 0, errors.New("boom") }

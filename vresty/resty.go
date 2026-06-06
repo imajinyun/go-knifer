@@ -158,6 +158,19 @@ func WithTLSConfig(cfg *tls.Config) RequestOption { return restyimpl.WithTLSConf
 // WithRestyClient sets a per-request resty client and takes precedence over WithTLSConfig.
 func WithRestyClient(c *grestry.Client) RequestOption { return restyimpl.WithRestyClient(c) }
 
+// WithRestyClientFactory sets a per-request resty client factory.
+func WithRestyClientFactory(factory func() *grestry.Client) RequestOption {
+	return restyimpl.WithRestyClientFactory(factory)
+}
+
+// ConfigureDefaultRestyClientProvider sets the provider used to create resty clients when no per-request client is set.
+func ConfigureDefaultRestyClientProvider(provider func() *grestry.Client) {
+	restyimpl.ConfigureDefaultRestyClientProvider(provider)
+}
+
+// ResetDefaultRestyClientProvider restores resty.New as the default client provider.
+func ResetDefaultRestyClientProvider() { restyimpl.ResetDefaultRestyClientProvider() }
+
 // WithUserAgent sets a per-request User-Agent.
 func WithUserAgent(ua string) RequestOption { return restyimpl.WithUserAgent(ua) }
 

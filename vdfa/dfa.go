@@ -63,6 +63,12 @@ func InitWithOptions(words []string, opts ...WordTreeOption) { dfaimpl.InitWithO
 // InitAsync initializes the package-level matcher in a new goroutine.
 func InitAsync(words []string) { dfaimpl.InitAsync(words) }
 
+// ConfigureAsyncRunner sets the runner used by asynchronous package-level matcher initialization.
+func ConfigureAsyncRunner(runner func(func())) { dfaimpl.ConfigureAsyncRunner(runner) }
+
+// ResetAsyncRunner restores the default goroutine runner used by asynchronous initialization.
+func ResetAsyncRunner() { dfaimpl.ResetAsyncRunner() }
+
 // InitString initializes the package-level matcher from a separated string.
 func InitString(words string, separator rune) { dfaimpl.InitString(words, separator) }
 

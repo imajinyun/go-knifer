@@ -66,3 +66,19 @@ func TestRandFacadeOptions(t *testing.T) {
 	_ = NumbersWithOptions(3, WithRandomSource(mathrand.New(mathrand.NewSource(1))))
 	_ = StringUpperWithOptions(3, WithRandomSource(mathrand.New(mathrand.NewSource(1))))
 }
+
+func TestRandFacadeDefaultSourceProvider(t *testing.T) {
+	ResetDefaultRandomSource()
+	t.Cleanup(ResetDefaultRandomSource)
+
+	ConfigureDefaultRandomSourceProvider(func() *mathrand.Rand {
+		return mathrand.New(mathrand.NewSource(9))
+	})
+	first := Int(1000)
+	ConfigureDefaultRandomSourceProvider(func() *mathrand.Rand {
+		return mathrand.New(mathrand.NewSource(9))
+	})
+	if got := Int(1000); got != first {
+		t.Fatalf("Int after provider reset = %d, want %d", got, first)
+	}
+}

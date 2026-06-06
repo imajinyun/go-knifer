@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/url"
 	"sort"
+	"sync"
 	"time"
 
 	grestry "resty.dev/v3"
@@ -13,26 +14,27 @@ import (
 
 // HTTPRequest is a chainable HTTP request builder backed by go-resty/resty.
 type HTTPRequest struct {
-	method       Method
-	rawURL       string
-	queryParams  url.Values
-	headers      HeaderValues
-	body         any
-	form         map[string]any
-	files        []*formFile
-	contentType  string
-	charset      string
-	timeout      time.Duration
-	followRedir  *bool
-	maxRedirects int
-	tlsSkip      bool
-	tlsConfig    *tls.Config
-	userAgent    string
-	cookieOff    bool
-	basicUser    string
-	basicPass    string
-	hasBasic     bool
-	restyClient  *grestry.Client
+	method        Method
+	rawURL        string
+	queryParams   url.Values
+	headers       HeaderValues
+	body          any
+	form          map[string]any
+	files         []*formFile
+	contentType   string
+	charset       string
+	timeout       time.Duration
+	followRedir   *bool
+	maxRedirects  int
+	tlsSkip       bool
+	tlsConfig     *tls.Config
+	userAgent     string
+	cookieOff     bool
+	basicUser     string
+	basicPass     string
+	hasBasic      bool
+	restyClient   *grestry.Client
+	clientFactory func() *grestry.Client
 }
 
 type formFile struct {
@@ -41,6 +43,11 @@ type formFile struct {
 	data     []byte
 	reader   io.Reader
 }
+
+var defaultRestyClientProvider = struct {
+	sync.RWMutex
+	provider func() *grestry.Client
+}{provider: grestry.New}
 
 // RequestOption customizes one HTTP request at construction time.
 type RequestOption func(*HTTPRequest)
@@ -157,6 +164,30 @@ func WithTLSConfig(cfg *tls.Config) RequestOption { return func(r *HTTPRequest) 
 func WithRestyClient(c *grestry.Client) RequestOption {
 	return func(r *HTTPRequest) { r.RestyClient(c) }
 }
+
+// WithRestyClientFactory sets a per-request resty client factory.
+func WithRestyClientFactory(factory func() *grestry.Client) RequestOption {
+	return func(r *HTTPRequest) {
+		if factory != nil {
+			r.clientFactory = factory
+		}
+	}
+}
+
+// ConfigureDefaultRestyClientProvider sets the provider used to create resty clients when no per-request client is set.
+// Passing nil restores resty.New.
+func ConfigureDefaultRestyClientProvider(provider func() *grestry.Client) {
+	defaultRestyClientProvider.Lock()
+	defer defaultRestyClientProvider.Unlock()
+	if provider == nil {
+		defaultRestyClientProvider.provider = grestry.New
+		return
+	}
+	defaultRestyClientProvider.provider = provider
+}
+
+// ResetDefaultRestyClientProvider restores resty.New as the default client provider.
+func ResetDefaultRestyClientProvider() { ConfigureDefaultRestyClientProvider(nil) }
 
 // WithUserAgent sets a per-request User-Agent.
 func WithUserAgent(ua string) RequestOption {
@@ -338,7 +369,7 @@ func (r *HTTPRequest) buildClient() *grestry.Client {
 	if r.restyClient != nil {
 		return r.restyClient
 	}
-	c := grestry.New()
+	c := r.newRestyClient()
 	if r.cookieOff {
 		c.SetCookieJar(nil)
 	}
@@ -366,6 +397,23 @@ func (r *HTTPRequest) buildClient() *grestry.Client {
 		c.SetRedirectPolicy(grestry.FlexibleRedirectPolicy(r.maxRedirects))
 	}
 	return c
+}
+
+func (r *HTTPRequest) newRestyClient() *grestry.Client {
+	if r.clientFactory != nil {
+		if c := r.clientFactory(); c != nil {
+			return c
+		}
+	}
+	defaultRestyClientProvider.RLock()
+	provider := defaultRestyClientProvider.provider
+	defaultRestyClientProvider.RUnlock()
+	if provider != nil {
+		if c := provider(); c != nil {
+			return c
+		}
+	}
+	return grestry.New()
 }
 
 func (r *HTTPRequest) doExecute() (*HTTPResponse, error) {

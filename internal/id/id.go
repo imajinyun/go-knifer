@@ -33,11 +33,12 @@ const (
 )
 
 var (
-	defaultRand      *mathrand.Rand
-	defaultRandMu    sync.Mutex
-	objectIDCounter  uint32
-	snowflakeCache   sync.Map
-	defaultSnowflake atomic.Value
+	defaultRand         *mathrand.Rand
+	defaultRandMu       sync.Mutex
+	defaultRandProvider = newDefaultFallbackRand
+	objectIDCounter     uint32
+	snowflakeCache      sync.Map
+	defaultSnowflake    atomic.Value
 )
 
 type randomConfig struct {
@@ -69,6 +70,30 @@ func applyRandomOptions(opts []RandomOption) randomConfig {
 		cfg.reader = cryptorand.Reader
 	}
 	return cfg
+}
+
+// ConfigureDefaultFallbackRandomSourceProvider sets the provider used to lazily
+// create the package-level fallback PRNG when the primary random reader fails.
+// Passing nil restores the time-seeded default provider and clears cached state.
+func ConfigureDefaultFallbackRandomSourceProvider(provider func() *mathrand.Rand) {
+	defaultRandMu.Lock()
+	defer defaultRandMu.Unlock()
+	defaultRand = nil
+	if provider == nil {
+		defaultRandProvider = newDefaultFallbackRand
+		return
+	}
+	defaultRandProvider = provider
+}
+
+// ResetDefaultFallbackRandomSource restores the fallback PRNG provider and clears cached state.
+func ResetDefaultFallbackRandomSource() { ConfigureDefaultFallbackRandomSourceProvider(nil) }
+
+// SetFallbackRandomSeed resets the package-level fallback PRNG to a deterministic seed.
+func SetFallbackRandomSeed(seed int64) {
+	defaultRandMu.Lock()
+	defer defaultRandMu.Unlock()
+	defaultRand = mathrand.New(mathrand.NewSource(seed))
 }
 
 type objectIDConfig struct {
@@ -640,9 +665,16 @@ func fillRandomBytesWithConfig(cfg randomConfig, buf []byte) {
 
 func defaultRandLocked() *mathrand.Rand {
 	if defaultRand == nil {
-		defaultRand = mathrand.New(mathrand.NewSource(time.Now().UnixNano())) // #nosec G404 -- fallback only for IDs when crypto/rand is unavailable.
+		defaultRand = defaultRandProvider()
+		if defaultRand == nil {
+			defaultRand = newDefaultFallbackRand()
+		}
 	}
 	return defaultRand
+}
+
+func newDefaultFallbackRand() *mathrand.Rand {
+	return mathrand.New(mathrand.NewSource(time.Now().UnixNano())) // #nosec G404 -- fallback only for IDs when crypto/rand is unavailable.
 }
 
 func nextPowerOfTwo(n int) int {

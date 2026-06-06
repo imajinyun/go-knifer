@@ -301,6 +301,11 @@ var defaultMatcher = struct {
 	tree *WordTree
 }{tree: NewWordTree()}
 
+var defaultAsyncRunner = struct {
+	sync.RWMutex
+	runner func(func())
+}{runner: goRun}
+
 // MatcherOption customizes one package-level matcher operation.
 type MatcherOption func(*matcherConfig)
 
@@ -341,6 +346,33 @@ func applyMatcherOptions(opts []MatcherOption) *WordTree {
 	return cfg.tree
 }
 
+// ConfigureAsyncRunner sets the runner used by asynchronous package-level matcher initialization.
+// Passing nil restores the default goroutine runner.
+func ConfigureAsyncRunner(runner func(func())) {
+	defaultAsyncRunner.Lock()
+	defer defaultAsyncRunner.Unlock()
+	if runner == nil {
+		defaultAsyncRunner.runner = goRun
+		return
+	}
+	defaultAsyncRunner.runner = runner
+}
+
+// ResetAsyncRunner restores the default goroutine runner used by asynchronous initialization.
+func ResetAsyncRunner() { ConfigureAsyncRunner(nil) }
+
+func runAsync(fn func()) {
+	defaultAsyncRunner.RLock()
+	runner := defaultAsyncRunner.runner
+	defaultAsyncRunner.RUnlock()
+	if runner == nil {
+		runner = goRun
+	}
+	runner(fn)
+}
+
+func goRun(fn func()) { go fn() }
+
 // IsInited reports whether the package-level matcher contains words.
 func IsInited() bool {
 	defaultMatcher.RLock()
@@ -362,7 +394,7 @@ func InitWithOptions(words []string, opts ...WordTreeOption) {
 }
 
 // InitAsync initializes the package-level matcher in a new goroutine.
-func InitAsync(words []string) { go Init(words) }
+func InitAsync(words []string) { runAsync(func() { Init(words) }) }
 
 // InitString initializes the package-level matcher from a separated string.
 func InitString(words string, separator rune) {
@@ -386,11 +418,11 @@ func InitStringWithOptions(words string, separator rune, opts ...WordTreeOption)
 }
 
 // InitStringAsync initializes the package-level matcher from a separated string in a new goroutine.
-func InitStringAsync(words string, separator rune) { go InitString(words, separator) }
+func InitStringAsync(words string, separator rune) { runAsync(func() { InitString(words, separator) }) }
 
 // InitStringAsyncWithOptions initializes the package-level matcher from a separated string in a new goroutine.
 func InitStringAsyncWithOptions(words string, separator rune, opts ...WordTreeOption) {
-	go InitStringWithOptions(words, separator, opts...)
+	runAsync(func() { InitStringWithOptions(words, separator, opts...) })
 }
 
 // SetCharFilter sets the filter used by the package-level matcher.

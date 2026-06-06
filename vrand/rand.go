@@ -81,3 +81,11 @@ func EleWithOptions[T any](a []T, opts ...RandomOption) T {
 
 // SetSeed resets the package-level pseudo-random source seed.
 func SetSeed(seed int64) { randimpl.SetSeed(seed) }
+
+// ConfigureDefaultRandomSourceProvider sets the provider used to lazily create the package-level pseudo-random source.
+func ConfigureDefaultRandomSourceProvider(provider func() *mathrand.Rand) {
+	randimpl.ConfigureDefaultRandomSourceProvider(provider)
+}
+
+// ResetDefaultRandomSource restores the time-seeded default source provider and clears cached state.
+func ResetDefaultRandomSource() { randimpl.ResetDefaultRandomSource() }

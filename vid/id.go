@@ -37,6 +37,17 @@ func WithFallbackRandomSource(source *mathrand.Rand) RandomOption {
 	return idimpl.WithFallbackRandomSource(source)
 }
 
+// ConfigureDefaultFallbackRandomSourceProvider sets the provider used to lazily create the package-level fallback PRNG.
+func ConfigureDefaultFallbackRandomSourceProvider(provider func() *mathrand.Rand) {
+	idimpl.ConfigureDefaultFallbackRandomSourceProvider(provider)
+}
+
+// ResetDefaultFallbackRandomSource restores the fallback PRNG provider and clears cached state.
+func ResetDefaultFallbackRandomSource() { idimpl.ResetDefaultFallbackRandomSource() }
+
+// SetFallbackRandomSeed resets the package-level fallback PRNG to a deterministic seed.
+func SetFallbackRandomSeed(seed int64) { idimpl.SetFallbackRandomSeed(seed) }
+
 // RandomUUIDWithOptions creates an RFC 4122 UUID with random options.
 func RandomUUIDWithOptions(opts ...RandomOption) string { return idimpl.RandomUUIDWithOptions(opts...) }
 

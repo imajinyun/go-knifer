@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/imajinyun/go-knifer/vresty"
+	grestry "resty.dev/v3"
 )
 
 func TestFacadeGetString(t *testing.T) {
@@ -56,6 +57,42 @@ func TestFacadeRequestOptions(t *testing.T) {
 	}
 	if got := resp.Body(); got != "yes:vresty-test/1.0" {
 		t.Fatalf("Body() = %q, want option headers", got)
+	}
+}
+
+func TestFacadeRestyClientFactoryProvider(t *testing.T) {
+	vresty.ResetDefaultRestyClientProvider()
+	t.Cleanup(vresty.ResetDefaultRestyClientProvider)
+
+	called := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(r.Header.Get("X-Factory")))
+	}))
+	defer server.Close()
+
+	resp := vresty.Get(server.URL,
+		vresty.WithRestyClientFactory(func() *grestry.Client {
+			called++
+			return grestry.New().SetHeader("X-Factory", "per-call")
+		}),
+	).Execute()
+	if resp.Err() != nil {
+		t.Fatal(resp.Err())
+	}
+	if called != 1 || resp.Body() != "per-call" {
+		t.Fatalf("factory called=%d body=%q", called, resp.Body())
+	}
+
+	vresty.ConfigureDefaultRestyClientProvider(func() *grestry.Client {
+		called++
+		return grestry.New().SetHeader("X-Factory", "default")
+	})
+	resp = vresty.Get(server.URL).Execute()
+	if resp.Err() != nil {
+		t.Fatal(resp.Err())
+	}
+	if called != 2 || resp.Body() != "default" {
+		t.Fatalf("default provider called=%d body=%q", called, resp.Body())
 	}
 }
 
