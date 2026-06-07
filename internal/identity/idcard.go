@@ -17,6 +17,8 @@ type ageConfig struct {
 
 type birthConfig struct {
 	location *time.Location
+	digits   func(string) bool
+	parser   func(layout, value string, location *time.Location) (time.Time, error)
 }
 
 type idCardConfig struct {
@@ -78,6 +80,24 @@ func WithBirthLocation(location *time.Location) BirthOption {
 	}
 }
 
+// WithBirthDigitsMatcher sets the decimal-digits matcher used by birthday helpers.
+func WithBirthDigitsMatcher(matcher func(string) bool) BirthOption {
+	return func(c *birthConfig) {
+		if matcher != nil {
+			c.digits = matcher
+		}
+	}
+}
+
+// WithBirthParser sets the date parser used by birthday helpers.
+func WithBirthParser(parser func(layout, value string, location *time.Location) (time.Time, error)) BirthOption {
+	return func(c *birthConfig) {
+		if parser != nil {
+			c.parser = parser
+		}
+	}
+}
+
 func applyAgeOptions(opts []AgeOption) ageConfig {
 	cfg := ageConfig{clock: time.Now}
 	for _, opt := range opts {
@@ -92,7 +112,11 @@ func applyAgeOptions(opts []AgeOption) ageConfig {
 }
 
 func applyBirthOptions(opts []BirthOption) birthConfig {
-	cfg := birthConfig{location: time.Local}
+	cfg := birthConfig{
+		location: time.Local,
+		digits:   rxDigits.MatchString,
+		parser:   time.ParseInLocation,
+	}
 	for _, opt := range opts {
 		if opt != nil {
 			opt(&cfg)
@@ -100,6 +124,12 @@ func applyBirthOptions(opts []BirthOption) birthConfig {
 	}
 	if cfg.location == nil {
 		cfg.location = time.Local
+	}
+	if cfg.digits == nil {
+		cfg.digits = rxDigits.MatchString
+	}
+	if cfg.parser == nil {
+		cfg.parser = time.ParseInLocation
 	}
 	return cfg
 }
@@ -247,7 +277,7 @@ func Convert15To18WithOptions(idCard string, opts ...IDCardOption) (string, bool
 		return "", false
 	}
 	id18 := idCard[:6] + "19" + idCard[6:]
-	return id18 + string(CheckCode18(id18[:17])), true
+	return id18 + string(CheckCode18WithOptions(id18[:17], opts...)), true
 }
 
 // Convert18To15 converts a valid 18-digit mainland China identity card number to 15 digits.
@@ -322,7 +352,7 @@ func isValidIDCard18(idCard string, ignoreCase bool, cfg idCardConfig) bool {
 	if !cfg.digits(code17) {
 		return false
 	}
-	check := CheckCode18(code17)
+	check := CheckCode18WithOptions(code17, WithDigitsMatcher(cfg.digits))
 	actual := idCard[17]
 	if ignoreCase {
 		return strings.EqualFold(string(check), string(actual))
@@ -465,6 +495,11 @@ func IsValidHKIDCardWithOptions(idCard string, opts ...IDCardOption) bool {
 
 // BirthString returns the birthday encoded in idCard as yyyyMMdd.
 func BirthString(idCard string) (string, bool) {
+	return BirthStringWithOptions(idCard)
+}
+
+// BirthStringWithOptions returns the birthday encoded in idCard as yyyyMMdd using custom parsing options.
+func BirthStringWithOptions(idCard string, opts ...BirthOption) (string, bool) {
 	if len(idCard) < chinaIDMinLength {
 		return "", false
 	}
@@ -479,7 +514,7 @@ func BirthString(idCard string) (string, bool) {
 		return "", false
 	}
 	birth := idCard[6:14]
-	return birth, IsValidBirthday(birth)
+	return birth, IsValidBirthdayWithOptions(birth, opts...)
 }
 
 // BirthDate returns the birthday encoded in idCard.
@@ -489,12 +524,12 @@ func BirthDate(idCard string) (time.Time, bool) {
 
 // BirthDateWithOptions returns the birthday encoded in idCard using custom parsing options.
 func BirthDateWithOptions(idCard string, opts ...BirthOption) (time.Time, bool) {
-	birth, ok := BirthString(idCard)
+	birth, ok := BirthStringWithOptions(idCard, opts...)
 	if !ok {
 		return time.Time{}, false
 	}
 	cfg := applyBirthOptions(opts)
-	t, err := time.ParseInLocation("20060102", birth, cfg.location)
+	t, err := cfg.parser("20060102", birth, cfg.location)
 	return t, err == nil
 }
 
@@ -646,7 +681,13 @@ func Hide(idCard string, start, end int) string {
 
 // CheckCode18 returns the 18th check code for a 17-digit identity card body.
 func CheckCode18(code17 string) byte {
-	if len(code17) != len(idCardPower) || !rxDigits.MatchString(code17) {
+	return CheckCode18WithOptions(code17)
+}
+
+// CheckCode18WithOptions returns the 18th check code for a 17-digit identity card body with options.
+func CheckCode18WithOptions(code17 string, opts ...IDCardOption) byte {
+	cfg := applyIDCardOptions(opts)
+	if len(code17) != len(idCardPower) || !cfg.digits(code17) {
 		return ' '
 	}
 	sum := 0
@@ -663,11 +704,11 @@ func IsValidBirthday(s string) bool {
 
 // IsValidBirthdayWithOptions reports whether s is a valid yyyyMMdd date using custom parsing options.
 func IsValidBirthdayWithOptions(s string, opts ...BirthOption) bool {
-	if len(s) != 8 || !rxDigits.MatchString(s) {
+	cfg := applyBirthOptions(opts)
+	if len(s) != 8 || !cfg.digits(s) {
 		return false
 	}
-	cfg := applyBirthOptions(opts)
-	t, err := time.ParseInLocation("20060102", s, cfg.location)
+	t, err := cfg.parser("20060102", s, cfg.location)
 	if err != nil {
 		return false
 	}

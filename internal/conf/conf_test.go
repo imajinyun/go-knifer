@@ -198,6 +198,28 @@ server:
 	}
 }
 
+func TestParseYAMLFullWithOptionsUsesProvider(t *testing.T) {
+	called := false
+	s, err := ParseYAMLFullWithOptions("ignored", WithYAMLUnmarshalFunc(func(data []byte, out any) error {
+		called = true
+		root, ok := out.(*any)
+		if !ok {
+			t.Fatalf("unmarshal output = %T, want *any", out)
+		}
+		*root = map[string]any{"app": map[string]any{"name": "provider"}}
+		return nil
+	}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !called {
+		t.Fatal("custom YAML unmarshal provider was not called")
+	}
+	if got := s.GetByGroup("app", "name"); got != "provider" {
+		t.Fatalf("provider app.name = %q", got)
+	}
+}
+
 func TestParseTOMLAndProfile(t *testing.T) {
 	s, err := ParseTOML(`
 name = "demo"
@@ -245,6 +267,32 @@ func TestLoadProfileAndParseByExt(t *testing.T) {
 	if got := yamlConf.GetByGroup("app", "name"); got != "demo" {
 		t.Fatalf("ParseByExt yaml app.name = %q", got)
 	}
+
+	custom, err := ParseByExtWithOptions("app.custom", []byte("ignored"), WithParserForExt("custom", func([]byte) (*Conf, error) {
+		c := New()
+		c.Set("name", "custom-parser")
+		return c, nil
+	}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := custom.Get("name"); got != "custom-parser" {
+		t.Fatalf("custom parser name = %q", got)
+	}
+}
+
+func TestLoadWithOptionsPassesParseOptions(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "app.yaml")
+	if err := os.WriteFile(path, []byte("ignored"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	c, err := LoadWithOptions(path, LoadOptions{ParseOptions: []ParseOption{WithYAMLUnmarshalFunc(func([]byte, any) error {
+		return errors.New("custom yaml error")
+	})}})
+	if err == nil {
+		t.Fatalf("LoadWithOptions = %#v, nil error", c)
+	}
+	assertConfCode(t, err, knifer.ErrCodeInvalidInput)
 }
 
 func TestWatchReloadsOnChange(t *testing.T) {

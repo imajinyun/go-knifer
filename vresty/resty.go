@@ -69,6 +69,49 @@ const (
 	MethodConnect Method = restyimpl.MethodConnect
 )
 
+const (
+	HeaderAuthorization      Header = restyimpl.HeaderAuthorization
+	HeaderProxyAuthorization Header = restyimpl.HeaderProxyAuthorization
+	HeaderDate               Header = restyimpl.HeaderDate
+	HeaderConnection         Header = restyimpl.HeaderConnection
+	HeaderMimeVersion        Header = restyimpl.HeaderMimeVersion
+	HeaderTrailer            Header = restyimpl.HeaderTrailer
+	HeaderTransferEncoding   Header = restyimpl.HeaderTransferEncoding
+	HeaderUpgrade            Header = restyimpl.HeaderUpgrade
+	HeaderVia                Header = restyimpl.HeaderVia
+	HeaderCacheControl       Header = restyimpl.HeaderCacheControl
+	HeaderPragma             Header = restyimpl.HeaderPragma
+	HeaderContentType        Header = restyimpl.HeaderContentType
+	HeaderHost               Header = restyimpl.HeaderHost
+	HeaderReferer            Header = restyimpl.HeaderReferer
+	HeaderOrigin             Header = restyimpl.HeaderOrigin
+	HeaderUserAgent          Header = restyimpl.HeaderUserAgent
+	HeaderAccept             Header = restyimpl.HeaderAccept
+	HeaderAcceptLanguage     Header = restyimpl.HeaderAcceptLanguage
+	HeaderAcceptEncoding     Header = restyimpl.HeaderAcceptEncoding
+	HeaderAcceptCharset      Header = restyimpl.HeaderAcceptCharset
+	HeaderCookie             Header = restyimpl.HeaderCookie
+	HeaderContentLength      Header = restyimpl.HeaderContentLength
+	HeaderWWWAuthenticate    Header = restyimpl.HeaderWWWAuthenticate
+	HeaderSetCookie          Header = restyimpl.HeaderSetCookie
+	HeaderContentEncoding    Header = restyimpl.HeaderContentEncoding
+	HeaderContentDisposition Header = restyimpl.HeaderContentDisposition
+	HeaderETag               Header = restyimpl.HeaderETag
+	HeaderLocation           Header = restyimpl.HeaderLocation
+)
+
+const (
+	ContentTypeFormURLEncoded ContentType = restyimpl.ContentTypeFormURLEncoded
+	ContentTypeMultipart      ContentType = restyimpl.ContentTypeMultipart
+	ContentTypeJSON           ContentType = restyimpl.ContentTypeJSON
+	ContentTypeXML            ContentType = restyimpl.ContentTypeXML
+	ContentTypeTextPlain      ContentType = restyimpl.ContentTypeTextPlain
+	ContentTypeTextXML        ContentType = restyimpl.ContentTypeTextXML
+	ContentTypeTextHTML       ContentType = restyimpl.ContentTypeTextHTML
+	ContentTypeOctetStream    ContentType = restyimpl.ContentTypeOctetStream
+	ContentTypeEventStream    ContentType = restyimpl.ContentTypeEventStream
+)
+
 // Get creates a GET request.
 func Get(rawURL string, opts ...RequestOption) *Request { return restyimpl.Get(rawURL, opts...) }
 
@@ -323,6 +366,30 @@ func SetGlobalTimeout(d time.Duration) { restyimpl.SetGlobalTimeout(d) }
 // GetGlobalTimeout returns the global HTTP timeout.
 func GetGlobalTimeout() time.Duration { return restyimpl.GetGlobalTimeout() }
 
+// SetGlobalMaxRedirects sets the global maximum redirect count.
+func SetGlobalMaxRedirects(n int) { restyimpl.SetGlobalMaxRedirects(n) }
+
+// GetGlobalMaxRedirects returns the global maximum redirect count.
+func GetGlobalMaxRedirects() int { return restyimpl.GetGlobalMaxRedirects() }
+
+// SetGlobalFollowRedirects sets whether redirects are followed globally.
+func SetGlobalFollowRedirects(b bool) { restyimpl.SetGlobalFollowRedirects(b) }
+
+// GetGlobalFollowRedirects reports whether redirects are followed globally.
+func GetGlobalFollowRedirects() bool { return restyimpl.GetGlobalFollowRedirects() }
+
+// SetGlobalUserAgent sets the global default User-Agent.
+func SetGlobalUserAgent(ua string) { restyimpl.SetGlobalUserAgent(ua) }
+
+// GetGlobalUserAgent returns the global default User-Agent.
+func GetGlobalUserAgent() string { return restyimpl.GetGlobalUserAgent() }
+
+// SetTrustAnyHost sets whether all hosts are trusted, skipping HTTPS certificate verification.
+func SetTrustAnyHost(b bool) { restyimpl.SetTrustAnyHost(b) }
+
+// IsTrustAnyHost reports whether all hosts are trusted.
+func IsTrustAnyHost() bool { return restyimpl.IsTrustAnyHost() }
+
 // SnapshotGlobalConfig returns a copy of the package-level resty defaults.
 func SnapshotGlobalConfig() GlobalConfig { return restyimpl.SnapshotGlobalConfig() }
 
@@ -373,6 +440,20 @@ func BuildContentType(contentType, charset string) string {
 
 // GuessContentType guesses Content-Type from the body.
 func GuessContentType(body string) ContentType { return restyimpl.GuessContentType(body) }
+
+// IsDefaultContentType reports whether the value is a default Content-Type.
+func IsDefaultContentType(contentType string) bool {
+	return restyimpl.IsDefaultContentType(contentType)
+}
+
+// IsFormURLEncoded reports whether the value is application/x-www-form-urlencoded.
+func IsFormURLEncoded(contentType string) bool { return restyimpl.IsFormURLEncoded(contentType) }
+
+// NewHTTPError creates an HTTP error.
+func NewHTTPError(msg string, cause error) *Error { return restyimpl.NewHTTPError(msg, cause) }
+
+// HTTPErrorf creates an HTTP error with a formatted message.
+func HTTPErrorf(format string, args ...any) *Error { return restyimpl.HTTPErrorf(format, args...) }
 
 // GetCharsetFromContentType extracts charset from Content-Type.
 func GetCharsetFromContentType(ct string) string { return restyimpl.GetCharsetFromContentType(ct) }

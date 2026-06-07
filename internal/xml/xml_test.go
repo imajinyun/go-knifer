@@ -126,6 +126,28 @@ func TestReadVariantsSAXXPathAndFile(t *testing.T) {
 		t.Fatalf("ReadBySAX handler err = %v", err)
 	}
 	assertXMLInvalidInput(t, ReadBySAX(strings.NewReader(`<root>`), func(stdxml.Token) error { return nil }))
+	decoderCalls := 0
+	withDecoder, err := ReadXMLReader(strings.NewReader(`<ignored/>`), WithDecoderFactory(func(io.Reader) *stdxml.Decoder {
+		decoderCalls++
+		return stdxml.NewDecoder(strings.NewReader(`<root><factory>ok</factory></root>`))
+	}))
+	if err != nil || decoderCalls != 1 || ElementText(withDecoder.Root, "factory") != "ok" {
+		t.Fatalf("ReadXMLReader decoder factory doc=%#v calls=%d err=%v", withDecoder, decoderCalls, err)
+	}
+	saxDecoderCalls := 0
+	var factoryStarts []string
+	if err := ReadBySAXWithOptions(strings.NewReader(`<ignored/>`), func(tok stdxml.Token) error {
+		if start, ok := tok.(stdxml.StartElement); ok {
+			factoryStarts = append(factoryStarts, start.Name.Local)
+		}
+		return nil
+	}, WithDecoderFactory(func(io.Reader) *stdxml.Decoder {
+		saxDecoderCalls++
+		return stdxml.NewDecoder(strings.NewReader(`<root><factory/></root>`))
+	})); err != nil || saxDecoderCalls != 1 || !reflect.DeepEqual(factoryStarts, []string{"root", "factory"}) {
+		t.Fatalf("ReadBySAXWithOptions decoder factory starts=%v calls=%d err=%v", factoryStarts, saxDecoderCalls, err)
+	}
+	assertXMLInvalidInput(t, ReadBySAXWithOptions(strings.NewReader(`<root/>`), func(stdxml.Token) error { return nil }, WithDecoderFactory(func(io.Reader) *stdxml.Decoder { return nil })))
 
 	tmp := t.TempDir() + "/x.xml"
 	if err := os.WriteFile(tmp, []byte(`<root><a>1</a><a>2</a></root>`), 0o600); err != nil {

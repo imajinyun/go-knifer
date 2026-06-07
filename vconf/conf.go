@@ -19,6 +19,8 @@ type (
 	DecryptFunc = confimpl.DecryptFunc
 	// ExpandOption customizes configuration variable expansion per call.
 	ExpandOption = confimpl.ExpandOption
+	// ParseOption customizes ParseByExt and full YAML parsing helpers per call.
+	ParseOption = confimpl.ParseOption
 	// FieldRule describes one schema validation rule.
 	FieldRule = confimpl.FieldRule
 	// Schema describes configuration validation rules.
@@ -101,11 +103,31 @@ func ParseByExt(path string, content []byte) (*Conf, error) {
 	return confimpl.ParseByExt(path, content)
 }
 
+// ParseByExtWithOptions parses content according to path extension with custom providers.
+func ParseByExtWithOptions(path string, content []byte, opts ...ParseOption) (*Conf, error) {
+	return confimpl.ParseByExtWithOptions(path, content, opts...)
+}
+
+// WithYAMLUnmarshalFunc sets the YAML unmarshal provider used by ParseYAMLFullWithOptions.
+func WithYAMLUnmarshalFunc(unmarshal func([]byte, any) error) ParseOption {
+	return confimpl.WithYAMLUnmarshalFunc(unmarshal)
+}
+
+// WithParserForExt sets the parser used by ParseByExtWithOptions for an extension.
+func WithParserForExt(ext string, parser func([]byte) (*Conf, error)) ParseOption {
+	return confimpl.WithParserForExt(ext, parser)
+}
+
 // ParseYAML 将简单 YAML 子集解析为分组配置。ParseYAML parses a small YAML subset into grouped configuration.
 func ParseYAML(content string) (*Conf, error) { return confimpl.ParseYAML(content) }
 
 // ParseYAMLFull parses YAML using yaml.v3 and flattens nested objects into grouped keys.
 func ParseYAMLFull(content string) (*Conf, error) { return confimpl.ParseYAMLFull(content) }
+
+// ParseYAMLFullWithOptions parses YAML using a configurable unmarshal provider and flattens nested objects into grouped keys.
+func ParseYAMLFullWithOptions(content string, opts ...ParseOption) (*Conf, error) {
+	return confimpl.ParseYAMLFullWithOptions(content, opts...)
+}
 
 // ParseTOML parses common TOML key-value and section syntax into grouped configuration.
 func ParseTOML(content string) (*Conf, error) { return confimpl.ParseTOML(content) }

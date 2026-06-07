@@ -140,6 +140,21 @@ func WithBirthLocation(location *time.Location) BirthOption {
 	return identityimpl.WithBirthLocation(location)
 }
 
+// WithBirthDigitsMatcher sets the decimal-digits matcher used by birthday helpers.
+func WithBirthDigitsMatcher(matcher func(string) bool) BirthOption {
+	return identityimpl.WithBirthDigitsMatcher(matcher)
+}
+
+// WithBirthParser sets the date parser used by birthday helpers.
+func WithBirthParser(parser func(layout, value string, location *time.Location) (time.Time, error)) BirthOption {
+	return identityimpl.WithBirthParser(parser)
+}
+
+// BirthStringWithOptions returns the birthday encoded in idCard as yyyyMMdd using custom parsing options.
+func BirthStringWithOptions(idCard string, opts ...BirthOption) (string, bool) {
+	return identityimpl.BirthStringWithOptions(idCard, opts...)
+}
+
 // BirthDateWithOptions returns the birthday encoded in idCard using custom parsing options.
 func BirthDateWithOptions(idCard string, opts ...BirthOption) (time.Time, bool) {
 	return identityimpl.BirthDateWithOptions(idCard, opts...)
@@ -194,6 +209,11 @@ func Hide(idCard string, start, end int) string { return identityimpl.Hide(idCar
 
 // CheckCode18 returns the 18th check code for a 17-digit identity card body.
 func CheckCode18(code17 string) byte { return identityimpl.CheckCode18(code17) }
+
+// CheckCode18WithOptions returns the 18th check code for a 17-digit identity card body with options.
+func CheckCode18WithOptions(code17 string, opts ...IDCardOption) byte {
+	return identityimpl.CheckCode18WithOptions(code17, opts...)
+}
 
 // IsValidBirthday reports whether s is a valid yyyyMMdd date.
 func IsValidBirthday(s string) bool { return identityimpl.IsValidBirthday(s) }

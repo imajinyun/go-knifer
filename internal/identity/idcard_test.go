@@ -1,6 +1,7 @@
 package identity
 
 import (
+	"errors"
 	"testing"
 	"time"
 )
@@ -83,6 +84,9 @@ func TestIDCardMatcherOptions(t *testing.T) {
 	if IsValidHKIDCardWithOptions("A123456(3)", WithHKCardMatcher(func(string) bool { return false })) {
 		t.Fatal("custom Hong Kong matcher should reject card")
 	}
+	if CheckCode18WithOptions("11010519491231002", WithDigitsMatcher(func(string) bool { return false })) != ' ' {
+		t.Fatal("custom digits matcher should reject check code input")
+	}
 }
 
 func TestIDCardFields(t *testing.T) {
@@ -128,6 +132,22 @@ func TestIDCardFields(t *testing.T) {
 	}
 	if !IsValidBirthdayWithOptions("19491231", WithBirthLocation(loc)) || IsValidBirthdayWithOptions("19490231", WithBirthLocation(loc)) {
 		t.Fatal("IsValidBirthdayWithOptions failed")
+	}
+	if IsValidBirthdayWithOptions("19491231", WithBirthDigitsMatcher(func(string) bool { return false })) {
+		t.Fatal("custom birthday digits matcher should reject birthday")
+	}
+	if _, ok := BirthStringWithOptions(id, WithBirthParser(func(string, string, *time.Location) (time.Time, error) {
+		return time.Time{}, errors.New("boom")
+	})); ok {
+		t.Fatal("custom birthday parser error should reject birth string")
+	}
+	parsedWithCustomParser := false
+	birthDate, ok = BirthDateWithOptions(id, WithBirthParser(func(layout, value string, location *time.Location) (time.Time, error) {
+		parsedWithCustomParser = true
+		return time.ParseInLocation(layout, value, location)
+	}))
+	if !ok || !parsedWithCustomParser || birthDate.Format("2006-01-02") != "1949-12-31" {
+		t.Fatalf("BirthDateWithOptions custom parser = %v, %v, called=%v", birthDate, ok, parsedWithCustomParser)
 	}
 	gender, ok := GenderOf(id)
 	if !ok || gender != GenderFemale {

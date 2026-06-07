@@ -54,6 +54,17 @@ func NewArrayWithConfig(cfg *Config) *Array {
 // NewConfig creates a default JSON config.
 func NewConfig() *Config { return jsonx.NewConfig() }
 
+// CreateConfig creates a default JSON config.
+func CreateConfig() *Config { return jsonx.CreateConfig() }
+
+// NewJSONError creates a JSON error with a formatted message.
+func NewJSONError(format string, args ...any) *Error { return jsonx.NewJSONError(format, args...) }
+
+// WrapJSONError wraps a lower-level error as a JSON error.
+func WrapJSONError(cause error, format string, args ...any) *Error {
+	return jsonx.WrapJSONError(cause, format, args...)
+}
+
 // WithConfig sets the JSON config used by serialization helpers.
 func WithConfig(cfg *Config) EncodeOption { return jsonx.WithConfig(cfg) }
 
@@ -115,6 +126,9 @@ func ParseWithOptions(src any, opts ...ParseOption) (any, error) {
 	return jsonx.ParseWithOptions(src, opts...)
 }
 
+// ParseWithConfig automatically detects and parses JSON with cfg.
+func ParseWithConfig(src any, cfg *Config) (any, error) { return jsonx.ParseWithConfig(src, cfg) }
+
 // ParseObj parses src as a JSON object.
 func ParseObj(src any) (*Object, error) { return jsonx.ParseObj(src) }
 
@@ -123,12 +137,22 @@ func ParseObjWithOptions(src any, opts ...ParseOption) (*Object, error) {
 	return jsonx.ParseObjWithOptions(src, opts...)
 }
 
+// ParseObjWithConfig parses src as a JSON object with cfg.
+func ParseObjWithConfig(src any, cfg *Config) (*Object, error) {
+	return jsonx.ParseObjWithConfig(src, cfg)
+}
+
 // ParseArray parses src as a JSON array.
 func ParseArray(src any) (*Array, error) { return jsonx.ParseArray(src) }
 
 // ParseArrayWithOptions parses src as a JSON array with options.
 func ParseArrayWithOptions(src any, opts ...ParseOption) (*Array, error) {
 	return jsonx.ParseArrayWithOptions(src, opts...)
+}
+
+// ParseArrayWithConfig parses src as a JSON array with cfg.
+func ParseArrayWithConfig(src any, cfg *Config) (*Array, error) {
+	return jsonx.ParseArrayWithConfig(src, cfg)
 }
 
 // ToStr serializes v to compact JSON.

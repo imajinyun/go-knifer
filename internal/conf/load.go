@@ -36,6 +36,8 @@ type LoadOptions struct {
 	MaxBytes int64
 	// ReadFile optionally reads a local config file. Defaults to os.Open plus MaxBytes limiting.
 	ReadFile func(path string, maxBytes int64) ([]byte, error)
+	// ParseOptions customize parsing after local or remote content is read.
+	ParseOptions []ParseOption
 }
 
 // LoadWithOptions reads and parses a configuration file with advanced options.
@@ -107,7 +109,7 @@ func loadFile(path string, opts LoadOptions, seen map[string]bool) (*Conf, error
 	if err != nil {
 		return nil, wrapConfigIO("read config file "+path, err)
 	}
-	current, err := ParseByExt(path, b)
+	current, err := ParseByExtWithOptions(path, b, opts.ParseOptions...)
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +194,7 @@ func loadRemote(rawURL string, opts LoadOptions) (*Conf, error) {
 	if u, err := url.Parse(rawURL); err == nil && u.Path != "" {
 		parsePath = u.Path
 	}
-	c, err := ParseByExt(parsePath, b)
+	c, err := ParseByExtWithOptions(parsePath, b, opts.ParseOptions...)
 	if err != nil {
 		return nil, err
 	}

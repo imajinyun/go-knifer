@@ -144,9 +144,19 @@ func PS256(priv *rsa.PrivateKey, pub *rsa.PublicKey) JWTSigner {
 	return jwtimpl.PS256(priv, pub)
 }
 
+// PS256WithOptions creates a PS256 signer with options.
+func PS256WithOptions(priv *rsa.PrivateKey, pub *rsa.PublicKey, opts ...SignerOption) JWTSigner {
+	return jwtimpl.PS256WithOptions(priv, pub, opts...)
+}
+
 // PS384 creates a PS384 signer.
 func PS384(priv *rsa.PrivateKey, pub *rsa.PublicKey) JWTSigner {
 	return jwtimpl.PS384(priv, pub)
+}
+
+// PS384WithOptions creates a PS384 signer with options.
+func PS384WithOptions(priv *rsa.PrivateKey, pub *rsa.PublicKey, opts ...SignerOption) JWTSigner {
+	return jwtimpl.PS384WithOptions(priv, pub, opts...)
 }
 
 // PS512 creates a PS512 signer.
@@ -154,9 +164,19 @@ func PS512(priv *rsa.PrivateKey, pub *rsa.PublicKey) JWTSigner {
 	return jwtimpl.PS512(priv, pub)
 }
 
+// PS512WithOptions creates a PS512 signer with options.
+func PS512WithOptions(priv *rsa.PrivateKey, pub *rsa.PublicKey, opts ...SignerOption) JWTSigner {
+	return jwtimpl.PS512WithOptions(priv, pub, opts...)
+}
+
 // ES256 creates an ES256 signer.
 func ES256(priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey) JWTSigner {
 	return jwtimpl.ES256(priv, pub)
+}
+
+// ES256WithOptions creates an ES256 signer with options.
+func ES256WithOptions(priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey, opts ...SignerOption) JWTSigner {
+	return jwtimpl.ES256WithOptions(priv, pub, opts...)
 }
 
 // ES384 creates an ES384 signer.
@@ -164,9 +184,19 @@ func ES384(priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey) JWTSigner {
 	return jwtimpl.ES384(priv, pub)
 }
 
+// ES384WithOptions creates an ES384 signer with options.
+func ES384WithOptions(priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey, opts ...SignerOption) JWTSigner {
+	return jwtimpl.ES384WithOptions(priv, pub, opts...)
+}
+
 // ES512 creates an ES512 signer.
 func ES512(priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey) JWTSigner {
 	return jwtimpl.ES512(priv, pub)
+}
+
+// ES512WithOptions creates an ES512 signer with options.
+func ES512WithOptions(priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey, opts ...SignerOption) JWTSigner {
+	return jwtimpl.ES512WithOptions(priv, pub, opts...)
 }
 
 // None returns a signer for the none algorithm.

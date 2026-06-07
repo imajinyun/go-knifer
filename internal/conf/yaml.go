@@ -8,6 +8,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+func defaultYAMLUnmarshal(data []byte, out any) error {
+	return yaml.Unmarshal(data, out)
+}
+
 // ParseYAML 将简单 YAML 子集解析为分组配置。ParseYAML parses a small YAML subset into grouped configuration.
 func ParseYAML(content string) (*Conf, error) {
 	s := New()
@@ -46,8 +50,14 @@ func ParseYAML(content string) (*Conf, error) {
 
 // ParseYAMLFull parses YAML using yaml.v3 and flattens nested objects into grouped keys.
 func ParseYAMLFull(content string) (*Conf, error) {
+	return ParseYAMLFullWithOptions(content)
+}
+
+// ParseYAMLFullWithOptions parses YAML using a configurable unmarshal provider and flattens nested objects into grouped keys.
+func ParseYAMLFullWithOptions(content string, opts ...ParseOption) (*Conf, error) {
+	cfg := applyParseOptions(opts)
 	var root any
-	if err := yaml.Unmarshal([]byte(content), &root); err != nil {
+	if err := cfg.yamlUnmarshal([]byte(content), &root); err != nil {
 		return nil, wrapConfigParse("parse yaml content", err)
 	}
 	c := New()

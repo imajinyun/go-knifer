@@ -119,6 +119,7 @@ type parseConfig struct {
 	entity         map[string]string
 	maxBytes       int64
 	openFile       func(string) (io.ReadCloser, error)
+	decoderFactory func(io.Reader) *stdxml.Decoder
 }
 
 func defaultParseConfig() parseConfig {
@@ -134,6 +135,9 @@ func applyParse(opts []ParseOption) parseConfig {
 	}
 	if cfg.openFile == nil {
 		cfg.openFile = defaultOpenFile
+	}
+	if cfg.decoderFactory == nil {
+		cfg.decoderFactory = stdxml.NewDecoder
 	}
 	return cfg
 }
@@ -171,6 +175,11 @@ func WithMaxBytes(maxBytes int64) ParseOption {
 // WithOpenFile sets the file opener used by XML file read helpers.
 func WithOpenFile(openFile func(string) (io.ReadCloser, error)) ParseOption {
 	return func(c *parseConfig) { c.openFile = openFile }
+}
+
+// WithDecoderFactory sets the XML decoder factory used by DOM and SAX readers.
+func WithDecoderFactory(factory func(io.Reader) *stdxml.Decoder) ParseOption {
+	return func(c *parseConfig) { c.decoderFactory = factory }
 }
 
 // ---------------------------------------------------------------------------
@@ -385,7 +394,10 @@ func readXMLReader(r io.Reader, cfg parseConfig) (*Document, error) {
 	if cfg.maxBytes > 0 {
 		r = io.LimitReader(r, cfg.maxBytes)
 	}
-	dec := stdxml.NewDecoder(r)
+	dec := cfg.decoderFactory(r)
+	if dec == nil {
+		return nil, invalidInputf("vxml: decoder factory returned nil")
+	}
 	dec.Strict = cfg.strict
 	dec.CharsetReader = cfg.charsetReader
 	dec.Entity = cfg.entity
@@ -487,7 +499,10 @@ func readBySAXWithConfig(r io.Reader, handler TokenHandler, cfg parseConfig) err
 	if cfg.maxBytes > 0 {
 		r = io.LimitReader(r, cfg.maxBytes)
 	}
-	dec := stdxml.NewDecoder(r)
+	dec := cfg.decoderFactory(r)
+	if dec == nil {
+		return invalidInputf("vxml: decoder factory returned nil")
+	}
 	dec.Strict = cfg.strict
 	dec.CharsetReader = cfg.charsetReader
 	dec.Entity = cfg.entity

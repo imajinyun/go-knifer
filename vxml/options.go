@@ -1,6 +1,7 @@
 package vxml
 
 import (
+	stdxml "encoding/xml"
 	"io"
 	"io/fs"
 
@@ -27,6 +28,11 @@ func WithMaxBytes(maxBytes int64) ParseOption { return xmlimpl.WithMaxBytes(maxB
 // WithOpenFile sets the file opener used by XML file read helpers.
 func WithOpenFile(openFile func(string) (io.ReadCloser, error)) ParseOption {
 	return xmlimpl.WithOpenFile(openFile)
+}
+
+// WithDecoderFactory sets the XML decoder factory used by DOM and SAX readers.
+func WithDecoderFactory(factory func(io.Reader) *stdxml.Decoder) ParseOption {
+	return xmlimpl.WithDecoderFactory(factory)
 }
 
 // WithCharset sets the XML declaration charset.
