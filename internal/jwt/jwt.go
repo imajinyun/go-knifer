@@ -21,8 +21,42 @@ type validateConfig struct {
 	leeway int64
 }
 
+type jsonConfig struct {
+	marshal   func(any) ([]byte, error)
+	unmarshal func([]byte, any) error
+}
+
 // ValidateOption customizes JWT ValidateWithOptions.
 type ValidateOption func(*validateConfig)
+
+// JSONOption customizes JWT JSON encoding and decoding per call.
+type JSONOption func(*jsonConfig)
+
+// WithJSONMarshalFunc sets the JSON marshal provider used by JWT signing helpers.
+func WithJSONMarshalFunc(marshal func(any) ([]byte, error)) JSONOption {
+	return func(c *jsonConfig) { c.marshal = marshal }
+}
+
+// WithJSONUnmarshalFunc sets the JSON unmarshal provider used by JWT parsing helpers.
+func WithJSONUnmarshalFunc(unmarshal func([]byte, any) error) JSONOption {
+	return func(c *jsonConfig) { c.unmarshal = unmarshal }
+}
+
+func applyJSONOptions(opts []JSONOption) jsonConfig {
+	cfg := jsonConfig{marshal: json.Marshal, unmarshal: json.Unmarshal}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.marshal == nil {
+		cfg.marshal = json.Marshal
+	}
+	if cfg.unmarshal == nil {
+		cfg.unmarshal = json.Unmarshal
+	}
+	return cfg
+}
 
 // WithValidateTime sets the time used by ValidateWithOptions.
 func WithValidateTime(now time.Time) ValidateOption {
@@ -66,8 +100,13 @@ func New() *JWT {
 
 // Of 解析已有 token 字符串，得到 JWT 对象。
 func Of(token string) (*JWT, error) {
+	return OfWithOptions(token)
+}
+
+// OfWithOptions parses an existing token string with JSON options.
+func OfWithOptions(token string, opts ...JSONOption) (*JWT, error) {
 	j := New()
-	if err := j.Parse(token); err != nil {
+	if err := j.ParseWithOptions(token, opts...); err != nil {
 		return nil, err
 	}
 	return j, nil
@@ -75,6 +114,12 @@ func Of(token string) (*JWT, error) {
 
 // Parse 解析 token 字符串到当前 JWT。
 func (j *JWT) Parse(token string) error {
+	return j.ParseWithOptions(token)
+}
+
+// ParseWithOptions parses token string to current JWT with JSON options.
+func (j *JWT) ParseWithOptions(token string, opts ...JSONOption) error {
+	cfg := applyJSONOptions(opts)
 	token = strings.TrimSpace(token)
 	if token == "" {
 		return NewJWTError("token must not be blank")
@@ -93,13 +138,13 @@ func (j *JWT) Parse(token string) error {
 	}
 	header := map[string]any{}
 	if len(headerJSON) > 0 {
-		if err := json.Unmarshal(headerJSON, &header); err != nil {
+		if err := cfg.unmarshal(headerJSON, &header); err != nil {
 			return wrapJWTError(err, "unmarshal header")
 		}
 	}
 	payload := map[string]any{}
 	if len(payloadJSON) > 0 {
-		if err := json.Unmarshal(payloadJSON, &payload); err != nil {
+		if err := cfg.unmarshal(payloadJSON, &payload); err != nil {
 			return wrapJWTError(err, "unmarshal payload")
 		}
 	}
@@ -275,6 +320,12 @@ func (j *JWT) SignWith(signer JWTSigner) (string, error) {
 
 // SignOpts 进行签名；addTypeIfNot=true 时若无 typ 字段则补 JWT。
 func (j *JWT) SignOpts(addTypeIfNot bool) (string, error) {
+	return j.SignOptsWithOptions(addTypeIfNot)
+}
+
+// SignOptsWithOptions signs the token with JSON options.
+func (j *JWT) SignOptsWithOptions(addTypeIfNot bool, opts ...JSONOption) (string, error) {
+	cfg := applyJSONOptions(opts)
 	if j.signer == nil {
 		return "", NewJWTError("no signer provided")
 	}
@@ -286,11 +337,11 @@ func (j *JWT) SignOpts(addTypeIfNot bool) (string, error) {
 	if _, ok := j.header[HeaderAlgorithm]; !ok {
 		j.header[HeaderAlgorithm] = j.signer.Algorithm()
 	}
-	hb, err := json.Marshal(j.header)
+	hb, err := cfg.marshal(j.header)
 	if err != nil {
 		return "", wrapJWTError(err, "marshal header")
 	}
-	pb, err := json.Marshal(j.payload)
+	pb, err := cfg.marshal(j.payload)
 	if err != nil {
 		return "", wrapJWTError(err, "marshal payload")
 	}

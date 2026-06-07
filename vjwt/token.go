@@ -71,6 +71,21 @@ func WithTokenAlgorithm(algorithm string) TokenOption { return jwtimpl.WithToken
 // WithTokenSigner sets the signer used by CreateTokenWithOptions and takes precedence over key/algorithm options.
 func WithTokenSigner(signer JWTSigner) TokenOption { return jwtimpl.WithTokenSigner(signer) }
 
+// WithJSONMarshalFunc sets the JSON marshal provider used by JWT signing helpers.
+func WithJSONMarshalFunc(marshal func(any) ([]byte, error)) JSONOption {
+	return jwtimpl.WithJSONMarshalFunc(marshal)
+}
+
+// WithJSONUnmarshalFunc sets the JSON unmarshal provider used by JWT parsing helpers.
+func WithJSONUnmarshalFunc(unmarshal func([]byte, any) error) JSONOption {
+	return jwtimpl.WithJSONUnmarshalFunc(unmarshal)
+}
+
+// WithTokenJSONOptions sets JSON codec options used when signing in CreateTokenWithOptions.
+func WithTokenJSONOptions(opts ...JSONOption) TokenOption {
+	return jwtimpl.WithTokenJSONOptions(opts...)
+}
+
 // CreateTokenWithOptions creates a token from functional options and avoids adding more overload variants.
 func CreateTokenWithOptions(opts ...TokenOption) (string, error) {
 	return jwtimpl.CreateTokenWithOptions(opts...)
@@ -79,6 +94,11 @@ func CreateTokenWithOptions(opts ...TokenOption) (string, error) {
 // ParseToken parses a token string.
 func ParseToken(token string) (*JWT, error) {
 	return jwtimpl.ParseToken(token)
+}
+
+// ParseTokenWithOptions parses a token string with JSON options.
+func ParseTokenWithOptions(token string, opts ...JSONOption) (*JWT, error) {
+	return jwtimpl.ParseTokenWithOptions(token, opts...)
 }
 
 // OfValidator creates a validator from token string.

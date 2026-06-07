@@ -20,6 +20,9 @@ type ValidateOption = jwtimpl.ValidateOption
 // SignerOption customizes asymmetric JWT signers.
 type SignerOption = jwtimpl.SignerOption
 
+// JSONOption customizes JWT JSON encoding and decoding per call.
+type JSONOption = jwtimpl.JSONOption
+
 // JWTError is the JWT module error type.
 type JWTError = jwtimpl.JWTError
 

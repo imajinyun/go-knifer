@@ -15,8 +15,18 @@ type rsaConfig struct {
 	pssOptions *rsa.PSSOptions
 }
 
+type rsaDigestConfig struct {
+	rsaConfig
+	hashID  stdcrypto.Hash
+	newHash func() hash.Hash
+	pss     bool
+}
+
 // RSAOption customizes RSA helper behavior.
 type RSAOption func(*rsaConfig)
+
+// RSADigestOption customizes RSA data-signing helpers per call.
+type RSADigestOption func(*rsaDigestConfig)
 
 // WithRSARandomReader sets the entropy source used by RSA helpers.
 func WithRSARandomReader(reader io.Reader) RSAOption {
@@ -47,6 +57,44 @@ func applyRSAOptions(opts ...RSAOption) rsaConfig {
 		cfg.oaepHash = sha256.New
 	}
 	return cfg
+}
+
+func applyRSADigestOptions(opts ...RSADigestOption) rsaDigestConfig {
+	base := applyRSAOptions()
+	cfg := rsaDigestConfig{rsaConfig: base, hashID: stdcrypto.SHA256, newHash: sha256.New}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.random == nil {
+		cfg.random = rand.Reader
+	}
+	if cfg.newHash == nil {
+		cfg.newHash = sha256.New
+	}
+	return cfg
+}
+
+// WithRSADigestHash sets the hash used by RSA data-signing helpers.
+func WithRSADigestHash(hashID stdcrypto.Hash, newHash func() hash.Hash) RSADigestOption {
+	return func(c *rsaDigestConfig) {
+		c.hashID = hashID
+		c.newHash = newHash
+	}
+}
+
+// WithRSADigestRandomReader sets the entropy source used by RSA data-signing helpers.
+func WithRSADigestRandomReader(reader io.Reader) RSADigestOption {
+	return func(c *rsaDigestConfig) { c.random = reader }
+}
+
+// WithRSADigestPSS signs and verifies using RSA-PSS instead of PKCS#1 v1.5.
+func WithRSADigestPSS(opts *rsa.PSSOptions) RSADigestOption {
+	return func(c *rsaDigestConfig) {
+		c.pss = true
+		c.pssOptions = opts
+	}
 }
 
 // GenerateRSAKey generates an RSA private key.
@@ -144,12 +192,30 @@ func RSAVerifyPSSWithOptions(pub *rsa.PublicKey, hash stdcrypto.Hash, digest, si
 
 // SignSHA256WithRSA signs data using SHA256withRSA.
 func SignSHA256WithRSA(data []byte, priv *rsa.PrivateKey) ([]byte, error) {
-	digest := sha256.Sum256(data)
-	return RSASignPKCS1v15(priv, stdcrypto.SHA256, digest[:])
+	return SignWithRSAOptions(data, priv)
 }
 
 // VerifySHA256WithRSA verifies SHA256withRSA signature.
 func VerifySHA256WithRSA(data, sig []byte, pub *rsa.PublicKey) error {
-	digest := sha256.Sum256(data)
-	return RSAVerifyPKCS1v15(pub, stdcrypto.SHA256, digest[:], sig)
+	return VerifyWithRSAOptions(data, sig, pub)
+}
+
+// SignWithRSAOptions hashes data and signs it with configurable RSA options.
+func SignWithRSAOptions(data []byte, priv *rsa.PrivateKey, opts ...RSADigestOption) ([]byte, error) {
+	cfg := applyRSADigestOptions(opts...)
+	digest := Digest(data, cfg.newHash)
+	if cfg.pss {
+		return rsa.SignPSS(cfg.random, priv, cfg.hashID, digest, cfg.pssOptions)
+	}
+	return rsa.SignPKCS1v15(cfg.random, priv, cfg.hashID, digest)
+}
+
+// VerifyWithRSAOptions hashes data and verifies an RSA signature with configurable options.
+func VerifyWithRSAOptions(data, sig []byte, pub *rsa.PublicKey, opts ...RSADigestOption) error {
+	cfg := applyRSADigestOptions(opts...)
+	digest := Digest(data, cfg.newHash)
+	if cfg.pss {
+		return rsa.VerifyPSS(pub, cfg.hashID, digest, sig, cfg.pssOptions)
+	}
+	return rsa.VerifyPKCS1v15(pub, cfg.hashID, digest, sig)
 }

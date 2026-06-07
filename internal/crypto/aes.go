@@ -9,6 +9,32 @@ import (
 type aesGCMConfig struct {
 	nonceSize int
 	tagSize   int
+	blockFunc func([]byte) (cipher.Block, error)
+}
+
+// AESBlockOption customizes AES block-mode helpers per call.
+type AESBlockOption func(*aesBlockConfig)
+
+type aesBlockConfig struct {
+	blockFunc func([]byte) (cipher.Block, error)
+}
+
+func applyAESBlockOptions(opts []AESBlockOption) aesBlockConfig {
+	cfg := aesBlockConfig{blockFunc: aes.NewCipher}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.blockFunc == nil {
+		cfg.blockFunc = aes.NewCipher
+	}
+	return cfg
+}
+
+// WithAESBlockFactory sets the cipher block factory used by AES helpers.
+func WithAESBlockFactory(factory func([]byte) (cipher.Block, error)) AESBlockOption {
+	return func(c *aesBlockConfig) { c.blockFunc = factory }
 }
 
 // AESGCMOption customizes AES-GCM helper behavior.
@@ -24,13 +50,25 @@ func WithGCMTagSize(size int) AESGCMOption {
 	return func(c *aesGCMConfig) { c.tagSize = size }
 }
 
-func newGCM(block cipher.Block, opts ...AESGCMOption) (cipher.AEAD, error) {
-	cfg := aesGCMConfig{}
+// WithGCMBlockFactory sets the cipher block factory used by AES-GCM helpers.
+func WithGCMBlockFactory(factory func([]byte) (cipher.Block, error)) AESGCMOption {
+	return func(c *aesGCMConfig) { c.blockFunc = factory }
+}
+
+func applyAESGCMOptions(opts []AESGCMOption) aesGCMConfig {
+	cfg := aesGCMConfig{blockFunc: aes.NewCipher}
 	for _, opt := range opts {
 		if opt != nil {
 			opt(&cfg)
 		}
 	}
+	if cfg.blockFunc == nil {
+		cfg.blockFunc = aes.NewCipher
+	}
+	return cfg
+}
+
+func newGCM(block cipher.Block, cfg aesGCMConfig) (cipher.AEAD, error) {
 	if cfg.nonceSize > 0 && cfg.tagSize > 0 {
 		return nil, errors.New("crypto: cannot set both GCM nonce size and tag size")
 	}
@@ -45,7 +83,13 @@ func newGCM(block cipher.Block, opts ...AESGCMOption) (cipher.AEAD, error) {
 
 // AESEncryptCBC encrypts plain data using AES-CBC with PKCS#7 padding.
 func AESEncryptCBC(plain, key, iv []byte) ([]byte, error) {
-	block, err := aes.NewCipher(key)
+	return AESEncryptCBCWithOptions(plain, key, iv)
+}
+
+// AESEncryptCBCWithOptions encrypts plain data using AES-CBC with options.
+func AESEncryptCBCWithOptions(plain, key, iv []byte, opts ...AESBlockOption) ([]byte, error) {
+	cfg := applyAESBlockOptions(opts)
+	block, err := cfg.blockFunc(key)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +98,13 @@ func AESEncryptCBC(plain, key, iv []byte) ([]byte, error) {
 
 // AESDecryptCBC decrypts AES-CBC data using PKCS#7 padding.
 func AESDecryptCBC(cipherText, key, iv []byte) ([]byte, error) {
-	block, err := aes.NewCipher(key)
+	return AESDecryptCBCWithOptions(cipherText, key, iv)
+}
+
+// AESDecryptCBCWithOptions decrypts AES-CBC data with options.
+func AESDecryptCBCWithOptions(cipherText, key, iv []byte, opts ...AESBlockOption) ([]byte, error) {
+	cfg := applyAESBlockOptions(opts)
+	block, err := cfg.blockFunc(key)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +113,13 @@ func AESDecryptCBC(cipherText, key, iv []byte) ([]byte, error) {
 
 // AESEncryptECB encrypts plain data using AES-ECB with PKCS#7 padding.
 func AESEncryptECB(plain, key []byte) ([]byte, error) {
-	block, err := aes.NewCipher(key)
+	return AESEncryptECBWithOptions(plain, key)
+}
+
+// AESEncryptECBWithOptions encrypts plain data using AES-ECB with options.
+func AESEncryptECBWithOptions(plain, key []byte, opts ...AESBlockOption) ([]byte, error) {
+	cfg := applyAESBlockOptions(opts)
+	block, err := cfg.blockFunc(key)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +128,13 @@ func AESEncryptECB(plain, key []byte) ([]byte, error) {
 
 // AESDecryptECB decrypts AES-ECB data using PKCS#7 padding.
 func AESDecryptECB(cipherText, key []byte) ([]byte, error) {
-	block, err := aes.NewCipher(key)
+	return AESDecryptECBWithOptions(cipherText, key)
+}
+
+// AESDecryptECBWithOptions decrypts AES-ECB data with options.
+func AESDecryptECBWithOptions(cipherText, key []byte, opts ...AESBlockOption) ([]byte, error) {
+	cfg := applyAESBlockOptions(opts)
+	block, err := cfg.blockFunc(key)
 	if err != nil {
 		return nil, err
 	}
@@ -81,29 +143,63 @@ func AESDecryptECB(cipherText, key []byte) ([]byte, error) {
 
 // AESEncryptCTR encrypts or decrypts data using AES-CTR.
 func AESEncryptCTR(data, key, iv []byte) ([]byte, error) {
-	return aesStream(data, key, iv, cipher.NewCTR)
+	return AESEncryptCTRWithOptions(data, key, iv)
+}
+
+// AESEncryptCTRWithOptions encrypts or decrypts data using AES-CTR with options.
+func AESEncryptCTRWithOptions(data, key, iv []byte, opts ...AESBlockOption) ([]byte, error) {
+	return aesStream(data, key, iv, cipher.NewCTR, opts...)
 }
 
 // AESDecryptCTR decrypts or encrypts data using AES-CTR.
-func AESDecryptCTR(data, key, iv []byte) ([]byte, error) { return AESEncryptCTR(data, key, iv) }
+func AESDecryptCTR(data, key, iv []byte) ([]byte, error) {
+	return AESEncryptCTRWithOptions(data, key, iv)
+}
+
+// AESDecryptCTRWithOptions decrypts or encrypts data using AES-CTR with options.
+func AESDecryptCTRWithOptions(data, key, iv []byte, opts ...AESBlockOption) ([]byte, error) {
+	return AESEncryptCTRWithOptions(data, key, iv, opts...)
+}
 
 // AESEncryptCFB encrypts data using AES-CFB.
 func AESEncryptCFB(data, key, iv []byte) ([]byte, error) {
-	return aesCFB(data, key, iv, false)
+	return AESEncryptCFBWithOptions(data, key, iv)
+}
+
+// AESEncryptCFBWithOptions encrypts data using AES-CFB with options.
+func AESEncryptCFBWithOptions(data, key, iv []byte, opts ...AESBlockOption) ([]byte, error) {
+	return aesCFB(data, key, iv, false, opts...)
 }
 
 // AESDecryptCFB decrypts data using AES-CFB.
 func AESDecryptCFB(data, key, iv []byte) ([]byte, error) {
-	return aesCFB(data, key, iv, true)
+	return AESDecryptCFBWithOptions(data, key, iv)
+}
+
+// AESDecryptCFBWithOptions decrypts data using AES-CFB with options.
+func AESDecryptCFBWithOptions(data, key, iv []byte, opts ...AESBlockOption) ([]byte, error) {
+	return aesCFB(data, key, iv, true, opts...)
 }
 
 // AESEncryptOFB encrypts or decrypts data using AES-OFB.
 func AESEncryptOFB(data, key, iv []byte) ([]byte, error) {
-	return aesOFB(data, key, iv)
+	return AESEncryptOFBWithOptions(data, key, iv)
+}
+
+// AESEncryptOFBWithOptions encrypts or decrypts data using AES-OFB with options.
+func AESEncryptOFBWithOptions(data, key, iv []byte, opts ...AESBlockOption) ([]byte, error) {
+	return aesOFB(data, key, iv, opts...)
 }
 
 // AESDecryptOFB decrypts or encrypts data using AES-OFB.
-func AESDecryptOFB(data, key, iv []byte) ([]byte, error) { return AESEncryptOFB(data, key, iv) }
+func AESDecryptOFB(data, key, iv []byte) ([]byte, error) {
+	return AESEncryptOFBWithOptions(data, key, iv)
+}
+
+// AESDecryptOFBWithOptions decrypts or encrypts data using AES-OFB with options.
+func AESDecryptOFBWithOptions(data, key, iv []byte, opts ...AESBlockOption) ([]byte, error) {
+	return AESEncryptOFBWithOptions(data, key, iv, opts...)
+}
 
 // AESEncryptGCM encrypts plain data using AES-GCM.
 func AESEncryptGCM(plain, key, nonce, additionalData []byte) ([]byte, error) {
@@ -112,11 +208,12 @@ func AESEncryptGCM(plain, key, nonce, additionalData []byte) ([]byte, error) {
 
 // AESEncryptGCMWithOptions encrypts plain data using AES-GCM with options.
 func AESEncryptGCMWithOptions(plain, key, nonce, additionalData []byte, opts ...AESGCMOption) ([]byte, error) {
-	block, err := aes.NewCipher(key)
+	cfg := applyAESGCMOptions(opts)
+	block, err := cfg.blockFunc(key)
 	if err != nil {
 		return nil, err
 	}
-	gcm, err := newGCM(block, opts...)
+	gcm, err := newGCM(block, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -133,11 +230,12 @@ func AESDecryptGCM(cipherText, key, nonce, additionalData []byte) ([]byte, error
 
 // AESDecryptGCMWithOptions decrypts AES-GCM data with options.
 func AESDecryptGCMWithOptions(cipherText, key, nonce, additionalData []byte, opts ...AESGCMOption) ([]byte, error) {
-	block, err := aes.NewCipher(key)
+	cfg := applyAESGCMOptions(opts)
+	block, err := cfg.blockFunc(key)
 	if err != nil {
 		return nil, err
 	}
-	gcm, err := newGCM(block, opts...)
+	gcm, err := newGCM(block, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -147,8 +245,9 @@ func AESDecryptGCMWithOptions(cipherText, key, nonce, additionalData []byte, opt
 	return gcm.Open(nil, nonce, cipherText, additionalData)
 }
 
-func aesBlockWithIV(key, iv []byte) (cipher.Block, error) {
-	block, err := aes.NewCipher(key)
+func aesBlockWithIV(key, iv []byte, opts ...AESBlockOption) (cipher.Block, error) {
+	cfg := applyAESBlockOptions(opts)
+	block, err := cfg.blockFunc(key)
 	if err != nil {
 		return nil, err
 	}
@@ -158,8 +257,8 @@ func aesBlockWithIV(key, iv []byte) (cipher.Block, error) {
 	return block, nil
 }
 
-func aesStream(data, key, iv []byte, newStream func(cipher.Block, []byte) cipher.Stream) ([]byte, error) {
-	block, err := aesBlockWithIV(key, iv)
+func aesStream(data, key, iv []byte, newStream func(cipher.Block, []byte) cipher.Stream, opts ...AESBlockOption) ([]byte, error) {
+	block, err := aesBlockWithIV(key, iv, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -168,8 +267,8 @@ func aesStream(data, key, iv []byte, newStream func(cipher.Block, []byte) cipher
 	return out, nil
 }
 
-func aesCFB(data, key, iv []byte, decrypt bool) ([]byte, error) {
-	block, err := aesBlockWithIV(key, iv)
+func aesCFB(data, key, iv []byte, decrypt bool, opts ...AESBlockOption) ([]byte, error) {
+	block, err := aesBlockWithIV(key, iv, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -193,8 +292,8 @@ func aesCFB(data, key, iv []byte, decrypt bool) ([]byte, error) {
 	return out, nil
 }
 
-func aesOFB(data, key, iv []byte) ([]byte, error) {
-	block, err := aesBlockWithIV(key, iv)
+func aesOFB(data, key, iv []byte, opts ...AESBlockOption) ([]byte, error) {
+	block, err := aesBlockWithIV(key, iv, opts...)
 	if err != nil {
 		return nil, err
 	}

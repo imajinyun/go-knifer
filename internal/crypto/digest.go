@@ -6,7 +6,23 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/hex"
+	"hash"
 )
+
+// Digest returns digest bytes computed by newHash.
+func Digest(data []byte, newHash func() hash.Hash) []byte {
+	if newHash == nil {
+		newHash = sha256.New
+	}
+	h := newHash()
+	_, _ = h.Write(data)
+	return h.Sum(nil)
+}
+
+// DigestHex returns the digest computed by newHash in lower-case hex form.
+func DigestHex(data []byte, newHash func() hash.Hash) string {
+	return hex.EncodeToString(Digest(data, newHash))
+}
 
 // MD5 returns the MD5 digest bytes of data.
 func MD5(data []byte) []byte {

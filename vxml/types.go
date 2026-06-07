@@ -17,11 +17,14 @@ const (
 )
 
 type (
-	Document       = xmlimpl.Document
-	Element        = xmlimpl.Element
-	Error          = xmlimpl.XMLError
-	TokenHandler   = xmlimpl.TokenHandler
-	NamespaceCache = xmlimpl.NamespaceCache
-	ParseOption    = xmlimpl.ParseOption
-	WriteOption    = xmlimpl.WriteOption
+	Document        = xmlimpl.Document
+	Element         = xmlimpl.Element
+	Error           = xmlimpl.XMLError
+	TokenHandler    = xmlimpl.TokenHandler
+	NamespaceCache  = xmlimpl.NamespaceCache
+	ParseOption     = xmlimpl.ParseOption
+	WriteOption     = xmlimpl.WriteOption
+	BeanOption      = xmlimpl.BeanOption
+	TransformOption = xmlimpl.TransformOption
+	FormatOption    = xmlimpl.FormatOption
 )

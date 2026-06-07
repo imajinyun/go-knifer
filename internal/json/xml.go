@@ -9,15 +9,7 @@ func XMLToJSON(xmlStr string) (*JSONObject, error) {
 
 // XMLToJSONWithOptions parses XML text into an ordered JSON object with XML parser options.
 func XMLToJSONWithOptions(xmlStr string, opts ...xmlimpl.ParseOption) (*JSONObject, error) {
-	m, err := xmlimpl.XMLToMap(xmlStr)
-	if len(opts) > 0 {
-		doc, parseErr := xmlimpl.ParseXML(xmlStr, opts...)
-		if parseErr != nil {
-			return nil, parseErr
-		}
-		m = xmlimpl.XMLNodeToMap(doc.Root)
-		err = nil
-	}
+	m, err := xmlimpl.XMLToMapWithOptions(xmlStr, opts...)
 	if err != nil {
 		return nil, err
 	}

@@ -71,3 +71,33 @@ func WithMkdirAll(mkdirAll func(string, fs.FileMode) error) WriteOption {
 func WithOpenWriteFile(openFile func(string, int, fs.FileMode) (io.WriteCloser, error)) WriteOption {
 	return xmlimpl.WithOpenWriteFile(openFile)
 }
+
+// WithBeanMarshalFunc sets the marshal provider used by XML bean conversion helpers.
+func WithBeanMarshalFunc(marshal func(any) ([]byte, error)) BeanOption {
+	return xmlimpl.WithBeanMarshalFunc(marshal)
+}
+
+// WithBeanUnmarshalFunc sets the unmarshal provider used by XML bean conversion helpers.
+func WithBeanUnmarshalFunc(unmarshal func([]byte, any) error) BeanOption {
+	return xmlimpl.WithBeanUnmarshalFunc(unmarshal)
+}
+
+// WithTransformParseOptions sets parser options used by TransformWithOptions.
+func WithTransformParseOptions(opts ...ParseOption) TransformOption {
+	return xmlimpl.WithTransformParseOptions(opts...)
+}
+
+// WithTransformWriteOptions sets writer options used by TransformWithOptions.
+func WithTransformWriteOptions(opts ...WriteOption) TransformOption {
+	return xmlimpl.WithTransformWriteOptions(opts...)
+}
+
+// WithFormatParseOptions sets parser options used by FormatWithOptions.
+func WithFormatParseOptions(opts ...ParseOption) FormatOption {
+	return xmlimpl.WithFormatParseOptions(opts...)
+}
+
+// WithFormatWriteOptions sets writer options used by FormatWithOptions.
+func WithFormatWriteOptions(opts ...WriteOption) FormatOption {
+	return xmlimpl.WithFormatWriteOptions(opts...)
+}

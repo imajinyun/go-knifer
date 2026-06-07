@@ -11,6 +11,40 @@ import (
 
 var emojiPattern = regexp.MustCompile(`(?:[\x{1F1E6}-\x{1F1FF}]{2}|[#*0-9]\x{FE0F}?\x{20E3}|[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}])(?:\x{FE0F}|\x{200D}[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}]\x{FE0F}?)*`)
 
+type emojiConfig struct {
+	matcher  func(string) bool
+	replacer func(string) string
+}
+
+// EmojiOption customizes emoji helpers per call.
+type EmojiOption func(*emojiConfig)
+
+// WithEmojiMatcher sets the matcher used by ContainsEmojiWithOptions.
+func WithEmojiMatcher(matcher func(string) bool) EmojiOption {
+	return func(c *emojiConfig) { c.matcher = matcher }
+}
+
+// WithEmojiReplacer sets the replacer used by RemoveEmojiWithOptions.
+func WithEmojiReplacer(replacer func(string) string) EmojiOption {
+	return func(c *emojiConfig) { c.replacer = replacer }
+}
+
+func applyEmojiOptions(opts []EmojiOption) emojiConfig {
+	cfg := emojiConfig{matcher: emojiPattern.MatchString, replacer: func(s string) string { return emojiPattern.ReplaceAllString(s, "") }}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.matcher == nil {
+		cfg.matcher = emojiPattern.MatchString
+	}
+	if cfg.replacer == nil {
+		cfg.replacer = func(s string) string { return emojiPattern.ReplaceAllString(s, "") }
+	}
+	return cfg
+}
+
 // IsEmpty reports whether s has zero length.
 func IsEmpty(s string) bool { return len(s) == 0 }
 
@@ -207,11 +241,21 @@ func PadRight(s string, length int, pad rune) string {
 func Contains(s, sub string) bool { return strings.Contains(s, sub) }
 
 // ContainsEmoji reports whether s contains emoji-like runes.
-func ContainsEmoji(s string) bool { return emojiPattern.MatchString(s) }
+func ContainsEmoji(s string) bool { return ContainsEmojiWithOptions(s) }
+
+// ContainsEmojiWithOptions reports whether s contains emoji-like runes with options.
+func ContainsEmojiWithOptions(s string, opts ...EmojiOption) bool {
+	return applyEmojiOptions(opts).matcher(s)
+}
 
 // RemoveEmoji removes emoji-like runes from s, including variation-selector and
 // zero-width-joiner based emoji sequences.
-func RemoveEmoji(s string) string { return emojiPattern.ReplaceAllString(s, "") }
+func RemoveEmoji(s string) string { return RemoveEmojiWithOptions(s) }
+
+// RemoveEmojiWithOptions removes emoji-like runes from s with options.
+func RemoveEmojiWithOptions(s string, opts ...EmojiOption) string {
+	return applyEmojiOptions(opts).replacer(s)
+}
 
 // ContainsAny reports whether s contains any candidate substring.
 func ContainsAny(s string, subs ...string) bool {

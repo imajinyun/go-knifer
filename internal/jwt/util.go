@@ -8,6 +8,7 @@ type tokenConfig struct {
 	key     []byte
 	alg     string
 	signer  JWTSigner
+	json    []JSONOption
 }
 
 // TokenOption customizes CreateTokenWithOptions.
@@ -35,6 +36,11 @@ func WithTokenAlgorithm(algorithm string) TokenOption {
 
 // WithTokenSigner sets the signer used by CreateTokenWithOptions and takes precedence over key/algorithm options.
 func WithTokenSigner(signer JWTSigner) TokenOption { return func(c *tokenConfig) { c.signer = signer } }
+
+// WithTokenJSONOptions sets JSON codec options used when signing in CreateTokenWithOptions.
+func WithTokenJSONOptions(opts ...JSONOption) TokenOption {
+	return func(c *tokenConfig) { c.json = append(c.json, opts...) }
+}
 
 func applyTokenOptions(opts []TokenOption) tokenConfig {
 	cfg := tokenConfig{}
@@ -87,19 +93,24 @@ func CreateTokenWithOptions(opts ...TokenOption) (string, error) {
 	cfg := applyTokenOptions(opts)
 	j := New().AddHeaders(cfg.headers).AddPayloads(cfg.payload)
 	if cfg.signer != nil {
-		return j.SetSigner(cfg.signer).Sign()
+		return j.SetSigner(cfg.signer).SignOptsWithOptions(true, cfg.json...)
 	}
 	if cfg.alg != "" {
 		if err := j.SetKeyWithAlgorithm(cfg.key, cfg.alg); err != nil {
 			return "", err
 		}
-		return j.Sign()
+		return j.SignOptsWithOptions(true, cfg.json...)
 	}
-	return j.SetKey(cfg.key).Sign()
+	return j.SetKey(cfg.key).SignOptsWithOptions(true, cfg.json...)
 }
 
 // ParseToken 解析 token。
 func ParseToken(token string) (*JWT, error) { return Of(token) }
+
+// ParseTokenWithOptions parses a token with JSON options.
+func ParseTokenWithOptions(token string, opts ...JSONOption) (*JWT, error) {
+	return OfWithOptions(token, opts...)
+}
 
 // Verify 使用 HS256 密钥校验 token。
 func Verify(token string, key []byte) bool {

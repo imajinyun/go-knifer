@@ -161,6 +161,76 @@ type writeConfig struct {
 	openFile           func(string, int, fs.FileMode) (io.WriteCloser, error)
 }
 
+// BeanOption customizes XML map-to-bean conversion helpers per call.
+type BeanOption func(*beanConfig)
+
+type beanConfig struct {
+	marshal   func(any) ([]byte, error)
+	unmarshal func([]byte, any) error
+}
+
+func applyBean(opts []BeanOption) beanConfig {
+	cfg := beanConfig{marshal: json.Marshal, unmarshal: json.Unmarshal}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.marshal == nil {
+		cfg.marshal = json.Marshal
+	}
+	if cfg.unmarshal == nil {
+		cfg.unmarshal = json.Unmarshal
+	}
+	return cfg
+}
+
+// WithBeanMarshalFunc sets the marshal provider used by XML bean conversion helpers.
+func WithBeanMarshalFunc(marshal func(any) ([]byte, error)) BeanOption {
+	return func(c *beanConfig) { c.marshal = marshal }
+}
+
+// WithBeanUnmarshalFunc sets the unmarshal provider used by XML bean conversion helpers.
+func WithBeanUnmarshalFunc(unmarshal func([]byte, any) error) BeanOption {
+	return func(c *beanConfig) { c.unmarshal = unmarshal }
+}
+
+// TransformOption customizes XML transform helpers per call.
+type TransformOption func(*transformConfig)
+
+type transformConfig struct {
+	parse []ParseOption
+	write []WriteOption
+}
+
+// WithTransformParseOptions sets parser options used by TransformWithOptions.
+func WithTransformParseOptions(opts ...ParseOption) TransformOption {
+	return func(c *transformConfig) { c.parse = append(c.parse, opts...) }
+}
+
+// WithTransformWriteOptions sets writer options used by TransformWithOptions.
+func WithTransformWriteOptions(opts ...WriteOption) TransformOption {
+	return func(c *transformConfig) { c.write = append(c.write, opts...) }
+}
+
+// FormatOption customizes XML formatting per call.
+type FormatOption func(*formatConfig)
+
+type formatConfig struct {
+	parse []ParseOption
+	write []WriteOption
+}
+
+// WithFormatParseOptions sets parser options used by FormatWithOptions.
+func WithFormatParseOptions(opts ...ParseOption) FormatOption {
+	return func(c *formatConfig) { c.parse = append(c.parse, opts...) }
+}
+
+// WithFormatWriteOptions sets writer options used by FormatWithOptions.
+func WithFormatWriteOptions(opts ...WriteOption) FormatOption {
+	return func(c *formatConfig) { c.write = append(c.write, opts...) }
+}
+
 func defaultWriteConfig() writeConfig {
 	return writeConfig{charset: DefaultCharset, filePerm: 0o644, dirPerm: 0o750, overwrite: true, createParents: true}
 }
@@ -480,20 +550,42 @@ func MarshalBean(bean any, opts ...WriteOption) (string, error) {
 
 // TransformWith copies XML from source to result with per-call options.
 func TransformWith(source io.Reader, result io.Writer, opts ...WriteOption) error {
-	doc, err := ReadXMLReader(source)
+	return TransformWithOptions(source, result, WithTransformWriteOptions(opts...))
+}
+
+// TransformWithOptions copies XML from source to result with parser and writer options.
+func TransformWithOptions(source io.Reader, result io.Writer, opts ...TransformOption) error {
+	cfg := transformConfig{}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	doc, err := ReadXMLReader(source, cfg.parse...)
 	if err != nil {
 		return err
 	}
-	return WriteTo(result, doc, opts...)
+	return WriteTo(result, doc, cfg.write...)
 }
 
 // Format pretty prints XML content.
 func Format(xmlStr string) (string, error) {
-	doc, err := ParseXML(xmlStr)
+	return FormatWithOptions(xmlStr)
+}
+
+// FormatWithOptions pretty prints XML content with parser and writer options.
+func FormatWithOptions(xmlStr string, opts ...FormatOption) (string, error) {
+	cfg := formatConfig{write: []WriteOption{WithPretty()}}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	doc, err := ParseXML(xmlStr, cfg.parse...)
 	if err != nil {
 		return "", err
 	}
-	return MarshalString(doc, WithPretty())
+	return MarshalString(doc, cfg.write...)
 }
 
 // ---------------------------------------------------------------------------
@@ -687,7 +779,12 @@ func Unescape(s string) string { return html.UnescapeString(s) }
 
 // XMLToMap parses XML into a nested map. Repeated sibling tags become []any.
 func XMLToMap(xmlStr string) (map[string]any, error) {
-	doc, err := ParseXML(xmlStr)
+	return XMLToMapWithOptions(xmlStr)
+}
+
+// XMLToMapWithOptions parses XML into a nested map with parser options.
+func XMLToMapWithOptions(xmlStr string, opts ...ParseOption) (map[string]any, error) {
+	doc, err := ParseXML(xmlStr, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -709,19 +806,34 @@ func XMLNodeToMap(node *Element) map[string]any {
 
 // XMLToBean parses XML and decodes the generated map into dst.
 func XMLToBean(xmlStr string, dst any) error {
-	m, err := XMLToMap(xmlStr)
+	return XMLToBeanWithOptions(xmlStr, dst)
+}
+
+// XMLToBeanWithOptions parses XML and decodes the generated map into dst with parser options.
+func XMLToBeanWithOptions(xmlStr string, dst any, opts ...ParseOption) error {
+	m, err := XMLToMapWithOptions(xmlStr, opts...)
 	if err != nil {
 		return err
 	}
-	return mapToBean(m, dst)
+	return mapToBeanWithOptions(m, dst)
 }
 
 // XMLNodeToBean converts an element tree to a map and decodes it into dst.
-func XMLNodeToBean(node *Element, dst any) error { return mapToBean(XMLNodeToMap(node), dst) }
+func XMLNodeToBean(node *Element, dst any) error { return XMLNodeToBeanWithOptions(node, dst) }
+
+// XMLNodeToBeanWithOptions converts an element tree to a map and decodes it into dst with bean options.
+func XMLNodeToBeanWithOptions(node *Element, dst any, opts ...BeanOption) error {
+	return mapToBeanWithOptions(XMLNodeToMap(node), dst, opts...)
+}
 
 // XMLToMapInto parses XML and merges values into result.
 func XMLToMapInto(xmlStr string, result map[string]any) (map[string]any, error) {
-	m, err := XMLToMap(xmlStr)
+	return XMLToMapIntoWithOptions(xmlStr, result)
+}
+
+// XMLToMapIntoWithOptions parses XML and merges values into result with parser options.
+func XMLToMapIntoWithOptions(xmlStr string, result map[string]any, opts ...ParseOption) (map[string]any, error) {
+	m, err := XMLToMapWithOptions(xmlStr, opts...)
 	if err != nil {
 		return result, err
 	}
@@ -745,12 +857,13 @@ func XMLNodeToMapInto(node *Element, result map[string]any) map[string]any {
 	return result
 }
 
-func mapToBean(m map[string]any, dst any) error {
-	data, err := json.Marshal(m)
+func mapToBeanWithOptions(m map[string]any, dst any, opts ...BeanOption) error {
+	cfg := applyBean(opts)
+	data, err := cfg.marshal(m)
 	if err != nil {
 		return wrapInternal("vxml: encode intermediate", err)
 	}
-	if err := json.Unmarshal(data, dst); err != nil {
+	if err := cfg.unmarshal(data, dst); err != nil {
 		return wrapInvalidInput("vxml: decode into dst", err)
 	}
 	return nil

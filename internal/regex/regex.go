@@ -19,7 +19,37 @@ var (
 	reKeys         = map[rune]struct{}{'$': {}, '(': {}, ')': {}, '*': {}, '+': {}, '.': {}, '[': {}, ']': {}, '?': {}, '\\': {}, '^': {}, '{': {}, '}': {}, '|': {}}
 	groupVarRegexp = regexp.MustCompile(`\$(\d+)`)
 	numbersRegexp  = regexp.MustCompile(`\d+`)
+	namedGroupRe   = regexp.MustCompile(`\(\?<([A-Za-z_][A-Za-z0-9_]*)>`)
 )
+
+type regexConfig struct {
+	compile func(string) (*regexp.Regexp, error)
+	dotAll  bool
+}
+
+// Option customizes pattern-string regex helpers per call.
+type Option func(*regexConfig)
+
+// WithCompileFunc sets the compiler used by pattern-string regex helpers.
+func WithCompileFunc(compile func(string) (*regexp.Regexp, error)) Option {
+	return func(c *regexConfig) { c.compile = compile }
+}
+
+// WithDotAll controls whether pattern-string helpers wrap patterns with (?s:...).
+func WithDotAll(dotAll bool) Option { return func(c *regexConfig) { c.dotAll = dotAll } }
+
+func applyOptions(opts []Option) regexConfig {
+	cfg := regexConfig{compile: regexp.Compile, dotAll: true}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.compile == nil {
+		cfg.compile = regexp.Compile
+	}
+	return cfg
+}
 
 // MatchResult describes a single regular-expression match.
 // Start and End are byte offsets in the original string.
@@ -33,7 +63,12 @@ type MatchResult struct {
 
 // ReMatch reports whether s contains a match for pattern. Invalid patterns return false.
 func ReMatch(pattern, s string) bool {
-	re, err := compile(pattern)
+	return ReMatchWithOptions(pattern, s)
+}
+
+// ReMatchWithOptions reports whether s contains a match for pattern with options.
+func ReMatchWithOptions(pattern, s string, opts ...Option) bool {
+	re, err := compile(pattern, opts...)
 	if err != nil {
 		return false
 	}
@@ -42,7 +77,12 @@ func ReMatch(pattern, s string) bool {
 
 // ReFind returns the first match, or an empty string when there is no match or the pattern is invalid.
 func ReFind(pattern, s string) string {
-	re, err := compile(pattern)
+	return ReFindWithOptions(pattern, s)
+}
+
+// ReFindWithOptions returns the first match with options.
+func ReFindWithOptions(pattern, s string, opts ...Option) string {
+	re, err := compile(pattern, opts...)
 	if err != nil {
 		return ""
 	}
@@ -51,7 +91,12 @@ func ReFind(pattern, s string) string {
 
 // ReFindAll returns all whole-match results, or nil when the pattern is invalid.
 func ReFindAll(pattern, s string) []string {
-	re, err := compile(pattern)
+	return ReFindAllWithOptions(pattern, s)
+}
+
+// ReFindAllWithOptions returns all whole-match results with options.
+func ReFindAllWithOptions(pattern, s string, opts ...Option) []string {
+	re, err := compile(pattern, opts...)
 	if err != nil {
 		return nil
 	}
@@ -60,7 +105,12 @@ func ReFindAll(pattern, s string) []string {
 
 // ReReplace replaces matches of pattern with replacement. Invalid patterns return the original string.
 func ReReplace(pattern, s, replacement string) string {
-	re, err := compile(pattern)
+	return ReReplaceWithOptions(pattern, s, replacement)
+}
+
+// ReReplaceWithOptions replaces matches of pattern with options.
+func ReReplaceWithOptions(pattern, s, replacement string, opts ...Option) string {
+	re, err := compile(pattern, opts...)
 	if err != nil {
 		return s
 	}
@@ -75,7 +125,12 @@ func GetGroup1(pattern, content string) string { return Get(pattern, content, 1)
 
 // Get returns a capture group from the first match. Missing matches or invalid patterns return an empty string.
 func Get(pattern, content string, groupIndex int) string {
-	re, err := compile(pattern)
+	return GetWithOptions(pattern, content, groupIndex)
+}
+
+// GetWithOptions returns a capture group from the first match with options.
+func GetWithOptions(pattern, content string, groupIndex int, opts ...Option) string {
+	re, err := compile(pattern, opts...)
 	if err != nil {
 		return ""
 	}
@@ -385,6 +440,11 @@ func CountRe(re *regexp.Regexp, content string) int {
 // Contains reports whether content contains a match.
 func Contains(pattern, content string) bool { return ReMatch(pattern, content) }
 
+// ContainsWithOptions reports whether content contains a match with options.
+func ContainsWithOptions(pattern, content string, opts ...Option) bool {
+	return ReMatchWithOptions(pattern, content, opts...)
+}
+
 // ContainsRe reports whether content contains a match for a compiled expression.
 func ContainsRe(re *regexp.Regexp, content string) bool { return re != nil && re.MatchString(content) }
 
@@ -447,10 +507,15 @@ func GetFirstNumber(content string) (int, bool) {
 
 // IsMatch reports whether the whole content matches pattern. Empty pattern matches all non-empty inputs.
 func IsMatch(pattern, content string) bool {
+	return IsMatchWithOptions(pattern, content)
+}
+
+// IsMatchWithOptions reports whether the whole content matches pattern with options.
+func IsMatchWithOptions(pattern, content string, opts ...Option) bool {
 	if pattern == "" {
 		return true
 	}
-	re, err := compile(pattern)
+	re, err := compile(pattern, opts...)
 	if err != nil {
 		return false
 	}
@@ -468,7 +533,12 @@ func IsMatchRe(re *regexp.Regexp, content string) bool {
 
 // ReplaceAll replaces all matches using a template with $1, $2, ... placeholders.
 func ReplaceAll(content, pattern, replacementTemplate string) string {
-	re, err := compile(pattern)
+	return ReplaceAllWithOptions(content, pattern, replacementTemplate)
+}
+
+// ReplaceAllWithOptions replaces all matches using a template with options.
+func ReplaceAllWithOptions(content, pattern, replacementTemplate string, opts ...Option) string {
+	re, err := compile(pattern, opts...)
 	if err != nil {
 		return content
 	}
@@ -485,7 +555,12 @@ func ReplaceAllRe(content string, re *regexp.Regexp, replacementTemplate string)
 
 // ReplaceAllFunc replaces all matches using a custom function.
 func ReplaceAllFunc(content, pattern string, replaceFunc func(MatchResult) string) string {
-	re, err := compile(pattern)
+	return ReplaceAllFuncWithOptions(content, pattern, replaceFunc)
+}
+
+// ReplaceAllFuncWithOptions replaces all matches using a custom function with options.
+func ReplaceAllFuncWithOptions(content, pattern string, replaceFunc func(MatchResult) string, opts ...Option) string {
+	re, err := compile(pattern, opts...)
 	if err != nil {
 		return content
 	}
@@ -551,13 +626,17 @@ func TemplateVars(template string) []int {
 	return result
 }
 
-func compile(pattern string) (*regexp.Regexp, error) {
-	return regexp.Compile("(?s:" + normalizeNamedGroups(pattern) + ")")
+func compile(pattern string, opts ...Option) (*regexp.Regexp, error) {
+	cfg := applyOptions(opts)
+	pattern = normalizeNamedGroups(pattern)
+	if cfg.dotAll {
+		pattern = "(?s:" + pattern + ")"
+	}
+	return cfg.compile(pattern)
 }
 
 func normalizeNamedGroups(pattern string) string {
-	replacer := regexp.MustCompile(`\(\?<([A-Za-z_][A-Za-z0-9_]*)>`)
-	return replacer.ReplaceAllString(pattern, `(?P<$1>`)
+	return namedGroupRe.ReplaceAllString(pattern, `(?P<$1>`)
 }
 
 func allLimit(findAll bool) int {

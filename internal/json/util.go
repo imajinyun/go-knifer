@@ -181,8 +181,14 @@ func ParseObj(src any) (*JSONObject, error) { return ParseObjWithConfig(src, nil
 
 // ParseObjWithOptions parses src as a JSON object with options.
 func ParseObjWithOptions(src any, opts ...ParseOption) (*JSONObject, error) {
-	cfg := applyParseOptions(opts)
-	return ParseObjWithConfig(src, cfg.cfg)
+	v, err := ParseWithOptions(src, opts...)
+	if err != nil {
+		return nil, err
+	}
+	if obj, ok := v.(*JSONObject); ok {
+		return obj, nil
+	}
+	return nil, NewJSONError("expect json object, got %T", v)
 }
 
 // ParseObjWithConfig 解析为 JSONObject。
@@ -202,8 +208,14 @@ func ParseArray(src any) (*JSONArray, error) { return ParseArrayWithConfig(src, 
 
 // ParseArrayWithOptions parses src as a JSON array with options.
 func ParseArrayWithOptions(src any, opts ...ParseOption) (*JSONArray, error) {
-	cfg := applyParseOptions(opts)
-	return ParseArrayWithConfig(src, cfg.cfg)
+	v, err := ParseWithOptions(src, opts...)
+	if err != nil {
+		return nil, err
+	}
+	if arr, ok := v.(*JSONArray); ok {
+		return arr, nil
+	}
+	return nil, NewJSONError("expect json array, got %T", v)
 }
 
 // ParseArrayWithConfig 解析为 JSONArray。

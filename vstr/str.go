@@ -2,6 +2,16 @@ package vstr
 
 import strimpl "github.com/imajinyun/go-knifer/internal/str"
 
+type EmojiOption = strimpl.EmojiOption
+
+func WithEmojiMatcher(matcher func(string) bool) EmojiOption {
+	return strimpl.WithEmojiMatcher(matcher)
+}
+
+func WithEmojiReplacer(replacer func(string) string) EmojiOption {
+	return strimpl.WithEmojiReplacer(replacer)
+}
+
 func IsEmpty(s string) bool                       { return strimpl.IsEmpty(s) }
 func IsNotEmpty(s string) bool                    { return strimpl.IsNotEmpty(s) }
 func IsBlank(s string) bool                       { return strimpl.IsBlank(s) }
@@ -29,31 +39,40 @@ func PadLeft(s string, length int, pad rune) string  { return strimpl.PadLeft(s,
 func PadRight(s string, length int, pad rune) string { return strimpl.PadRight(s, length, pad) }
 func Contains(s, sub string) bool                    { return strimpl.Contains(s, sub) }
 func ContainsEmoji(s string) bool                    { return strimpl.ContainsEmoji(s) }
-func RemoveEmoji(s string) string                    { return strimpl.RemoveEmoji(s) }
-func ContainsAny(s string, subs ...string) bool      { return strimpl.ContainsAny(s, subs...) }
-func ContainsAll(s string, subs ...string) bool      { return strimpl.ContainsAll(s, subs...) }
-func ContainsIgnoreCase(s, sub string) bool          { return strimpl.ContainsIgnoreCase(s, sub) }
-func StartsWith(s, prefix string) bool               { return strimpl.StartsWith(s, prefix) }
-func EndsWith(s, suffix string) bool                 { return strimpl.EndsWith(s, suffix) }
-func EqualsIgnoreCase(a, b string) bool              { return strimpl.EqualsIgnoreCase(a, b) }
-func Reverse(s string) string                        { return strimpl.Reverse(s) }
-func Format(template string, args ...any) string     { return strimpl.Format(template, args...) }
-func RemovePrefix(s, prefix string) string           { return strimpl.RemovePrefix(s, prefix) }
-func RemoveSuffix(s, suffix string) string           { return strimpl.RemoveSuffix(s, suffix) }
-func AddPrefixIfNot(s, prefix string) string         { return strimpl.AddPrefixIfNot(s, prefix) }
-func AddSuffixIfNot(s, suffix string) string         { return strimpl.AddSuffixIfNot(s, suffix) }
-func Length(s string) int                            { return strimpl.Length(s) }
-func DefaultIfEmpty(s, def string) string            { return strimpl.DefaultIfEmpty(s, def) }
-func DefaultIfBlank(s, def string) string            { return strimpl.DefaultIfBlank(s, def) }
-func EscapeHTML(s string) string                     { return strimpl.EscapeHTML(s) }
-func UnescapeHTML(s string) string                   { return strimpl.UnescapeHTML(s) }
-func ToCamelCase(s string) string                    { return strimpl.ToCamelCase(s) }
-func ToPascalCase(s string) string                   { return strimpl.ToPascalCase(s) }
-func ToUnderlineCase(s string) string                { return strimpl.ToUnderlineCase(s) }
-func ToKebabCase(s string) string                    { return strimpl.ToKebabCase(s) }
-func RuneLen(s string) int                           { return strimpl.RuneLen(s) }
-func IsBlankChar(r rune) bool                        { return strimpl.IsBlankChar(r) }
-func IsLetter(r rune) bool                           { return strimpl.IsLetter(r) }
-func IsDigit(r rune) bool                            { return strimpl.IsDigit(r) }
-func IsAscii(r rune) bool                            { return strimpl.IsAscii(r) }
-func IsLetterOrDigit(r rune) bool                    { return strimpl.IsLetterOrDigit(r) }
+func ContainsEmojiWithOptions(s string, opts ...EmojiOption) bool {
+	return strimpl.ContainsEmojiWithOptions(s, opts...)
+}
+
+func RemoveEmoji(s string) string { return strimpl.RemoveEmoji(s) }
+
+func RemoveEmojiWithOptions(s string, opts ...EmojiOption) string {
+	return strimpl.RemoveEmojiWithOptions(s, opts...)
+}
+
+func ContainsAny(s string, subs ...string) bool  { return strimpl.ContainsAny(s, subs...) }
+func ContainsAll(s string, subs ...string) bool  { return strimpl.ContainsAll(s, subs...) }
+func ContainsIgnoreCase(s, sub string) bool      { return strimpl.ContainsIgnoreCase(s, sub) }
+func StartsWith(s, prefix string) bool           { return strimpl.StartsWith(s, prefix) }
+func EndsWith(s, suffix string) bool             { return strimpl.EndsWith(s, suffix) }
+func EqualsIgnoreCase(a, b string) bool          { return strimpl.EqualsIgnoreCase(a, b) }
+func Reverse(s string) string                    { return strimpl.Reverse(s) }
+func Format(template string, args ...any) string { return strimpl.Format(template, args...) }
+func RemovePrefix(s, prefix string) string       { return strimpl.RemovePrefix(s, prefix) }
+func RemoveSuffix(s, suffix string) string       { return strimpl.RemoveSuffix(s, suffix) }
+func AddPrefixIfNot(s, prefix string) string     { return strimpl.AddPrefixIfNot(s, prefix) }
+func AddSuffixIfNot(s, suffix string) string     { return strimpl.AddSuffixIfNot(s, suffix) }
+func Length(s string) int                        { return strimpl.Length(s) }
+func DefaultIfEmpty(s, def string) string        { return strimpl.DefaultIfEmpty(s, def) }
+func DefaultIfBlank(s, def string) string        { return strimpl.DefaultIfBlank(s, def) }
+func EscapeHTML(s string) string                 { return strimpl.EscapeHTML(s) }
+func UnescapeHTML(s string) string               { return strimpl.UnescapeHTML(s) }
+func ToCamelCase(s string) string                { return strimpl.ToCamelCase(s) }
+func ToPascalCase(s string) string               { return strimpl.ToPascalCase(s) }
+func ToUnderlineCase(s string) string            { return strimpl.ToUnderlineCase(s) }
+func ToKebabCase(s string) string                { return strimpl.ToKebabCase(s) }
+func RuneLen(s string) int                       { return strimpl.RuneLen(s) }
+func IsBlankChar(r rune) bool                    { return strimpl.IsBlankChar(r) }
+func IsLetter(r rune) bool                       { return strimpl.IsLetter(r) }
+func IsDigit(r rune) bool                        { return strimpl.IsDigit(r) }
+func IsAscii(r rune) bool                        { return strimpl.IsAscii(r) }
+func IsLetterOrDigit(r rune) bool                { return strimpl.IsLetterOrDigit(r) }

@@ -12,6 +12,9 @@ import (
 // RSAOption customizes RSA helper behavior.
 type RSAOption = cryptoimpl.RSAOption
 
+// RSADigestOption customizes RSA data-signing helpers per call.
+type RSADigestOption = cryptoimpl.RSADigestOption
+
 // WithRSARandomReader sets the entropy source used by RSA helpers.
 func WithRSARandomReader(reader io.Reader) RSAOption { return cryptoimpl.WithRSARandomReader(reader) }
 
@@ -20,6 +23,21 @@ func WithRSAOAEPHash(newHash func() hash.Hash) RSAOption { return cryptoimpl.Wit
 
 // WithRSAPSSOptions sets the PSS options used by RSA-PSS helpers.
 func WithRSAPSSOptions(opts *rsa.PSSOptions) RSAOption { return cryptoimpl.WithRSAPSSOptions(opts) }
+
+// WithRSADigestHash sets the hash used by RSA data-signing helpers.
+func WithRSADigestHash(hashID stdcrypto.Hash, newHash func() hash.Hash) RSADigestOption {
+	return cryptoimpl.WithRSADigestHash(hashID, newHash)
+}
+
+// WithRSADigestRandomReader sets the entropy source used by RSA data-signing helpers.
+func WithRSADigestRandomReader(reader io.Reader) RSADigestOption {
+	return cryptoimpl.WithRSADigestRandomReader(reader)
+}
+
+// WithRSADigestPSS signs and verifies using RSA-PSS instead of PKCS#1 v1.5.
+func WithRSADigestPSS(opts *rsa.PSSOptions) RSADigestOption {
+	return cryptoimpl.WithRSADigestPSS(opts)
+}
 
 // GenerateRSAKey generates an RSA private key.
 func GenerateRSAKey(bits int) (*rsa.PrivateKey, error) { return cryptoimpl.GenerateRSAKey(bits) }
@@ -112,4 +130,14 @@ func SignSHA256WithRSA(data []byte, priv *rsa.PrivateKey) ([]byte, error) {
 // VerifySHA256WithRSA verifies SHA256withRSA signature.
 func VerifySHA256WithRSA(data, sig []byte, pub *rsa.PublicKey) error {
 	return cryptoimpl.VerifySHA256WithRSA(data, sig, pub)
+}
+
+// SignWithRSAOptions hashes data and signs it with configurable RSA options.
+func SignWithRSAOptions(data []byte, priv *rsa.PrivateKey, opts ...RSADigestOption) ([]byte, error) {
+	return cryptoimpl.SignWithRSAOptions(data, priv, opts...)
+}
+
+// VerifyWithRSAOptions hashes data and verifies an RSA signature with configurable options.
+func VerifyWithRSAOptions(data, sig []byte, pub *rsa.PublicKey, opts ...RSADigestOption) error {
+	return cryptoimpl.VerifyWithRSAOptions(data, sig, pub, opts...)
 }

@@ -166,6 +166,13 @@ func TestReadVariantsSAXXPathAndFile(t *testing.T) {
 	if err := TransformWith(strings.NewReader(`<root><a>1</a></root>`), &out, WithOmitDeclaration(true)); err != nil || out.String() != `<root><a>1</a></root>` {
 		t.Fatalf("TransformWith = %q, %v", out.String(), err)
 	}
+	out.Reset()
+	if err := TransformWithOptions(strings.NewReader(`<root xmlns:p="urn:p"><p:a>1</p:a></root>`), &out,
+		WithTransformParseOptions(WithNamespaceAware(false)),
+		WithTransformWriteOptions(WithOmitDeclaration(true)),
+	); err != nil || strings.Contains(out.String(), `xmlns`) || !strings.Contains(out.String(), `<a>1</a>`) {
+		t.Fatalf("TransformWithOptions = %q, %v", out.String(), err)
+	}
 }
 
 func TestXMLErrorContract(t *testing.T) {
@@ -213,6 +220,14 @@ func TestMapBeanAndNamespaceConversions(t *testing.T) {
 	if err != nil || merged["old"] != true || merged["x"] == nil {
 		t.Fatalf("XMLToMapInto = %#v, %v", merged, err)
 	}
+	stripped, err := XMLToMapWithOptions(`<root xmlns:p="urn:p"><p:a>1</p:a></root>`, WithNamespaceAware(false))
+	if err != nil || stripped["root"].(map[string]any)["a"] != int64(1) {
+		t.Fatalf("XMLToMapWithOptions = %#v, %v", stripped, err)
+	}
+	limited, err := XMLToMapIntoWithOptions(`<root><a>1</a></root>`, nil, WithMaxBytes(6))
+	if err == nil || limited != nil {
+		t.Fatalf("XMLToMapIntoWithOptions should fail with max bytes: %#v, %v", limited, err)
+	}
 	if got := XMLNodeToMapInto(nil, nil); len(got) != 0 {
 		t.Fatalf("XMLNodeToMapInto nil = %#v", got)
 	}
@@ -251,6 +266,15 @@ func TestMapBeanAndNamespaceConversions(t *testing.T) {
 	if err := XMLNodeToBean(doc.Root, &decodedNode); err != nil || decodedNode.Root.Name != "node" {
 		t.Fatalf("XMLNodeToBean decoded=%+v err=%v", decodedNode, err)
 	}
+	customCalled := false
+	var custom struct{ Name string }
+	if err := XMLNodeToBeanWithOptions(doc.Root, &custom, WithBeanUnmarshalFunc(func(_ []byte, dst any) error {
+		customCalled = true
+		dst.(*struct{ Name string }).Name = "custom"
+		return nil
+	})); err != nil || !customCalled || custom.Name != "custom" {
+		t.Fatalf("XMLNodeToBeanWithOptions custom=%+v called=%v err=%v", custom, customCalled, err)
+	}
 
 	nsDoc, err := ParseXML(`<root xmlns="urn:default" xmlns:p="urn:p"><p:a>1</p:a></root>`)
 	if err != nil {
@@ -262,6 +286,16 @@ func TestMapBeanAndNamespaceConversions(t *testing.T) {
 	}
 	if (*NamespaceCache)(nil).NamespaceURI("p") != "" || (*NamespaceCache)(nil).PrefixOf("urn:p") != "" {
 		t.Fatal("nil namespace cache should return empty values")
+	}
+}
+
+func TestFormatWithOptions(t *testing.T) {
+	formatted, err := FormatWithOptions(`<root xmlns:p="urn:p"><p:a>1</p:a></root>`,
+		WithFormatParseOptions(WithNamespaceAware(false)),
+		WithFormatWriteOptions(WithOmitDeclaration(true), WithIndent(4)),
+	)
+	if err != nil || strings.Contains(formatted, `xmlns`) || !strings.Contains(formatted, "\n    <a>") {
+		t.Fatalf("FormatWithOptions = %q, %v", formatted, err)
 	}
 }
 

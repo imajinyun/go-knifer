@@ -1,6 +1,18 @@
 package vcrypto
 
-import cryptoimpl "github.com/imajinyun/go-knifer/internal/crypto"
+import (
+	"hash"
+
+	cryptoimpl "github.com/imajinyun/go-knifer/internal/crypto"
+)
+
+// Digest returns digest bytes computed by newHash.
+func Digest(data []byte, newHash func() hash.Hash) []byte { return cryptoimpl.Digest(data, newHash) }
+
+// DigestHex returns the digest computed by newHash in lower-case hex form.
+func DigestHex(data []byte, newHash func() hash.Hash) string {
+	return cryptoimpl.DigestHex(data, newHash)
+}
 
 // MD5Hex returns the MD5 digest of s in lower-case hex form.
 func MD5Hex(s string) string { return cryptoimpl.MD5Hex([]byte(s)) }

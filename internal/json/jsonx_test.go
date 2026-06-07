@@ -163,6 +163,34 @@ func TestParseObjAndArrayErrors(t *testing.T) {
 	}
 }
 
+func TestParseObjAndArrayWithOptionsUseUnmarshalFunc(t *testing.T) {
+	objCalled := false
+	obj, err := ParseObjWithOptions(`{"ignored":true}`, WithParseUnmarshalFunc(func(_ []byte, dst any) error {
+		objCalled = true
+		*(dst.(*any)) = map[string]any{"provided": "yes"}
+		return nil
+	}))
+	if err != nil {
+		t.Fatalf("ParseObjWithOptions: %v", err)
+	}
+	if !objCalled || obj.GetString("provided") != "yes" {
+		t.Fatalf("object unmarshal provider called=%v obj=%s", objCalled, obj.String())
+	}
+
+	arrCalled := false
+	arr, err := ParseArrayWithOptions(`["ignored"]`, WithParseUnmarshalFunc(func(_ []byte, dst any) error {
+		arrCalled = true
+		*(dst.(*any)) = []any{"provided"}
+		return nil
+	}))
+	if err != nil {
+		t.Fatalf("ParseArrayWithOptions: %v", err)
+	}
+	if !arrCalled || arr.GetString(0) != "provided" {
+		t.Fatalf("array unmarshal provider called=%v arr=%s", arrCalled, arr.String())
+	}
+}
+
 func TestIsJSONHelpers(t *testing.T) {
 	if !IsJSON(`{"a":1}`) || !IsJSONObj(`{"a":1}`) {
 		t.Fatalf("obj")
