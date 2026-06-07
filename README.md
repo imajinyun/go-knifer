@@ -5,7 +5,7 @@
 ![go-knifer](./go-knifer.jpeg)
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/imajinyun/go-knifer.svg)](https://pkg.go.dev/github.com/imajinyun/go-knifer)
-[![Go Version](https://img.shields.io/badge/go-%3E%3D1.20-00ADD8?logo=go)](https://go.dev/)
+[![Go Version](https://img.shields.io/badge/go-%3E%3D1.24-00ADD8?logo=go)](https://go.dev/)
 
 ## 📚 Introduction
 
@@ -239,7 +239,7 @@ sentinels, and cause chains.
 
 ## 🚀 Install
 
-Go 1.20 or later is required.
+Go 1.24 or later is required.
 
 ```bash
 go get github.com/imajinyun/go-knifer

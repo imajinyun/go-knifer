@@ -212,9 +212,20 @@ func readFileLimit(path string, maxBytes int64) ([]byte, error) {
 
 func readFileWithOptions(path string, opts LoadOptions) ([]byte, error) {
 	if opts.ReadFile != nil {
-		return opts.ReadFile(path, opts.MaxBytes)
+		b, err := opts.ReadFile(path, opts.MaxBytes)
+		if err != nil {
+			return nil, err
+		}
+		return enforceMaxBytes(b, opts.MaxBytes)
 	}
 	return readFileLimit(path, opts.MaxBytes)
+}
+
+func enforceMaxBytes(b []byte, maxBytes int64) ([]byte, error) {
+	if maxBytes > 0 && int64(len(b)) > maxBytes {
+		return nil, invalidInputf("config exceeds max bytes: %d", maxBytes)
+	}
+	return b, nil
 }
 
 func readAllLimit(r io.Reader, maxBytes int64) ([]byte, error) {

@@ -33,20 +33,28 @@ func wrapResponse(r *http.Response, cfg responseDecodeConfig) *HTTPResponse {
 type ContentDecoder func(io.Reader) (io.ReadCloser, error)
 
 type responseDecodeConfig struct {
-	autoDecode bool
-	decoders   map[string]ContentDecoder
-	maxBytes   int64
-	readAll    func(io.Reader) ([]byte, error)
+	autoDecode     bool
+	decoders       map[string]ContentDecoder
+	maxBytes       int64
+	readAll        func(io.Reader) ([]byte, error)
+	ignoreEOFError bool
 }
 
 func defaultResponseDecodeConfig() responseDecodeConfig {
 	return responseDecodeConfig{
-		autoDecode: true,
+		autoDecode:     true,
+		ignoreEOFError: true,
 		decoders: map[string]ContentDecoder{
 			"gzip":    gzipDecoder,
 			"deflate": deflateDecoder,
 		},
 	}
+}
+
+func responseDecodeConfigFromGlobal(cfg GlobalConfig) responseDecodeConfig {
+	decodeConfig := defaultResponseDecodeConfig()
+	decodeConfig.ignoreEOFError = cfg.IgnoreEOFError
+	return decodeConfig
 }
 
 func (c responseDecodeConfig) normalized() responseDecodeConfig {
@@ -266,7 +274,7 @@ func (r *HTTPResponse) Bytes() []byte {
 			return
 		}
 		data, err := readAllWithLimit(reader, r.decodeConfig.maxBytes, r.decodeConfig.readAll)
-		if err != nil && (!IsIgnoreEOFError() || err != io.ErrUnexpectedEOF) {
+		if err != nil && (!r.decodeConfig.ignoreEOFError || err != io.ErrUnexpectedEOF) {
 			r.err = NewHTTPError("read response body failed", err)
 			return
 		}
@@ -367,7 +375,7 @@ func (r *HTTPResponse) writeBodyTo(w io.Writer) (int64, error) {
 		}()
 	}
 	n, err := io.Copy(w, reader)
-	if err != nil && (!IsIgnoreEOFError() || err != io.ErrUnexpectedEOF) {
+	if err != nil && (!r.decodeConfig.ignoreEOFError || err != io.ErrUnexpectedEOF) {
 		r.err = NewHTTPError("read response body failed", err)
 		return n, r.err
 	}

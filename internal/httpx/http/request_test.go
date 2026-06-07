@@ -364,6 +364,32 @@ func TestResponseReadOptions(t *testing.T) {
 	}
 }
 
+func TestResponseIgnoreEOFFollowsRequestSnapshot(t *testing.T) {
+	old := IsIgnoreEOFError()
+	defer SetIgnoreEOFError(old)
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("abcdef"))
+	}))
+	defer srv.Close()
+
+	readUnexpectedEOF := func(io.Reader) ([]byte, error) {
+		return []byte("partial"), io.ErrUnexpectedEOF
+	}
+
+	ignoreResp := NewRequestWithConfig(MethodGet, srv.URL, GlobalConfig{FollowRedirects: true, MaxRedirects: 10, IgnoreEOFError: true}, WithResponseReadAllFunc(readUnexpectedEOF)).Execute()
+	SetIgnoreEOFError(false)
+	if got := ignoreResp.Body(); got != "partial" || ignoreResp.Err() != nil {
+		t.Fatalf("ignore snapshot body=%q err=%v, want partial without error", got, ignoreResp.Err())
+	}
+
+	strictResp := NewRequestWithConfig(MethodGet, srv.URL, GlobalConfig{FollowRedirects: true, MaxRedirects: 10, IgnoreEOFError: false}, WithResponseReadAllFunc(readUnexpectedEOF)).Execute()
+	SetIgnoreEOFError(true)
+	if got := strictResp.Body(); got != "" || strictResp.Err() == nil {
+		t.Fatalf("strict snapshot body=%q err=%v, want read error", got, strictResp.Err())
+	}
+}
+
 func TestRequestOptionTLSConfig(t *testing.T) {
 	client := Get("https://example.com", WithTLSConfig(&tls.Config{ServerName: "example.com"})).buildClient()
 	transport, ok := client.Transport.(*http.Transport)

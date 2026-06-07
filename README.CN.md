@@ -5,7 +5,7 @@
 ![go-knifer](./go-knifer.jpeg)
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/imajinyun/go-knifer.svg)](https://pkg.go.dev/github.com/imajinyun/go-knifer)
-[![Go Version](https://img.shields.io/badge/go-%3E%3D1.20-00ADD8?logo=go)](https://go.dev/)
+[![Go Version](https://img.shields.io/badge/go-%3E%3D1.24-00ADD8?logo=go)](https://go.dev/)
 
 ## 📚 简介
 
@@ -207,7 +207,7 @@ vcron、vjob、vpoi 空 sheet 名、vcodec 解码失败、vdate 解析失败、v
 
 ## 🚀 安装
 
-项目要求 Go 1.20 或更高版本。
+项目要求 Go 1.24 或更高版本。
 
 ```bash
 go get github.com/imajinyun/go-knifer

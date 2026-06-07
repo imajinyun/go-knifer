@@ -3,6 +3,7 @@ package conf
 import (
 	"crypto/sha256"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -43,6 +44,9 @@ func Watch(path string, interval time.Duration, onChange func(*Conf, error)) (fu
 
 // WatchWithOptions polls path using options and calls onChange after changes.
 func WatchWithOptions(path string, opts WatchOptions, onChange func(*Conf, error)) (func(), error) {
+	if onChange == nil {
+		return nil, invalidInputf("watch callback is nil")
+	}
 	if opts.Interval <= 0 {
 		opts.Interval = time.Second
 	}
@@ -85,7 +89,13 @@ func WatchWithOptions(path string, opts WatchOptions, onChange func(*Conf, error
 			}
 		}
 	})
-	return func() { close(stop); <-done }, nil
+	var stopOnce sync.Once
+	return func() {
+		stopOnce.Do(func() {
+			close(stop)
+			<-done
+		})
+	}, nil
 }
 
 func snapshot(path string, opts WatchOptions) (WatchEvent, error) {

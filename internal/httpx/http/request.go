@@ -155,7 +155,7 @@ func NewRequestWithConfig(method Method, rawURL string, cfg GlobalConfig, opts .
 		userAgent:    cfg.DefaultUserAgent,
 		newRequest:   http.NewRequest,
 		multipartNew: newMultipartWriter,
-		decodeConfig: defaultResponseDecodeConfig(),
+		decodeConfig: responseDecodeConfigFromGlobal(cfg),
 	}
 	for _, opt := range opts {
 		if opt != nil {

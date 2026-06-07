@@ -74,6 +74,8 @@ func wrapConfigIO(msg string, cause error) error {
 	code := knifer.ErrCodeInternal
 	if os.IsNotExist(cause) {
 		code = knifer.ErrCodeNotFound
+	} else if causeCode, ok := knifer.CodeOf(cause); ok && causeCode != "" {
+		code = causeCode
 	}
 	return wrapConfError(code, msg, cause)
 }

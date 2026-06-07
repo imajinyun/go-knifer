@@ -453,6 +453,17 @@ func TestWatchWithOptionsUsesRunner(t *testing.T) {
 	case <-time.After(time.Second):
 		t.Fatal("watch ticker was not stopped")
 	}
+	stop()
+}
+
+func TestWatchWithOptionsRejectsNilCallback(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "app.setting")
+	if err := os.WriteFile(path, []byte("name=one"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if stop, err := WatchWithOptions(path, WatchOptions{}, nil); err == nil || stop != nil {
+		t.Fatalf("WatchWithOptions nil callback stop nil=%v err=%v, want error", stop == nil, err)
+	}
 }
 
 func TestLoadWithOptionsIncludesMergeDecryptAndSchema(t *testing.T) {
@@ -824,9 +835,9 @@ func TestWatchWithOptionsProviders(t *testing.T) {
 
 func TestLoadWithOptionsReadFileProvider(t *testing.T) {
 	c, err := LoadWithOptions("virtual.setting", LoadOptions{
-		MaxBytes: 8,
+		MaxBytes: 16,
 		ReadFile: func(path string, maxBytes int64) ([]byte, error) {
-			if path != "virtual.setting" || maxBytes != 8 {
+			if path != "virtual.setting" || maxBytes != 16 {
 				t.Fatalf("read path=%q maxBytes=%d", path, maxBytes)
 			}
 			return []byte("name=fake"), nil
@@ -838,6 +849,16 @@ func TestLoadWithOptionsReadFileProvider(t *testing.T) {
 	if got := c.Get("name"); got != "fake" {
 		t.Fatalf("loaded name = %q", got)
 	}
+}
+
+func TestLoadWithOptionsReadFileProviderEnforcesMaxBytes(t *testing.T) {
+	_, err := LoadWithOptions("virtual.setting", LoadOptions{
+		MaxBytes: 4,
+		ReadFile: func(path string, maxBytes int64) ([]byte, error) {
+			return []byte("name=fake"), nil
+		},
+	})
+	assertConfCode(t, err, knifer.ErrCodeInvalidInput)
 }
 
 type fakeFileInfo struct {
