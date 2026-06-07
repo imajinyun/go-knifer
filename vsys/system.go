@@ -149,6 +149,16 @@ func WithEnvLookupFunc(fn func(string) (string, bool)) EnvOption {
 // WithEnvWarningWriter sets the writer used for missing-variable warnings.
 func WithEnvWarningWriter(w io.Writer) EnvOption { return system.WithEnvWarningWriter(w) }
 
+// WithEnvIntParser sets the parser used by EnvIntWithOptions.
+func WithEnvIntParser(parser func(string) (int, error)) EnvOption {
+	return system.WithEnvIntParser(parser)
+}
+
+// WithEnvBoolParser sets the parser used by EnvBoolWithOptions.
+func WithEnvBoolParser(parser func(string) (bool, error)) EnvOption {
+	return system.WithEnvBoolParser(parser)
+}
+
 // WithCurrentUserFunc sets the function used to discover the current OS user.
 func WithCurrentUserFunc(fn func() (*user.User, error)) UserInfoOption {
 	return system.WithCurrentUserFunc(fn)

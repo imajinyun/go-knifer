@@ -101,6 +101,29 @@ func TestMathGenerator_GenWithOptions(t *testing.T) {
 	}
 }
 
+func TestMathGenerator_VerifyWithOptionsUsesParser(t *testing.T) {
+	g := NewMathGenerator()
+	parseCalls := 0
+	if !g.VerifyWithOptions("left+right=", "sum", WithGeneratorIntParser(func(text string) (int, error) {
+		parseCalls++
+		switch text {
+		case "left":
+			return 2, nil
+		case "right":
+			return 3, nil
+		case "sum":
+			return 5, nil
+		default:
+			return strconv.Atoi(text)
+		}
+	})) {
+		t.Fatal("VerifyWithOptions should use custom parser")
+	}
+	if parseCalls != 3 {
+		t.Fatalf("parser calls = %d, want 3", parseCalls)
+	}
+}
+
 func TestMathGenerator_NoNegative(t *testing.T) {
 	g := NewMathGeneratorWith(2, false)
 	for i := 0; i < 100; i++ {

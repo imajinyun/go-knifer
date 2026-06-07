@@ -10,13 +10,22 @@ import (
 
 // ParseTOML parses TOML into grouped configuration.
 func ParseTOML(content string) (*Conf, error) {
+	return ParseTOMLWithOptions(content)
+}
+
+// ParseTOMLWithOptions parses TOML into grouped configuration using custom providers.
+func ParseTOMLWithOptions(content string, opts ...ParseOption) (*Conf, error) {
 	var root map[string]any
-	if err := toml.Unmarshal([]byte(content), &root); err != nil {
+	if err := applyParseOptions(opts).tomlUnmarshal([]byte(content), &root); err != nil {
 		return nil, wrapConfigParse("parse toml content", err)
 	}
 	c := New()
 	flattenTOMLMap(c, nil, root)
 	return c, nil
+}
+
+func defaultTOMLUnmarshal(data []byte, out any) error {
+	return toml.Unmarshal(data, out)
 }
 
 func flattenTOMLMap(c *Conf, path []string, values map[string]any) {

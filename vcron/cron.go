@@ -52,6 +52,9 @@ type Part = cron.Part
 // PartMatcher matches a cron expression part.
 type PartMatcher = cron.PartMatcher
 
+// PatternOption customizes cron pattern parsing per call.
+type PatternOption = cron.PatternOption
+
 // SimpleTaskListener is a no-op task listener base.
 type SimpleTaskListener = cron.SimpleTaskListener
 
@@ -82,11 +85,26 @@ func NewConfigWithOptions(opts ...ConfigOption) *Config {
 	return cron.NewConfigWithOptions(opts...)
 }
 
+// WithPatternIntParser sets the integer parser used by NewCronPatternWithOptions.
+func WithPatternIntParser(parser func(string) (int, error)) PatternOption {
+	return cron.WithPatternIntParser(parser)
+}
+
 // NewCronPattern parses a cron expression.
 func NewCronPattern(expr string) (*CronPattern, error) { return cron.NewPattern(expr) }
 
+// NewCronPatternWithOptions parses a cron expression with custom parser providers.
+func NewCronPatternWithOptions(expr string, opts ...PatternOption) (*CronPattern, error) {
+	return cron.NewPatternWithOptions(expr, opts...)
+}
+
 // MustNewCronPattern parses a cron expression or panics.
 func MustNewCronPattern(expr string) *CronPattern { return cron.MustNewPattern(expr) }
+
+// MustNewCronPatternWithOptions parses a cron expression with custom parser providers or panics.
+func MustNewCronPatternWithOptions(expr string, opts ...PatternOption) *CronPattern {
+	return cron.MustNewPatternWithOptions(expr, opts...)
+}
 
 // NewScheduler creates a cron scheduler.
 func NewScheduler() *Scheduler { return NewSchedulerWithOptions() }
@@ -115,6 +133,11 @@ func WithClock(clock func() time.Time) SchedulerOption { return cron.WithClock(c
 // WithSleeper sets the sleep function used by the scheduler timer.
 func WithSleeper(sleeper func(time.Duration, <-chan struct{}) bool) SchedulerOption {
 	return cron.WithSleeper(sleeper)
+}
+
+// WithSchedulerPatternOptions sets cron pattern parser providers used by scheduler string-pattern APIs.
+func WithSchedulerPatternOptions(opts ...PatternOption) SchedulerOption {
+	return cron.WithSchedulerPatternOptions(opts...)
 }
 
 // WithDefaultScheduler sets the scheduler used by one package-level operation.

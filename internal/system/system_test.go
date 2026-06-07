@@ -2,6 +2,7 @@ package system
 
 import (
 	"bytes"
+	"errors"
 	"net"
 	"os"
 	"os/user"
@@ -331,10 +332,29 @@ func TestGetEnvWithOptions(t *testing.T) {
 	if got := GetOrDefaultWithOptions("EMPTY", "def", WithEnvLookupFunc(lookup)); got != "def" {
 		t.Fatalf("GetOrDefaultWithOptions empty = %q", got)
 	}
-	if got := GetIntWithOptions("INT", 0, WithEnvLookupFunc(lookup)); got != 12 {
+	intCalled := false
+	if got := GetIntWithOptions("INT", 0, WithEnvLookupFunc(lookup), WithEnvIntParser(func(text string) (int, error) {
+		intCalled = true
+		if text != "12" {
+			t.Fatalf("env int parser text = %q", text)
+		}
+		return 21, nil
+	})); got != 21 || !intCalled {
 		t.Fatalf("GetIntWithOptions = %d", got)
 	}
-	if got := GetBoolWithOptions("BOOL", false, WithEnvLookupFunc(lookup)); !got {
+	if got := GetIntWithOptions("INT", 7, WithEnvLookupFunc(lookup), WithEnvIntParser(func(string) (int, error) {
+		return 0, errors.New("invalid int")
+	})); got != 7 {
+		t.Fatalf("GetIntWithOptions fallback = %d", got)
+	}
+	boolCalled := false
+	if got := GetBoolWithOptions("BOOL", false, WithEnvLookupFunc(lookup), WithEnvBoolParser(func(text string) (bool, error) {
+		boolCalled = true
+		if text != "true" {
+			t.Fatalf("env bool parser text = %q", text)
+		}
+		return true, nil
+	})); !got || !boolCalled {
 		t.Fatalf("GetBoolWithOptions = %v", got)
 	}
 }

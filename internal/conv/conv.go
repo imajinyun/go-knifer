@@ -8,11 +8,104 @@ import (
 	"strings"
 )
 
+type config struct {
+	parseBool   func(string) (bool, error)
+	parseInt    func(string, int, int) (int64, error)
+	parseFloat  func(string, int) (float64, error)
+	formatBool  func(bool) string
+	formatFloat func(float64, byte, int, int) string
+}
+
+// Option customizes conversion helpers per call.
+type Option func(*config)
+
+// WithBoolParser sets the parser used for string-to-bool conversion.
+func WithBoolParser(parser func(string) (bool, error)) Option {
+	return func(c *config) {
+		if parser != nil {
+			c.parseBool = parser
+		}
+	}
+}
+
+// WithParseIntFunc sets the parser used for string-to-integer conversion.
+func WithParseIntFunc(parser func(string, int, int) (int64, error)) Option {
+	return func(c *config) {
+		if parser != nil {
+			c.parseInt = parser
+		}
+	}
+}
+
+// WithParseFloatFunc sets the parser used for string-to-float conversion.
+func WithParseFloatFunc(parser func(string, int) (float64, error)) Option {
+	return func(c *config) {
+		if parser != nil {
+			c.parseFloat = parser
+		}
+	}
+}
+
+// WithFormatBoolFunc sets the formatter used for bool-to-string conversion.
+func WithFormatBoolFunc(formatter func(bool) string) Option {
+	return func(c *config) {
+		if formatter != nil {
+			c.formatBool = formatter
+		}
+	}
+}
+
+// WithFormatFloatFunc sets the formatter used for float-to-string conversion.
+func WithFormatFloatFunc(formatter func(float64, byte, int, int) string) Option {
+	return func(c *config) {
+		if formatter != nil {
+			c.formatFloat = formatter
+		}
+	}
+}
+
+func applyOptions(opts []Option) config {
+	cfg := config{
+		parseBool:   defaultBoolParser,
+		parseInt:    strconv.ParseInt,
+		parseFloat:  strconv.ParseFloat,
+		formatBool:  strconv.FormatBool,
+		formatFloat: strconv.FormatFloat,
+	}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.parseBool == nil {
+		cfg.parseBool = defaultBoolParser
+	}
+	if cfg.parseInt == nil {
+		cfg.parseInt = strconv.ParseInt
+	}
+	if cfg.parseFloat == nil {
+		cfg.parseFloat = strconv.ParseFloat
+	}
+	if cfg.formatBool == nil {
+		cfg.formatBool = strconv.FormatBool
+	}
+	if cfg.formatFloat == nil {
+		cfg.formatFloat = strconv.FormatFloat
+	}
+	return cfg
+}
+
 // This file provides permissive conversion helpers aligned with the utility toolkit-core Convert.
 // Failed conversions return zero values or caller-provided defaults instead of panicking.
 
 // ToString converts any value to a string; nil becomes an empty string.
 func ToString(v any) string {
+	return ToStringWithOptions(v)
+}
+
+// ToStringWithOptions converts any value to a string using per-call options.
+func ToStringWithOptions(v any, opts ...Option) string {
+	cfg := applyOptions(opts)
 	if v == nil {
 		return ""
 	}
@@ -26,29 +119,43 @@ func ToString(v any) string {
 	case error:
 		return x.Error()
 	case bool:
-		return strconv.FormatBool(x)
+		return cfg.formatBool(x)
 	case float32:
-		return strconv.FormatFloat(float64(x), 'f', -1, 32)
+		return cfg.formatFloat(float64(x), 'f', -1, 32)
 	case float64:
-		return strconv.FormatFloat(x, 'f', -1, 64)
+		return cfg.formatFloat(x, 'f', -1, 64)
 	}
 	return fmt.Sprint(v)
 }
 
 // ToStringDefault converts a value to a string and returns def when the value is nil.
 func ToStringDefault(v any, def string) string {
+	return ToStringDefaultWithOptions(v, def)
+}
+
+// ToStringDefaultWithOptions converts a value to a string using per-call options and returns def when nil.
+func ToStringDefaultWithOptions(v any, def string, opts ...Option) string {
 	if v == nil {
 		return def
 	}
-	return ToString(v)
+	return ToStringWithOptions(v, opts...)
 }
 
 // ToInt converts a value to int and returns 0 on failure.
-func ToInt(v any) int { return ToIntDefault(v, 0) }
+func ToInt(v any) int { return ToIntWithOptions(v) }
+
+// ToIntWithOptions converts a value to int using per-call options and returns 0 on failure.
+func ToIntWithOptions(v any, opts ...Option) int { return ToIntDefaultWithOptions(v, 0, opts...) }
 
 // ToIntDefault converts a value to int and returns def on failure.
 func ToIntDefault(v any, def int) int {
-	i, ok := toInt64(v)
+	return ToIntDefaultWithOptions(v, def)
+}
+
+// ToIntDefaultWithOptions converts a value to int using per-call options and returns def on failure.
+func ToIntDefaultWithOptions(v any, def int, opts ...Option) int {
+	cfg := applyOptions(opts)
+	i, ok := toInt64(v, cfg)
 	if !ok {
 		return def
 	}
@@ -56,11 +163,20 @@ func ToIntDefault(v any, def int) int {
 }
 
 // ToInt64 converts a value to int64 and returns 0 on failure.
-func ToInt64(v any) int64 { return ToInt64Default(v, 0) }
+func ToInt64(v any) int64 { return ToInt64WithOptions(v) }
+
+// ToInt64WithOptions converts a value to int64 using per-call options and returns 0 on failure.
+func ToInt64WithOptions(v any, opts ...Option) int64 { return ToInt64DefaultWithOptions(v, 0, opts...) }
 
 // ToInt64Default converts a value to int64 and returns def on failure.
 func ToInt64Default(v any, def int64) int64 {
-	i, ok := toInt64(v)
+	return ToInt64DefaultWithOptions(v, def)
+}
+
+// ToInt64DefaultWithOptions converts a value to int64 using per-call options and returns def on failure.
+func ToInt64DefaultWithOptions(v any, def int64, opts ...Option) int64 {
+	cfg := applyOptions(opts)
+	i, ok := toInt64(v, cfg)
 	if !ok {
 		return def
 	}
@@ -68,11 +184,22 @@ func ToInt64Default(v any, def int64) int64 {
 }
 
 // ToFloat64 converts a value to float64 and returns 0 on failure.
-func ToFloat64(v any) float64 { return ToFloat64Default(v, 0) }
+func ToFloat64(v any) float64 { return ToFloat64WithOptions(v) }
+
+// ToFloat64WithOptions converts a value to float64 using per-call options and returns 0 on failure.
+func ToFloat64WithOptions(v any, opts ...Option) float64 {
+	return ToFloat64DefaultWithOptions(v, 0, opts...)
+}
 
 // ToFloat64Default converts a value to float64 and returns def on failure.
 func ToFloat64Default(v any, def float64) float64 {
-	f, ok := toFloat64(v)
+	return ToFloat64DefaultWithOptions(v, def)
+}
+
+// ToFloat64DefaultWithOptions converts a value to float64 using per-call options and returns def on failure.
+func ToFloat64DefaultWithOptions(v any, def float64, opts ...Option) float64 {
+	cfg := applyOptions(opts)
+	f, ok := toFloat64(v, cfg)
 	if !ok {
 		return def
 	}
@@ -80,10 +207,21 @@ func ToFloat64Default(v any, def float64) float64 {
 }
 
 // ToBool converts a value to bool and returns false on failure.
-func ToBool(v any) bool { return ToBoolDefault(v, false) }
+func ToBool(v any) bool { return ToBoolWithOptions(v) }
+
+// ToBoolWithOptions converts a value to bool using per-call options and returns false on failure.
+func ToBoolWithOptions(v any, opts ...Option) bool {
+	return ToBoolDefaultWithOptions(v, false, opts...)
+}
 
 // ToBoolDefault converts a value to bool and returns def on failure.
 func ToBoolDefault(v any, def bool) bool {
+	return ToBoolDefaultWithOptions(v, def)
+}
+
+// ToBoolDefaultWithOptions converts a value to bool using per-call options and returns def on failure.
+func ToBoolDefaultWithOptions(v any, def bool, opts ...Option) bool {
+	cfg := applyOptions(opts)
 	if v == nil {
 		return def
 	}
@@ -91,16 +229,13 @@ func ToBoolDefault(v any, def bool) bool {
 	case bool:
 		return x
 	case string:
-		s := strings.ToLower(strings.TrimSpace(x))
-		switch s {
-		case "true", "yes", "y", "ok", "1", "on":
-			return true
-		case "false", "no", "n", "0", "off":
-			return false
+		b, err := cfg.parseBool(x)
+		if err != nil {
+			return def
 		}
-		return def
+		return b
 	}
-	if i, ok := toInt64(v); ok {
+	if i, ok := toInt64(v, cfg); ok {
 		return i != 0
 	}
 	return def
@@ -108,6 +243,11 @@ func ToBoolDefault(v any, def bool) bool {
 
 // ToBytes converts a value to bytes; strings are converted directly and other values use ToString.
 func ToBytes(v any) []byte {
+	return ToBytesWithOptions(v)
+}
+
+// ToBytesWithOptions converts a value to bytes using per-call options.
+func ToBytesWithOptions(v any, opts ...Option) []byte {
 	switch x := v.(type) {
 	case nil:
 		return nil
@@ -116,10 +256,10 @@ func ToBytes(v any) []byte {
 	case string:
 		return []byte(x)
 	}
-	return []byte(ToString(v))
+	return []byte(ToStringWithOptions(v, opts...))
 }
 
-func toInt64(v any) (int64, bool) {
+func toInt64(v any, cfg config) (int64, bool) {
 	if v == nil {
 		return 0, false
 	}
@@ -158,10 +298,10 @@ func toInt64(v any) (int64, bool) {
 		if s == "" {
 			return 0, false
 		}
-		if i, err := strconv.ParseInt(s, 10, 64); err == nil {
+		if i, err := cfg.parseInt(s, 10, 64); err == nil {
 			return i, true
 		}
-		if f, err := strconv.ParseFloat(s, 64); err == nil {
+		if f, err := cfg.parseFloat(s, 64); err == nil {
 			return int64(f), true
 		}
 		return 0, false
@@ -178,7 +318,7 @@ func toInt64(v any) (int64, bool) {
 	return 0, false
 }
 
-func toFloat64(v any) (float64, bool) {
+func toFloat64(v any, cfg config) (float64, bool) {
 	if v == nil {
 		return 0, false
 	}
@@ -192,14 +332,26 @@ func toFloat64(v any) (float64, bool) {
 		if s == "" {
 			return 0, false
 		}
-		f, err := strconv.ParseFloat(s, 64)
+		f, err := cfg.parseFloat(s, 64)
 		if err == nil {
 			return f, true
 		}
 		return 0, false
 	}
-	if i, ok := toInt64(v); ok {
+	if i, ok := toInt64(v, cfg); ok {
 		return float64(i), true
 	}
 	return 0, false
+}
+
+func defaultBoolParser(s string) (bool, error) {
+	s = strings.ToLower(strings.TrimSpace(s))
+	switch s {
+	case "true", "yes", "y", "ok", "1", "on":
+		return true, nil
+	case "false", "no", "n", "0", "off":
+		return false, nil
+	default:
+		return false, fmt.Errorf("cannot parse bool %q", s)
+	}
 }

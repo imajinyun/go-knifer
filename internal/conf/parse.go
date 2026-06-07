@@ -7,6 +7,7 @@ import (
 
 type parseConfig struct {
 	yamlUnmarshal func([]byte, any) error
+	tomlUnmarshal func([]byte, any) error
 	parsers       map[string]func([]byte) (*Conf, error)
 }
 
@@ -18,6 +19,15 @@ func WithYAMLUnmarshalFunc(unmarshal func([]byte, any) error) ParseOption {
 	return func(c *parseConfig) {
 		if unmarshal != nil {
 			c.yamlUnmarshal = unmarshal
+		}
+	}
+}
+
+// WithTOMLUnmarshalFunc sets the TOML unmarshal provider used by ParseTOMLWithOptions.
+func WithTOMLUnmarshalFunc(unmarshal func([]byte, any) error) ParseOption {
+	return func(c *parseConfig) {
+		if unmarshal != nil {
+			c.tomlUnmarshal = unmarshal
 		}
 	}
 }
@@ -43,7 +53,7 @@ func WithParserForExt(ext string, parser func([]byte) (*Conf, error)) ParseOptio
 }
 
 func applyParseOptions(opts []ParseOption) parseConfig {
-	cfg := parseConfig{yamlUnmarshal: defaultYAMLUnmarshal}
+	cfg := parseConfig{yamlUnmarshal: defaultYAMLUnmarshal, tomlUnmarshal: defaultTOMLUnmarshal}
 	for _, opt := range opts {
 		if opt != nil {
 			opt(&cfg)
@@ -51,6 +61,9 @@ func applyParseOptions(opts []ParseOption) parseConfig {
 	}
 	if cfg.yamlUnmarshal == nil {
 		cfg.yamlUnmarshal = defaultYAMLUnmarshal
+	}
+	if cfg.tomlUnmarshal == nil {
+		cfg.tomlUnmarshal = defaultTOMLUnmarshal
 	}
 	return cfg
 }
@@ -71,7 +84,7 @@ func ParseByExtWithOptions(path string, content []byte, opts ...ParseOption) (*C
 	case ".yaml", ".yml":
 		return ParseYAMLFullWithOptions(string(content), opts...)
 	case ".toml":
-		return ParseTOML(string(content))
+		return ParseTOMLWithOptions(string(content), opts...)
 	default:
 		return ParseBytes(content)
 	}

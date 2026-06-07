@@ -78,6 +78,11 @@ func WithGeneratorRandomInt(randomInt func(max int) int) GeneratorOption {
 	return captcha.WithGeneratorRandomInt(randomInt)
 }
 
+// WithGeneratorIntParser sets the integer parser used by math captcha verification.
+func WithGeneratorIntParser(parser func(string) (int, error)) GeneratorOption {
+	return captcha.WithGeneratorIntParser(parser)
+}
+
 // WithColorFunc sets the color function used while rendering captcha images.
 func WithColorFunc(colorFunc func() color.Color) CaptchaOption {
 	return captcha.WithColorFunc(colorFunc)

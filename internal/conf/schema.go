@@ -3,7 +3,6 @@ package conf
 import (
 	"fmt"
 	"reflect"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -33,6 +32,12 @@ type Schema struct {
 
 // ValidateSchema validates s against schema.
 func (s *Conf) ValidateSchema(schema Schema) error {
+	return s.ValidateSchemaWithOptions(schema)
+}
+
+// ValidateSchemaWithOptions validates s against schema with custom parser providers.
+func (s *Conf) ValidateSchemaWithOptions(schema Schema, opts ...SchemaOption) error {
+	cfg := applySchemaOptions(opts)
 	for _, rule := range schema.Fields {
 		group := rule.Group
 		key := rule.Key
@@ -46,7 +51,7 @@ func (s *Conf) ValidateSchema(schema Schema) error {
 			}
 			continue
 		}
-		if err := validateType(value, rule.Type); err != nil {
+		if err := validateType(value, rule.Type, cfg); err != nil {
 			return invalidInputf("config %s type mismatch: %s", schemaPath(group, key), err.Error())
 		}
 		if len(rule.Choices) > 0 && !containsString(rule.Choices, value) {
@@ -72,11 +77,16 @@ func (s *Conf) ApplyDefaults(schema Schema) *Conf {
 
 // ValidateStruct validates required conf tags on dst against s.
 func (s *Conf) ValidateStruct(dst any) error {
+	return s.ValidateStructWithOptions(dst)
+}
+
+// ValidateStructWithOptions validates required conf tags on dst against s with custom parser providers.
+func (s *Conf) ValidateStructWithOptions(dst any, opts ...SchemaOption) error {
 	rules, err := SchemaFromStruct(dst)
 	if err != nil {
 		return err
 	}
-	return s.ValidateSchema(rules)
+	return s.ValidateSchemaWithOptions(rules, opts...)
 }
 
 // SchemaFromStruct builds a schema from conf tags. A tag like `conf:"port,required,int"` marks a required int.
@@ -184,18 +194,18 @@ func inferRuleType(rt reflect.Type) string {
 	}
 }
 
-func validateType(value, typ string) error {
+func validateType(value, typ string, cfg schemaConfig) error {
 	switch strings.ToLower(strings.TrimSpace(typ)) {
 	case "", TypeString:
 		return nil
 	case TypeBool:
-		_, err := strconv.ParseBool(value)
+		_, err := cfg.parseBool(value)
 		return err
 	case TypeInt:
-		_, err := strconv.ParseInt(value, 10, 64)
+		_, err := cfg.parseInt(value, 10, 64)
 		return err
 	case TypeFloat:
-		_, err := strconv.ParseFloat(value, 64)
+		_, err := cfg.parseFloat(value, 64)
 		return err
 	case TypeList:
 		return nil

@@ -80,6 +80,7 @@ const mathOperators = "+-*"
 
 type generatorConfig struct {
 	randomInt func(max int) int
+	parseInt  func(string) (int, error)
 }
 
 // GeneratorOption customizes captcha code generation per call.
@@ -94,8 +95,17 @@ func WithGeneratorRandomInt(randomInt func(max int) int) GeneratorOption {
 	}
 }
 
+// WithGeneratorIntParser sets the integer parser used by math captcha verification.
+func WithGeneratorIntParser(parser func(string) (int, error)) GeneratorOption {
+	return func(c *generatorConfig) {
+		if parser != nil {
+			c.parseInt = parser
+		}
+	}
+}
+
 func applyGeneratorOptions(opts []GeneratorOption) generatorConfig {
-	cfg := generatorConfig{randomInt: randutil.RandomInt}
+	cfg := generatorConfig{randomInt: randutil.RandomInt, parseInt: strconv.Atoi}
 	for _, opt := range opts {
 		if opt != nil {
 			opt(&cfg)
@@ -103,6 +113,9 @@ func applyGeneratorOptions(opts []GeneratorOption) generatorConfig {
 	}
 	if cfg.randomInt == nil {
 		cfg.randomInt = randutil.RandomInt
+	}
+	if cfg.parseInt == nil {
+		cfg.parseInt = strconv.Atoi
 	}
 	return cfg
 }
@@ -160,11 +173,17 @@ func (g *MathGenerator) GenWithOptions(opts ...GeneratorOption) string {
 
 // Verify evaluates code and compares it with user input.
 func (g *MathGenerator) Verify(code, userInput string) bool {
-	got, err := strconv.Atoi(strings.TrimSpace(userInput))
+	return g.VerifyWithOptions(code, userInput)
+}
+
+// VerifyWithOptions evaluates code and compares it with user input using custom providers.
+func (g *MathGenerator) VerifyWithOptions(code, userInput string, opts ...GeneratorOption) bool {
+	cfg := applyGeneratorOptions(opts)
+	got, err := cfg.parseInt(strings.TrimSpace(userInput))
 	if err != nil {
 		return false
 	}
-	v, ok := evalMathExpr(code)
+	v, ok := evalMathExprWithOptions(code, opts...)
 	if !ok {
 		return false
 	}
@@ -204,14 +223,20 @@ func normalizeRandomIndex(v, max int) int {
 
 // evalMathExpr parses a simple padded integer expression in "a op b=" form.
 func evalMathExpr(s string) (int, bool) {
+	return evalMathExprWithOptions(s)
+}
+
+// evalMathExprWithOptions parses a simple padded integer expression using custom providers.
+func evalMathExprWithOptions(s string, opts ...GeneratorOption) (int, bool) {
+	cfg := applyGeneratorOptions(opts)
 	s = strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(s), "="))
 	for _, op := range []byte{'+', '-', '*'} {
 		// Find the first operator that is not the leading character.
 		if i := strings.IndexByte(s, op); i > 0 {
 			left := strings.TrimSpace(s[:i])
 			right := strings.TrimSpace(s[i+1:])
-			a, errA := strconv.Atoi(left)
-			b, errB := strconv.Atoi(right)
+			a, errA := cfg.parseInt(left)
+			b, errB := cfg.parseInt(right)
 			if errA != nil || errB != nil {
 				return 0, false
 			}

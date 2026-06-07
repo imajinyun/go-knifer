@@ -542,6 +542,28 @@ ip = "10.0.0.1"
 	}
 }
 
+func TestParseTOMLWithOptionsUsesProvider(t *testing.T) {
+	called := false
+	c, err := ParseTOMLWithOptions("ignored", WithTOMLUnmarshalFunc(func(data []byte, out any) error {
+		called = true
+		root, ok := out.(*map[string]any)
+		if !ok {
+			t.Fatalf("toml unmarshal output = %T, want *map[string]any", out)
+		}
+		*root = map[string]any{"app": map[string]any{"name": "provider"}}
+		return nil
+	}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !called {
+		t.Fatal("custom TOML unmarshal provider was not called")
+	}
+	if got := c.GetByGroup("app", "name"); got != "provider" {
+		t.Fatalf("provider app.name = %q", got)
+	}
+}
+
 func TestLoadRemoteWithOptions(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("X-Config-Token") != "secret" {
@@ -593,6 +615,70 @@ func TestSchemaFromStructAndValidateStruct(t *testing.T) {
 	}
 	if len(schema.Fields) != 3 {
 		t.Fatalf("SchemaFromStruct fields = %d", len(schema.Fields))
+	}
+}
+
+func TestValidateSchemaWithOptionsUsesParsers(t *testing.T) {
+	c := New()
+	c.Set("debug", "custom-bool")
+	c.Set("port", "custom-int")
+	c.Set("ratio", "custom-float")
+
+	var boolCalled, intCalled, floatCalled int
+	err := c.ValidateSchemaWithOptions(Schema{Fields: []FieldRule{
+		{Key: "debug", Required: true, Type: TypeBool},
+		{Key: "port", Required: true, Type: TypeInt},
+		{Key: "ratio", Required: true, Type: TypeFloat},
+	}},
+		WithSchemaBoolParser(func(text string) (bool, error) {
+			boolCalled++
+			if text == "custom-bool" {
+				return true, nil
+			}
+			return strconv.ParseBool(text)
+		}),
+		WithSchemaIntParser(func(text string, base, bitSize int) (int64, error) {
+			intCalled++
+			if text == "custom-int" {
+				return 8080, nil
+			}
+			return strconv.ParseInt(text, base, bitSize)
+		}),
+		WithSchemaFloatParser(func(text string, bitSize int) (float64, error) {
+			floatCalled++
+			if text == "custom-float" {
+				return 0.75, nil
+			}
+			return strconv.ParseFloat(text, bitSize)
+		}),
+	)
+	if err != nil {
+		t.Fatalf("ValidateSchemaWithOptions() error = %v", err)
+	}
+	if boolCalled != 1 || intCalled != 1 || floatCalled != 1 {
+		t.Fatalf("schema parser calls bool=%d int=%d float=%d", boolCalled, intCalled, floatCalled)
+	}
+}
+
+func TestValidateStructWithOptionsUsesParsers(t *testing.T) {
+	type appConfig struct {
+		Port int `conf:"port,required,int"`
+	}
+	c := New()
+	c.Set("port", "custom-int")
+
+	called := false
+	if err := c.ValidateStructWithOptions(appConfig{}, WithSchemaIntParser(func(text string, base, bitSize int) (int64, error) {
+		called = true
+		if text == "custom-int" {
+			return 8080, nil
+		}
+		return strconv.ParseInt(text, base, bitSize)
+	})); err != nil {
+		t.Fatalf("ValidateStructWithOptions() error = %v", err)
+	}
+	if !called {
+		t.Fatal("schema int parser was not called")
 	}
 }
 

@@ -84,6 +84,8 @@ func applyProcessOptions(opts []ProcessOption) processConfig {
 
 type envConfig struct {
 	lookup        func(string) (string, bool)
+	parseInt      func(string) (int, error)
+	parseBool     func(string) (bool, error)
 	warningWriter io.Writer
 }
 
@@ -154,8 +156,26 @@ func WithEnvWarningWriter(w io.Writer) EnvOption {
 	}
 }
 
+// WithEnvIntParser sets the parser used by GetIntWithOptions.
+func WithEnvIntParser(parser func(string) (int, error)) EnvOption {
+	return func(c *envConfig) {
+		if parser != nil {
+			c.parseInt = parser
+		}
+	}
+}
+
+// WithEnvBoolParser sets the parser used by GetBoolWithOptions.
+func WithEnvBoolParser(parser func(string) (bool, error)) EnvOption {
+	return func(c *envConfig) {
+		if parser != nil {
+			c.parseBool = parser
+		}
+	}
+}
+
 func applyEnvOptions(opts []EnvOption) envConfig {
-	cfg := envConfig{lookup: os.LookupEnv, warningWriter: os.Stderr}
+	cfg := envConfig{lookup: os.LookupEnv, parseInt: strconv.Atoi, parseBool: strconv.ParseBool, warningWriter: os.Stderr}
 	for _, opt := range opts {
 		if opt != nil {
 			opt(&cfg)
@@ -163,6 +183,12 @@ func applyEnvOptions(opts []EnvOption) envConfig {
 	}
 	if cfg.lookup == nil {
 		cfg.lookup = os.LookupEnv
+	}
+	if cfg.parseInt == nil {
+		cfg.parseInt = strconv.Atoi
+	}
+	if cfg.parseBool == nil {
+		cfg.parseBool = strconv.ParseBool
 	}
 	if cfg.warningWriter == nil {
 		cfg.warningWriter = os.Stderr
@@ -323,11 +349,12 @@ func GetInt(key string, def int) int {
 
 // GetIntWithOptions returns an environment variable as an int, or def on conversion failure, using custom providers.
 func GetIntWithOptions(key string, def int, opts ...EnvOption) int {
-	v, ok := applyEnvOptions(opts).lookup(key)
+	cfg := applyEnvOptions(opts)
+	v, ok := cfg.lookup(key)
 	if !ok {
 		return def
 	}
-	n, err := strconv.Atoi(v)
+	n, err := cfg.parseInt(v)
 	if err != nil {
 		return def
 	}
@@ -341,11 +368,12 @@ func GetBool(key string, def bool) bool {
 
 // GetBoolWithOptions returns an environment variable as a bool, or def on conversion failure, using custom providers.
 func GetBoolWithOptions(key string, def bool, opts ...EnvOption) bool {
-	v, ok := applyEnvOptions(opts).lookup(key)
+	cfg := applyEnvOptions(opts)
+	v, ok := cfg.lookup(key)
 	if !ok {
 		return def
 	}
-	b, err := strconv.ParseBool(v)
+	b, err := cfg.parseBool(v)
 	if err != nil {
 		return def
 	}

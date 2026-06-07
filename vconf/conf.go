@@ -23,6 +23,8 @@ type (
 	ValueOption = confimpl.ValueOption
 	// BindOption customizes struct binding per call.
 	BindOption = confimpl.BindOption
+	// SchemaOption customizes schema validation per call.
+	SchemaOption = confimpl.SchemaOption
 	// ParseOption customizes ParseByExt and full YAML parsing helpers per call.
 	ParseOption = confimpl.ParseOption
 	// FieldRule describes one schema validation rule.
@@ -110,6 +112,21 @@ func WithBindFloatParser(parser func(string, int) (float64, error)) BindOption {
 	return confimpl.WithBindFloatParser(parser)
 }
 
+// WithSchemaBoolParser sets the bool parser used by Conf.ValidateSchemaWithOptions and Conf.ValidateStructWithOptions.
+func WithSchemaBoolParser(parser func(string) (bool, error)) SchemaOption {
+	return confimpl.WithSchemaBoolParser(parser)
+}
+
+// WithSchemaIntParser sets the signed integer parser used by Conf.ValidateSchemaWithOptions and Conf.ValidateStructWithOptions.
+func WithSchemaIntParser(parser func(string, int, int) (int64, error)) SchemaOption {
+	return confimpl.WithSchemaIntParser(parser)
+}
+
+// WithSchemaFloatParser sets the floating-point parser used by Conf.ValidateSchemaWithOptions and Conf.ValidateStructWithOptions.
+func WithSchemaFloatParser(parser func(string, int) (float64, error)) SchemaOption {
+	return confimpl.WithSchemaFloatParser(parser)
+}
+
 // Base64Decrypt decodes base64 encrypted configuration values.
 func Base64Decrypt(cipherText string) (string, error) { return confimpl.Base64Decrypt(cipherText) }
 
@@ -147,6 +164,11 @@ func WithYAMLUnmarshalFunc(unmarshal func([]byte, any) error) ParseOption {
 	return confimpl.WithYAMLUnmarshalFunc(unmarshal)
 }
 
+// WithTOMLUnmarshalFunc sets the TOML unmarshal provider used by ParseTOMLWithOptions.
+func WithTOMLUnmarshalFunc(unmarshal func([]byte, any) error) ParseOption {
+	return confimpl.WithTOMLUnmarshalFunc(unmarshal)
+}
+
 // WithParserForExt sets the parser used by ParseByExtWithOptions for an extension.
 func WithParserForExt(ext string, parser func([]byte) (*Conf, error)) ParseOption {
 	return confimpl.WithParserForExt(ext, parser)
@@ -165,6 +187,11 @@ func ParseYAMLFullWithOptions(content string, opts ...ParseOption) (*Conf, error
 
 // ParseTOML parses common TOML key-value and section syntax into grouped configuration.
 func ParseTOML(content string) (*Conf, error) { return confimpl.ParseTOML(content) }
+
+// ParseTOMLWithOptions parses common TOML syntax into grouped configuration with custom providers.
+func ParseTOMLWithOptions(content string, opts ...ParseOption) (*Conf, error) {
+	return confimpl.ParseTOMLWithOptions(content, opts...)
+}
 
 // Watch polls path and calls onChange after successful reloads.
 func Watch(path string, interval time.Duration, onChange func(*Conf, error)) (func(), error) {

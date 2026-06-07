@@ -1,9 +1,39 @@
 package cron
 
 import (
+	"strconv"
 	"strings"
 	"time"
 )
+
+type patternConfig struct {
+	parseInt func(string) (int, error)
+}
+
+// PatternOption customizes cron pattern parsing per call.
+type PatternOption func(*patternConfig)
+
+// WithPatternIntParser sets the integer parser used by NewPatternWithOptions.
+func WithPatternIntParser(parser func(string) (int, error)) PatternOption {
+	return func(c *patternConfig) {
+		if parser != nil {
+			c.parseInt = parser
+		}
+	}
+}
+
+func applyPatternOptions(opts []PatternOption) patternConfig {
+	cfg := patternConfig{parseInt: strconv.Atoi}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.parseInt == nil {
+		cfg.parseInt = strconv.Atoi
+	}
+	return cfg
+}
 
 // patternMatcher is aligned with the utility toolkit PatternMatcher and consists of seven field matchers.
 type patternMatcher struct {
@@ -11,7 +41,7 @@ type patternMatcher struct {
 }
 
 // newPatternMatcher parses one cron expression without | into a patternMatcher.
-func newPatternMatcher(expr string) (*patternMatcher, error) {
+func newPatternMatcher(expr string, cfg patternConfig) (*patternMatcher, error) {
 	parts := strings.Fields(expr)
 	switch len(parts) {
 	case 5:
@@ -34,7 +64,7 @@ func newPatternMatcher(expr string) (*patternMatcher, error) {
 			pm.matchers[p] = AlwaysTrueMatcher
 			continue
 		}
-		m, err := parsePart(p, raw)
+		m, err := parsePart(p, raw, cfg)
 		if err != nil {
 			return nil, err
 		}
@@ -86,10 +116,16 @@ type Pattern struct {
 
 // NewPattern parses a cron expression and supports multiple | separated groups.
 func NewPattern(expr string) (*Pattern, error) {
+	return NewPatternWithOptions(expr)
+}
+
+// NewPatternWithOptions parses a cron expression with custom parser providers and supports multiple | separated groups.
+func NewPatternWithOptions(expr string, opts ...PatternOption) (*Pattern, error) {
 	expr = strings.TrimSpace(expr)
 	if expr == "" {
 		return nil, NewCronError("empty cron expression")
 	}
+	cfg := applyPatternOptions(opts)
 	groups := strings.Split(expr, "|")
 	matchers := make([]*patternMatcher, 0, len(groups))
 	for _, g := range groups {
@@ -97,7 +133,7 @@ func NewPattern(expr string) (*Pattern, error) {
 		if g == "" {
 			return nil, NewCronError("empty sub-expression in %q", expr)
 		}
-		pm, err := newPatternMatcher(g)
+		pm, err := newPatternMatcher(g, cfg)
 		if err != nil {
 			return nil, err
 		}
@@ -108,7 +144,16 @@ func NewPattern(expr string) (*Pattern, error) {
 
 // MustNewPattern is like NewPattern but panics when parsing fails.
 func MustNewPattern(expr string) *Pattern {
-	p, err := NewPattern(expr)
+	p, err := NewPatternWithOptions(expr)
+	if err != nil {
+		panic(err)
+	}
+	return p
+}
+
+// MustNewPatternWithOptions is like NewPatternWithOptions but panics when parsing fails.
+func MustNewPatternWithOptions(expr string, opts ...PatternOption) *Pattern {
+	p, err := NewPatternWithOptions(expr, opts...)
 	if err != nil {
 		panic(err)
 	}

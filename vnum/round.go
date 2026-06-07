@@ -10,6 +10,10 @@ func RoundMode(v float64, scale int, mode RoundingMode) float64 {
 
 func RoundStr(v float64, scale int) string { return numimpl.RoundStr(v, scale) }
 
+func RoundStrWithOptions(v float64, scale int, opts ...FormatOption) string {
+	return numimpl.RoundStrWithOptions(v, scale, opts...)
+}
+
 func RoundHalfEvenFloat(v float64, scale int) float64 { return numimpl.RoundHalfEvenFloat(v, scale) }
 
 func RoundDownFloat(v float64, scale int) float64 { return numimpl.RoundDownFloat(v, scale) }

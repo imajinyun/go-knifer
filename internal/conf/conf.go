@@ -30,6 +30,12 @@ type bindConfig struct {
 	parseFloat func(string, int) (float64, error)
 }
 
+type schemaConfig struct {
+	parseBool  func(string) (bool, error)
+	parseInt   func(string, int, int) (int64, error)
+	parseFloat func(string, int) (float64, error)
+}
+
 // ExpandOption customizes configuration variable expansion per call.
 type ExpandOption func(*expandConfig)
 
@@ -38,6 +44,9 @@ type ValueOption func(*valueConfig)
 
 // BindOption customizes struct binding per call.
 type BindOption func(*bindConfig)
+
+// SchemaOption customizes schema validation per call.
+type SchemaOption func(*schemaConfig)
 
 // WithEnvLookup sets the environment lookup function used for ${ENV:NAME} placeholders.
 func WithEnvLookup(lookup func(string) string) ExpandOption {
@@ -102,6 +111,33 @@ func WithBindFloatParser(parser func(string, int) (float64, error)) BindOption {
 	}
 }
 
+// WithSchemaBoolParser sets the bool parser used by ValidateSchemaWithOptions and ValidateStructWithOptions.
+func WithSchemaBoolParser(parser func(string) (bool, error)) SchemaOption {
+	return func(c *schemaConfig) {
+		if parser != nil {
+			c.parseBool = parser
+		}
+	}
+}
+
+// WithSchemaIntParser sets the signed integer parser used by ValidateSchemaWithOptions and ValidateStructWithOptions.
+func WithSchemaIntParser(parser func(string, int, int) (int64, error)) SchemaOption {
+	return func(c *schemaConfig) {
+		if parser != nil {
+			c.parseInt = parser
+		}
+	}
+}
+
+// WithSchemaFloatParser sets the floating-point parser used by ValidateSchemaWithOptions and ValidateStructWithOptions.
+func WithSchemaFloatParser(parser func(string, int) (float64, error)) SchemaOption {
+	return func(c *schemaConfig) {
+		if parser != nil {
+			c.parseFloat = parser
+		}
+	}
+}
+
 func applyExpandOptions(opts []ExpandOption) expandConfig {
 	cfg := expandConfig{envLookup: os.Getenv}
 	for _, opt := range opts {
@@ -151,6 +187,29 @@ func applyBindOptions(opts []BindOption) bindConfig {
 	}
 	if cfg.parseUint == nil {
 		cfg.parseUint = strconv.ParseUint
+	}
+	if cfg.parseFloat == nil {
+		cfg.parseFloat = strconv.ParseFloat
+	}
+	return cfg
+}
+
+func applySchemaOptions(opts []SchemaOption) schemaConfig {
+	cfg := schemaConfig{
+		parseBool:  strconv.ParseBool,
+		parseInt:   strconv.ParseInt,
+		parseFloat: strconv.ParseFloat,
+	}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.parseBool == nil {
+		cfg.parseBool = strconv.ParseBool
+	}
+	if cfg.parseInt == nil {
+		cfg.parseInt = strconv.ParseInt
 	}
 	if cfg.parseFloat == nil {
 		cfg.parseFloat = strconv.ParseFloat

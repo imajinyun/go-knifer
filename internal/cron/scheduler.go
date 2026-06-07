@@ -19,11 +19,12 @@ type Scheduler struct {
 	listenerMgr *listenerManager
 
 	// executor controls goroutine usage for task execution and may be replaced with a concurrency-limited executor.
-	executor func(func())
-	runner   func(func())
-	idFunc   func() string
-	nowFunc  func() time.Time
-	sleeper  func(time.Duration, <-chan struct{}) bool
+	executor    func(func())
+	runner      func(func())
+	idFunc      func() string
+	nowFunc     func() time.Time
+	sleeper     func(time.Duration, <-chan struct{}) bool
+	patternOpts []PatternOption
 }
 
 // SchedulerOption customizes scheduler construction.
@@ -85,6 +86,13 @@ func WithSleeper(sleeper func(time.Duration, <-chan struct{}) bool) SchedulerOpt
 	}
 }
 
+// WithSchedulerPatternOptions sets cron pattern parser providers used by scheduler string-pattern APIs.
+func WithSchedulerPatternOptions(opts ...PatternOption) SchedulerOption {
+	return func(s *Scheduler) {
+		s.patternOpts = append([]PatternOption(nil), opts...)
+	}
+}
+
 // NewScheduler creates a Scheduler.
 func NewScheduler() *Scheduler {
 	return NewSchedulerWithOptions()
@@ -124,6 +132,12 @@ func (s *Scheduler) sleep(d time.Duration, stopCh <-chan struct{}) bool {
 		return s.sleeper(d, stopCh)
 	}
 	return defaultTimerSleep(d, stopCh)
+}
+
+func (s *Scheduler) parsePattern(pattern string, opts ...PatternOption) (*Pattern, error) {
+	allOpts := append([]PatternOption(nil), s.patternOpts...)
+	allOpts = append(allOpts, opts...)
+	return NewPatternWithOptions(pattern, allOpts...)
 }
 
 // Config returns the scheduler config.
@@ -177,8 +191,13 @@ func (s *Scheduler) RemoveListener(l TaskListener) *Scheduler {
 
 // Schedule registers a task with an expression, generates an id automatically, and returns it.
 func (s *Scheduler) Schedule(pattern string, task Task) (string, error) {
+	return s.ScheduleWithPatternOptions(pattern, task)
+}
+
+// ScheduleWithPatternOptions registers a task with parser options, generates an id automatically, and returns it.
+func (s *Scheduler) ScheduleWithPatternOptions(pattern string, task Task, opts ...PatternOption) (string, error) {
 	id := s.idFunc()
-	if err := s.ScheduleWithID(id, pattern, task); err != nil {
+	if err := s.ScheduleWithIDWithPatternOptions(id, pattern, task, opts...); err != nil {
 		return "", err
 	}
 	return id, nil
@@ -186,12 +205,22 @@ func (s *Scheduler) Schedule(pattern string, task Task) (string, error) {
 
 // ScheduleFunc registers a function task.
 func (s *Scheduler) ScheduleFunc(pattern string, fn func()) (string, error) {
-	return s.Schedule(pattern, TaskFunc(fn))
+	return s.ScheduleFuncWithPatternOptions(pattern, fn)
+}
+
+// ScheduleFuncWithPatternOptions registers a function task with parser options.
+func (s *Scheduler) ScheduleFuncWithPatternOptions(pattern string, fn func(), opts ...PatternOption) (string, error) {
+	return s.ScheduleWithPatternOptions(pattern, TaskFunc(fn), opts...)
 }
 
 // ScheduleWithID registers a task with the specified id.
 func (s *Scheduler) ScheduleWithID(id, pattern string, task Task) error {
-	p, err := NewPattern(pattern)
+	return s.ScheduleWithIDWithPatternOptions(id, pattern, task)
+}
+
+// ScheduleWithIDWithPatternOptions registers a task with the specified id and parser options.
+func (s *Scheduler) ScheduleWithIDWithPatternOptions(id, pattern string, task Task, opts ...PatternOption) error {
+	p, err := s.parsePattern(pattern, opts...)
 	if err != nil {
 		return err
 	}
@@ -210,7 +239,12 @@ func (s *Scheduler) Deschedule(id string) bool {
 
 // UpdatePattern updates a task expression.
 func (s *Scheduler) UpdatePattern(id, pattern string) error {
-	p, err := NewPattern(pattern)
+	return s.UpdatePatternWithPatternOptions(id, pattern)
+}
+
+// UpdatePatternWithPatternOptions updates a task expression with parser options.
+func (s *Scheduler) UpdatePatternWithPatternOptions(id, pattern string, opts ...PatternOption) error {
+	p, err := s.parsePattern(pattern, opts...)
 	if err != nil {
 		return err
 	}

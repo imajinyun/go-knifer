@@ -8,6 +8,10 @@ import (
 
 func GetBinaryStr(number any) string { return numimpl.GetBinaryStr(number) }
 
+func GetBinaryStrWithOptions(number any, opts ...FormatOption) string {
+	return numimpl.GetBinaryStrWithOptions(number, opts...)
+}
+
 func BinaryToInt(binaryStr string) (int, error) { return numimpl.BinaryToInt(binaryStr) }
 
 func BinaryToIntWithOptions(binaryStr string, opts ...ParseOption) (int, error) {

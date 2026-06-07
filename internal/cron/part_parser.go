@@ -1,7 +1,6 @@
 package cron
 
 import (
-	"strconv"
 	"strings"
 )
 
@@ -17,12 +16,12 @@ var weekAlias = map[string]int{
 }
 
 // parsePart parses a single field expression and returns the corresponding PartMatcher.
-func parsePart(part Part, value string) (PartMatcher, error) {
+func parsePart(part Part, value string, cfg patternConfig) (PartMatcher, error) {
 	value = strings.TrimSpace(value)
 	if value == "" {
 		return nil, NewCronError("empty cron field")
 	}
-	values, err := parsePartValues(part, value)
+	values, err := parsePartValues(part, value, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +38,7 @@ func parsePart(part Part, value string) (PartMatcher, error) {
 }
 
 // parsePartValues parses a field and returns all matchable values; callers handle plain * or ? first.
-func parsePartValues(part Part, value string) ([]int, error) {
+func parsePartValues(part Part, value string, cfg patternConfig) ([]int, error) {
 	// List.
 	tokens := strings.Split(value, ",")
 	var result []int
@@ -48,7 +47,7 @@ func parsePartValues(part Part, value string) ([]int, error) {
 		if tok == "" {
 			return nil, NewCronError("empty list element in %q", value)
 		}
-		vals, err := parseRangeStep(part, tok)
+		vals, err := parseRangeStep(part, tok, cfg)
 		if err != nil {
 			return nil, err
 		}
@@ -58,23 +57,23 @@ func parsePartValues(part Part, value string) ([]int, error) {
 }
 
 // parseRangeStep parses forms such as a, a-b, *, a/n, */n, and a-b/n.
-func parseRangeStep(part Part, value string) ([]int, error) {
+func parseRangeStep(part Part, value string, cfg patternConfig) ([]int, error) {
 	step := 1
 	rangeStr := value
 	if i := strings.Index(value, "/"); i >= 0 {
 		rangeStr = value[:i]
 		stepStr := value[i+1:]
-		s, err := strconv.Atoi(stepStr)
+		s, err := cfg.parseInt(stepStr)
 		if err != nil || s <= 0 {
 			return nil, NewCronError("invalid step %q", stepStr)
 		}
 		step = s
 	}
-	return parseRange(part, rangeStr, step)
+	return parseRange(part, rangeStr, step, cfg)
 }
 
 // parseRange parses forms such as a, a-b, *, and ?.
-func parseRange(part Part, value string, step int) ([]int, error) {
+func parseRange(part Part, value string, step int, cfg patternConfig) ([]int, error) {
 	if value == "*" || value == "?" {
 		// Enumerate the whole range by step.
 		return enumerate(part.Min(), part.Max(), step), nil
@@ -83,7 +82,7 @@ func parseRange(part Part, value string, step int) ([]int, error) {
 	// Single value, including L, month/weekday aliases, numbers, and negative numbers.
 	if !strings.Contains(value, "-") || (strings.HasPrefix(value, "-") && strings.Count(value, "-") == 1) {
 		// Note that "-3" means counting back 3 from the maximum value.
-		v, err := parseSingle(part, value)
+		v, err := parseSingle(part, value, cfg)
 		if err != nil {
 			return nil, err
 		}
@@ -104,7 +103,7 @@ func parseRange(part Part, value string, step int) ([]int, error) {
 		}
 	}
 	if idx < 0 {
-		v, err := parseSingle(part, value)
+		v, err := parseSingle(part, value, cfg)
 		if err != nil {
 			return nil, err
 		}
@@ -112,11 +111,11 @@ func parseRange(part Part, value string, step int) ([]int, error) {
 	}
 	beginStr := value[:idx]
 	endStr := value[idx+1:]
-	begin, err := parseSingle(part, beginStr)
+	begin, err := parseSingle(part, beginStr, cfg)
 	if err != nil {
 		return nil, err
 	}
-	end, err := parseSingle(part, endStr)
+	end, err := parseSingle(part, endStr, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +129,7 @@ func parseRange(part Part, value string, step int) ([]int, error) {
 }
 
 // parseSingle parses a single number, alias, L, or negative value.
-func parseSingle(part Part, value string) (int, error) {
+func parseSingle(part Part, value string, cfg patternConfig) (int, error) {
 	v := strings.TrimSpace(value)
 	if v == "" {
 		return 0, NewCronError("empty value")
@@ -150,7 +149,7 @@ func parseSingle(part Part, value string) (int, error) {
 			return n, nil
 		}
 	}
-	n, err := strconv.Atoi(v)
+	n, err := cfg.parseInt(v)
 	if err != nil {
 		return 0, NewCronError("invalid number %q", v)
 	}

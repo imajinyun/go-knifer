@@ -32,11 +32,19 @@ type parseConfig struct {
 	parseFloat func(string, int) (float64, error)
 }
 
+type formatConfig struct {
+	formatFloat func(float64, byte, int, int) string
+	formatInt   func(int64, int) string
+}
+
 // RandomNumberOption customizes random-number generation per call.
 type RandomNumberOption func(*randomNumberConfig)
 
 // ParseOption customizes numeric parsing and validation helpers per call.
 type ParseOption func(*parseConfig)
+
+// FormatOption customizes numeric formatting helpers per call.
+type FormatOption func(*formatConfig)
 
 // WithRandomReader sets the random source used by Gen*WithOptions helpers.
 func WithRandomReader(reader io.Reader) RandomNumberOption {
@@ -61,6 +69,24 @@ func WithParseFloatFunc(parser func(string, int) (float64, error)) ParseOption {
 	return func(c *parseConfig) {
 		if parser != nil {
 			c.parseFloat = parser
+		}
+	}
+}
+
+// WithFormatFloatFunc sets the floating-point formatter used by formatting helpers.
+func WithFormatFloatFunc(formatter func(float64, byte, int, int) string) FormatOption {
+	return func(c *formatConfig) {
+		if formatter != nil {
+			c.formatFloat = formatter
+		}
+	}
+}
+
+// WithFormatIntFunc sets the signed integer formatter used by formatting helpers.
+func WithFormatIntFunc(formatter func(int64, int) string) FormatOption {
+	return func(c *formatConfig) {
+		if formatter != nil {
+			c.formatInt = formatter
 		}
 	}
 }
@@ -90,6 +116,22 @@ func applyParseOptions(opts []ParseOption) parseConfig {
 	}
 	if cfg.parseFloat == nil {
 		cfg.parseFloat = strconv.ParseFloat
+	}
+	return cfg
+}
+
+func applyFormatOptions(opts []FormatOption) formatConfig {
+	cfg := formatConfig{formatFloat: strconv.FormatFloat, formatInt: strconv.FormatInt}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.formatFloat == nil {
+		cfg.formatFloat = strconv.FormatFloat
+	}
+	if cfg.formatInt == nil {
+		cfg.formatInt = strconv.FormatInt
 	}
 	return cfg
 }
@@ -234,7 +276,12 @@ func RoundMode(v float64, scale int, mode RoundingMode) float64 {
 
 // RoundStr returns Round formatted with fixed scale digits.
 func RoundStr(v float64, scale int) string {
-	return strconv.FormatFloat(Round(v, scale), 'f', maxInt(scale, 0), 64)
+	return RoundStrWithOptions(v, scale)
+}
+
+// RoundStrWithOptions returns Round formatted with fixed scale digits using custom providers.
+func RoundStrWithOptions(v float64, scale int, opts ...FormatOption) string {
+	return applyFormatOptions(opts).formatFloat(Round(v, scale), 'f', maxInt(scale, 0), 64)
 }
 
 // RoundHalfEvenFloat rounds with banker rounding.
@@ -245,8 +292,14 @@ func RoundDownFloat(v float64, scale int) float64 { return RoundMode(v, scale, R
 
 // DecimalFormat formats v with common decimal patterns such as "0", "0.00", ",##0.00" and percent patterns.
 func DecimalFormat(format string, v float64) string {
+	return DecimalFormatWithOptions(format, v)
+}
+
+// DecimalFormatWithOptions formats v with common decimal patterns using custom providers.
+func DecimalFormatWithOptions(format string, v float64, opts ...FormatOption) string {
+	cfg := applyFormatOptions(opts)
 	if format == "" {
-		return strconv.FormatFloat(v, 'f', 0, 64)
+		return cfg.formatFloat(v, 'f', 0, 64)
 	}
 	percent := strings.Contains(format, "%")
 	if percent {
@@ -260,7 +313,7 @@ func DecimalFormat(format string, v float64) string {
 			}
 		}
 	}
-	out := strconv.FormatFloat(Round(v, decimals), 'f', decimals, 64)
+	out := cfg.formatFloat(Round(v, decimals), 'f', decimals, 64)
 	if strings.Contains(format, ",") {
 		out = addThousands(out)
 	}
@@ -271,11 +324,21 @@ func DecimalFormat(format string, v float64) string {
 }
 
 // DecimalFormatMoney formats money with comma grouping and two decimal places.
-func DecimalFormatMoney(v float64) string { return DecimalFormat(",##0.00", v) }
+func DecimalFormatMoney(v float64) string { return DecimalFormatMoneyWithOptions(v) }
+
+// DecimalFormatMoneyWithOptions formats money with comma grouping and two decimal places using custom providers.
+func DecimalFormatMoneyWithOptions(v float64, opts ...FormatOption) string {
+	return DecimalFormatWithOptions(",##0.00", v, opts...)
+}
 
 // FormatPercent formats number as a percentage with scale fraction digits.
 func FormatPercent(number float64, scale int) string {
-	return DecimalFormat("0."+strings.Repeat("0", maxInt(scale, 0))+"%", number)
+	return FormatPercentWithOptions(number, scale)
+}
+
+// FormatPercentWithOptions formats number as a percentage with scale fraction digits using custom providers.
+func FormatPercentWithOptions(number float64, scale int, opts ...FormatOption) string {
+	return DecimalFormatWithOptions("0."+strings.Repeat("0", maxInt(scale, 0))+"%", number, opts...)
 }
 
 // IsNumber reports whether s is a valid number, including hex and scientific notation.
@@ -571,17 +634,23 @@ func Multiple(m, n int) int {
 
 // GetBinaryStr returns the binary representation of common numeric values.
 func GetBinaryStr(number any) string {
+	return GetBinaryStrWithOptions(number)
+}
+
+// GetBinaryStrWithOptions returns the binary representation using custom providers.
+func GetBinaryStrWithOptions(number any, opts ...FormatOption) string {
+	cfg := applyFormatOptions(opts)
 	switch v := number.(type) {
 	case int:
-		return strconv.FormatInt(int64(v), 2)
+		return cfg.formatInt(int64(v), 2)
 	case int8:
 		return fmt.Sprintf("%08b", int64(v)&0xff)
 	case int16:
 		return fmt.Sprintf("%016b", int64(v)&0xffff)
 	case int32:
-		return strconv.FormatInt(int64(v), 2)
+		return cfg.formatInt(int64(v), 2)
 	case int64:
-		return strconv.FormatInt(v, 2)
+		return cfg.formatInt(v, 2)
 	case uint, uint8, uint16, uint32, uint64:
 		return fmt.Sprintf("%b", v)
 	case float32:
@@ -729,22 +798,37 @@ func Avg[T Number](nums ...T) float64 {
 }
 
 // ToStr converts a float64 to string and strips trailing fractional zeros.
-func ToStr(number float64) string { return ToStrStrip(number, true) }
+func ToStr(number float64) string { return ToStrWithOptions(number) }
+
+// ToStrWithOptions converts a float64 to string and strips trailing fractional zeros using custom providers.
+func ToStrWithOptions(number float64, opts ...FormatOption) string {
+	return ToStrStripWithOptions(number, true, opts...)
+}
 
 // ToStrDefault converts a pointer to string or returns defaultValue when nil.
 func ToStrDefault(number *float64, defaultValue string) string {
+	return ToStrDefaultWithOptions(number, defaultValue)
+}
+
+// ToStrDefaultWithOptions converts a pointer to string or returns defaultValue when nil using custom providers.
+func ToStrDefaultWithOptions(number *float64, defaultValue string, opts ...FormatOption) string {
 	if number == nil {
 		return defaultValue
 	}
-	return ToStr(*number)
+	return ToStrWithOptions(*number, opts...)
 }
 
 // ToStrStrip converts number to string and optionally strips trailing zeros.
 func ToStrStrip(number float64, strip bool) string {
+	return ToStrStripWithOptions(number, strip)
+}
+
+// ToStrStripWithOptions converts number to string using custom providers and optionally strips trailing zeros.
+func ToStrStripWithOptions(number float64, strip bool, opts ...FormatOption) string {
 	if !IsValid(number) {
 		return ""
 	}
-	s := strconv.FormatFloat(number, 'f', -1, 64)
+	s := applyFormatOptions(opts).formatFloat(number, 'f', -1, 64)
 	if strip {
 		s = stripTrailingZeros(s)
 	}
