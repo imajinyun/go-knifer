@@ -22,6 +22,7 @@ const (
 
 type parseConfig struct {
 	location *time.Location
+	parser   func(layout, value string, location *time.Location) (time.Time, error)
 }
 
 type nowConfig struct {
@@ -42,8 +43,17 @@ func WithLocation(location *time.Location) ParseOption {
 	return func(c *parseConfig) { c.location = location }
 }
 
+// WithParseInLocationFunc sets the parser used for layout-based date parsing.
+func WithParseInLocationFunc(parser func(layout, value string, location *time.Location) (time.Time, error)) ParseOption {
+	return func(c *parseConfig) {
+		if parser != nil {
+			c.parser = parser
+		}
+	}
+}
+
 func applyParseOptions(opts []ParseOption) parseConfig {
-	cfg := parseConfig{location: time.Local}
+	cfg := parseConfig{location: time.Local, parser: time.ParseInLocation}
 	for _, opt := range opts {
 		if opt != nil {
 			opt(&cfg)
@@ -51,6 +61,9 @@ func applyParseOptions(opts []ParseOption) parseConfig {
 	}
 	if cfg.location == nil {
 		cfg.location = time.Local
+	}
+	if cfg.parser == nil {
+		cfg.parser = time.ParseInLocation
 	}
 	return cfg
 }
@@ -123,7 +136,7 @@ func ParseDateWithOptions(s string, opts ...ParseOption) (time.Time, error) {
 		"2006-01-02T15:04:05",
 	}
 	for _, p := range patterns {
-		if t, err := time.ParseInLocation(p, s, cfg.location); err == nil {
+		if t, err := cfg.parser(p, s, cfg.location); err == nil {
 			return t, nil
 		}
 	}
@@ -138,7 +151,7 @@ func ParseDateLayout(s, layout string) (time.Time, error) {
 // ParseDateLayoutWithOptions parses s with the specified Go layout and explicit options.
 func ParseDateLayoutWithOptions(s, layout string, opts ...ParseOption) (time.Time, error) {
 	cfg := applyParseOptions(opts)
-	t, err := time.ParseInLocation(layout, s, cfg.location)
+	t, err := cfg.parser(layout, s, cfg.location)
 	if err != nil {
 		return time.Time{}, wrapDateParse("parse date with layout", err)
 	}

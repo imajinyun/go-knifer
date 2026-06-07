@@ -2,6 +2,7 @@ package json
 
 import (
 	"encoding/json"
+	"io"
 	"strings"
 )
 
@@ -11,8 +12,9 @@ type encodeConfig struct {
 }
 
 type parseConfig struct {
-	cfg           *Config
-	unmarshalFunc func([]byte, any) error
+	cfg            *Config
+	unmarshalFunc  func([]byte, any) error
+	decoderFactory func(io.Reader) *json.Decoder
 }
 
 type validConfig struct {
@@ -115,6 +117,25 @@ func WithParseUnmarshalFunc(unmarshal func([]byte, any) error) ParseOption {
 	}
 }
 
+// WithParseDecoderFactory sets a per-call decoder factory for token parsing helpers.
+func WithParseDecoderFactory(factory func(io.Reader) *json.Decoder) ParseOption {
+	return func(c *parseConfig) {
+		if factory != nil {
+			c.decoderFactory = factory
+		}
+	}
+}
+
+// WithDecoderFactory sets the decoder factory stored in the JSON config.
+func WithDecoderFactory(factory func(io.Reader) *json.Decoder) EncodeOption {
+	return func(c *encodeConfig) {
+		if factory != nil {
+			c.cfg = c.cfg.Clone()
+			c.cfg.DecoderFactory = factory
+		}
+	}
+}
+
 // WithBeanConfig sets the JSON config used by bean conversion helpers.
 func WithBeanConfig(cfg *Config) BeanOption {
 	return func(c *beanConfig) {
@@ -185,6 +206,10 @@ func ParseWithOptions(src any, opts ...ParseOption) (any, error) {
 	if cfg.unmarshalFunc != nil {
 		cfg.cfg = cfg.cfg.Clone()
 		cfg.cfg.UnmarshalFunc = cfg.unmarshalFunc
+	}
+	if cfg.decoderFactory != nil {
+		cfg.cfg = cfg.cfg.Clone()
+		cfg.cfg.DecoderFactory = cfg.decoderFactory
 	}
 	return ParseWithConfig(src, cfg.cfg)
 }

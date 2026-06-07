@@ -23,8 +23,10 @@ func parseBytesWithConfig(b []byte, cfg *Config) (any, error) {
 		}
 		return wrap(raw, cfg), nil
 	}
-	dec := json.NewDecoder(bytes.NewReader(b))
-	dec.UseNumber()
+	dec := newDecoderWithConfig(bytes.NewReader(b), cfg)
+	if dec == nil {
+		return nil, NewJSONError("json: decoder factory returned nil")
+	}
 	tok, err := dec.Token()
 	if err != nil {
 		return nil, WrapJSONError(err, "json: parse failed")
@@ -40,6 +42,15 @@ func parseBytesWithConfig(b []byte, cfg *Config) (any, error) {
 		return nil, WrapJSONError(err, "json: read trailing content failed")
 	}
 	return v, nil
+}
+
+func newDecoderWithConfig(r io.Reader, cfg *Config) *json.Decoder {
+	if cfg != nil && cfg.DecoderFactory != nil {
+		return cfg.DecoderFactory(r)
+	}
+	dec := json.NewDecoder(r)
+	dec.UseNumber()
+	return dec
 }
 
 // parseValue 根据当前 token 递归解析。

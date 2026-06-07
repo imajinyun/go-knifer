@@ -346,6 +346,28 @@ func TestResolveWithOptions(t *testing.T) {
 	}
 }
 
+func TestTLSReaderWithOptionsUsesReadAll(t *testing.T) {
+	b := NewTLSConfigBuilder()
+	called := false
+	err := b.AddRootCAReaderWithOptions(strings.NewReader("ignored"), WithTLSReadAll(func(r io.Reader) ([]byte, error) {
+		called = true
+		data, err := io.ReadAll(r)
+		if err != nil {
+			return nil, err
+		}
+		if string(data) != "ignored" {
+			t.Fatalf("reader data = %q", data)
+		}
+		return []byte("not a certificate"), nil
+	}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !called {
+		t.Fatal("custom TLS readAll provider was not called")
+	}
+}
+
 func TestMultipartFileExts(t *testing.T) {
 	req := multipartAvatarRequest(t, "a.txt")
 	setting := NewUploadSetting()

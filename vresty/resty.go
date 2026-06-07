@@ -240,6 +240,16 @@ func WithJSONUnmarshalFunc(unmarshal func([]byte, any) error) RequestOption {
 	return restyimpl.WithJSONUnmarshalFunc(unmarshal)
 }
 
+// WithJSONDecodeReadAllFunc sets the reader used before custom JSON unmarshalling.
+func WithJSONDecodeReadAllFunc(readAll func(io.Reader) ([]byte, error)) RequestOption {
+	return restyimpl.WithJSONDecodeReadAllFunc(readAll)
+}
+
+// WithMaxDecodeBytes limits bytes read before custom JSON unmarshalling. Non-positive means unlimited.
+func WithMaxDecodeBytes(maxBytes int64) RequestOption {
+	return restyimpl.WithMaxDecodeBytes(maxBytes)
+}
+
 // WithSaveFilePerm sets the file permission used when creating the destination file.
 func WithSaveFilePerm(perm fs.FileMode) SaveOption { return restyimpl.WithSaveFilePerm(perm) }
 

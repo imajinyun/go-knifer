@@ -9,6 +9,7 @@ import (
 
 type tlsFileConfig struct {
 	readFile func(string) ([]byte, error)
+	readAll  func(io.Reader) ([]byte, error)
 }
 
 // TLSFileOption customizes TLS file loading helpers.
@@ -19,8 +20,13 @@ func WithTLSReadFile(readFile func(string) ([]byte, error)) TLSFileOption {
 	return func(c *tlsFileConfig) { c.readFile = readFile }
 }
 
+// WithTLSReadAll sets the reader drain function used by TLS reader helpers.
+func WithTLSReadAll(readAll func(io.Reader) ([]byte, error)) TLSFileOption {
+	return func(c *tlsFileConfig) { c.readAll = readAll }
+}
+
 func applyTLSFileOptions(opts []TLSFileOption) tlsFileConfig {
-	cfg := tlsFileConfig{readFile: os.ReadFile}
+	cfg := tlsFileConfig{readFile: os.ReadFile, readAll: io.ReadAll}
 	for _, opt := range opts {
 		if opt != nil {
 			opt(&cfg)
@@ -28,6 +34,9 @@ func applyTLSFileOptions(opts []TLSFileOption) tlsFileConfig {
 	}
 	if cfg.readFile == nil {
 		cfg.readFile = os.ReadFile
+	}
+	if cfg.readAll == nil {
+		cfg.readAll = io.ReadAll
 	}
 	return cfg
 }
@@ -106,7 +115,13 @@ func (b *TLSConfigBuilder) AddRootCAFileWithOptions(path string, opts ...TLSFile
 
 // AddRootCAReader appends PEM certificates from r to RootCAs.
 func (b *TLSConfigBuilder) AddRootCAReader(r io.Reader) error {
-	pem, err := io.ReadAll(r)
+	return b.AddRootCAReaderWithOptions(r)
+}
+
+// AddRootCAReaderWithOptions appends PEM certificates from r to RootCAs using options.
+func (b *TLSConfigBuilder) AddRootCAReaderWithOptions(r io.Reader, opts ...TLSFileOption) error {
+	cfg := applyTLSFileOptions(opts)
+	pem, err := cfg.readAll(r)
 	if err != nil {
 		return err
 	}

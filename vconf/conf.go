@@ -19,6 +19,10 @@ type (
 	DecryptFunc = confimpl.DecryptFunc
 	// ExpandOption customizes configuration variable expansion per call.
 	ExpandOption = confimpl.ExpandOption
+	// ValueOption customizes typed value getters per call.
+	ValueOption = confimpl.ValueOption
+	// BindOption customizes struct binding per call.
+	BindOption = confimpl.BindOption
 	// ParseOption customizes ParseByExt and full YAML parsing helpers per call.
 	ParseOption = confimpl.ParseOption
 	// FieldRule describes one schema validation rule.
@@ -75,6 +79,36 @@ func Merge(configs ...*Conf) *Conf { return confimpl.Merge(configs...) }
 
 // WithEnvLookup sets the environment lookup function used for ${ENV:NAME} placeholders.
 func WithEnvLookup(lookup func(string) string) ExpandOption { return confimpl.WithEnvLookup(lookup) }
+
+// WithIntParser sets the parser used by Conf.GetIntWithOptions.
+func WithIntParser(parser func(string) (int, error)) ValueOption {
+	return confimpl.WithIntParser(parser)
+}
+
+// WithBoolParser sets the parser used by Conf.GetBoolWithOptions.
+func WithBoolParser(parser func(string) (bool, error)) ValueOption {
+	return confimpl.WithBoolParser(parser)
+}
+
+// WithBindBoolParser sets the bool parser used by Conf.BindWithOptions and Conf.BindGroupWithOptions.
+func WithBindBoolParser(parser func(string) (bool, error)) BindOption {
+	return confimpl.WithBindBoolParser(parser)
+}
+
+// WithBindIntParser sets the signed integer parser used by Conf.BindWithOptions and Conf.BindGroupWithOptions.
+func WithBindIntParser(parser func(string, int, int) (int64, error)) BindOption {
+	return confimpl.WithBindIntParser(parser)
+}
+
+// WithBindUintParser sets the unsigned integer parser used by Conf.BindWithOptions and Conf.BindGroupWithOptions.
+func WithBindUintParser(parser func(string, int, int) (uint64, error)) BindOption {
+	return confimpl.WithBindUintParser(parser)
+}
+
+// WithBindFloatParser sets the floating-point parser used by Conf.BindWithOptions and Conf.BindGroupWithOptions.
+func WithBindFloatParser(parser func(string, int) (float64, error)) BindOption {
+	return confimpl.WithBindFloatParser(parser)
+}
 
 // Base64Decrypt decodes base64 encrypted configuration values.
 func Base64Decrypt(cipherText string) (string, error) { return confimpl.Base64Decrypt(cipherText) }

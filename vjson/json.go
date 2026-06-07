@@ -1,6 +1,9 @@
 package vjson
 
 import (
+	stdjson "encoding/json"
+	"io"
+
 	jsonx "github.com/imajinyun/go-knifer/internal/json"
 	xmlimpl "github.com/imajinyun/go-knifer/internal/xml"
 )
@@ -87,6 +90,11 @@ func WithUnmarshalFunc(unmarshal func([]byte, any) error) EncodeOption {
 	return jsonx.WithUnmarshalFunc(unmarshal)
 }
 
+// WithDecoderFactory sets the decoder factory stored in the JSON config.
+func WithDecoderFactory(factory func(io.Reader) *stdjson.Decoder) EncodeOption {
+	return jsonx.WithDecoderFactory(factory)
+}
+
 // WithFormatIndent sets the indentation string used by FormatWithOptions.
 func WithFormatIndent(indent string) FormatOption { return jsonx.WithFormatIndent(indent) }
 
@@ -102,6 +110,11 @@ func WithParseConfig(cfg *Config) ParseOption { return jsonx.WithParseConfig(cfg
 // WithParseUnmarshalFunc sets a per-call unmarshal provider for parsing helpers.
 func WithParseUnmarshalFunc(unmarshal func([]byte, any) error) ParseOption {
 	return jsonx.WithParseUnmarshalFunc(unmarshal)
+}
+
+// WithParseDecoderFactory sets a per-call decoder factory for parsing helpers.
+func WithParseDecoderFactory(factory func(io.Reader) *stdjson.Decoder) ParseOption {
+	return jsonx.WithParseDecoderFactory(factory)
 }
 
 // WithJSONValidFunc sets the validator used by IsJSONWithOptions.

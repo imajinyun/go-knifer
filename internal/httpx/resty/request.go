@@ -37,6 +37,8 @@ type HTTPRequest struct {
 	clientFactory func() *grestry.Client
 	jsonMarshal   func(any) ([]byte, error)
 	jsonUnmarshal func([]byte, any) error
+	jsonReadAll   func(io.Reader) ([]byte, error)
+	maxDecode     int64
 	result        any
 	errorResult   any
 }
@@ -228,6 +230,20 @@ func WithJSONUnmarshalFunc(unmarshal func([]byte, any) error) RequestOption {
 			r.jsonUnmarshal = unmarshal
 		}
 	}
+}
+
+// WithJSONDecodeReadAllFunc sets the reader used before custom JSON unmarshalling.
+func WithJSONDecodeReadAllFunc(readAll func(io.Reader) ([]byte, error)) RequestOption {
+	return func(r *HTTPRequest) {
+		if readAll != nil {
+			r.jsonReadAll = readAll
+		}
+	}
+}
+
+// WithMaxDecodeBytes limits bytes read before custom JSON unmarshalling. Non-positive means unlimited.
+func WithMaxDecodeBytes(maxBytes int64) RequestOption {
+	return func(r *HTTPRequest) { r.maxDecode = maxBytes }
 }
 
 // Method sets the HTTP method.
@@ -443,7 +459,7 @@ func (r *HTTPRequest) buildClient() *grestry.Client {
 	}
 	if r.jsonUnmarshal != nil {
 		c.AddContentTypeDecoder("json", func(reader io.Reader, v any) error {
-			data, err := io.ReadAll(reader)
+			data, err := readAllWithLimit(reader, r.maxDecode, r.jsonReadAll)
 			if err != nil {
 				return err
 			}

@@ -27,6 +27,24 @@ type Cookie struct {
 
 func wrapResponse(r *grestry.Response) *HTTPResponse { return &HTTPResponse{resp: r} }
 
+func readAllWithLimit(r io.Reader, maxBytes int64, readAll func(io.Reader) ([]byte, error)) ([]byte, error) {
+	if readAll == nil {
+		readAll = io.ReadAll
+	}
+	if maxBytes <= 0 {
+		return readAll(r)
+	}
+	limited := &io.LimitedReader{R: r, N: maxBytes + 1}
+	data, err := readAll(limited)
+	if err != nil {
+		return nil, err
+	}
+	if int64(len(data)) > maxBytes {
+		return nil, HTTPErrorf("response body exceeds max bytes: %d", maxBytes)
+	}
+	return data, nil
+}
+
 type saveConfig struct {
 	filePerm        fs.FileMode
 	dirPerm         fs.FileMode

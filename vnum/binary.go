@@ -10,7 +10,15 @@ func GetBinaryStr(number any) string { return numimpl.GetBinaryStr(number) }
 
 func BinaryToInt(binaryStr string) (int, error) { return numimpl.BinaryToInt(binaryStr) }
 
+func BinaryToIntWithOptions(binaryStr string, opts ...ParseOption) (int, error) {
+	return numimpl.BinaryToIntWithOptions(binaryStr, opts...)
+}
+
 func BinaryToLong(binaryStr string) (int64, error) { return numimpl.BinaryToLong(binaryStr) }
+
+func BinaryToLongWithOptions(binaryStr string, opts ...ParseOption) (int64, error) {
+	return numimpl.BinaryToLongWithOptions(binaryStr, opts...)
+}
 
 func ToBytes(value int32) []byte { return numimpl.ToBytes(value) }
 

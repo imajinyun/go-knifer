@@ -6,9 +6,11 @@ import (
 	"io"
 )
 
-// generateID creates a random hexadecimal id with 16 characters.
-func generateID() string {
-	return generateIDWithReader(rand.Reader)
+func newIDGeneratorWithReader(r io.Reader) func() string {
+	if r == nil {
+		r = rand.Reader
+	}
+	return func() string { return generateIDWithReader(r) }
 }
 
 func generateIDWithReader(r io.Reader) string {

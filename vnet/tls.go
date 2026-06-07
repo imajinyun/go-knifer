@@ -14,11 +14,19 @@ func WithTLSReadFile(readFile func(string) ([]byte, error)) TLSFileOption {
 	return netimpl.WithTLSReadFile(readFile)
 }
 
+func WithTLSReadAll(readAll func(io.Reader) ([]byte, error)) TLSFileOption {
+	return netimpl.WithTLSReadAll(readAll)
+}
+
 func AddRootCAFileWithOptions(b *TLSConfigBuilder, path string, opts ...TLSFileOption) error {
 	return b.AddRootCAFileWithOptions(path, opts...)
 }
 
 func AddRootCAReader(b *TLSConfigBuilder, r io.Reader) error { return b.AddRootCAReader(r) }
+
+func AddRootCAReaderWithOptions(b *TLSConfigBuilder, r io.Reader, opts ...TLSFileOption) error {
+	return b.AddRootCAReaderWithOptions(r, opts...)
+}
 
 func AddRootCABytes(b *TLSConfigBuilder, pem []byte) error { return b.AddRootCABytes(pem) }
 

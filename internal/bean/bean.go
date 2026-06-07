@@ -22,6 +22,14 @@ type Options struct {
 	IgnoreEmpty bool
 	// IgnoreZero skips zero source values when copying to maps or structs.
 	IgnoreZero bool
+	// ParseBool parses strings during weak bool conversion. nil keeps default semantics.
+	ParseBool func(string) (bool, error)
+	// ParseInt parses strings during weak signed integer conversion. nil means strconv.ParseInt.
+	ParseInt func(string, int, int) (int64, error)
+	// ParseUint parses strings during weak unsigned integer conversion. nil means strconv.ParseUint.
+	ParseUint func(string, int, int) (uint64, error)
+	// ParseFloat parses strings during weak floating-point conversion. nil means strconv.ParseFloat.
+	ParseFloat func(string, int) (float64, error)
 }
 
 // NewOptions returns default mapping options.
@@ -30,6 +38,10 @@ func NewOptions() Options {
 		TagNames:        []string{"bean", "json", "xml", "ref"},
 		WeaklyTyped:     true,
 		CaseInsensitive: true,
+		ParseBool:       defaultBoolParser,
+		ParseInt:        strconv.ParseInt,
+		ParseUint:       strconv.ParseUint,
+		ParseFloat:      strconv.ParseFloat,
 	}
 }
 
@@ -51,6 +63,42 @@ func WithIgnoreEmpty(enable bool) Option { return func(o *Options) { o.IgnoreEmp
 
 // WithIgnoreZero skips zero source values.
 func WithIgnoreZero(enable bool) Option { return func(o *Options) { o.IgnoreZero = enable } }
+
+// WithBoolParser sets the parser used during weak string-to-bool conversion.
+func WithBoolParser(parser func(string) (bool, error)) Option {
+	return func(o *Options) {
+		if parser != nil {
+			o.ParseBool = parser
+		}
+	}
+}
+
+// WithIntParser sets the parser used during weak string-to-signed-integer conversion.
+func WithIntParser(parser func(string, int, int) (int64, error)) Option {
+	return func(o *Options) {
+		if parser != nil {
+			o.ParseInt = parser
+		}
+	}
+}
+
+// WithUintParser sets the parser used during weak string-to-unsigned-integer conversion.
+func WithUintParser(parser func(string, int, int) (uint64, error)) Option {
+	return func(o *Options) {
+		if parser != nil {
+			o.ParseUint = parser
+		}
+	}
+}
+
+// WithFloatParser sets the parser used during weak string-to-floating-point conversion.
+func WithFloatParser(parser func(string, int) (float64, error)) Option {
+	return func(o *Options) {
+		if parser != nil {
+			o.ParseFloat = parser
+		}
+	}
+}
 
 // ToMap converts a struct or map to map[string]any using field tags and aliases.
 func ToMap(src any, opts ...Option) (map[string]any, error) {
@@ -144,7 +192,33 @@ func applyOptions(opts ...Option) Options {
 			opt(&cfg)
 		}
 	}
+	if cfg.ParseBool == nil {
+		cfg.ParseBool = defaultBoolParser
+	}
+	if cfg.ParseInt == nil {
+		cfg.ParseInt = strconv.ParseInt
+	}
+	if cfg.ParseUint == nil {
+		cfg.ParseUint = strconv.ParseUint
+	}
+	if cfg.ParseFloat == nil {
+		cfg.ParseFloat = strconv.ParseFloat
+	}
 	return cfg
+}
+
+func optionsFromConfig(cfg Options) []Option {
+	return []Option{
+		WithTagNames(cfg.TagNames...),
+		WithWeaklyTyped(cfg.WeaklyTyped),
+		WithCaseInsensitive(cfg.CaseInsensitive),
+		WithIgnoreEmpty(cfg.IgnoreEmpty),
+		WithIgnoreZero(cfg.IgnoreZero),
+		WithBoolParser(cfg.ParseBool),
+		WithIntParser(cfg.ParseInt),
+		WithUintParser(cfg.ParseUint),
+		WithFloatParser(cfg.ParseFloat),
+	}
 }
 
 func collectProperties(src any, cfg Options) ([]property, error) {
@@ -369,28 +443,28 @@ func assignValue(dst, src reflect.Value, cfg Options) error {
 		dst.SetString(valueString(src))
 		return nil
 	case reflect.Bool:
-		b, err := valueBool(src)
+		b, err := valueBool(src, cfg)
 		if err != nil {
 			return err
 		}
 		dst.SetBool(b)
 		return nil
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		i, err := valueInt(src, dst.Type().Bits())
+		i, err := valueInt(src, dst.Type().Bits(), cfg)
 		if err != nil {
 			return err
 		}
 		dst.SetInt(i)
 		return nil
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		u, err := valueUint(src, dst.Type().Bits())
+		u, err := valueUint(src, dst.Type().Bits(), cfg)
 		if err != nil {
 			return err
 		}
 		dst.SetUint(u)
 		return nil
 	case reflect.Float32, reflect.Float64:
-		f, err := valueFloat(src, dst.Type().Bits())
+		f, err := valueFloat(src, dst.Type().Bits(), cfg)
 		if err != nil {
 			return err
 		}
@@ -431,7 +505,7 @@ func assignSlice(dst, src reflect.Value, cfg Options) error {
 
 func assignMap(dst, src reflect.Value, cfg Options) error {
 	if src.Kind() == reflect.Struct {
-		m, err := ToMap(src.Interface(), WithTagNames(cfg.TagNames...), WithWeaklyTyped(cfg.WeaklyTyped), WithCaseInsensitive(cfg.CaseInsensitive), WithIgnoreEmpty(cfg.IgnoreEmpty), WithIgnoreZero(cfg.IgnoreZero))
+		m, err := ToMap(src.Interface(), optionsFromConfig(cfg)...)
 		if err != nil {
 			return err
 		}
@@ -461,7 +535,7 @@ func assignStruct(dst, src reflect.Value, cfg Options) error {
 	if !src.CanInterface() {
 		return fmt.Errorf("cannot assign inaccessible %s", src.Type())
 	}
-	return CopyProperties(src.Interface(), dst.Addr().Interface(), WithTagNames(cfg.TagNames...), WithWeaklyTyped(cfg.WeaklyTyped), WithCaseInsensitive(cfg.CaseInsensitive), WithIgnoreEmpty(cfg.IgnoreEmpty), WithIgnoreZero(cfg.IgnoreZero))
+	return CopyProperties(src.Interface(), dst.Addr().Interface(), optionsFromConfig(cfg)...)
 }
 
 func valueString(v reflect.Value) string {
@@ -478,7 +552,7 @@ func valueString(v reflect.Value) string {
 	return fmt.Sprint(v)
 }
 
-func valueBool(v reflect.Value) (bool, error) {
+func valueBool(v reflect.Value, cfg Options) (bool, error) {
 	v = indirect(v)
 	if !v.IsValid() {
 		return false, nil
@@ -487,15 +561,7 @@ func valueBool(v reflect.Value) (bool, error) {
 	case reflect.Bool:
 		return v.Bool(), nil
 	case reflect.String:
-		s := strings.ToLower(strings.TrimSpace(v.String()))
-		switch s {
-		case "true", "yes", "y", "ok", "1", "on":
-			return true, nil
-		case "false", "no", "n", "0", "off", "":
-			return false, nil
-		default:
-			return false, fmt.Errorf("cannot parse bool %q", v.String())
-		}
+		return cfg.ParseBool(v.String())
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return v.Int() != 0, nil
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
@@ -507,7 +573,7 @@ func valueBool(v reflect.Value) (bool, error) {
 	}
 }
 
-func valueInt(v reflect.Value, bits int) (int64, error) {
+func valueInt(v reflect.Value, bits int, cfg Options) (int64, error) {
 	v = indirect(v)
 	if !v.IsValid() {
 		return 0, nil
@@ -533,11 +599,11 @@ func valueInt(v reflect.Value, bits int) (int64, error) {
 		if s == "" {
 			return 0, nil
 		}
-		parsed, err := strconv.ParseInt(s, 10, bits)
+		parsed, err := cfg.ParseInt(s, 10, bits)
 		if err == nil {
 			return parsed, nil
 		}
-		f, ferr := strconv.ParseFloat(s, 64)
+		f, ferr := cfg.ParseFloat(s, 64)
 		if ferr != nil {
 			return 0, err
 		}
@@ -555,7 +621,7 @@ func valueInt(v reflect.Value, bits int) (int64, error) {
 	return n, nil
 }
 
-func valueUint(v reflect.Value, bits int) (uint64, error) {
+func valueUint(v reflect.Value, bits int, cfg Options) (uint64, error) {
 	v = indirect(v)
 	if !v.IsValid() {
 		return 0, nil
@@ -585,11 +651,11 @@ func valueUint(v reflect.Value, bits int) (uint64, error) {
 		if s == "" {
 			return 0, nil
 		}
-		parsed, err := strconv.ParseUint(s, 10, bits)
+		parsed, err := cfg.ParseUint(s, 10, bits)
 		if err == nil {
 			return parsed, nil
 		}
-		f, ferr := strconv.ParseFloat(s, 64)
+		f, ferr := cfg.ParseFloat(s, 64)
 		if ferr != nil || f < 0 {
 			return 0, err
 		}
@@ -603,7 +669,7 @@ func valueUint(v reflect.Value, bits int) (uint64, error) {
 	return n, nil
 }
 
-func valueFloat(v reflect.Value, bits int) (float64, error) {
+func valueFloat(v reflect.Value, bits int, cfg Options) (float64, error) {
 	v = indirect(v)
 	if !v.IsValid() {
 		return 0, nil
@@ -625,9 +691,21 @@ func valueFloat(v reflect.Value, bits int) (float64, error) {
 		if s == "" {
 			return 0, nil
 		}
-		return strconv.ParseFloat(s, bits)
+		return cfg.ParseFloat(s, bits)
 	default:
 		return 0, fmt.Errorf("cannot convert %s to float", v.Type())
+	}
+}
+
+func defaultBoolParser(s string) (bool, error) {
+	s = strings.ToLower(strings.TrimSpace(s))
+	switch s {
+	case "true", "yes", "y", "ok", "1", "on":
+		return true, nil
+	case "false", "no", "n", "0", "off", "":
+		return false, nil
+	default:
+		return false, fmt.Errorf("cannot parse bool %q", s)
 	}
 }
 

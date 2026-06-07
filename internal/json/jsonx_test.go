@@ -1,6 +1,8 @@
 package json
 
 import (
+	stdjson "encoding/json"
+	"io"
 	"strings"
 	"testing"
 	"time"
@@ -205,6 +207,45 @@ func TestParseObjAndArrayWithOptionsUseUnmarshalFunc(t *testing.T) {
 	}
 	if !arrCalled || arr.GetString(0) != "provided" {
 		t.Fatalf("array unmarshal provider called=%v arr=%s", arrCalled, arr.String())
+	}
+}
+
+func TestParseWithOptionsUsesDecoderFactory(t *testing.T) {
+	called := false
+	v, err := ParseWithOptions(`{"ignored":true}`, WithParseDecoderFactory(func(io.Reader) *stdjson.Decoder {
+		called = true
+		dec := stdjson.NewDecoder(strings.NewReader(`{"provided":"yes"}`))
+		dec.UseNumber()
+		return dec
+	}))
+	if err != nil {
+		t.Fatalf("ParseWithOptions decoder factory: %v", err)
+	}
+	obj, ok := v.(*JSONObject)
+	if !called || !ok || obj.GetString("provided") != "yes" {
+		t.Fatalf("decoder factory called=%v value=%#v", called, v)
+	}
+	if _, err := ParseWithOptions(`{"ignored":true}`, WithParseDecoderFactory(func(io.Reader) *stdjson.Decoder { return nil })); err == nil {
+		t.Fatal("nil decoder factory should fail")
+	}
+}
+
+func TestWrapUsesConfigDecoderFactory(t *testing.T) {
+	type tagged struct {
+		Name string `json:"name"`
+	}
+	called := false
+	out, err := ToJSONStr(tagged{Name: "ignored"}, WithDecoderFactory(func(io.Reader) *stdjson.Decoder {
+		called = true
+		dec := stdjson.NewDecoder(strings.NewReader(`{"name":"provided"}`))
+		dec.UseNumber()
+		return dec
+	}))
+	if err != nil {
+		t.Fatalf("ToJSONStr: %v", err)
+	}
+	if !called || out != `{"name":"provided"}` {
+		t.Fatalf("decoder factory called=%v out=%s", called, out)
 	}
 }
 

@@ -104,8 +104,10 @@ func wrap(v any, cfg *Config) any {
 			}
 			return wrap(raw, cfg)
 		}
-		dec := json.NewDecoder(bytes.NewReader(b))
-		dec.UseNumber()
+		dec := newDecoderWithConfig(bytes.NewReader(b), cfg)
+		if dec == nil {
+			return fmt.Sprint(v)
+		}
 		var raw any
 		if err := dec.Decode(&raw); err != nil {
 			return fmt.Sprint(v)

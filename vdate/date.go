@@ -38,6 +38,12 @@ func Parse(s string) (time.Time, error)                { return dateimpl.ParseDa
 func ParseLayout(s, layout string) (time.Time, error)  { return dateimpl.ParseDateLayout(s, layout) }
 func WithLocation(location *time.Location) ParseOption { return dateimpl.WithLocation(location) }
 func WithClock(clock func() time.Time) NowOption       { return dateimpl.WithClock(clock) }
+func WithParseInLocationFunc(
+	parser func(layout, value string, location *time.Location) (time.Time, error),
+) ParseOption {
+	return dateimpl.WithParseInLocationFunc(parser)
+}
+
 func ParseWithOptions(s string, opts ...ParseOption) (time.Time, error) {
 	return dateimpl.ParseDateWithOptions(s, opts...)
 }

@@ -1,6 +1,7 @@
 package vobj
 
 import (
+	"io"
 	"reflect"
 
 	objimpl "github.com/imajinyun/go-knifer/internal/obj"
@@ -11,6 +12,25 @@ type Ordered interface {
 	~int | ~int8 | ~int16 | ~int32 | ~int64 |
 		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr |
 		~float32 | ~float64 | ~string
+}
+
+type (
+	// Encoder is the serialization encoder contract used by object helpers.
+	Encoder = objimpl.Encoder
+	// Decoder is the serialization decoder contract used by object helpers.
+	Decoder = objimpl.Decoder
+	// CodecOption customizes object serialization helpers per call.
+	CodecOption = objimpl.CodecOption
+)
+
+// WithEncoderFactory sets the encoder factory used by SerializeWithOptions and CloneWithOptions.
+func WithEncoderFactory(factory func(io.Writer) Encoder) CodecOption {
+	return objimpl.WithEncoderFactory(factory)
+}
+
+// WithDecoderFactory sets the decoder factory used by DeserializeWithOptions and CloneWithOptions.
+func WithDecoderFactory(factory func(io.Reader) Decoder) CodecOption {
+	return objimpl.WithDecoderFactory(factory)
 }
 
 // Equal reports whether a and b are equal. Numeric values are compared by value.
@@ -71,17 +91,42 @@ func Accept[T any](source *T, consumer func(T)) { objimpl.Accept(source, consume
 // Clone creates a deep copy through gob serialization.
 func Clone[T any](src T) (T, error) { return objimpl.Clone(src) }
 
+// CloneWithOptions creates a deep copy using per-call codec options.
+func CloneWithOptions[T any](src T, opts ...CodecOption) (T, error) {
+	return objimpl.CloneWithOptions(src, opts...)
+}
+
 // CloneIfPossible returns a cloned value when cloning succeeds, otherwise src.
 func CloneIfPossible[T any](src T) T { return objimpl.CloneIfPossible(src) }
+
+// CloneIfPossibleWithOptions returns a cloned value using per-call codec options when cloning succeeds, otherwise src.
+func CloneIfPossibleWithOptions[T any](src T, opts ...CodecOption) T {
+	return objimpl.CloneIfPossibleWithOptions(src, opts...)
+}
 
 // CloneByStream creates a deep copy through gob serialization.
 func CloneByStream[T any](src T) (T, error) { return objimpl.CloneByStream(src) }
 
+// CloneByStreamWithOptions creates a deep copy using per-call codec options.
+func CloneByStreamWithOptions[T any](src T, opts ...CodecOption) (T, error) {
+	return objimpl.CloneByStreamWithOptions(src, opts...)
+}
+
 // Serialize encodes obj with gob.
 func Serialize[T any](obj T) ([]byte, error) { return objimpl.Serialize(obj) }
 
+// SerializeWithOptions encodes obj using per-call codec options.
+func SerializeWithOptions[T any](obj T, opts ...CodecOption) ([]byte, error) {
+	return objimpl.SerializeWithOptions(obj, opts...)
+}
+
 // SerializeOrNil encodes obj with gob and returns nil when encoding fails.
 func SerializeOrNil[T any](obj T) []byte { return objimpl.SerializeOrNil(obj) }
+
+// SerializeOrNilWithOptions encodes obj using per-call codec options and returns nil when encoding fails.
+func SerializeOrNilWithOptions[T any](obj T, opts ...CodecOption) []byte {
+	return objimpl.SerializeOrNilWithOptions(obj, opts...)
+}
 
 // Deserialize decodes gob data into out, which must be a pointer.
 //
@@ -92,9 +137,19 @@ func Deserialize(data []byte, out any, acceptedTypes ...any) error {
 	return objimpl.Deserialize(data, out, acceptedTypes...)
 }
 
+// DeserializeWithOptions decodes data using per-call codec options.
+func DeserializeWithOptions(data []byte, out any, acceptedTypes []any, opts ...CodecOption) error {
+	return objimpl.DeserializeWithOptions(data, out, acceptedTypes, opts...)
+}
+
 // DeserializeTo decodes gob data into a new value.
 func DeserializeTo[T any](data []byte, acceptedTypes ...any) (T, error) {
 	return objimpl.DeserializeTo[T](data, acceptedTypes...)
+}
+
+// DeserializeToWithOptions decodes data into a new value using per-call codec options.
+func DeserializeToWithOptions[T any](data []byte, acceptedTypes []any, opts ...CodecOption) (T, error) {
+	return objimpl.DeserializeToWithOptions[T](data, acceptedTypes, opts...)
 }
 
 // MustDeserialize decodes gob data into a new value and panics on failure.

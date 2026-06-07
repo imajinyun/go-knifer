@@ -343,6 +343,27 @@ func TestRequestOptionContentTypeAndCharset(t *testing.T) {
 	}
 }
 
+func TestResponseReadOptions(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("abcdef"))
+	}))
+	defer srv.Close()
+
+	limited := Get(srv.URL, WithMaxResponseBytes(3)).Execute()
+	if got := limited.Bytes(); len(got) != 0 || limited.Err() == nil {
+		t.Fatalf("limited Bytes() = %q err=%v, want max bytes error", string(got), limited.Err())
+	}
+
+	readAllCalled := false
+	resp := Get(srv.URL, WithResponseReadAllFunc(func(r io.Reader) ([]byte, error) {
+		readAllCalled = true
+		return []byte("provided"), nil
+	})).Execute()
+	if got := resp.Body(); got != "provided" || !readAllCalled || resp.Err() != nil {
+		t.Fatalf("custom readAll body=%q called=%v err=%v", got, readAllCalled, resp.Err())
+	}
+}
+
 func TestRequestOptionTLSConfig(t *testing.T) {
 	client := Get("https://example.com", WithTLSConfig(&tls.Config{ServerName: "example.com"})).buildClient()
 	transport, ok := client.Transport.(*http.Transport)

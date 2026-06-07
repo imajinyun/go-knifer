@@ -18,14 +18,86 @@ type expandConfig struct {
 	envLookup func(string) string
 }
 
+type valueConfig struct {
+	parseInt  func(string) (int, error)
+	parseBool func(string) (bool, error)
+}
+
+type bindConfig struct {
+	parseBool  func(string) (bool, error)
+	parseInt   func(string, int, int) (int64, error)
+	parseUint  func(string, int, int) (uint64, error)
+	parseFloat func(string, int) (float64, error)
+}
+
 // ExpandOption customizes configuration variable expansion per call.
 type ExpandOption func(*expandConfig)
+
+// ValueOption customizes typed value getters per call.
+type ValueOption func(*valueConfig)
+
+// BindOption customizes struct binding per call.
+type BindOption func(*bindConfig)
 
 // WithEnvLookup sets the environment lookup function used for ${ENV:NAME} placeholders.
 func WithEnvLookup(lookup func(string) string) ExpandOption {
 	return func(c *expandConfig) {
 		if lookup != nil {
 			c.envLookup = lookup
+		}
+	}
+}
+
+// WithIntParser sets the parser used by GetIntWithOptions.
+func WithIntParser(parser func(string) (int, error)) ValueOption {
+	return func(c *valueConfig) {
+		if parser != nil {
+			c.parseInt = parser
+		}
+	}
+}
+
+// WithBoolParser sets the parser used by GetBoolWithOptions.
+func WithBoolParser(parser func(string) (bool, error)) ValueOption {
+	return func(c *valueConfig) {
+		if parser != nil {
+			c.parseBool = parser
+		}
+	}
+}
+
+// WithBindBoolParser sets the bool parser used by BindWithOptions and BindGroupWithOptions.
+func WithBindBoolParser(parser func(string) (bool, error)) BindOption {
+	return func(c *bindConfig) {
+		if parser != nil {
+			c.parseBool = parser
+		}
+	}
+}
+
+// WithBindIntParser sets the signed integer parser used by BindWithOptions and BindGroupWithOptions.
+func WithBindIntParser(parser func(string, int, int) (int64, error)) BindOption {
+	return func(c *bindConfig) {
+		if parser != nil {
+			c.parseInt = parser
+		}
+	}
+}
+
+// WithBindUintParser sets the unsigned integer parser used by BindWithOptions and BindGroupWithOptions.
+func WithBindUintParser(parser func(string, int, int) (uint64, error)) BindOption {
+	return func(c *bindConfig) {
+		if parser != nil {
+			c.parseUint = parser
+		}
+	}
+}
+
+// WithBindFloatParser sets the floating-point parser used by BindWithOptions and BindGroupWithOptions.
+func WithBindFloatParser(parser func(string, int) (float64, error)) BindOption {
+	return func(c *bindConfig) {
+		if parser != nil {
+			c.parseFloat = parser
 		}
 	}
 }
@@ -39,6 +111,49 @@ func applyExpandOptions(opts []ExpandOption) expandConfig {
 	}
 	if cfg.envLookup == nil {
 		cfg.envLookup = os.Getenv
+	}
+	return cfg
+}
+
+func applyValueOptions(opts []ValueOption) valueConfig {
+	cfg := valueConfig{parseInt: strconv.Atoi, parseBool: strconv.ParseBool}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.parseInt == nil {
+		cfg.parseInt = strconv.Atoi
+	}
+	if cfg.parseBool == nil {
+		cfg.parseBool = strconv.ParseBool
+	}
+	return cfg
+}
+
+func applyBindOptions(opts []BindOption) bindConfig {
+	cfg := bindConfig{
+		parseBool:  strconv.ParseBool,
+		parseInt:   strconv.ParseInt,
+		parseUint:  strconv.ParseUint,
+		parseFloat: strconv.ParseFloat,
+	}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.parseBool == nil {
+		cfg.parseBool = strconv.ParseBool
+	}
+	if cfg.parseInt == nil {
+		cfg.parseInt = strconv.ParseInt
+	}
+	if cfg.parseUint == nil {
+		cfg.parseUint = strconv.ParseUint
+	}
+	if cfg.parseFloat == nil {
+		cfg.parseFloat = strconv.ParseFloat
 	}
 	return cfg
 }
@@ -164,11 +279,17 @@ func (s *Conf) Lookup(group, key string) (string, bool) {
 
 // GetInt 从默认分组获取 int 值，不存在或格式非法时返回 def。GetInt returns an int value from the default group or def when absent/invalid.
 func (s *Conf) GetInt(key string, def int) int {
+	return s.GetIntWithOptions(key, def)
+}
+
+// GetIntWithOptions returns an int value from the default group using per-call parser options.
+func (s *Conf) GetIntWithOptions(key string, def int, opts ...ValueOption) int {
 	v, ok := s.Lookup(defaultGroup, key)
 	if !ok {
 		return def
 	}
-	n, err := strconv.Atoi(v)
+	cfg := applyValueOptions(opts)
+	n, err := cfg.parseInt(v)
 	if err != nil {
 		return def
 	}
@@ -177,11 +298,17 @@ func (s *Conf) GetInt(key string, def int) int {
 
 // GetBool 从默认分组获取 bool 值，不存在或格式非法时返回 def。GetBool returns a bool value from the default group or def when absent/invalid.
 func (s *Conf) GetBool(key string, def bool) bool {
+	return s.GetBoolWithOptions(key, def)
+}
+
+// GetBoolWithOptions returns a bool value from the default group using per-call parser options.
+func (s *Conf) GetBoolWithOptions(key string, def bool, opts ...ValueOption) bool {
 	v, ok := s.Lookup(defaultGroup, key)
 	if !ok {
 		return def
 	}
-	b, err := strconv.ParseBool(v)
+	cfg := applyValueOptions(opts)
+	b, err := cfg.parseBool(v)
 	if err != nil {
 		return def
 	}
@@ -329,10 +456,20 @@ func (s *Conf) ApplyProfile(profile string) *Conf {
 }
 
 // Bind fills dst from the default group using conf tags or field names.
-func (s *Conf) Bind(dst any) error { return s.BindGroup(defaultGroup, dst) }
+func (s *Conf) Bind(dst any) error { return s.BindWithOptions(dst) }
+
+// BindWithOptions fills dst from the default group using per-call parser options.
+func (s *Conf) BindWithOptions(dst any, opts ...BindOption) error {
+	return s.BindGroupWithOptions(defaultGroup, dst, opts...)
+}
 
 // BindGroup fills dst from a group using conf tags or field names.
 func (s *Conf) BindGroup(group string, dst any) error {
+	return s.BindGroupWithOptions(group, dst)
+}
+
+// BindGroupWithOptions fills dst from a group using conf tags or field names and per-call parser options.
+func (s *Conf) BindGroupWithOptions(group string, dst any, opts ...BindOption) error {
 	rv := reflect.ValueOf(dst)
 	if rv.Kind() != reflect.Pointer || rv.IsNil() {
 		return invalidInputf("bind target must be a non-nil pointer")
@@ -341,7 +478,8 @@ func (s *Conf) BindGroup(group string, dst any) error {
 	if rv.Kind() != reflect.Struct {
 		return invalidInputf("bind target must point to a struct")
 	}
-	return s.bindStruct(group, "", rv)
+	cfg := applyBindOptions(opts)
+	return s.bindStruct(group, "", rv, cfg)
 }
 
 func (s *Conf) ensureGroup(group string) {
@@ -353,7 +491,7 @@ func (s *Conf) ensureGroup(group string) {
 	}
 }
 
-func (s *Conf) bindStruct(group, prefix string, rv reflect.Value) error {
+func (s *Conf) bindStruct(group, prefix string, rv reflect.Value, cfg bindConfig) error {
 	rt := rv.Type()
 	for i := 0; i < rt.NumField(); i++ {
 		field := rt.Field(i)
@@ -370,7 +508,7 @@ func (s *Conf) bindStruct(group, prefix string, rv reflect.Value) error {
 		}
 		fv := rv.Field(i)
 		if fv.Kind() == reflect.Struct && !field.Anonymous && field.Type != reflect.TypeOf(time.Time{}) {
-			if err := s.bindStruct(group, key, fv); err != nil {
+			if err := s.bindStruct(group, key, fv, cfg); err != nil {
 				return err
 			}
 			continue
@@ -379,7 +517,7 @@ func (s *Conf) bindStruct(group, prefix string, rv reflect.Value) error {
 		if !ok {
 			continue
 		}
-		if err := setReflectValue(fv, value); err != nil {
+		if err := setReflectValue(fv, value, cfg); err != nil {
 			return invalidInputf("bind %s: %s", key, err.Error())
 		}
 	}
@@ -391,7 +529,7 @@ func confFieldName(field reflect.StructField) (string, bool) {
 	return name, skip
 }
 
-func setReflectValue(v reflect.Value, text string) error {
+func setReflectValue(v reflect.Value, text string, cfg bindConfig) error {
 	if !v.CanSet() {
 		return nil
 	}
@@ -399,25 +537,25 @@ func setReflectValue(v reflect.Value, text string) error {
 	case reflect.String:
 		v.SetString(text)
 	case reflect.Bool:
-		b, err := strconv.ParseBool(text)
+		b, err := cfg.parseBool(text)
 		if err != nil {
 			return err
 		}
 		v.SetBool(b)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		n, err := strconv.ParseInt(text, 10, v.Type().Bits())
+		n, err := cfg.parseInt(text, 10, v.Type().Bits())
 		if err != nil {
 			return err
 		}
 		v.SetInt(n)
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		n, err := strconv.ParseUint(text, 10, v.Type().Bits())
+		n, err := cfg.parseUint(text, 10, v.Type().Bits())
 		if err != nil {
 			return err
 		}
 		v.SetUint(n)
 	case reflect.Float32, reflect.Float64:
-		f, err := strconv.ParseFloat(text, v.Type().Bits())
+		f, err := cfg.parseFloat(text, v.Type().Bits())
 		if err != nil {
 			return err
 		}
@@ -427,7 +565,7 @@ func setReflectValue(v reflect.Value, text string) error {
 		slice := reflect.MakeSlice(v.Type(), 0, len(parts))
 		for _, part := range parts {
 			elem := reflect.New(v.Type().Elem()).Elem()
-			if err := setReflectValue(elem, part); err != nil {
+			if err := setReflectValue(elem, part, cfg); err != nil {
 				return err
 			}
 			slice = reflect.Append(slice, elem)

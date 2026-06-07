@@ -8,6 +8,10 @@ import (
 
 func ToBigDecimal(numberStr string) *big.Rat { return numimpl.ToBigDecimal(numberStr) }
 
+func ToBigDecimalWithOptions(numberStr string, opts ...ParseOption) *big.Rat {
+	return numimpl.ToBigDecimalWithOptions(numberStr, opts...)
+}
+
 func ToBigInteger(number string) *big.Int { return numimpl.ToBigInteger(number) }
 
 func Count(total, part int) int { return numimpl.Count(total, part) }

@@ -1,5 +1,10 @@
 package json
 
+import (
+	stdjson "encoding/json"
+	"io"
+)
+
 // Config controls JSON serialization behavior.
 type Config struct {
 	// IgnoreNullValue 序列化时忽略 null。
@@ -16,6 +21,8 @@ type Config struct {
 	MarshalFunc func(any) ([]byte, error)
 	// UnmarshalFunc deserializes JSON bytes for bean conversion and struct wrapping. nil means encoding/json with UseNumber.
 	UnmarshalFunc func([]byte, any) error
+	// DecoderFactory creates JSON decoders for token parsing. nil means encoding/json.NewDecoder with UseNumber.
+	DecoderFactory func(io.Reader) *stdjson.Decoder
 }
 
 // NewConfig 创建一个默认配置。

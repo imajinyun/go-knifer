@@ -264,6 +264,20 @@ func WithAutoDecodeResponse(autoDecode bool) RequestOption {
 	return func(r *HTTPRequest) { r.decodeConfig.autoDecode = autoDecode }
 }
 
+// WithMaxResponseBytes limits bytes read by response Bytes/Body helpers. Non-positive means unlimited.
+func WithMaxResponseBytes(maxBytes int64) RequestOption {
+	return func(r *HTTPRequest) { r.decodeConfig.maxBytes = maxBytes }
+}
+
+// WithResponseReadAllFunc sets the reader used by response Bytes/Body helpers.
+func WithResponseReadAllFunc(readAll func(io.Reader) ([]byte, error)) RequestOption {
+	return func(r *HTTPRequest) {
+		if readAll != nil {
+			r.decodeConfig.readAll = readAll
+		}
+	}
+}
+
 // WithRequestFactory sets the HTTP request factory used at execution time.
 func WithRequestFactory(newRequest NewRequestFunc) RequestOption {
 	return func(r *HTTPRequest) {

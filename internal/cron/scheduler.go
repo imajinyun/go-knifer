@@ -62,7 +62,7 @@ func WithIDGenerator(idFunc func() string) SchedulerOption {
 func WithIDRandomReader(reader io.Reader) SchedulerOption {
 	return func(s *Scheduler) {
 		if reader != nil {
-			s.idFunc = func() string { return generateIDWithReader(reader) }
+			s.idFunc = newIDGeneratorWithReader(reader)
 		}
 	}
 }
@@ -101,7 +101,7 @@ func NewSchedulerWithOptions(opts ...SchedulerOption) *Scheduler {
 	s.listenerMgr = newListenerManager()
 	s.executor = func(fn func()) { go fn() }
 	s.runner = func(fn func()) { go fn() }
-	s.idFunc = generateID
+	s.idFunc = newIDGeneratorWithReader(nil)
 	s.nowFunc = time.Now
 	s.sleeper = defaultTimerSleep
 	for _, opt := range opts {

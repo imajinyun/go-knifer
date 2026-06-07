@@ -35,6 +35,8 @@ type ContentDecoder func(io.Reader) (io.ReadCloser, error)
 type responseDecodeConfig struct {
 	autoDecode bool
 	decoders   map[string]ContentDecoder
+	maxBytes   int64
+	readAll    func(io.Reader) ([]byte, error)
 }
 
 func defaultResponseDecodeConfig() responseDecodeConfig {
@@ -48,6 +50,9 @@ func defaultResponseDecodeConfig() responseDecodeConfig {
 }
 
 func (c responseDecodeConfig) normalized() responseDecodeConfig {
+	if c.readAll == nil {
+		c.readAll = io.ReadAll
+	}
 	if c.decoders == nil {
 		c.decoders = defaultResponseDecodeConfig().decoders
 		return c
@@ -80,6 +85,24 @@ func (c *responseDecodeConfig) setDecoder(encoding string, decoder ContentDecode
 		cloned[encoding] = decoder
 	}
 	c.decoders = cloned
+}
+
+func readAllWithLimit(r io.Reader, maxBytes int64, readAll func(io.Reader) ([]byte, error)) ([]byte, error) {
+	if readAll == nil {
+		readAll = io.ReadAll
+	}
+	if maxBytes <= 0 {
+		return readAll(r)
+	}
+	limited := &io.LimitedReader{R: r, N: maxBytes + 1}
+	data, err := readAll(limited)
+	if err != nil {
+		return nil, err
+	}
+	if int64(len(data)) > maxBytes {
+		return nil, HTTPErrorf("response body exceeds max bytes: %d", maxBytes)
+	}
+	return data, nil
 }
 
 type saveConfig struct {
@@ -242,7 +265,7 @@ func (r *HTTPResponse) Bytes() []byte {
 			r.err = err
 			return
 		}
-		data, err := io.ReadAll(reader)
+		data, err := readAllWithLimit(reader, r.decodeConfig.maxBytes, r.decodeConfig.readAll)
 		if err != nil && (!IsIgnoreEOFError() || err != io.ErrUnexpectedEOF) {
 			r.err = NewHTTPError("read response body failed", err)
 			return

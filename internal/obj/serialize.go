@@ -4,22 +4,88 @@ import (
 	"bytes"
 	"encoding/gob"
 	"fmt"
+	"io"
 	"reflect"
 )
 
+type codecConfig struct {
+	newEncoder func(io.Writer) Encoder
+	newDecoder func(io.Reader) Decoder
+}
+
+// Encoder is the serialization encoder contract used by object helpers.
+type Encoder interface {
+	Encode(any) error
+}
+
+// Decoder is the serialization decoder contract used by object helpers.
+type Decoder interface {
+	Decode(any) error
+}
+
+// CodecOption customizes object serialization helpers per call.
+type CodecOption func(*codecConfig)
+
+// WithEncoderFactory sets the encoder factory used by SerializeWithOptions and CloneWithOptions.
+func WithEncoderFactory(factory func(io.Writer) Encoder) CodecOption {
+	return func(c *codecConfig) {
+		if factory != nil {
+			c.newEncoder = factory
+		}
+	}
+}
+
+// WithDecoderFactory sets the decoder factory used by DeserializeWithOptions and CloneWithOptions.
+func WithDecoderFactory(factory func(io.Reader) Decoder) CodecOption {
+	return func(c *codecConfig) {
+		if factory != nil {
+			c.newDecoder = factory
+		}
+	}
+}
+
+func applyCodecOptions(opts []CodecOption) codecConfig {
+	cfg := codecConfig{
+		newEncoder: func(w io.Writer) Encoder { return gob.NewEncoder(w) },
+		newDecoder: func(r io.Reader) Decoder { return gob.NewDecoder(r) },
+	}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.newEncoder == nil {
+		cfg.newEncoder = func(w io.Writer) Encoder { return gob.NewEncoder(w) }
+	}
+	if cfg.newDecoder == nil {
+		cfg.newDecoder = func(r io.Reader) Decoder { return gob.NewDecoder(r) }
+	}
+	return cfg
+}
+
 // Clone creates a deep copy through gob serialization.
 func Clone[T any](src T) (T, error) {
-	data, err := Serialize(src)
+	return CloneWithOptions(src)
+}
+
+// CloneWithOptions creates a deep copy using per-call codec options.
+func CloneWithOptions[T any](src T, opts ...CodecOption) (T, error) {
+	data, err := SerializeWithOptions(src, opts...)
 	if err != nil {
 		var zero T
 		return zero, err
 	}
-	return DeserializeTo[T](data)
+	return DeserializeToWithOptions[T](data, nil, opts...)
 }
 
 // CloneIfPossible returns a cloned value when cloning succeeds, otherwise src.
 func CloneIfPossible[T any](src T) T {
-	clone, err := Clone(src)
+	return CloneIfPossibleWithOptions(src)
+}
+
+// CloneIfPossibleWithOptions returns a cloned value using per-call codec options when cloning succeeds, otherwise src.
+func CloneIfPossibleWithOptions[T any](src T, opts ...CodecOption) T {
+	clone, err := CloneWithOptions(src, opts...)
 	if err != nil {
 		return src
 	}
@@ -27,12 +93,23 @@ func CloneIfPossible[T any](src T) T {
 }
 
 // CloneByStream creates a deep copy through gob serialization.
-func CloneByStream[T any](src T) (T, error) { return Clone(src) }
+func CloneByStream[T any](src T) (T, error) { return CloneByStreamWithOptions(src) }
+
+// CloneByStreamWithOptions creates a deep copy using per-call codec options.
+func CloneByStreamWithOptions[T any](src T, opts ...CodecOption) (T, error) {
+	return CloneWithOptions(src, opts...)
+}
 
 // Serialize encodes obj with gob.
 func Serialize[T any](obj T) ([]byte, error) {
+	return SerializeWithOptions(obj)
+}
+
+// SerializeWithOptions encodes obj using per-call codec options.
+func SerializeWithOptions[T any](obj T, opts ...CodecOption) ([]byte, error) {
 	var buf bytes.Buffer
-	err := gob.NewEncoder(&buf).Encode(obj)
+	cfg := applyCodecOptions(opts)
+	err := cfg.newEncoder(&buf).Encode(obj)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +118,12 @@ func Serialize[T any](obj T) ([]byte, error) {
 
 // SerializeOrNil encodes obj with gob and returns nil when encoding fails.
 func SerializeOrNil[T any](obj T) []byte {
-	data, err := Serialize(obj)
+	return SerializeOrNilWithOptions(obj)
+}
+
+// SerializeOrNilWithOptions encodes obj using per-call codec options and returns nil when encoding fails.
+func SerializeOrNilWithOptions[T any](obj T, opts ...CodecOption) []byte {
+	data, err := SerializeWithOptions(obj, opts...)
 	if err != nil {
 		return nil
 	}
@@ -54,7 +136,13 @@ func SerializeOrNil[T any](obj T) []byte {
 // built-in container/scalar types plus values assignable to one of the accepted
 // types. Accepted entries may be concrete values, pointers, or reflect.Type.
 func Deserialize(data []byte, out any, acceptedTypes ...any) error {
-	if err := gob.NewDecoder(bytes.NewReader(data)).Decode(out); err != nil {
+	return DeserializeWithOptions(data, out, acceptedTypes)
+}
+
+// DeserializeWithOptions decodes data using per-call codec options.
+func DeserializeWithOptions(data []byte, out any, acceptedTypes []any, opts ...CodecOption) error {
+	cfg := applyCodecOptions(opts)
+	if err := cfg.newDecoder(bytes.NewReader(data)).Decode(out); err != nil {
 		return err
 	}
 	if len(acceptedTypes) == 0 {
@@ -65,8 +153,13 @@ func Deserialize(data []byte, out any, acceptedTypes ...any) error {
 
 // DeserializeTo decodes gob data into a new value.
 func DeserializeTo[T any](data []byte, acceptedTypes ...any) (T, error) {
+	return DeserializeToWithOptions[T](data, acceptedTypes)
+}
+
+// DeserializeToWithOptions decodes data into a new value using per-call codec options.
+func DeserializeToWithOptions[T any](data []byte, acceptedTypes []any, opts ...CodecOption) (T, error) {
 	var out T
-	if err := Deserialize(data, &out, acceptedTypes...); err != nil {
+	if err := DeserializeWithOptions(data, &out, acceptedTypes, opts...); err != nil {
 		var zero T
 		return zero, err
 	}

@@ -113,6 +113,39 @@ func TestRequestJSONUnmarshalProvider(t *testing.T) {
 	}
 }
 
+func TestRequestJSONDecodeReadOptions(t *testing.T) {
+	type result struct {
+		Name string `json:"name"`
+	}
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"abcdef"}`))
+	}))
+	defer srv.Close()
+
+	tooLarge := &result{}
+	resp := Get(srv.URL,
+		WithMaxDecodeBytes(3),
+		WithJSONUnmarshalFunc(json.Unmarshal),
+	).Result(tooLarge).Execute()
+	if resp.Err() == nil {
+		t.Fatal("Execute() with max decode bytes error = nil")
+	}
+
+	readAllCalled := false
+	out := &result{}
+	resp = Get(srv.URL,
+		WithJSONDecodeReadAllFunc(func(io.Reader) ([]byte, error) {
+			readAllCalled = true
+			return []byte(`{"name":"provided"}`), nil
+		}),
+		WithJSONUnmarshalFunc(json.Unmarshal),
+	).Result(out).Execute()
+	if resp.Err() != nil || !readAllCalled || out.Name != "provided" {
+		t.Fatalf("custom decode readAll called=%v out=%+v err=%v", readAllCalled, out, resp.Err())
+	}
+}
+
 func TestResponseHeadersCookiesAndLength(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if got := r.Header.Get("Cookie"); !strings.Contains(got, "k=v") {

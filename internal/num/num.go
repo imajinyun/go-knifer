@@ -27,14 +27,40 @@ type randomNumberConfig struct {
 	randomReader io.Reader
 }
 
+type parseConfig struct {
+	parseInt   func(string, int, int) (int64, error)
+	parseFloat func(string, int) (float64, error)
+}
+
 // RandomNumberOption customizes random-number generation per call.
 type RandomNumberOption func(*randomNumberConfig)
+
+// ParseOption customizes numeric parsing and validation helpers per call.
+type ParseOption func(*parseConfig)
 
 // WithRandomReader sets the random source used by Gen*WithOptions helpers.
 func WithRandomReader(reader io.Reader) RandomNumberOption {
 	return func(c *randomNumberConfig) {
 		if reader != nil {
 			c.randomReader = reader
+		}
+	}
+}
+
+// WithParseIntFunc sets the signed integer parser used by parsing helpers.
+func WithParseIntFunc(parser func(string, int, int) (int64, error)) ParseOption {
+	return func(c *parseConfig) {
+		if parser != nil {
+			c.parseInt = parser
+		}
+	}
+}
+
+// WithParseFloatFunc sets the floating-point parser used by parsing helpers.
+func WithParseFloatFunc(parser func(string, int) (float64, error)) ParseOption {
+	return func(c *parseConfig) {
+		if parser != nil {
+			c.parseFloat = parser
 		}
 	}
 }
@@ -48,6 +74,22 @@ func applyRandomNumberOptions(opts []RandomNumberOption) randomNumberConfig {
 	}
 	if cfg.randomReader == nil {
 		cfg.randomReader = cryptorand.Reader
+	}
+	return cfg
+}
+
+func applyParseOptions(opts []ParseOption) parseConfig {
+	cfg := parseConfig{parseInt: strconv.ParseInt, parseFloat: strconv.ParseFloat}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&cfg)
+		}
+	}
+	if cfg.parseInt == nil {
+		cfg.parseInt = strconv.ParseInt
+	}
+	if cfg.parseFloat == nil {
+		cfg.parseFloat = strconv.ParseFloat
 	}
 	return cfg
 }
@@ -238,6 +280,12 @@ func FormatPercent(number float64, scale int) string {
 
 // IsNumber reports whether s is a valid number, including hex and scientific notation.
 func IsNumber(s string) bool {
+	return IsNumberWithOptions(s)
+}
+
+// IsNumberWithOptions reports whether s is a valid number using per-call parser options.
+func IsNumberWithOptions(s string, opts ...ParseOption) bool {
+	cfg := applyParseOptions(opts)
 	s = strings.TrimSpace(s)
 	if s == "" {
 		return false
@@ -253,34 +301,52 @@ func IsNumber(s string) bool {
 	if strings.ContainsRune("dDfFlL", rune(last)) {
 		s = s[:len(s)-1]
 	}
-	_, err := strconv.ParseFloat(s, 64)
+	_, err := cfg.parseFloat(s, 64)
 	return err == nil
 }
 
 // IsInteger reports whether s is a valid base-10 int.
 func IsInteger(s string) bool {
+	return IsIntegerWithOptions(s)
+}
+
+// IsIntegerWithOptions reports whether s is a valid base-10 int using per-call parser options.
+func IsIntegerWithOptions(s string, opts ...ParseOption) bool {
 	if strings.TrimSpace(s) == "" {
 		return false
 	}
-	_, err := strconv.ParseInt(s, 10, 0)
+	cfg := applyParseOptions(opts)
+	_, err := cfg.parseInt(s, 10, 0)
 	return err == nil
 }
 
 // IsLong reports whether s is a valid base-10 int64.
 func IsLong(s string) bool {
+	return IsLongWithOptions(s)
+}
+
+// IsLongWithOptions reports whether s is a valid base-10 int64 using per-call parser options.
+func IsLongWithOptions(s string, opts ...ParseOption) bool {
 	if strings.TrimSpace(s) == "" {
 		return false
 	}
-	_, err := strconv.ParseInt(s, 10, 64)
+	cfg := applyParseOptions(opts)
+	_, err := cfg.parseInt(s, 10, 64)
 	return err == nil
 }
 
 // IsDouble reports whether s is a valid floating-point value containing a decimal point.
 func IsDouble(s string) bool {
+	return IsDoubleWithOptions(s)
+}
+
+// IsDoubleWithOptions reports whether s is a valid floating-point value using per-call parser options.
+func IsDoubleWithOptions(s string, opts ...ParseOption) bool {
 	if strings.TrimSpace(s) == "" || !strings.Contains(s, ".") {
 		return false
 	}
-	_, err := strconv.ParseFloat(s, 64)
+	cfg := applyParseOptions(opts)
+	_, err := cfg.parseFloat(s, 64)
 	return err == nil
 }
 
@@ -534,12 +600,23 @@ func GetBinaryStr(number any) string {
 
 // BinaryToInt parses a binary string into int.
 func BinaryToInt(binaryStr string) (int, error) {
-	v, err := strconv.ParseInt(binaryStr, 2, 0)
+	return BinaryToIntWithOptions(binaryStr)
+}
+
+// BinaryToIntWithOptions parses a binary string into int using per-call parser options.
+func BinaryToIntWithOptions(binaryStr string, opts ...ParseOption) (int, error) {
+	cfg := applyParseOptions(opts)
+	v, err := cfg.parseInt(binaryStr, 2, 0)
 	return int(v), err
 }
 
 // BinaryToLong parses a binary string into int64.
-func BinaryToLong(binaryStr string) (int64, error) { return strconv.ParseInt(binaryStr, 2, 64) }
+func BinaryToLong(binaryStr string) (int64, error) { return BinaryToLongWithOptions(binaryStr) }
+
+// BinaryToLongWithOptions parses a binary string into int64 using per-call parser options.
+func BinaryToLongWithOptions(binaryStr string, opts ...ParseOption) (int64, error) {
+	return applyParseOptions(opts).parseInt(binaryStr, 2, 64)
+}
 
 // Compare returns -1, 0, or 1 according to x and y ordering.
 func Compare[T Ordered](x, y T) int {
@@ -676,6 +753,11 @@ func ToStrStrip(number float64, strip bool) string {
 
 // ToBigDecimal parses a decimal string into a rational number. Blank input returns 0.
 func ToBigDecimal(numberStr string) *big.Rat {
+	return ToBigDecimalWithOptions(numberStr)
+}
+
+// ToBigDecimalWithOptions parses a decimal string using per-call parser options for fallback parsing.
+func ToBigDecimalWithOptions(numberStr string, opts ...ParseOption) *big.Rat {
 	s := strings.TrimSpace(strings.ReplaceAll(numberStr, ",", ""))
 	if s == "" {
 		return new(big.Rat)
@@ -684,7 +766,8 @@ func ToBigDecimal(numberStr string) *big.Rat {
 	if _, ok := r.SetString(s); ok {
 		return r
 	}
-	f, _ := strconv.ParseFloat(s, 64)
+	cfg := applyParseOptions(opts)
+	f, _ := cfg.parseFloat(s, 64)
 	return ratFromFloat(f)
 }
 
@@ -813,93 +896,138 @@ func IsPowerOfTwo(n int64) bool { return n > 0 && (n&(n-1)) == 0 }
 
 // ParseInt parses an int with tolerant handling for blank, hex, and decimal fractions.
 func ParseInt(number string) int {
+	return ParseIntWithOptions(number)
+}
+
+// ParseIntWithOptions parses an int using per-call parser options.
+func ParseIntWithOptions(number string, opts ...ParseOption) int {
+	cfg := applyParseOptions(opts)
 	s := strings.TrimSpace(number)
 	if s == "" || strings.HasPrefix(s, ".") {
 		return 0
 	}
 	if strings.HasPrefix(strings.ToLower(s), "0x") {
-		v, _ := strconv.ParseInt(s[2:], 16, 0)
+		v, _ := cfg.parseInt(s[2:], 16, 0)
 		return int(v)
 	}
 	if strings.ContainsAny(s, "eE") {
 		return 0
 	}
-	if i, err := strconv.Atoi(s); err == nil {
-		return i
+	if i, err := cfg.parseInt(s, 10, 0); err == nil {
+		return int(i)
 	}
-	f, _ := strconv.ParseFloat(strings.ReplaceAll(s, ",", ""), 64)
+	f, _ := cfg.parseFloat(strings.ReplaceAll(s, ",", ""), 64)
 	return int(f)
 }
 
 // ParseLong parses an int64 with tolerant handling for blank, hex, and decimal fractions.
 func ParseLong(number string) int64 {
+	return ParseLongWithOptions(number)
+}
+
+// ParseLongWithOptions parses an int64 using per-call parser options.
+func ParseLongWithOptions(number string, opts ...ParseOption) int64 {
+	cfg := applyParseOptions(opts)
 	s := strings.TrimSpace(number)
 	if s == "" || strings.HasPrefix(s, ".") {
 		return 0
 	}
 	if strings.HasPrefix(strings.ToLower(s), "0x") {
-		v, _ := strconv.ParseInt(s[2:], 16, 64)
+		v, _ := cfg.parseInt(s[2:], 16, 64)
 		return v
 	}
-	if i, err := strconv.ParseInt(s, 10, 64); err == nil {
+	if i, err := cfg.parseInt(s, 10, 64); err == nil {
 		return i
 	}
-	f, _ := strconv.ParseFloat(strings.ReplaceAll(s, ",", ""), 64)
+	f, _ := cfg.parseFloat(strings.ReplaceAll(s, ",", ""), 64)
 	return int64(f)
 }
 
 // ParseFloat parses a float32. Blank input returns 0.
-func ParseFloat(number string) float32 { return float32(ParseDouble(number)) }
+func ParseFloat(number string) float32 { return ParseFloatWithOptions(number) }
+
+// ParseFloatWithOptions parses a float32 using per-call parser options.
+func ParseFloatWithOptions(number string, opts ...ParseOption) float32 {
+	return float32(ParseDoubleWithOptions(number, opts...))
+}
 
 // ParseDouble parses a float64. Blank input returns 0.
 func ParseDouble(number string) float64 {
+	return ParseDoubleWithOptions(number)
+}
+
+// ParseDoubleWithOptions parses a float64 using per-call parser options.
+func ParseDoubleWithOptions(number string, opts ...ParseOption) float64 {
+	cfg := applyParseOptions(opts)
 	s := strings.TrimSpace(strings.ReplaceAll(number, ",", ""))
 	if s == "" {
 		return 0
 	}
-	f, _ := strconv.ParseFloat(s, 64)
+	f, _ := cfg.parseFloat(s, 64)
 	return f
 }
 
 // ParseNumber parses a numeric string as float64.
 func ParseNumber(numberStr string) (float64, error) {
+	return ParseNumberWithOptions(numberStr)
+}
+
+// ParseNumberWithOptions parses a numeric string as float64 using per-call parser options.
+func ParseNumberWithOptions(numberStr string, opts ...ParseOption) (float64, error) {
+	cfg := applyParseOptions(opts)
 	s := strings.TrimSpace(strings.ReplaceAll(numberStr, ",", ""))
 	if strings.HasPrefix(strings.ToLower(s), "0x") {
-		v, err := strconv.ParseInt(s[2:], 16, 64)
+		v, err := cfg.parseInt(s[2:], 16, 64)
 		return float64(v), err
 	}
 	s = strings.TrimPrefix(s, "+")
-	return strconv.ParseFloat(s, 64)
+	return cfg.parseFloat(s, 64)
 }
 
 // ParseIntDefault parses an int or returns defaultValue on failure.
 func ParseIntDefault(numberStr string, defaultValue int) int {
+	return ParseIntDefaultWithOptions(numberStr, defaultValue)
+}
+
+// ParseIntDefaultWithOptions parses an int or returns defaultValue on failure using per-call parser options.
+func ParseIntDefaultWithOptions(numberStr string, defaultValue int, opts ...ParseOption) int {
 	if strings.TrimSpace(numberStr) == "" {
 		return defaultValue
 	}
-	if !IsNumber(numberStr) && !strings.Contains(numberStr, ",") {
+	if !IsNumberWithOptions(numberStr, opts...) && !strings.Contains(numberStr, ",") {
 		return defaultValue
 	}
-	return ParseInt(numberStr)
+	return ParseIntWithOptions(numberStr, opts...)
 }
 
 // ParseLongDefault parses an int64 or returns defaultValue on failure.
 func ParseLongDefault(numberStr string, defaultValue int64) int64 {
+	return ParseLongDefaultWithOptions(numberStr, defaultValue)
+}
+
+// ParseLongDefaultWithOptions parses an int64 or returns defaultValue on failure using per-call parser options.
+func ParseLongDefaultWithOptions(numberStr string, defaultValue int64, opts ...ParseOption) int64 {
 	if strings.TrimSpace(numberStr) == "" {
 		return defaultValue
 	}
-	if !IsNumber(numberStr) && !strings.Contains(numberStr, ",") {
+	if !IsNumberWithOptions(numberStr, opts...) && !strings.Contains(numberStr, ",") {
 		return defaultValue
 	}
-	return ParseLong(numberStr)
+	return ParseLongWithOptions(numberStr, opts...)
 }
 
 // ParseFloatDefault parses a float32 or returns defaultValue on failure.
 func ParseFloatDefault(numberStr string, defaultValue float32) float32 {
+	return ParseFloatDefaultWithOptions(numberStr, defaultValue)
+}
+
+// ParseFloatDefaultWithOptions parses a float32 or returns defaultValue on failure using per-call parser options.
+func ParseFloatDefaultWithOptions(numberStr string, defaultValue float32, opts ...ParseOption) float32 {
 	if strings.TrimSpace(numberStr) == "" {
 		return defaultValue
 	}
-	if f, err := strconv.ParseFloat(strings.ReplaceAll(numberStr, ",", ""), 32); err == nil {
+	cfg := applyParseOptions(opts)
+	if f, err := cfg.parseFloat(strings.ReplaceAll(numberStr, ",", ""), 32); err == nil {
 		return float32(f)
 	}
 	return defaultValue
@@ -907,10 +1035,16 @@ func ParseFloatDefault(numberStr string, defaultValue float32) float32 {
 
 // ParseDoubleDefault parses a float64 or returns defaultValue on failure.
 func ParseDoubleDefault(numberStr string, defaultValue float64) float64 {
+	return ParseDoubleDefaultWithOptions(numberStr, defaultValue)
+}
+
+// ParseDoubleDefaultWithOptions parses a float64 or returns defaultValue on failure using per-call parser options.
+func ParseDoubleDefaultWithOptions(numberStr string, defaultValue float64, opts ...ParseOption) float64 {
 	if strings.TrimSpace(numberStr) == "" {
 		return defaultValue
 	}
-	if f, err := strconv.ParseFloat(strings.ReplaceAll(numberStr, ",", ""), 64); err == nil {
+	cfg := applyParseOptions(opts)
+	if f, err := cfg.parseFloat(strings.ReplaceAll(numberStr, ",", ""), 64); err == nil {
 		return f
 	}
 	return defaultValue

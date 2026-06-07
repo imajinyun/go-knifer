@@ -7,6 +7,7 @@ type (
 	Ordered            = numimpl.Ordered
 	RoundingMode       = numimpl.RoundingMode
 	RandomNumberOption = numimpl.RandomNumberOption
+	ParseOption        = numimpl.ParseOption
 )
 
 const (

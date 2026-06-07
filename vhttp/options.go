@@ -69,6 +69,16 @@ func WithAutoDecodeResponse(autoDecode bool) RequestOption {
 	return httpx.WithAutoDecodeResponse(autoDecode)
 }
 
+// WithMaxResponseBytes limits bytes read by response Bytes/Body helpers. Non-positive means unlimited.
+func WithMaxResponseBytes(maxBytes int64) RequestOption {
+	return httpx.WithMaxResponseBytes(maxBytes)
+}
+
+// WithResponseReadAllFunc sets the reader used by response Bytes/Body helpers.
+func WithResponseReadAllFunc(readAll func(io.Reader) ([]byte, error)) RequestOption {
+	return httpx.WithResponseReadAllFunc(readAll)
+}
+
 // WithContentDecoder registers a per-request response body decoder for encoding.
 func WithContentDecoder(encoding string, decoder func(io.Reader) (io.ReadCloser, error)) RequestOption {
 	return httpx.WithContentDecoder(encoding, decoder)

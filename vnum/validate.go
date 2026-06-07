@@ -4,11 +4,27 @@ import numimpl "github.com/imajinyun/go-knifer/internal/num"
 
 func IsNumber(s string) bool { return numimpl.IsNumber(s) }
 
+func IsNumberWithOptions(s string, opts ...ParseOption) bool {
+	return numimpl.IsNumberWithOptions(s, opts...)
+}
+
 func IsInteger(s string) bool { return numimpl.IsInteger(s) }
+
+func IsIntegerWithOptions(s string, opts ...ParseOption) bool {
+	return numimpl.IsIntegerWithOptions(s, opts...)
+}
 
 func IsLong(s string) bool { return numimpl.IsLong(s) }
 
+func IsLongWithOptions(s string, opts ...ParseOption) bool {
+	return numimpl.IsLongWithOptions(s, opts...)
+}
+
 func IsDouble(s string) bool { return numimpl.IsDouble(s) }
+
+func IsDoubleWithOptions(s string, opts ...ParseOption) bool {
+	return numimpl.IsDoubleWithOptions(s, opts...)
+}
 
 func IsDigits(s string) bool { return numimpl.IsDigits(s) }
 

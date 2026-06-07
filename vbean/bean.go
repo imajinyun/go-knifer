@@ -29,6 +29,26 @@ func WithIgnoreEmpty(enable bool) Option { return beanimpl.WithIgnoreEmpty(enabl
 // WithIgnoreZero skips zero source values.
 func WithIgnoreZero(enable bool) Option { return beanimpl.WithIgnoreZero(enable) }
 
+// WithBoolParser sets the parser used during weak string-to-bool conversion.
+func WithBoolParser(parser func(string) (bool, error)) Option {
+	return beanimpl.WithBoolParser(parser)
+}
+
+// WithIntParser sets the parser used during weak string-to-signed-integer conversion.
+func WithIntParser(parser func(string, int, int) (int64, error)) Option {
+	return beanimpl.WithIntParser(parser)
+}
+
+// WithUintParser sets the parser used during weak string-to-unsigned-integer conversion.
+func WithUintParser(parser func(string, int, int) (uint64, error)) Option {
+	return beanimpl.WithUintParser(parser)
+}
+
+// WithFloatParser sets the parser used during weak string-to-floating-point conversion.
+func WithFloatParser(parser func(string, int) (float64, error)) Option {
+	return beanimpl.WithFloatParser(parser)
+}
+
 // ToMap converts a struct or map to map[string]any using field tags and aliases.
 func ToMap(src any, opts ...Option) (map[string]any, error) { return beanimpl.ToMap(src, opts...) }
 
