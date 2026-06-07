@@ -1,6 +1,9 @@
 package cron
 
-import "sync"
+import (
+	"context"
+	"sync"
+)
 
 // defaultScheduler is the package-level scheduler aligned with the utility toolkit CronUtil.scheduler.
 var (
@@ -161,6 +164,19 @@ func StopWithOptions(opts ...DefaultSchedulerOption) {
 	defaultMu.Lock()
 	defer defaultMu.Unlock()
 	defaultScheduler.Stop()
+}
+
+// Shutdown stops the package-level scheduler and waits for running tasks to finish.
+func Shutdown(ctx context.Context, clearTasks ...bool) error {
+	defaultMu.Lock()
+	s := defaultScheduler
+	defaultMu.Unlock()
+	return s.Shutdown(ctx, clearTasks...)
+}
+
+// ShutdownWithOptions stops the selected default scheduler and waits for running tasks to finish.
+func ShutdownWithOptions(ctx context.Context, opts ...DefaultSchedulerOption) error {
+	return applyDefaultSchedulerOptions(opts).Shutdown(ctx)
 }
 
 // Restart restarts the package-level scheduler.

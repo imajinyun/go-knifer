@@ -1,6 +1,7 @@
 package cron
 
 import (
+	"context"
 	"sync"
 )
 
@@ -33,17 +34,26 @@ func (e *TaskExecutor) run() {
 type taskExecutorManager struct {
 	scheduler *Scheduler
 	mu        sync.Mutex
+	cond      *sync.Cond
 	executors []*TaskExecutor
+	idleCh    chan struct{}
 }
 
 func newTaskExecutorManager(s *Scheduler) *taskExecutorManager {
-	return &taskExecutorManager{scheduler: s}
+	idleCh := make(chan struct{})
+	close(idleCh)
+	m := &taskExecutorManager{scheduler: s, idleCh: idleCh}
+	m.cond = sync.NewCond(&m.mu)
+	return m
 }
 
 // spawn creates a TaskExecutor for a CronTask and submits it to the scheduler executor.
 func (m *taskExecutorManager) spawn(task *CronTask) *TaskExecutor {
 	e := &TaskExecutor{scheduler: m.scheduler, task: task}
 	m.mu.Lock()
+	if len(m.executors) == 0 {
+		m.idleCh = make(chan struct{})
+	}
 	m.executors = append(m.executors, e)
 	m.mu.Unlock()
 	m.scheduler.submit(e.run)
@@ -57,8 +67,41 @@ func (m *taskExecutorManager) completed(e *TaskExecutor) {
 	for i, x := range m.executors {
 		if x == e {
 			m.executors = append(m.executors[:i], m.executors[i+1:]...)
+			m.cond.Broadcast()
+			if len(m.executors) == 0 {
+				close(m.idleCh)
+			}
 			return
 		}
+	}
+}
+
+func (m *taskExecutorManager) runningCount() int {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return len(m.executors)
+}
+
+func (m *taskExecutorManager) wait() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for len(m.executors) > 0 {
+		m.cond.Wait()
+	}
+}
+
+func (m *taskExecutorManager) waitContext(ctx context.Context) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	m.mu.Lock()
+	idleCh := m.idleCh
+	m.mu.Unlock()
+	select {
+	case <-idleCh:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
 	}
 }
 

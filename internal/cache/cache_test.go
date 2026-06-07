@@ -158,6 +158,28 @@ func TestLRUClearTriggersListener(t *testing.T) {
 	}
 }
 
+func TestListenerCanReenterSameCache(t *testing.T) {
+	c := NewLRU[string, string](2)
+	done := make(chan struct{})
+	c.SetListener(CacheListenerFunc[string, string](func(string, string) {
+		defer close(done)
+		_ = c.Size()
+		c.SetListener(nil)
+		c.Put("listener", "ok")
+	}))
+	c.Put("a", "1")
+	c.Put("b", "2")
+	c.Put("c", "3")
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("listener reentry deadlocked")
+	}
+	if v, ok := c.Get("listener"); !ok || v != "ok" {
+		t.Fatalf("listener reentry value = %q ok=%v", v, ok)
+	}
+}
+
 func TestGetOrLoad(t *testing.T) {
 	c := NewLRU[string, int](3)
 	v, err := c.GetOrLoad("a", func() (int, error) { return 42, nil })

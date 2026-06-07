@@ -25,6 +25,10 @@ type WeakCache[K comparable, V any] struct {
 	misses    int64
 	clock     func() time.Time
 	finalizer func(*V, func(*V))
+
+	// pendingRemoves stores removal notifications collected while mu is held.
+	// They are delivered after unlocking to avoid listener reentry deadlocks.
+	pendingRemoves []removeEvent[K, *V]
 }
 
 type weakEntry[V any] struct {
@@ -78,6 +82,8 @@ func (c *WeakCache[K, V]) now() time.Time {
 
 // SetListener sets the removal listener and returns the cache for chaining.
 func (c *WeakCache[K, V]) SetListener(l CacheListener[K, *V]) *WeakCache[K, V] {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.listener = l
 	return c
 }
@@ -90,12 +96,14 @@ func (c *WeakCache[K, V]) Put(key K, value *V) {
 // PutWithTimeout stores a pointer value using a custom timeout.
 func (c *WeakCache[K, V]) PutWithTimeout(key K, value *V, timeout time.Duration) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 	if old, ok := c.entries[key]; ok {
-		c.notifyRemove(key, old.ref)
+		c.collectRemoveLocked(key, old.ref)
 	}
 	if value == nil {
 		delete(c.entries, key)
+		listener, events := c.drainRemoveEventsLocked()
+		c.mu.Unlock()
+		notifyRemoveEvents(listener, events)
 		return
 	}
 	c.entries[key] = &weakEntry[V]{
@@ -111,37 +119,46 @@ func (c *WeakCache[K, V]) PutWithTimeout(key K, value *V, timeout time.Duration)
 			cache.removeIfRefIs(keyCopy, v)
 		})
 	}
+	listener, events := c.drainRemoveEventsLocked()
+	c.mu.Unlock()
+	notifyRemoveEvents(listener, events)
 }
 
 // Get returns a cached pointer, or nil and false when missing or expired.
 func (c *WeakCache[K, V]) Get(key K) (*V, bool) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 	e, ok := c.entries[key]
 	if !ok {
 		c.misses++
+		c.mu.Unlock()
 		return nil, false
 	}
 	now := c.now().UnixNano()
 	if e.ttl > 0 && now-e.lastAccess > int64(e.ttl) {
 		delete(c.entries, key)
-		c.notifyRemove(key, e.ref)
+		c.collectRemoveLocked(key, e.ref)
 		c.misses++
+		listener, events := c.drainRemoveEventsLocked()
+		c.mu.Unlock()
+		notifyRemoveEvents(listener, events)
 		return nil, false
 	}
 	e.lastAccess = now
 	c.hits++
+	c.mu.Unlock()
 	return e.ref, true
 }
 
 // Remove deletes one key and notifies the removal listener when present.
 func (c *WeakCache[K, V]) Remove(key K) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 	if e, ok := c.entries[key]; ok {
 		delete(c.entries, key)
-		c.notifyRemove(key, e.ref)
+		c.collectRemoveLocked(key, e.ref)
 	}
+	listener, events := c.drainRemoveEventsLocked()
+	c.mu.Unlock()
+	notifyRemoveEvents(listener, events)
 }
 
 // Size returns the number of entries still tracked internally.
@@ -155,26 +172,30 @@ func (c *WeakCache[K, V]) Size() int {
 // Clear removes all entries and notifies the listener for each value.
 func (c *WeakCache[K, V]) Clear() {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 	for k, e := range c.entries {
-		c.notifyRemove(k, e.ref)
+		c.collectRemoveLocked(k, e.ref)
 	}
 	c.entries = make(map[K]*weakEntry[V])
+	listener, events := c.drainRemoveEventsLocked()
+	c.mu.Unlock()
+	notifyRemoveEvents(listener, events)
 }
 
 // Prune removes expired entries and returns the removed count.
 func (c *WeakCache[K, V]) Prune() int {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 	count := 0
 	now := c.now().UnixNano()
 	for k, e := range c.entries {
 		if e.ttl > 0 && now-e.lastAccess > int64(e.ttl) {
 			delete(c.entries, k)
-			c.notifyRemove(k, e.ref)
+			c.collectRemoveLocked(k, e.ref)
 			count++
 		}
 	}
+	listener, events := c.drainRemoveEventsLocked()
+	c.mu.Unlock()
+	notifyRemoveEvents(listener, events)
 	return count
 }
 
@@ -197,19 +218,32 @@ func (c *WeakCache[K, V]) MissCount() int64 {
 // same key after the finalizer was registered.
 func (c *WeakCache[K, V]) removeIfRefIs(key K, ref *V) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 	e, ok := c.entries[key]
 	if !ok {
+		c.mu.Unlock()
 		return
 	}
 	if e.ref == ref {
 		delete(c.entries, key)
-		c.notifyRemove(key, ref)
+		c.collectRemoveLocked(key, ref)
+	}
+	listener, events := c.drainRemoveEventsLocked()
+	c.mu.Unlock()
+	notifyRemoveEvents(listener, events)
+}
+
+func (c *WeakCache[K, V]) collectRemoveLocked(key K, value *V) {
+	if c.listener != nil {
+		c.pendingRemoves = append(c.pendingRemoves, removeEvent[K, *V]{key: key, value: value})
 	}
 }
 
-func (c *WeakCache[K, V]) notifyRemove(key K, value *V) {
-	if c.listener != nil {
-		c.listener.OnRemove(key, value)
+func (c *WeakCache[K, V]) drainRemoveEventsLocked() (CacheListener[K, *V], []removeEvent[K, *V]) {
+	if c.listener == nil || len(c.pendingRemoves) == 0 {
+		c.pendingRemoves = nil
+		return nil, nil
 	}
+	events := append([]removeEvent[K, *V](nil), c.pendingRemoves...)
+	c.pendingRemoves = nil
+	return c.listener, events
 }

@@ -1,6 +1,7 @@
 package cron
 
 import (
+	"context"
 	"io"
 	"sync"
 	"sync/atomic"
@@ -305,6 +306,19 @@ func (s *Scheduler) Stop(clearTasks ...bool) {
 	if len(clearTasks) > 0 && clearTasks[0] {
 		s.Clear()
 	}
+}
+
+// RunningCount returns the number of task executions currently running.
+func (s *Scheduler) RunningCount() int { return s.executorMgr.runningCount() }
+
+// Wait blocks until all currently running task executions finish.
+func (s *Scheduler) Wait() { s.executorMgr.wait() }
+
+// Shutdown stops the scheduler timer and waits for running task executions to finish
+// or for ctx to be canceled. It does not forcibly cancel already running tasks.
+func (s *Scheduler) Shutdown(ctx context.Context, clearTasks ...bool) error {
+	s.Stop(clearTasks...)
+	return s.executorMgr.waitContext(ctx)
 }
 
 // submit executes fn asynchronously through the current executor.

@@ -82,6 +82,14 @@ func GetStringWithOptions(rawURL string, opts ...RequestOption) string {
 	return httpx.GetStringWithOptions(rawURL, opts...)
 }
 
+// GetStringE sends a GET request and returns response body as string or an error.
+func GetStringE(rawURL string) (string, error) { return GetStringEWithOptions(rawURL) }
+
+// GetStringEWithOptions sends a GET request with options and returns response body as string or an error.
+func GetStringEWithOptions(rawURL string, opts ...RequestOption) (string, error) {
+	return httpx.GetStringEWithOptions(rawURL, opts...)
+}
+
 // GetWithTimeout delegates to the internal httpx implementation.
 func GetWithTimeout(rawURL string, timeout time.Duration) string {
 	return GetWithTimeoutWithOptions(rawURL, timeout)
@@ -90,6 +98,16 @@ func GetWithTimeout(rawURL string, timeout time.Duration) string {
 // GetWithTimeoutWithOptions delegates to the internal httpx implementation with options.
 func GetWithTimeoutWithOptions(rawURL string, timeout time.Duration, opts ...RequestOption) string {
 	return httpx.GetWithTimeoutWithOptions(rawURL, timeout, opts...)
+}
+
+// GetWithTimeoutE sends a GET request with a timeout and returns response body or an error.
+func GetWithTimeoutE(rawURL string, timeout time.Duration) (string, error) {
+	return GetWithTimeoutEWithOptions(rawURL, timeout)
+}
+
+// GetWithTimeoutEWithOptions sends a GET request with a timeout and custom options, returning body or error.
+func GetWithTimeoutEWithOptions(rawURL string, timeout time.Duration, opts ...RequestOption) (string, error) {
+	return httpx.GetWithTimeoutEWithOptions(rawURL, timeout, opts...)
 }
 
 // GetWithParams delegates to the internal httpx implementation.
@@ -102,6 +120,16 @@ func GetWithParamsWithOptions(rawURL string, params map[string]any, opts ...Requ
 	return httpx.GetWithParamsWithOptions(rawURL, params, opts...)
 }
 
+// GetWithParamsE sends a GET request with form parameters and returns response body or an error.
+func GetWithParamsE(rawURL string, params map[string]any) (string, error) {
+	return GetWithParamsEWithOptions(rawURL, params)
+}
+
+// GetWithParamsEWithOptions sends a GET request with form parameters and custom options, returning body or error.
+func GetWithParamsEWithOptions(rawURL string, params map[string]any, opts ...RequestOption) (string, error) {
+	return httpx.GetWithParamsEWithOptions(rawURL, params, opts...)
+}
+
 // PostForm posts form parameters and returns response body as string.
 func PostForm(rawURL string, params map[string]any) string {
 	return PostFormWithOptions(rawURL, params)
@@ -112,12 +140,30 @@ func PostFormWithOptions(rawURL string, params map[string]any, opts ...RequestOp
 	return httpx.PostFormWithOptions(rawURL, params, opts...)
 }
 
+// PostFormE posts form parameters and returns response body or an error.
+func PostFormE(rawURL string, params map[string]any) (string, error) {
+	return PostFormEWithOptions(rawURL, params)
+}
+
+// PostFormEWithOptions posts form parameters with options and returns response body or an error.
+func PostFormEWithOptions(rawURL string, params map[string]any, opts ...RequestOption) (string, error) {
+	return httpx.PostFormEWithOptions(rawURL, params, opts...)
+}
+
 // PostJSON posts JSON body and returns response body as string.
 func PostJSON(rawURL, jsonStr string) string { return PostJSONWithOptions(rawURL, jsonStr) }
 
 // PostJSONWithOptions posts JSON body with options and returns response body as string.
 func PostJSONWithOptions(rawURL, jsonStr string, opts ...RequestOption) string {
 	return httpx.PostJSONWithOptions(rawURL, jsonStr, opts...)
+}
+
+// PostJSONE posts JSON body and returns response body or an error.
+func PostJSONE(rawURL, jsonStr string) (string, error) { return PostJSONEWithOptions(rawURL, jsonStr) }
+
+// PostJSONEWithOptions posts JSON body with options and returns response body or an error.
+func PostJSONEWithOptions(rawURL, jsonStr string, opts ...RequestOption) (string, error) {
+	return httpx.PostJSONEWithOptions(rawURL, jsonStr, opts...)
 }
 
 // PostString delegates to the internal httpx implementation.
@@ -128,4 +174,12 @@ func PostString(rawURL, body string) string {
 // PostStringWithOptions delegates to the internal httpx implementation with options.
 func PostStringWithOptions(rawURL, body string, opts ...RequestOption) string {
 	return httpx.PostStringWithOptions(rawURL, body, opts...)
+}
+
+// PostStringE posts a string body and returns response body or an error.
+func PostStringE(rawURL, body string) (string, error) { return PostStringEWithOptions(rawURL, body) }
+
+// PostStringEWithOptions posts a string body with options and returns response body or an error.
+func PostStringEWithOptions(rawURL, body string, opts ...RequestOption) (string, error) {
+	return httpx.PostStringEWithOptions(rawURL, body, opts...)
 }

@@ -2,6 +2,8 @@ package http
 
 import (
 	"errors"
+	"net"
+	"os"
 	"testing"
 
 	knifer "github.com/imajinyun/go-knifer"
@@ -16,6 +18,28 @@ func TestHTTPErrorMessage(t *testing.T) {
 	}
 	if e.Unwrap() == nil {
 		t.Fatal("unwrap nil")
+	}
+}
+
+func TestHTTPErrorWithCode(t *testing.T) {
+	err := NewHTTPErrorWithCode(knifer.ErrCodeInvalidInput, "bad url", errors.New("parse"))
+	if !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("error should match invalid input: %v", err)
+	}
+	if code, ok := knifer.CodeOf(err); !ok || code != knifer.ErrCodeInvalidInput {
+		t.Fatalf("CodeOf = %q %v, want invalid input", code, ok)
+	}
+}
+
+func TestHTTPErrorClassifiesTimeout(t *testing.T) {
+	cause := &net.DNSError{IsTimeout: true}
+	err := NewHTTPError("send request failed", cause)
+	if !errors.Is(err, knifer.ErrCodeTimeout) {
+		t.Fatalf("timeout error should match timeout code: %v", err)
+	}
+	deadline := NewHTTPError("deadline", os.ErrDeadlineExceeded)
+	if !errors.Is(deadline, knifer.ErrCodeTimeout) {
+		t.Fatalf("deadline error should match timeout code: %v", deadline)
 	}
 }
 

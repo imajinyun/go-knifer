@@ -38,6 +38,8 @@ func newTimedCacheWithConfig[K comparable, V any](cfg cacheConfig[K, V]) *TimedC
 
 // SetListener sets the removal listener and returns the cache for chaining.
 func (c *TimedCache[K, V]) SetListener(l CacheListener[K, V]) Cache[K, V] {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.listener = l
 	return c
 }

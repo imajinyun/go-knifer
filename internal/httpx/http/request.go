@@ -12,6 +12,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	knifer "github.com/imajinyun/go-knifer"
 )
 
 var (
@@ -482,7 +484,7 @@ func (r *HTTPRequest) MustExecute() *HTTPResponse {
 func (r *HTTPRequest) buildURL() (string, error) {
 	u, err := url.Parse(r.rawURL)
 	if err != nil {
-		return "", NewHTTPError("invalid url", err)
+		return "", NewHTTPErrorWithCode(knifer.ErrCodeInvalidInput, "invalid url", err)
 	}
 	if len(r.queryParams) > 0 {
 		q := u.Query()
@@ -575,7 +577,7 @@ func (r *HTTPRequest) buildClient() *http.Client {
 				return http.ErrUseLastResponse
 			}
 			if max > 0 && len(via) >= max {
-				return HTTPErrorf("stopped after %d redirects", max)
+				return HTTPErrorfWithCode(knifer.ErrCodeUnsupported, "stopped after %d redirects", max)
 			}
 			return nil
 		},
@@ -588,12 +590,13 @@ func (r *HTTPRequest) doExecute() (*HTTPResponse, error) {
 	if err != nil {
 		return nil, err
 	}
+	hadForm := len(r.form) > 0
 	bodyReader, ct, err := r.prepareBody()
 	if err != nil {
 		return nil, err
 	}
 	// prepareBody may modify query values, so build the URL again.
-	if r.form != nil {
+	if hadForm {
 		finalURL, err = r.buildURL()
 		if err != nil {
 			return nil, err
@@ -606,7 +609,7 @@ func (r *HTTPRequest) doExecute() (*HTTPResponse, error) {
 	}
 	req, err := newRequest(string(r.method), finalURL, bodyReader)
 	if err != nil {
-		return nil, NewHTTPError("build request failed", err)
+		return nil, NewHTTPErrorWithCode(knifer.ErrCodeInvalidInput, "build request failed", err)
 	}
 	for k, vs := range r.headers {
 		for _, v := range vs {

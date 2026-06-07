@@ -218,6 +218,13 @@ func applySchemaOptions(opts []SchemaOption) schemaConfig {
 }
 
 // Conf stores grouped key-value configuration.
+//
+// Conf is intended to be built or loaded first and then published as a read-only
+// snapshot. Concurrent reads are safe only when there are no concurrent
+// mutations. Clone is also a read operation on the source Conf; do not call it
+// while mutating the same Conf concurrently. If a configuration needs to be
+// updated at runtime, clone or build a new Conf from a stable snapshot, mutate
+// the new instance, and publish the new pointer atomically.
 type Conf struct {
 	data map[string]map[string]string
 }
@@ -435,6 +442,16 @@ func (s *Conf) ToMap() map[string]map[string]string {
 			out[g][k] = v
 		}
 	}
+	return out
+}
+
+// Clone returns a deep copy of s that can be mutated independently.
+func (s *Conf) Clone() *Conf {
+	out := New()
+	if s == nil || s.data == nil {
+		return out
+	}
+	out.data = s.ToMap()
 	return out
 }
 

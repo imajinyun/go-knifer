@@ -50,8 +50,22 @@ func CreatePostWithOptions(rawURL string, opts ...RequestOption) *HTTPRequest {
 func GetString(rawURL string) string { return GetStringWithOptions(rawURL) }
 
 // GetStringWithOptions sends a GET request with options and returns the response body as a string.
+// For strict error handling, use GetStringEWithOptions.
 func GetStringWithOptions(rawURL string, opts ...RequestOption) string {
 	return Get(rawURL, opts...).Execute().Body()
+}
+
+// GetStringE sends a GET request and returns the response body or an execution/read error.
+func GetStringE(rawURL string) (string, error) { return GetStringEWithOptions(rawURL) }
+
+// GetStringEWithOptions sends a GET request with options and returns the response body or an error.
+func GetStringEWithOptions(rawURL string, opts ...RequestOption) (string, error) {
+	resp := Get(rawURL, opts...).Execute()
+	body := resp.Body()
+	if err := resp.Err(); err != nil {
+		return "", err
+	}
+	return body, nil
 }
 
 // GetWithTimeout sends a GET request with a timeout.
@@ -64,6 +78,21 @@ func GetWithTimeoutWithOptions(rawURL string, timeout time.Duration, opts ...Req
 	return Get(rawURL, opts...).Timeout(timeout).Execute().Body()
 }
 
+// GetWithTimeoutE sends a GET request with a timeout and returns the response body or an error.
+func GetWithTimeoutE(rawURL string, timeout time.Duration) (string, error) {
+	return GetWithTimeoutEWithOptions(rawURL, timeout)
+}
+
+// GetWithTimeoutEWithOptions sends a GET request with a timeout and custom options, returning body or error.
+func GetWithTimeoutEWithOptions(rawURL string, timeout time.Duration, opts ...RequestOption) (string, error) {
+	resp := Get(rawURL, opts...).Timeout(timeout).Execute()
+	body := resp.Body()
+	if err := resp.Err(); err != nil {
+		return "", err
+	}
+	return body, nil
+}
+
 // GetWithParams sends a GET request with form parameters.
 func GetWithParams(rawURL string, params map[string]any) string {
 	return GetWithParamsWithOptions(rawURL, params)
@@ -72,6 +101,21 @@ func GetWithParams(rawURL string, params map[string]any) string {
 // GetWithParamsWithOptions sends a GET request with form parameters and custom options.
 func GetWithParamsWithOptions(rawURL string, params map[string]any, opts ...RequestOption) string {
 	return Get(rawURL, opts...).Form(params).Execute().Body()
+}
+
+// GetWithParamsE sends a GET request with form parameters and returns the response body or an error.
+func GetWithParamsE(rawURL string, params map[string]any) (string, error) {
+	return GetWithParamsEWithOptions(rawURL, params)
+}
+
+// GetWithParamsEWithOptions sends a GET request with form parameters and custom options, returning body or error.
+func GetWithParamsEWithOptions(rawURL string, params map[string]any, opts ...RequestOption) (string, error) {
+	resp := Get(rawURL, opts...).Form(params).Execute()
+	body := resp.Body()
+	if err := resp.Err(); err != nil {
+		return "", err
+	}
+	return body, nil
 }
 
 // PostString sends a POST request with a string body.
@@ -84,6 +128,19 @@ func PostStringWithOptions(rawURL, body string, opts ...RequestOption) string {
 	return Post(rawURL, opts...).BodyString(body).Execute().Body()
 }
 
+// PostStringE sends a POST request with a string body and returns the response body or an error.
+func PostStringE(rawURL, body string) (string, error) { return PostStringEWithOptions(rawURL, body) }
+
+// PostStringEWithOptions sends a POST request with a string body and custom options, returning body or error.
+func PostStringEWithOptions(rawURL, body string, opts ...RequestOption) (string, error) {
+	resp := Post(rawURL, opts...).BodyString(body).Execute()
+	respBody := resp.Body()
+	if err := resp.Err(); err != nil {
+		return "", err
+	}
+	return respBody, nil
+}
+
 // PostForm sends a POST request with form parameters.
 func PostForm(rawURL string, params map[string]any) string {
 	return PostFormWithOptions(rawURL, params)
@@ -94,6 +151,21 @@ func PostFormWithOptions(rawURL string, params map[string]any, opts ...RequestOp
 	return Post(rawURL, opts...).Form(params).Execute().Body()
 }
 
+// PostFormE sends a POST request with form parameters and returns the response body or an error.
+func PostFormE(rawURL string, params map[string]any) (string, error) {
+	return PostFormEWithOptions(rawURL, params)
+}
+
+// PostFormEWithOptions sends a POST request with form parameters and custom options, returning body or error.
+func PostFormEWithOptions(rawURL string, params map[string]any, opts ...RequestOption) (string, error) {
+	resp := Post(rawURL, opts...).Form(params).Execute()
+	body := resp.Body()
+	if err := resp.Err(); err != nil {
+		return "", err
+	}
+	return body, nil
+}
+
 // PostJSON sends a POST request with a JSON string body.
 func PostJSON(rawURL, jsonStr string) string {
 	return PostJSONWithOptions(rawURL, jsonStr)
@@ -102,6 +174,19 @@ func PostJSON(rawURL, jsonStr string) string {
 // PostJSONWithOptions sends a POST request with a JSON string body and custom options.
 func PostJSONWithOptions(rawURL, jsonStr string, opts ...RequestOption) string {
 	return Post(rawURL, opts...).BodyJSON(jsonStr).Execute().Body()
+}
+
+// PostJSONE sends a POST request with a JSON string body and returns the response body or an error.
+func PostJSONE(rawURL, jsonStr string) (string, error) { return PostJSONEWithOptions(rawURL, jsonStr) }
+
+// PostJSONEWithOptions sends a POST request with a JSON string body and custom options, returning body or error.
+func PostJSONEWithOptions(rawURL, jsonStr string, opts ...RequestOption) (string, error) {
+	resp := Post(rawURL, opts...).BodyJSON(jsonStr).Execute()
+	body := resp.Body()
+	if err := resp.Err(); err != nil {
+		return "", err
+	}
+	return body, nil
 }
 
 // DownloadString downloads remote text and detects charset from response headers when customCharset is empty.
@@ -120,6 +205,27 @@ func DownloadStringWithOptions(rawURL, customCharset string, opts ...RequestOpti
 		_ = customCharset
 	}
 	return resp.Body()
+}
+
+// DownloadStringE downloads remote text and returns an error on request or read failure.
+func DownloadStringE(rawURL, customCharset string) (string, error) {
+	return DownloadStringEWithOptions(rawURL, customCharset)
+}
+
+// DownloadStringEWithOptions downloads remote text with per-request options and returns an error on failure.
+func DownloadStringEWithOptions(rawURL, customCharset string, opts ...RequestOption) (string, error) {
+	resp := Get(rawURL, opts...).Execute()
+	if resp.err != nil {
+		return "", resp.err
+	}
+	if customCharset != "" {
+		_ = customCharset
+	}
+	body := resp.Body()
+	if err := resp.Err(); err != nil {
+		return "", err
+	}
+	return body, nil
 }
 
 // DownloadFile downloads to a file, using URL or response headers for the file name when dest is a directory.
@@ -156,6 +262,19 @@ func DownloadBytes(rawURL string) []byte { return DownloadBytesWithOptions(rawUR
 // DownloadBytesWithOptions downloads and returns bytes with per-request options.
 func DownloadBytesWithOptions(rawURL string, opts ...RequestOption) []byte {
 	return Get(rawURL, opts...).Execute().Bytes()
+}
+
+// DownloadBytesE downloads and returns bytes or an error.
+func DownloadBytesE(rawURL string) ([]byte, error) { return DownloadBytesEWithOptions(rawURL) }
+
+// DownloadBytesEWithOptions downloads and returns bytes with per-request options or an error.
+func DownloadBytesEWithOptions(rawURL string, opts ...RequestOption) ([]byte, error) {
+	resp := Get(rawURL, opts...).Execute()
+	body := resp.Bytes()
+	if err := resp.Err(); err != nil {
+		return nil, err
+	}
+	return body, nil
 }
 
 // ToParams converts a map to a URL query string.

@@ -34,6 +34,8 @@ func NewLRUCacheWithTimeout[K comparable, V any](capacity int, timeout time.Dura
 
 // SetListener sets the removal listener and returns the cache for chaining.
 func (c *LRUCache[K, V]) SetListener(l CacheListener[K, V]) Cache[K, V] {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.listener = l
 	return c
 }

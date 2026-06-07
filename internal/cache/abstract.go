@@ -10,6 +10,11 @@ import (
 // It returns the number of entries removed while abstractCache.mu is held.
 type pruneStrategy[K comparable, V any] func(c *abstractCache[K, V]) int
 
+type removeEvent[K comparable, V any] struct {
+	key   K
+	value V
+}
+
 // abstractCache contains the shared implementation for cache variants, similar
 // to the utility cache AbstractCache and ReentrantCache.
 //
@@ -37,6 +42,11 @@ type abstractCache[K comparable, V any] struct {
 
 	// keyLocks serializes GetOrLoad calls per key to prevent duplicate loading.
 	keyLocks sync.Map
+
+	// pendingRemoves stores removal notifications collected while mu is held.
+	// They are drained and delivered after unlocking so listeners may safely
+	// interact with the same cache without self-deadlocking.
+	pendingRemoves []removeEvent[K, V]
 }
 
 func (c *abstractCache[K, V]) init(capacity int, timeout time.Duration, prune pruneStrategy[K, V]) {
@@ -132,8 +142,10 @@ func (c *abstractCache[K, V]) Put(key K, value V) {
 // PutWithTimeout stores an entry with a custom expiration duration.
 func (c *abstractCache[K, V]) PutWithTimeout(key K, value V, timeout time.Duration) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 	c.putLocked(key, value, timeout)
+	listener, events := c.drainRemoveEventsLocked()
+	c.mu.Unlock()
+	notifyRemoveEvents(listener, events)
 }
 
 func (c *abstractCache[K, V]) putLocked(key K, value V, timeout time.Duration) {
@@ -144,7 +156,7 @@ func (c *abstractCache[K, V]) putLocked(key K, value V, timeout time.Duration) {
 	if old, ok := c.cacheMap.get(key); ok {
 		// Replacing an existing entry must not trigger capacity eviction.
 		c.cacheMap.putBack(key, co)
-		c.notifyRemove(old.key, old.value)
+		c.collectRemoveLocked(old.key, old.value)
 		return
 	}
 	if c.isFullLocked() {
@@ -162,8 +174,11 @@ func (c *abstractCache[K, V]) Get(key K) (V, bool) {
 // GetWithUpdate returns a cached value and optionally refreshes last access time.
 func (c *abstractCache[K, V]) GetWithUpdate(key K, updateLastAccess bool) (V, bool) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.getLocked(key, updateLastAccess)
+	v, ok := c.getLocked(key, updateLastAccess)
+	listener, events := c.drainRemoveEventsLocked()
+	c.mu.Unlock()
+	notifyRemoveEvents(listener, events)
+	return v, ok
 }
 
 func (c *abstractCache[K, V]) getLocked(key K, updateLastAccess bool) (V, bool) {
@@ -176,7 +191,7 @@ func (c *abstractCache[K, V]) getLocked(key K, updateLastAccess bool) (V, bool) 
 	if co.isExpired(c.now()) {
 		// Remove expired entries immediately so future lookups do not see them.
 		c.cacheMap.remove(key)
-		c.notifyRemove(co.key, co.value)
+		c.collectRemoveLocked(co.key, co.value)
 		atomic.AddInt64(&c.missCount, 1)
 		return zero, false
 	}
@@ -231,43 +246,54 @@ func (c *abstractCache[K, V]) GetOrLoadWith(key K, updateLastAccess bool, timeou
 // ContainsKey reports whether key exists and removes it if the entry has expired.
 func (c *abstractCache[K, V]) ContainsKey(key K) bool {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 	co, ok := c.cacheMap.get(key)
 	if !ok {
+		c.mu.Unlock()
 		return false
 	}
 	if co.isExpired(c.now()) {
 		c.cacheMap.remove(key)
-		c.notifyRemove(co.key, co.value)
+		c.collectRemoveLocked(co.key, co.value)
+		listener, events := c.drainRemoveEventsLocked()
+		c.mu.Unlock()
+		notifyRemoveEvents(listener, events)
 		return false
 	}
+	c.mu.Unlock()
 	return true
 }
 
 // Remove deletes one key and notifies the removal listener when present.
 func (c *abstractCache[K, V]) Remove(key K) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 	if old, ok := c.cacheMap.remove(key); ok {
-		c.notifyRemove(old.key, old.value)
+		c.collectRemoveLocked(old.key, old.value)
 	}
+	listener, events := c.drainRemoveEventsLocked()
+	c.mu.Unlock()
+	notifyRemoveEvents(listener, events)
 }
 
 // Clear removes all entries and notifies the listener for each removed value.
 func (c *abstractCache[K, V]) Clear() {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 	for _, co := range c.cacheMap.valuesInOrder() {
-		c.notifyRemove(co.key, co.value)
+		c.collectRemoveLocked(co.key, co.value)
 	}
 	c.cacheMap.clear()
+	listener, events := c.drainRemoveEventsLocked()
+	c.mu.Unlock()
+	notifyRemoveEvents(listener, events)
 }
 
 // Prune runs the configured eviction strategy and returns the removed count.
 func (c *abstractCache[K, V]) Prune() int {
 	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.pruneFn(c)
+	count := c.pruneFn(c)
+	listener, events := c.drainRemoveEventsLocked()
+	c.mu.Unlock()
+	notifyRemoveEvents(listener, events)
+	return count
 }
 
 // Keys returns a snapshot of all keys in list order.
@@ -290,9 +316,28 @@ func (c *abstractCache[K, V]) Values() []V {
 	return out
 }
 
-func (c *abstractCache[K, V]) notifyRemove(key K, value V) {
+func (c *abstractCache[K, V]) collectRemoveLocked(key K, value V) {
 	if c.listener != nil {
-		c.listener.OnRemove(key, value)
+		c.pendingRemoves = append(c.pendingRemoves, removeEvent[K, V]{key: key, value: value})
+	}
+}
+
+func (c *abstractCache[K, V]) drainRemoveEventsLocked() (CacheListener[K, V], []removeEvent[K, V]) {
+	if c.listener == nil || len(c.pendingRemoves) == 0 {
+		c.pendingRemoves = nil
+		return nil, nil
+	}
+	events := append([]removeEvent[K, V](nil), c.pendingRemoves...)
+	c.pendingRemoves = nil
+	return c.listener, events
+}
+
+func notifyRemoveEvents[K comparable, V any](listener CacheListener[K, V], events []removeEvent[K, V]) {
+	if listener == nil {
+		return
+	}
+	for _, event := range events {
+		listener.OnRemove(event.key, event.value)
 	}
 }
 
@@ -300,6 +345,6 @@ func (c *abstractCache[K, V]) notifyRemove(key K, value V) {
 // Callers must already hold abstractCache.mu.
 func (c *abstractCache[K, V]) removeWithoutLock(key K) {
 	if old, ok := c.cacheMap.remove(key); ok {
-		c.notifyRemove(old.key, old.value)
+		c.collectRemoveLocked(old.key, old.value)
 	}
 }

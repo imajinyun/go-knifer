@@ -12,6 +12,7 @@ import (
 	"strings"
 	"sync"
 
+	knifer "github.com/imajinyun/go-knifer"
 	"github.com/imajinyun/go-knifer/internal/httpx/internal/shared"
 )
 
@@ -108,7 +109,7 @@ func readAllWithLimit(r io.Reader, maxBytes int64, readAll func(io.Reader) ([]by
 		return nil, err
 	}
 	if int64(len(data)) > maxBytes {
-		return nil, HTTPErrorf("response body exceeds max bytes: %d", maxBytes)
+		return nil, HTTPErrorfWithCode(knifer.ErrCodeUnsupported, "response body exceeds max bytes: %d", maxBytes)
 	}
 	return data, nil
 }

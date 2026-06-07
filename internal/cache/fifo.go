@@ -33,6 +33,8 @@ func NewFIFOCacheWithTimeout[K comparable, V any](capacity int, timeout time.Dur
 
 // SetListener sets the removal listener and returns the cache for chaining.
 func (c *FIFOCache[K, V]) SetListener(l CacheListener[K, V]) Cache[K, V] {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.listener = l
 	return c
 }

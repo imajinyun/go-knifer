@@ -1,6 +1,7 @@
 package vcron
 
 import (
+	"context"
 	"io"
 	"time"
 
@@ -223,6 +224,16 @@ func CronStop() { cron.Stop() }
 
 // CronStopWithOptions stops the selected default scheduler.
 func CronStopWithOptions(opts ...DefaultSchedulerOption) { cron.StopWithOptions(opts...) }
+
+// CronShutdown stops the default scheduler and waits for running tasks to finish.
+func CronShutdown(ctx context.Context, clearTasks ...bool) error {
+	return cron.Shutdown(ctx, clearTasks...)
+}
+
+// CronShutdownWithOptions stops the selected default scheduler and waits for running tasks to finish.
+func CronShutdownWithOptions(ctx context.Context, opts ...DefaultSchedulerOption) error {
+	return cron.ShutdownWithOptions(ctx, opts...)
+}
 
 // CronRestart restarts the default scheduler.
 func CronRestart() error { return cron.Restart() }

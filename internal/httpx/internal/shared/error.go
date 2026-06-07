@@ -1,7 +1,10 @@
 package shared
 
 import (
+	"errors"
 	"fmt"
+	"net"
+	"os"
 
 	knifer "github.com/imajinyun/go-knifer"
 )
@@ -48,10 +51,47 @@ func (e *HTTPError) Is(target error) bool {
 
 // NewHTTPError creates an HTTP error.
 func NewHTTPError(msg string, cause error) *HTTPError {
-	return &HTTPError{Code: knifer.ErrCodeInternal, Msg: msg, Cause: cause}
+	return NewHTTPErrorWithCode(ClassifyHTTPErrorCode(cause, knifer.ErrCodeInternal), msg, cause)
 }
 
 // HTTPErrorf creates an HTTP error with a formatted message.
 func HTTPErrorf(format string, args ...any) *HTTPError {
-	return &HTTPError{Code: knifer.ErrCodeInternal, Msg: fmt.Sprintf(format, args...)}
+	return NewHTTPErrorWithCode(knifer.ErrCodeInternal, fmt.Sprintf(format, args...), nil)
+}
+
+// HTTPErrorfWithCode creates an HTTP error with an explicit code and formatted message.
+func HTTPErrorfWithCode(code knifer.ErrCode, format string, args ...any) *HTTPError {
+	return NewHTTPErrorWithCode(code, fmt.Sprintf(format, args...), nil)
+}
+
+// NewHTTPErrorWithCode creates an HTTP error with an explicit code.
+func NewHTTPErrorWithCode(code knifer.ErrCode, msg string, cause error) *HTTPError {
+	if code == "" {
+		code = knifer.ErrCodeInternal
+	}
+	return &HTTPError{Code: code, Msg: msg, Cause: cause}
+}
+
+// ClassifyHTTPErrorCode maps common transport errors to go-knifer error codes.
+func ClassifyHTTPErrorCode(err error, fallback knifer.ErrCode) knifer.ErrCode {
+	if err == nil {
+		if fallback == "" {
+			return knifer.ErrCodeInternal
+		}
+		return fallback
+	}
+	if errors.Is(err, os.ErrDeadlineExceeded) {
+		return knifer.ErrCodeTimeout
+	}
+	var netErr net.Error
+	if errors.As(err, &netErr) && netErr.Timeout() {
+		return knifer.ErrCodeTimeout
+	}
+	if code, ok := knifer.CodeOf(err); ok {
+		return code
+	}
+	if fallback == "" {
+		return knifer.ErrCodeInternal
+	}
+	return fallback
 }
