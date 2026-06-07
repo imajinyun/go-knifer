@@ -42,6 +42,11 @@ type Sliceable interface {
 	Run(ctx context.Context, start, end int) (Merge, error)
 }
 
+// OptionCarrier exposes embedded scheduling options for Run.
+type OptionCarrier interface {
+	JobOptions() Options
+}
+
 // Options controls scheduling behavior. The zero value is valid.
 type Options struct {
 	// BatchSize is the number of items per shard. Values <= 0 use Len().

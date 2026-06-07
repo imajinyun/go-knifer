@@ -15,6 +15,13 @@ type removeEvent[K comparable, V any] struct {
 	value V
 }
 
+type loadLock struct {
+	guard   sync.Mutex
+	mu      sync.Mutex
+	refs    int
+	closing bool
+}
+
 // abstractCache contains the shared implementation for cache variants, similar
 // to the utility cache AbstractCache and ReentrantCache.
 //
@@ -225,13 +232,8 @@ func (c *abstractCache[K, V]) GetOrLoadWith(key K, updateLastAccess bool, timeou
 	}
 	// Double-check after acquiring the per-key lock; another goroutine may have
 	// populated the same key while this goroutine was waiting.
-	lockAny, _ := c.keyLocks.LoadOrStore(key, &sync.Mutex{})
-	lock := lockAny.(*sync.Mutex)
-	lock.Lock()
-	defer func() {
-		lock.Unlock()
-		c.keyLocks.Delete(key)
-	}()
+	lock := c.acquireLoadLock(key)
+	defer c.releaseLoadLock(key, lock)
 	if v, ok := c.GetWithUpdate(key, updateLastAccess); ok {
 		return v, nil
 	}
@@ -241,6 +243,37 @@ func (c *abstractCache[K, V]) GetOrLoadWith(key K, updateLastAccess bool, timeou
 	}
 	c.PutWithTimeout(key, v, timeout)
 	return v, nil
+}
+
+func (c *abstractCache[K, V]) acquireLoadLock(key K) *loadLock {
+	for {
+		lockAny, _ := c.keyLocks.LoadOrStore(key, &loadLock{})
+		lock := lockAny.(*loadLock)
+		lock.guard.Lock()
+		if lock.closing {
+			lock.guard.Unlock()
+			continue
+		}
+		lock.refs++
+		lock.guard.Unlock()
+		lock.mu.Lock()
+		return lock
+	}
+}
+
+func (c *abstractCache[K, V]) releaseLoadLock(key K, lock *loadLock) {
+	lock.mu.Unlock()
+	deleteLock := false
+	lock.guard.Lock()
+	lock.refs--
+	if lock.refs == 0 {
+		lock.closing = true
+		deleteLock = true
+	}
+	lock.guard.Unlock()
+	if deleteLock {
+		c.keyLocks.CompareAndDelete(key, lock)
+	}
 }
 
 // ContainsKey reports whether key exists and removes it if the entry has expired.

@@ -62,6 +62,8 @@ func ResetDefaultTransport() { ConfigureDefaultTransportProvider(nil) }
 
 // HTTPRequest is a chainable HTTP request builder, aligned with the utility toolkit-http HttpRequest.
 type HTTPRequest struct {
+	mu           sync.Mutex
+	used         bool
 	method       Method
 	rawURL       string
 	queryParams  url.Values
@@ -97,6 +99,18 @@ type formFile struct {
 	fileName string
 	data     []byte
 	reader   io.Reader
+}
+
+func (f *formFile) clone() *formFile {
+	if f == nil {
+		return nil
+	}
+	return &formFile{
+		field:    f.field,
+		fileName: f.fileName,
+		data:     append([]byte(nil), f.data...),
+		reader:   f.reader,
+	}
 }
 
 // RequestOption customizes one HTTP request at construction time.
@@ -301,6 +315,72 @@ func WithMultipartWriterFactory(factory MultipartWriterFactory) RequestOption {
 // WithContentDecoder registers a per-request response body decoder for encoding.
 func WithContentDecoder(encoding string, decoder ContentDecoder) RequestOption {
 	return func(r *HTTPRequest) { r.decodeConfig.setDecoder(encoding, decoder) }
+}
+
+// Clone returns an independent request builder snapshot.
+//
+// Replayable data such as headers, query values, cookies, byte bodies, forms,
+// and byte-backed multipart files is copied. Reader-backed bodies and
+// multipart files share the same reader and therefore remain single-use unless
+// callers replace them on the clone with a fresh reader.
+func (r *HTTPRequest) Clone() *HTTPRequest {
+	if r == nil {
+		return nil
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	clone := &HTTPRequest{
+		method:       r.method,
+		rawURL:       r.rawURL,
+		queryParams:  cloneValues(r.queryParams),
+		headers:      cloneHeader(r.headers),
+		cookieJar:    r.cookieJar,
+		body:         append([]byte(nil), r.body...),
+		bodyReader:   r.bodyReader,
+		form:         cloneAnyMap(r.form),
+		multipart:    r.multipart,
+		contentType:  r.contentType,
+		charset:      r.charset,
+		timeout:      r.timeout,
+		maxRedirects: r.maxRedirects,
+		tlsSkip:      r.tlsSkip,
+		userAgent:    r.userAgent,
+		transport:    r.transport,
+		transportFn:  r.transportFn,
+		basicUser:    r.basicUser,
+		basicPass:    r.basicPass,
+		hasBasic:     r.hasBasic,
+		httpClient:   r.httpClient,
+		newRequest:   r.newRequest,
+		multipartNew: r.multipartNew,
+		decodeConfig: r.decodeConfig.normalized(),
+	}
+	if r.followRedir != nil {
+		follow := *r.followRedir
+		clone.followRedir = &follow
+	}
+	if r.tlsConfig != nil {
+		clone.tlsConfig = r.tlsConfig.Clone()
+	}
+	if len(r.cookies) > 0 {
+		clone.cookies = make([]*http.Cookie, 0, len(r.cookies))
+		for _, cookie := range r.cookies {
+			if cookie == nil {
+				clone.cookies = append(clone.cookies, nil)
+				continue
+			}
+			copied := *cookie
+			clone.cookies = append(clone.cookies, &copied)
+		}
+	}
+	if len(r.multipartFs) > 0 {
+		clone.multipartFs = make([]*formFile, 0, len(r.multipartFs))
+		for _, file := range r.multipartFs {
+			clone.multipartFs = append(clone.multipartFs, file.clone())
+		}
+	}
+	return clone
 }
 
 // Method sets the HTTP method.
@@ -537,6 +617,50 @@ func (r *HTTPRequest) prepareBody() (io.Reader, string, error) {
 	return nil, r.contentType, nil
 }
 
+func cloneValues(values url.Values) url.Values {
+	out := url.Values{}
+	for k, v := range values {
+		out[k] = append([]string(nil), v...)
+	}
+	return out
+}
+
+func cloneAnyMap(m map[string]any) map[string]any {
+	if m == nil {
+		return nil
+	}
+	out := make(map[string]any, len(m))
+	for k, v := range m {
+		out[k] = v
+	}
+	return out
+}
+
+func (r *HTTPRequest) hasStreamingBody() bool {
+	if r.bodyReader != nil {
+		return true
+	}
+	for _, file := range r.multipartFs {
+		if file != nil && file.reader != nil {
+			return true
+		}
+	}
+	return false
+}
+
+func (r *HTTPRequest) beginExecution() error {
+	if !r.hasStreamingBody() {
+		return nil
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.used {
+		return HTTPErrorfWithCode(knifer.ErrCodeUnsupported, "request contains reader-backed body and cannot be executed more than once; clone it and provide a fresh reader")
+	}
+	r.used = true
+	return nil
+}
+
 func (r *HTTPRequest) buildClient() *http.Client {
 	if r.httpClient != nil {
 		return r.httpClient
@@ -588,6 +712,9 @@ func (r *HTTPRequest) buildClient() *http.Client {
 func (r *HTTPRequest) doExecute() (*HTTPResponse, error) {
 	finalURL, err := r.buildURL()
 	if err != nil {
+		return nil, err
+	}
+	if err := r.beginExecution(); err != nil {
 		return nil, err
 	}
 	hadForm := len(r.form) > 0

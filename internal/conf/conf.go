@@ -350,16 +350,54 @@ func (s *Conf) GetInt(key string, def int) int {
 
 // GetIntWithOptions returns an int value from the default group using per-call parser options.
 func (s *Conf) GetIntWithOptions(key string, def int, opts ...ValueOption) int {
-	v, ok := s.Lookup(defaultGroup, key)
-	if !ok {
-		return def
-	}
-	cfg := applyValueOptions(opts)
-	n, err := cfg.parseInt(v)
+	n, err := s.GetIntEWithOptions(key, opts...)
 	if err != nil {
 		return def
 	}
 	return n
+}
+
+// GetIntE returns an int value from the default group and reports missing or invalid values.
+func (s *Conf) GetIntE(key string) (int, error) {
+	return s.GetIntEWithOptions(key)
+}
+
+// GetIntEWithOptions returns an int value from the default group using per-call parser options.
+func (s *Conf) GetIntEWithOptions(key string, opts ...ValueOption) (int, error) {
+	return s.GetIntByGroupEWithOptions(defaultGroup, key, opts...)
+}
+
+// GetIntByGroup returns an int value from a group or def when absent/invalid.
+func (s *Conf) GetIntByGroup(group, key string, def int) int {
+	return s.GetIntByGroupWithOptions(group, key, def)
+}
+
+// GetIntByGroupWithOptions returns an int value from a group using per-call parser options.
+func (s *Conf) GetIntByGroupWithOptions(group, key string, def int, opts ...ValueOption) int {
+	n, err := s.GetIntByGroupEWithOptions(group, key, opts...)
+	if err != nil {
+		return def
+	}
+	return n
+}
+
+// GetIntByGroupE returns an int value from a group and reports missing or invalid values.
+func (s *Conf) GetIntByGroupE(group, key string) (int, error) {
+	return s.GetIntByGroupEWithOptions(group, key)
+}
+
+// GetIntByGroupEWithOptions returns an int value from a group using per-call parser options.
+func (s *Conf) GetIntByGroupEWithOptions(group, key string, opts ...ValueOption) (int, error) {
+	v, ok := s.Lookup(group, key)
+	if !ok {
+		return 0, notFoundf("configuration %q not found in group %q", key, group)
+	}
+	cfg := applyValueOptions(opts)
+	n, err := cfg.parseInt(v)
+	if err != nil {
+		return 0, wrapConfigParse(fmt.Sprintf("parse int configuration %q in group %q", key, group), err)
+	}
+	return n, nil
 }
 
 // GetBool 从默认分组获取 bool 值，不存在或格式非法时返回 def。GetBool returns a bool value from the default group or def when absent/invalid.
@@ -369,16 +407,54 @@ func (s *Conf) GetBool(key string, def bool) bool {
 
 // GetBoolWithOptions returns a bool value from the default group using per-call parser options.
 func (s *Conf) GetBoolWithOptions(key string, def bool, opts ...ValueOption) bool {
-	v, ok := s.Lookup(defaultGroup, key)
-	if !ok {
-		return def
-	}
-	cfg := applyValueOptions(opts)
-	b, err := cfg.parseBool(v)
+	b, err := s.GetBoolEWithOptions(key, opts...)
 	if err != nil {
 		return def
 	}
 	return b
+}
+
+// GetBoolE returns a bool value from the default group and reports missing or invalid values.
+func (s *Conf) GetBoolE(key string) (bool, error) {
+	return s.GetBoolEWithOptions(key)
+}
+
+// GetBoolEWithOptions returns a bool value from the default group using per-call parser options.
+func (s *Conf) GetBoolEWithOptions(key string, opts ...ValueOption) (bool, error) {
+	return s.GetBoolByGroupEWithOptions(defaultGroup, key, opts...)
+}
+
+// GetBoolByGroup returns a bool value from a group or def when absent/invalid.
+func (s *Conf) GetBoolByGroup(group, key string, def bool) bool {
+	return s.GetBoolByGroupWithOptions(group, key, def)
+}
+
+// GetBoolByGroupWithOptions returns a bool value from a group using per-call parser options.
+func (s *Conf) GetBoolByGroupWithOptions(group, key string, def bool, opts ...ValueOption) bool {
+	b, err := s.GetBoolByGroupEWithOptions(group, key, opts...)
+	if err != nil {
+		return def
+	}
+	return b
+}
+
+// GetBoolByGroupE returns a bool value from a group and reports missing or invalid values.
+func (s *Conf) GetBoolByGroupE(group, key string) (bool, error) {
+	return s.GetBoolByGroupEWithOptions(group, key)
+}
+
+// GetBoolByGroupEWithOptions returns a bool value from a group using per-call parser options.
+func (s *Conf) GetBoolByGroupEWithOptions(group, key string, opts ...ValueOption) (bool, error) {
+	v, ok := s.Lookup(group, key)
+	if !ok {
+		return false, notFoundf("configuration %q not found in group %q", key, group)
+	}
+	cfg := applyValueOptions(opts)
+	b, err := cfg.parseBool(v)
+	if err != nil {
+		return false, wrapConfigParse(fmt.Sprintf("parse bool configuration %q in group %q", key, group), err)
+	}
+	return b, nil
 }
 
 // Set 将配置值写入默认分组。Set stores a value in the default group.

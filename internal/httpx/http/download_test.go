@@ -3,6 +3,7 @@ package http
 import (
 	"bytes"
 	"compress/gzip"
+	"errors"
 	"io"
 	"io/fs"
 	"net/http"
@@ -11,6 +12,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	knifer "github.com/imajinyun/go-knifer"
 )
 
 // Covers the utility toolkit-http DownloadTest.
@@ -173,6 +176,12 @@ func TestSaveAsStreamsWithoutCachingBody(t *testing.T) {
 	}
 	if resp.body != nil {
 		t.Fatalf("SaveAs() should stream to file without caching response body, cached %d bytes", len(resp.body))
+	}
+	if got := resp.Bytes(); got != nil {
+		t.Fatalf("Bytes() after streamed SaveAs = %q, want nil", string(got))
+	}
+	if !errors.Is(resp.Err(), knifer.ErrCodeUnsupported) {
+		t.Fatalf("Err() after Bytes() on consumed body = %v, want unsupported", resp.Err())
 	}
 }
 

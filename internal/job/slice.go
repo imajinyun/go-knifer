@@ -2,7 +2,10 @@ package job
 
 import "context"
 
-var _ Sliceable = (*Slice)(nil)
+var (
+	_ Sliceable     = (*Slice)(nil)
+	_ OptionCarrier = (*Slice)(nil)
+)
 
 // Slice adapts index ranges to the Sliceable interface.
 type Slice struct {
@@ -38,6 +41,9 @@ func (s *Slice) WithMaxConcurrency(maxConcurrency int) *Slice {
 	s.MaxConcurrency = maxConcurrency
 	return s
 }
+
+// JobOptions returns the embedded scheduling options used by Run.
+func (s *Slice) JobOptions() Options { return s.Options }
 
 // Len returns the number of indexes to process.
 func (s *Slice) Len() int { return s.length }

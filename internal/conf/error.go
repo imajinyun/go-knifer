@@ -70,6 +70,10 @@ func invalidInputf(format string, args ...any) *ConfError {
 	return confErrorf(knifer.ErrCodeInvalidInput, format, args...)
 }
 
+func notFoundf(format string, args ...any) *ConfError {
+	return confErrorf(knifer.ErrCodeNotFound, format, args...)
+}
+
 func wrapConfigIO(msg string, cause error) error {
 	code := knifer.ErrCodeInternal
 	if os.IsNotExist(cause) {

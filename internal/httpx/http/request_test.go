@@ -262,6 +262,40 @@ func TestRequestFormFileReader(t *testing.T) {
 	}
 }
 
+func TestRequestReaderBackedBodyIsSingleUse(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		b, _ := io.ReadAll(r.Body)
+		_, _ = w.Write(b)
+	}))
+	defer srv.Close()
+
+	req := Post(srv.URL).BodyReader(strings.NewReader("hello"))
+	if got := req.Execute().Body(); got != "hello" {
+		t.Fatalf("first body = %q", got)
+	}
+	resp := req.Execute()
+	if resp.Err() == nil {
+		t.Fatal("second Execute() should reject reader-backed body reuse")
+	}
+}
+
+func TestRequestCloneCreatesIndependentBuilder(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(r.URL.Query().Get("q") + ":" + r.Header.Get("X-Token")))
+	}))
+	defer srv.Close()
+
+	base := Get(srv.URL).Query("q", "base").Header("X-Token", "base")
+	clone := base.Clone().Query("q", "clone").Header("X-Token", "clone")
+
+	if got := base.Execute().Body(); got != "base:base" {
+		t.Fatalf("base Body() = %q", got)
+	}
+	if got := clone.Execute().Body(); got != "base:clone" {
+		t.Fatalf("clone Body() = %q", got)
+	}
+}
+
 func TestRequestCookie(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		c, _ := r.Cookie("k")

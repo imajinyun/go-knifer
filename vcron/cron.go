@@ -230,6 +230,12 @@ func CronShutdown(ctx context.Context, clearTasks ...bool) error {
 	return cron.Shutdown(ctx, clearTasks...)
 }
 
+// CronRunningCount returns the number of running task executions on the default scheduler.
+func CronRunningCount() int { return cron.DefaultScheduler().RunningCount() }
+
+// CronLaunchingCount returns the number of launcher jobs currently dispatching due tasks.
+func CronLaunchingCount() int { return cron.DefaultScheduler().LaunchingCount() }
+
 // CronShutdownWithOptions stops the selected default scheduler and waits for running tasks to finish.
 func CronShutdownWithOptions(ctx context.Context, opts ...DefaultSchedulerOption) error {
 	return cron.ShutdownWithOptions(ctx, opts...)

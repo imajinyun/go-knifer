@@ -120,16 +120,25 @@ func (l *taskLauncher) run() {
 type taskLauncherManager struct {
 	scheduler *Scheduler
 	mu        sync.Mutex
+	cond      *sync.Cond
 	launchers []*taskLauncher
+	idleCh    chan struct{}
 }
 
 func newTaskLauncherManager(s *Scheduler) *taskLauncherManager {
-	return &taskLauncherManager{scheduler: s}
+	idleCh := make(chan struct{})
+	close(idleCh)
+	m := &taskLauncherManager{scheduler: s, idleCh: idleCh}
+	m.cond = sync.NewCond(&m.mu)
+	return m
 }
 
 func (m *taskLauncherManager) spawn(millis int64) *taskLauncher {
 	l := &taskLauncher{scheduler: m.scheduler, millis: millis}
 	m.mu.Lock()
+	if len(m.launchers) == 0 {
+		m.idleCh = make(chan struct{})
+	}
 	m.launchers = append(m.launchers, l)
 	m.mu.Unlock()
 	m.scheduler.submit(l.run)
@@ -142,7 +151,40 @@ func (m *taskLauncherManager) completed(l *taskLauncher) {
 	for i, x := range m.launchers {
 		if x == l {
 			m.launchers = append(m.launchers[:i], m.launchers[i+1:]...)
+			m.cond.Broadcast()
+			if len(m.launchers) == 0 {
+				close(m.idleCh)
+			}
 			return
 		}
+	}
+}
+
+func (m *taskLauncherManager) runningCount() int {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return len(m.launchers)
+}
+
+func (m *taskLauncherManager) wait() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for len(m.launchers) > 0 {
+		m.cond.Wait()
+	}
+}
+
+func (m *taskLauncherManager) waitContext(ctx context.Context) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	m.mu.Lock()
+	idleCh := m.idleCh
+	m.mu.Unlock()
+	select {
+	case <-idleCh:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
 	}
 }

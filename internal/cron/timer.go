@@ -23,6 +23,7 @@ func newCronTimer(s *Scheduler) *cronTimer {
 
 // run starts the loop, triggers tasks by unit, and automatically corrects clock drift.
 func (t *cronTimer) run() {
+	defer t.scheduler.timerWG.Done()
 	unit := timerUnitMinute
 	if t.scheduler.config.MatchSecond {
 		unit = timerUnitSecond

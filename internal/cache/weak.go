@@ -6,12 +6,14 @@ import (
 	"time"
 )
 
-// WeakCache is a weak-reference-like cache for pointer values.
+// WeakCache is a pointer-value cache with TTL and best-effort finalizer cleanup.
 //
-// Go does not provide Java-style WeakReference. This implementation uses
-// runtime.SetFinalizer to approximate weak-reference behavior: when all strong
-// references to a cached pointer disappear, a later GC cycle may run the
-// finalizer and remove the corresponding entry.
+// Go does not provide Java-style WeakReference. Entries in this cache keep a
+// normal strong reference while they remain in the map, so callers must not rely
+// on GC to reclaim cached values merely because outside references disappear.
+// The optional finalizer hook is only a best-effort cleanup aid for values that
+// become collectible after explicit removal/replacement or other lifecycle
+// transitions; it is not a true weak-reference contract.
 //
 // Because finalizer scheduling is intentionally non-deterministic in Go, callers
 // should treat GC-based cleanup as eventual cleanup. TTL checks and explicit
@@ -37,13 +39,13 @@ type weakEntry[V any] struct {
 	ttl        time.Duration
 }
 
-// NewWeakCache creates a weak-reference-like cache with timeout as default TTL.
+// NewWeakCache creates a pointer-value timed cache with timeout as default TTL.
 // A zero timeout means entries do not expire by time.
 func NewWeakCache[K comparable, V any](timeout time.Duration) *WeakCache[K, V] {
 	return NewWeakCacheWithOptions[K, V](WithTimeout[K, *V](timeout))
 }
 
-// NewWeakCacheWithOptions creates a weak-reference-like cache customized by options.
+// NewWeakCacheWithOptions creates a pointer-value timed cache customized by options.
 func NewWeakCacheWithOptions[K comparable, V any](opts ...Option[K, *V]) *WeakCache[K, V] {
 	return newWeakCacheWithConfig[K, V](applyOptions(opts))
 }

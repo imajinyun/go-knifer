@@ -19,9 +19,10 @@ import (
 // HTTPResponse wraps http.Response and provides convenient readers, aligned with the utility toolkit-http HttpResponse.
 type HTTPResponse struct {
 	resp         *http.Response
+	mu           sync.Mutex
 	body         []byte
 	bodyRead     bool
-	once         sync.Once
+	bodyConsumed bool
 	err          error
 	decodeConfig responseDecodeConfig
 }
@@ -197,7 +198,11 @@ func applySaveOptions(opts []SaveOption) saveConfig {
 }
 
 // Err returns the error raised during execution.
-func (r *HTTPResponse) Err() error { return r.err }
+func (r *HTTPResponse) Err() error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.err
+}
 
 // Status returns the HTTP status code, or 0 on error.
 func (r *HTTPResponse) Status() int {
@@ -257,31 +262,37 @@ func (r *HTTPResponse) Charset() string {
 
 // Bytes reads and returns the response body bytes.
 func (r *HTTPResponse) Bytes() []byte {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	if r.bodyRead {
 		return r.body
 	}
-	r.once.Do(func() {
-		if r.resp == nil || r.resp.Body == nil {
-			return
+	if r.bodyConsumed {
+		if r.err == nil {
+			r.err = HTTPErrorfWithCode(knifer.ErrCodeUnsupported, "response body has already been consumed")
 		}
-		defer func() {
-			if err := r.resp.Body.Close(); err != nil && r.err == nil {
-				r.err = NewHTTPError("close response body failed", err)
-			}
-		}()
-		reader, err := r.decodedBody()
-		if err != nil {
-			r.err = err
-			return
+		return nil
+	}
+	if r.resp == nil || r.resp.Body == nil {
+		return nil
+	}
+	defer func() {
+		if err := r.resp.Body.Close(); err != nil && r.err == nil {
+			r.err = NewHTTPError("close response body failed", err)
 		}
-		data, err := readAllWithLimit(reader, r.decodeConfig.maxBytes, r.decodeConfig.readAll)
-		if err != nil && (!r.decodeConfig.ignoreEOFError || err != io.ErrUnexpectedEOF) {
-			r.err = NewHTTPError("read response body failed", err)
-			return
-		}
-		r.body = data
-		r.bodyRead = true
-	})
+	}()
+	reader, err := r.decodedBody()
+	if err != nil {
+		r.err = err
+		return nil
+	}
+	data, err := readAllWithLimit(reader, r.decodeConfig.maxBytes, r.decodeConfig.readAll)
+	if err != nil && (!r.decodeConfig.ignoreEOFError || err != io.ErrUnexpectedEOF) {
+		r.err = NewHTTPError("read response body failed", err)
+		return nil
+	}
+	r.body = data
+	r.bodyRead = true
 	return r.body
 }
 
@@ -349,11 +360,17 @@ func (r *HTTPResponse) Close() error {
 func (r *HTTPResponse) Raw() *http.Response { return r.resp }
 
 func (r *HTTPResponse) writeBodyTo(w io.Writer) (int64, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	if r.err != nil {
 		return 0, r.err
 	}
 	if r.bodyRead {
 		return io.Copy(w, bytes.NewReader(r.body))
+	}
+	if r.bodyConsumed {
+		r.err = HTTPErrorfWithCode(knifer.ErrCodeUnsupported, "response body has already been consumed")
+		return 0, r.err
 	}
 	if r.resp == nil || r.resp.Body == nil {
 		return 0, nil
@@ -380,7 +397,7 @@ func (r *HTTPResponse) writeBodyTo(w io.Writer) (int64, error) {
 		r.err = NewHTTPError("read response body failed", err)
 		return n, r.err
 	}
-	r.bodyRead = true
+	r.bodyConsumed = true
 	return n, nil
 }
 

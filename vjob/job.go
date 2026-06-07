@@ -19,6 +19,9 @@ type Merge = jobimpl.Merge
 // Sliceable describes work that can be split by half-open index ranges.
 type Sliceable = jobimpl.Sliceable
 
+// OptionCarrier exposes embedded scheduling options for Run.
+type OptionCarrier = jobimpl.OptionCarrier
+
 // Options controls scheduling behavior. The zero value is valid.
 type Options = jobimpl.Options
 
@@ -80,6 +83,9 @@ func (b *Batch[T]) WithMaxConcurrency(maxConcurrency int) *Batch[T] {
 	b.MaxConcurrency = maxConcurrency
 	return b
 }
+
+// JobOptions returns the embedded scheduling options used by Run.
+func (b *Batch[T]) JobOptions() Options { return b.Options }
 
 // Len returns the number of items to process.
 func (b *Batch[T]) Len() int { return b.ensureInner().Len() }

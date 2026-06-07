@@ -14,6 +14,7 @@ type Scheduler struct {
 	config      *Config
 	started     atomic.Bool
 	timer       *cronTimer
+	timerWG     sync.WaitGroup
 	taskTable   *TaskTable
 	launcherMgr *taskLauncherManager
 	executorMgr *taskExecutorManager
@@ -288,6 +289,7 @@ func (s *Scheduler) Start() error {
 		return NewCronError("scheduler already started")
 	}
 	s.timer = newCronTimer(s)
+	s.timerWG.Add(1)
 	s.run(s.timer.run)
 	return nil
 }
@@ -303,6 +305,7 @@ func (s *Scheduler) Stop(clearTasks ...bool) {
 		s.timer.stopTimer()
 		s.timer = nil
 	}
+	s.timerWG.Wait()
 	if len(clearTasks) > 0 && clearTasks[0] {
 		s.Clear()
 	}
@@ -311,13 +314,22 @@ func (s *Scheduler) Stop(clearTasks ...bool) {
 // RunningCount returns the number of task executions currently running.
 func (s *Scheduler) RunningCount() int { return s.executorMgr.runningCount() }
 
-// Wait blocks until all currently running task executions finish.
-func (s *Scheduler) Wait() { s.executorMgr.wait() }
+// LaunchingCount returns the number of scheduler launcher jobs currently dispatching due tasks.
+func (s *Scheduler) LaunchingCount() int { return s.launcherMgr.runningCount() }
+
+// Wait blocks until all currently dispatching launchers and running task executions finish.
+func (s *Scheduler) Wait() {
+	s.launcherMgr.wait()
+	s.executorMgr.wait()
+}
 
 // Shutdown stops the scheduler timer and waits for running task executions to finish
 // or for ctx to be canceled. It does not forcibly cancel already running tasks.
 func (s *Scheduler) Shutdown(ctx context.Context, clearTasks ...bool) error {
 	s.Stop(clearTasks...)
+	if err := s.launcherMgr.waitContext(ctx); err != nil {
+		return err
+	}
 	return s.executorMgr.waitContext(ctx)
 }
 

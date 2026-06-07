@@ -113,6 +113,21 @@ func TestRunWithEmbeddedOptions_BitsUT(t *testing.T) {
 	}
 }
 
+func TestRunUsesEmbeddedOptions_BitsUT(t *testing.T) {
+	var ranges []string
+	j := NewSlice(func(ctx context.Context, start, end int) (Merge, error) {
+		ranges = append(ranges, formatRange(start, end))
+		return nil, nil
+	}, 5).WithBatchSize(2)
+
+	if err := Run(context.Background(), j); err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if want := []string{"0:2", "2:4", "4:5"}; !reflect.DeepEqual(ranges, want) {
+		t.Fatalf("ranges = %v, want %v", ranges, want)
+	}
+}
+
 type embeddedOptionsJob struct {
 	Options
 	vals []int

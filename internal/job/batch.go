@@ -2,7 +2,10 @@ package job
 
 import "context"
 
-var _ Sliceable = (*Batch[int])(nil)
+var (
+	_ Sliceable     = (*Batch[int])(nil)
+	_ OptionCarrier = (*Batch[int])(nil)
+)
 
 // Batch adapts a typed slice to the Sliceable interface.
 type Batch[T any] struct {
@@ -38,6 +41,9 @@ func (b *Batch[T]) WithMaxConcurrency(maxConcurrency int) *Batch[T] {
 	b.MaxConcurrency = maxConcurrency
 	return b
 }
+
+// JobOptions returns the embedded scheduling options used by Run.
+func (b *Batch[T]) JobOptions() Options { return b.Options }
 
 // Len returns the number of items to process.
 func (b *Batch[T]) Len() int { return len(b.vals) }

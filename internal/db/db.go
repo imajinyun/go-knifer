@@ -133,12 +133,28 @@ func (db *DB) Upsert(ctx context.Context, entity Entity, conflictFields []string
 
 // Update updates rows matching conditions.
 func (db *DB) Update(ctx context.Context, entity Entity, conds ...Condition) (sql.Result, error) {
+	if len(conds) == 0 {
+		return nil, invalidInputf("db: UPDATE without conditions is unsafe; use UpdateAll to update every row explicitly")
+	}
 	return updateEntity(ctx, db.sqlDB, db.dialect, db.wrapper, entity, conds...)
+}
+
+// UpdateAll updates all rows in entity.Table. Use deliberately; no WHERE clause is generated.
+func (db *DB) UpdateAll(ctx context.Context, entity Entity) (sql.Result, error) {
+	return updateEntity(ctx, db.sqlDB, db.dialect, db.wrapper, entity)
 }
 
 // Delete deletes rows matching conditions.
 func (db *DB) Delete(ctx context.Context, table string, conds ...Condition) (sql.Result, error) {
+	if len(conds) == 0 {
+		return nil, invalidInputf("db: DELETE without conditions is unsafe; use DeleteAll to delete every row explicitly")
+	}
 	return deleteRows(ctx, db.sqlDB, db.dialect, db.wrapper, table, conds...)
+}
+
+// DeleteAll deletes all rows from table. Use deliberately; no WHERE clause is generated.
+func (db *DB) DeleteAll(ctx context.Context, table string) (sql.Result, error) {
+	return deleteRows(ctx, db.sqlDB, db.dialect, db.wrapper, table)
 }
 
 // DeleteEntity deletes rows using entity values as equality conditions.
@@ -214,6 +230,12 @@ func (db *DB) Tx(ctx context.Context, opts *sql.TxOptions, fn func(*Session) err
 	if err != nil {
 		return wrapInternal("db: begin transaction", err)
 	}
+	defer func() {
+		if p := recover(); p != nil {
+			_ = tx.Rollback()
+			panic(p)
+		}
+	}()
 	s := &Session{tx: tx, parent: db}
 	if err := fn(s); err != nil {
 		if rbErr := tx.Rollback(); rbErr != nil {

@@ -11,6 +11,7 @@ import (
 type TimedCache[K comparable, V any] struct {
 	abstractCache[K, V]
 
+	pruneMu   sync.Mutex
 	pruneStop chan struct{}
 	pruneWG   sync.WaitGroup
 }
@@ -58,16 +59,27 @@ func timedPrune[K comparable, V any](c *abstractCache[K, V]) int {
 
 // SchedulePrune starts a background pruning task with delay as the interval.
 // The task keeps running until CancelPruneSchedule is called.
+// Calling SchedulePrune while a pruning task is already running is a no-op.
 func (c *TimedCache[K, V]) SchedulePrune(delay time.Duration) {
-	c.pruneStop = make(chan struct{})
+	if delay <= 0 {
+		return
+	}
+	c.pruneMu.Lock()
+	if c.pruneStop != nil {
+		c.pruneMu.Unlock()
+		return
+	}
+	stopCh := make(chan struct{})
+	c.pruneStop = stopCh
 	c.pruneWG.Add(1)
+	c.pruneMu.Unlock()
 	c.run(func() {
 		defer c.pruneWG.Done()
 		ticks, ticker := c.newTicker(delay)
 		defer ticker.Stop()
 		for {
 			select {
-			case <-c.pruneStop:
+			case <-stopCh:
 				return
 			case <-ticks:
 				c.Prune()
@@ -78,14 +90,15 @@ func (c *TimedCache[K, V]) SchedulePrune(delay time.Duration) {
 
 // CancelPruneSchedule stops the background pruning task if it is running.
 func (c *TimedCache[K, V]) CancelPruneSchedule() {
-	if c.pruneStop != nil {
-		select {
-		case <-c.pruneStop:
-			// Already closed.
-		default:
-			close(c.pruneStop)
-		}
-		c.pruneWG.Wait()
-		c.pruneStop = nil
+	c.pruneMu.Lock()
+	stopCh := c.pruneStop
+	if stopCh == nil {
+		c.pruneMu.Unlock()
+		return
 	}
+	c.pruneStop = nil
+	c.pruneMu.Unlock()
+
+	close(stopCh)
+	c.pruneWG.Wait()
 }

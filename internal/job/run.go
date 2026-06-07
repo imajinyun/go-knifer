@@ -9,6 +9,9 @@ import (
 
 // Run executes job with the default Options. By default, the whole job runs as one serial shard.
 func Run(ctx context.Context, job Sliceable) error {
+	if carrier, ok := job.(OptionCarrier); ok {
+		return RunWith(ctx, job, carrier.JobOptions())
+	}
 	return RunWith(ctx, job, Options{})
 }
 

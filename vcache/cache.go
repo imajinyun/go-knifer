@@ -61,7 +61,8 @@ type TimedCache[K comparable, V any] struct {
 	*cache.TimedCache[K, V]
 }
 
-// WeakCache is a weak-style timed cache.
+// WeakCache is a pointer-value timed cache with best-effort finalizer cleanup.
+// It does not provide Java-style weak-reference semantics while entries remain stored.
 type WeakCache[K comparable, V any] struct {
 	*cache.WeakCache[K, V]
 }
