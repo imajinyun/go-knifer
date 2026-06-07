@@ -43,3 +43,8 @@ func ExtractMultiAndDelPreRe(re *regexp.Regexp, contentHolder *string, template 
 
 // TemplateVars returns numeric placeholders referenced by a replacement template, longest first.
 func TemplateVars(template string) []int { return regeximpl.TemplateVars(template) }
+
+// TemplateVarsWithOptions returns numeric placeholders referenced by a replacement template with options.
+func TemplateVarsWithOptions(template string, opts ...Option) []int {
+	return regeximpl.TemplateVarsWithOptions(template, opts...)
+}

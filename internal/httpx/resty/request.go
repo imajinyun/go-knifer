@@ -35,6 +35,10 @@ type HTTPRequest struct {
 	hasBasic      bool
 	restyClient   *grestry.Client
 	clientFactory func() *grestry.Client
+	jsonMarshal   func(any) ([]byte, error)
+	jsonUnmarshal func([]byte, any) error
+	result        any
+	errorResult   any
 }
 
 type formFile struct {
@@ -208,6 +212,24 @@ func WithContentType(ct string) RequestOption { return func(r *HTTPRequest) { r.
 // WithCharset sets a per-request charset at construction time.
 func WithCharset(charset string) RequestOption { return func(r *HTTPRequest) { r.Charset(charset) } }
 
+// WithJSONMarshalFunc sets the JSON marshal provider used by request body encoding.
+func WithJSONMarshalFunc(marshal func(any) ([]byte, error)) RequestOption {
+	return func(r *HTTPRequest) {
+		if marshal != nil {
+			r.jsonMarshal = marshal
+		}
+	}
+}
+
+// WithJSONUnmarshalFunc sets the JSON unmarshal provider used by response decoding.
+func WithJSONUnmarshalFunc(unmarshal func([]byte, any) error) RequestOption {
+	return func(r *HTTPRequest) {
+		if unmarshal != nil {
+			r.jsonUnmarshal = unmarshal
+		}
+	}
+}
+
 // Method sets the HTTP method.
 func (r *HTTPRequest) Method(m Method) *HTTPRequest { r.method = m; return r }
 
@@ -321,6 +343,19 @@ func (r *HTTPRequest) BodyJSON(s string) *HTTPRequest {
 	return r.Body([]byte(s))
 }
 
+// BodyJSONValue sets a JSON request body value to be encoded by resty or the configured JSON marshal provider.
+func (r *HTTPRequest) BodyJSONValue(v any) *HTTPRequest {
+	r.contentType = ContentTypeJSON.WithCharset(r.charset)
+	r.body = v
+	return r
+}
+
+// Result registers a value for automatic response decoding.
+func (r *HTTPRequest) Result(v any) *HTTPRequest { r.result = v; return r }
+
+// ErrorResult registers a value for automatic error response decoding.
+func (r *HTTPRequest) ErrorResult(v any) *HTTPRequest { r.errorResult = v; return r }
+
 // BodyReader sets the request body from an io.Reader.
 func (r *HTTPRequest) BodyReader(reader io.Reader) *HTTPRequest { r.body = reader; return r }
 
@@ -396,6 +431,25 @@ func (r *HTTPRequest) buildClient() *grestry.Client {
 	} else if r.maxRedirects > 0 {
 		c.SetRedirectPolicy(grestry.FlexibleRedirectPolicy(r.maxRedirects))
 	}
+	if r.jsonMarshal != nil {
+		c.AddContentTypeEncoder("json", func(w io.Writer, v any) error {
+			data, err := r.jsonMarshal(v)
+			if err != nil {
+				return err
+			}
+			_, err = w.Write(data)
+			return err
+		})
+	}
+	if r.jsonUnmarshal != nil {
+		c.AddContentTypeDecoder("json", func(reader io.Reader, v any) error {
+			data, err := io.ReadAll(reader)
+			if err != nil {
+				return err
+			}
+			return r.jsonUnmarshal(data, v)
+		})
+	}
 	return c
 }
 
@@ -434,6 +488,12 @@ func (r *HTTPRequest) doExecute() (*HTTPResponse, error) {
 	}
 	if r.hasBasic {
 		req.SetBasicAuth(r.basicUser, r.basicPass)
+	}
+	if r.result != nil {
+		req.SetResult(r.result)
+	}
+	if r.errorResult != nil {
+		req.SetError(r.errorResult)
 	}
 	keys := make([]string, 0, len(r.queryParams))
 	for k := range r.queryParams {

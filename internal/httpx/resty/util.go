@@ -2,11 +2,21 @@ package resty
 
 import (
 	"io"
+	"regexp"
 	"time"
 
 	"github.com/imajinyun/go-knifer/internal/httpx/internal/shared"
 	urlimpl "github.com/imajinyun/go-knifer/internal/url"
 )
+
+// CharsetOption customizes charset extraction helpers per call.
+type CharsetOption = shared.CharsetOption
+
+// WithCharsetRegexp sets the regexp used by GetCharsetFromContentTypeWithOptions.
+func WithCharsetRegexp(re *regexp.Regexp) CharsetOption { return shared.WithCharsetRegexp(re) }
+
+// WithMetaCharsetRegexp sets the regexp used by GetCharsetFromHTMLWithOptions.
+func WithMetaCharsetRegexp(re *regexp.Regexp) CharsetOption { return shared.WithMetaCharsetRegexp(re) }
 
 // IsHTTPS reports whether the given URL is https.
 func IsHTTPS(u string) bool { return urlimpl.IsHTTPS(u) }
@@ -148,12 +158,22 @@ var (
 
 // GetCharsetFromContentType extracts charset from Content-Type.
 func GetCharsetFromContentType(ct string) string {
-	return shared.GetCharsetFromContentType(ct)
+	return GetCharsetFromContentTypeWithOptions(ct)
+}
+
+// GetCharsetFromContentTypeWithOptions extracts charset from Content-Type with options.
+func GetCharsetFromContentTypeWithOptions(ct string, opts ...CharsetOption) string {
+	return shared.GetCharsetFromContentTypeWithOptions(ct, opts...)
 }
 
 // GetCharsetFromHTML extracts charset from HTML meta tags.
 func GetCharsetFromHTML(html string) string {
-	return shared.GetCharsetFromHTML(html)
+	return GetCharsetFromHTMLWithOptions(html)
+}
+
+// GetCharsetFromHTMLWithOptions extracts charset from HTML meta tags with options.
+func GetCharsetFromHTMLWithOptions(html string, opts ...CharsetOption) string {
+	return shared.GetCharsetFromHTMLWithOptions(html, opts...)
 }
 
 // GetMimeType returns the MIME type by file extension, or an empty string when unknown.

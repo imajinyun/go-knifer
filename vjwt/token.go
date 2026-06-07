@@ -11,6 +11,11 @@ func ParseJWT(token string) (*JWT, error) { return jwtimpl.ParseToken(token) }
 // JWTOf parses a token string.
 func JWTOf(token string) (*JWT, error) { return jwtimpl.Of(token) }
 
+// JWTOfWithOptions parses a token string with JSON options.
+func JWTOfWithOptions(token string, opts ...JSONOption) (*JWT, error) {
+	return jwtimpl.OfWithOptions(token, opts...)
+}
+
 // New creates a new JWT object.
 func New() *JWT {
 	return jwtimpl.New()

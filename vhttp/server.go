@@ -80,6 +80,9 @@ func WithListenAndServeFunc(listenAndServe ListenAndServeFunc) ServerOption {
 	return httpx.WithListenAndServeFunc(listenAndServe)
 }
 
+// WithListener sets a listener used by Start and StartAsync instead of ListenAndServe.
+func WithListener(listener net.Listener) ServerOption { return httpx.WithListener(listener) }
+
 // WithAsyncRunner sets the function used by StartAsync to launch the serving task.
 func WithAsyncRunner(runner func(func())) ServerOption { return httpx.WithAsyncRunner(runner) }
 

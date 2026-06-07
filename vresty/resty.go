@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"regexp"
 	"time"
 
 	restyimpl "github.com/imajinyun/go-knifer/internal/httpx/resty"
@@ -37,6 +38,9 @@ type HeaderValues = restyimpl.HeaderValues
 
 // GlobalConfig captures resty package-level defaults for explicit request construction.
 type GlobalConfig = restyimpl.GlobalConfig
+
+// CharsetOption customizes charset extraction helpers per call.
+type CharsetOption = restyimpl.CharsetOption
 
 // Cookie contains a response cookie name and value.
 type Cookie = restyimpl.Cookie
@@ -182,6 +186,16 @@ func WithContentType(ct string) RequestOption { return restyimpl.WithContentType
 
 // WithCharset sets a per-request charset at construction time.
 func WithCharset(charset string) RequestOption { return restyimpl.WithCharset(charset) }
+
+// WithJSONMarshalFunc sets the JSON marshal provider used by request body encoding.
+func WithJSONMarshalFunc(marshal func(any) ([]byte, error)) RequestOption {
+	return restyimpl.WithJSONMarshalFunc(marshal)
+}
+
+// WithJSONUnmarshalFunc sets the JSON unmarshal provider used by response decoding.
+func WithJSONUnmarshalFunc(unmarshal func([]byte, any) error) RequestOption {
+	return restyimpl.WithJSONUnmarshalFunc(unmarshal)
+}
 
 // WithSaveFilePerm sets the file permission used when creating the destination file.
 func WithSaveFilePerm(perm fs.FileMode) SaveOption { return restyimpl.WithSaveFilePerm(perm) }
@@ -330,6 +344,14 @@ func CloseCookie() { restyimpl.CloseCookie() }
 // BuildBasicAuth builds a Basic authorization value.
 func BuildBasicAuth(user, pass string) string { return restyimpl.BuildBasicAuth(user, pass) }
 
+// WithCharsetRegexp sets the regexp used by GetCharsetFromContentTypeWithOptions.
+func WithCharsetRegexp(re *regexp.Regexp) CharsetOption { return restyimpl.WithCharsetRegexp(re) }
+
+// WithMetaCharsetRegexp sets the regexp used by GetCharsetFromHTMLWithOptions.
+func WithMetaCharsetRegexp(re *regexp.Regexp) CharsetOption {
+	return restyimpl.WithMetaCharsetRegexp(re)
+}
+
 // IsHTTPS reports whether the given URL is https.
 func IsHTTPS(rawURL string) bool { return restyimpl.IsHTTPS(rawURL) }
 
@@ -355,8 +377,18 @@ func GuessContentType(body string) ContentType { return restyimpl.GuessContentTy
 // GetCharsetFromContentType extracts charset from Content-Type.
 func GetCharsetFromContentType(ct string) string { return restyimpl.GetCharsetFromContentType(ct) }
 
+// GetCharsetFromContentTypeWithOptions extracts charset from Content-Type with options.
+func GetCharsetFromContentTypeWithOptions(ct string, opts ...CharsetOption) string {
+	return restyimpl.GetCharsetFromContentTypeWithOptions(ct, opts...)
+}
+
 // GetCharsetFromHTML extracts charset from HTML meta tags.
 func GetCharsetFromHTML(html string) string { return restyimpl.GetCharsetFromHTML(html) }
+
+// GetCharsetFromHTMLWithOptions extracts charset from HTML meta tags with options.
+func GetCharsetFromHTMLWithOptions(html string, opts ...CharsetOption) string {
+	return restyimpl.GetCharsetFromHTMLWithOptions(html, opts...)
+}
 
 // GetMimeType returns the MIME type by file extension.
 func GetMimeType(filename string) string { return restyimpl.GetMimeType(filename) }

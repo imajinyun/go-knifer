@@ -73,3 +73,8 @@ func LastIndexOfRe(re *regexp.Regexp, content string) *MatchResult {
 
 // GetFirstNumber returns the first integer in content.
 func GetFirstNumber(content string) (int, bool) { return regeximpl.GetFirstNumber(content) }
+
+// GetFirstNumberWithOptions returns the first integer in content with options.
+func GetFirstNumberWithOptions(content string, opts ...Option) (int, bool) {
+	return regeximpl.GetFirstNumberWithOptions(content, opts...)
+}

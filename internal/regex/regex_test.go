@@ -184,3 +184,17 @@ func TestRegexHelpersWithOptions(t *testing.T) {
 		t.Fatalf("LastIndexOfWithOptions = %#v", got)
 	}
 }
+
+func TestSpecializedRegexOptions(t *testing.T) {
+	if n, ok := GetFirstNumberWithOptions("v12.34", WithNumbersRegexp(regexp.MustCompile(`[3-9]\d`))); !ok || n != 34 {
+		t.Fatalf("GetFirstNumberWithOptions = %d %v", n, ok)
+	}
+	if got := TemplateVarsWithOptions("${3} $1", WithGroupVarRegexp(regexp.MustCompile(`\$\{(\d+)\}`))); !reflect.DeepEqual(got, []int{3}) {
+		t.Fatalf("TemplateVarsWithOptions = %#v", got)
+	}
+	if got := GetByNameWithOptions(`(?<word>\w+)`, "abc", "word", WithNamedGroupNormalizer(func(pattern string) string {
+		return strings.ReplaceAll(pattern, `(?<`, `(?P<`)
+	})); got != "abc" {
+		t.Fatalf("GetByNameWithOptions custom normalizer = %q", got)
+	}
+}

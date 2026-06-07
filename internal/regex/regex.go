@@ -23,8 +23,12 @@ var (
 )
 
 type regexConfig struct {
-	compile func(string) (*regexp.Regexp, error)
-	dotAll  bool
+	compile             func(string) (*regexp.Regexp, error)
+	dotAll              bool
+	groupVarRegexp      *regexp.Regexp
+	numbersRegexp       *regexp.Regexp
+	namedGroupRegexp    *regexp.Regexp
+	normalizeNamedGroup func(string) string
 }
 
 // Option customizes pattern-string regex helpers per call.
@@ -38,8 +42,34 @@ func WithCompileFunc(compile func(string) (*regexp.Regexp, error)) Option {
 // WithDotAll controls whether pattern-string helpers wrap patterns with (?s:...).
 func WithDotAll(dotAll bool) Option { return func(c *regexConfig) { c.dotAll = dotAll } }
 
+// WithGroupVarRegexp sets the regexp used by TemplateVarsWithOptions.
+func WithGroupVarRegexp(re *regexp.Regexp) Option {
+	return func(c *regexConfig) { c.groupVarRegexp = re }
+}
+
+// WithNumbersRegexp sets the regexp used by GetFirstNumberWithOptions.
+func WithNumbersRegexp(re *regexp.Regexp) Option {
+	return func(c *regexConfig) { c.numbersRegexp = re }
+}
+
+// WithNamedGroupRegexp sets the regexp used to normalize (?<name>...) groups before compiling.
+func WithNamedGroupRegexp(re *regexp.Regexp) Option {
+	return func(c *regexConfig) { c.namedGroupRegexp = re }
+}
+
+// WithNamedGroupNormalizer sets the normalizer used before compiling pattern strings.
+func WithNamedGroupNormalizer(normalize func(string) string) Option {
+	return func(c *regexConfig) { c.normalizeNamedGroup = normalize }
+}
+
 func applyOptions(opts []Option) regexConfig {
-	cfg := regexConfig{compile: regexp.Compile, dotAll: true}
+	cfg := regexConfig{
+		compile:          regexp.Compile,
+		dotAll:           true,
+		groupVarRegexp:   groupVarRegexp,
+		numbersRegexp:    numbersRegexp,
+		namedGroupRegexp: namedGroupRe,
+	}
 	for _, opt := range opts {
 		if opt != nil {
 			opt(&cfg)
@@ -47,6 +77,15 @@ func applyOptions(opts []Option) regexConfig {
 	}
 	if cfg.compile == nil {
 		cfg.compile = regexp.Compile
+	}
+	if cfg.groupVarRegexp == nil {
+		cfg.groupVarRegexp = groupVarRegexp
+	}
+	if cfg.numbersRegexp == nil {
+		cfg.numbersRegexp = numbersRegexp
+	}
+	if cfg.namedGroupRegexp == nil {
+		cfg.namedGroupRegexp = namedGroupRe
 	}
 	return cfg
 }
@@ -598,7 +637,12 @@ func LastIndexOfRe(re *regexp.Regexp, content string) *MatchResult {
 
 // GetFirstNumber returns the first integer in content.
 func GetFirstNumber(content string) (int, bool) {
-	number := numbersRegexp.FindString(content)
+	return GetFirstNumberWithOptions(content)
+}
+
+// GetFirstNumberWithOptions returns the first integer in content with options.
+func GetFirstNumberWithOptions(content string, opts ...Option) (int, bool) {
+	number := applyOptions(opts).numbersRegexp.FindString(content)
 	if number == "" {
 		return 0, false
 	}
@@ -713,10 +757,18 @@ func Escape(content string) string {
 
 // TemplateVars returns numeric placeholders referenced by a replacement template, longest first.
 func TemplateVars(template string) []int {
-	matches := groupVarRegexp.FindAllStringSubmatch(template, -1)
+	return TemplateVarsWithOptions(template)
+}
+
+// TemplateVarsWithOptions returns numeric placeholders referenced by a replacement template with options.
+func TemplateVarsWithOptions(template string, opts ...Option) []int {
+	matches := applyOptions(opts).groupVarRegexp.FindAllStringSubmatch(template, -1)
 	seen := map[int]struct{}{}
 	result := make([]int, 0, len(matches))
 	for _, match := range matches {
+		if len(match) < 2 {
+			continue
+		}
 		v, err := strconv.Atoi(match[1])
 		if err != nil {
 			continue
@@ -732,15 +784,18 @@ func TemplateVars(template string) []int {
 
 func compile(pattern string, opts ...Option) (*regexp.Regexp, error) {
 	cfg := applyOptions(opts)
-	pattern = normalizeNamedGroups(pattern)
+	pattern = normalizeNamedGroupsWithConfig(pattern, cfg)
 	if cfg.dotAll {
 		pattern = "(?s:" + pattern + ")"
 	}
 	return cfg.compile(pattern)
 }
 
-func normalizeNamedGroups(pattern string) string {
-	return namedGroupRe.ReplaceAllString(pattern, `(?P<$1>`)
+func normalizeNamedGroupsWithConfig(pattern string, cfg regexConfig) string {
+	if cfg.normalizeNamedGroup != nil {
+		return cfg.normalizeNamedGroup(pattern)
+	}
+	return cfg.namedGroupRegexp.ReplaceAllString(pattern, `(?P<$1>`)
 }
 
 func allLimit(findAll bool) int {

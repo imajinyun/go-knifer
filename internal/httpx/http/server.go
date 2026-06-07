@@ -178,6 +178,16 @@ func WithListenAndServeFunc(listenAndServe ListenAndServeFunc) ServerOption {
 	}
 }
 
+// WithListener sets a listener used by Start and StartAsync instead of ListenAndServe.
+func WithListener(listener net.Listener) ServerOption {
+	return WithListenAndServeFunc(func(server *http.Server) error {
+		if listener == nil {
+			return defaultListenAndServe(server)
+		}
+		return server.Serve(listener)
+	})
+}
+
 // WithAsyncRunner sets the function used by StartAsync to launch the serving task.
 func WithAsyncRunner(runner func(func())) ServerOption {
 	return func(s *http.Server) {

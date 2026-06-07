@@ -17,6 +17,20 @@ func WithCompileFunc(compile func(string) (*regexp.Regexp, error)) Option {
 // WithDotAll controls whether pattern-string helpers wrap patterns with (?s:...).
 func WithDotAll(dotAll bool) Option { return regeximpl.WithDotAll(dotAll) }
 
+// WithGroupVarRegexp sets the regexp used by TemplateVarsWithOptions.
+func WithGroupVarRegexp(re *regexp.Regexp) Option { return regeximpl.WithGroupVarRegexp(re) }
+
+// WithNumbersRegexp sets the regexp used by GetFirstNumberWithOptions.
+func WithNumbersRegexp(re *regexp.Regexp) Option { return regeximpl.WithNumbersRegexp(re) }
+
+// WithNamedGroupRegexp sets the regexp used to normalize (?<name>...) groups before compiling.
+func WithNamedGroupRegexp(re *regexp.Regexp) Option { return regeximpl.WithNamedGroupRegexp(re) }
+
+// WithNamedGroupNormalizer sets the normalizer used before compiling pattern strings.
+func WithNamedGroupNormalizer(normalize func(string) string) Option {
+	return regeximpl.WithNamedGroupNormalizer(normalize)
+}
+
 // Match reports whether s contains a match for pattern.
 func Match(pattern, s string) bool { return regeximpl.ReMatch(pattern, s) }
 

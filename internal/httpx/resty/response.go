@@ -240,6 +240,22 @@ func (r *HTTPResponse) Close() error {
 // RestyRaw returns the original resty response.
 func (r *HTTPResponse) RestyRaw() *grestry.Response { return r.resp }
 
+// Result returns the automatically decoded response result, if one was registered on the request.
+func (r *HTTPResponse) Result() any {
+	if r.resp == nil {
+		return nil
+	}
+	return r.resp.Result()
+}
+
+// ErrorResult returns the automatically decoded error response result, if one was registered on the request.
+func (r *HTTPResponse) ErrorResult() any {
+	if r.resp == nil {
+		return nil
+	}
+	return r.resp.Error()
+}
+
 func (r *HTTPResponse) fileName() string {
 	if name := shared.FilenameFromContentDisposition(r.Header(string(HeaderContentDisposition))); name != "" {
 		return name
