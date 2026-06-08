@@ -9,7 +9,7 @@ import (
 )
 
 func TestFacadePatternParse(t *testing.T) {
-	p, err := vcron.NewCronPattern("0 0 * * *")
+	p, err := vcron.NewPattern("0 0 * * *")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -19,7 +19,7 @@ func TestFacadePatternParse(t *testing.T) {
 }
 
 func TestFacadePatternParseInvalid(t *testing.T) {
-	_, err := vcron.NewCronPattern("invalid")
+	_, err := vcron.NewPattern("invalid")
 	if err == nil {
 		t.Fatal("expected error for invalid pattern")
 	}
@@ -43,7 +43,7 @@ func TestFacadeMustPattern(t *testing.T) {
 			t.Fatal("expected panic for invalid pattern")
 		}
 	}()
-	vcron.MustNewCronPattern("bad")
+	vcron.MustNewPattern("bad")
 }
 
 func TestFacadeSchedulerLifecycle(t *testing.T) {
@@ -123,13 +123,13 @@ func TestFacadeDefaultSchedulerOptions(t *testing.T) {
 }
 
 func TestFacadeConfig(t *testing.T) {
-	cfg := vcron.NewCronConfig()
+	cfg := vcron.NewConfig()
 	if cfg == nil {
 		t.Fatal("expected non-nil config")
 	}
 	loc := time.FixedZone("facade-config", 8*3600)
-	cfg = vcron.NewCronConfigWithOptions(vcron.WithConfigLocation(loc), vcron.WithConfigMatchSecond(true))
+	cfg = vcron.NewConfigWithOptions(vcron.WithConfigLocation(loc), vcron.WithConfigMatchSecond(true))
 	if cfg.Location != loc || !cfg.MatchSecond {
-		t.Fatalf("NewCronConfigWithOptions = %#v", cfg)
+		t.Fatalf("NewConfigWithOptions = %#v", cfg)
 	}
 }

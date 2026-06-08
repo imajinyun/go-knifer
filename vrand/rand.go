@@ -23,19 +23,6 @@ func Long() int64               { return LongWithOptions() }
 func Float() float64            { return FloatWithOptions() }
 func Bool() bool                { return BoolWithOptions() }
 
-// Bytes returns n compatibility random bytes.
-//
-// Compatibility: when the cryptographic reader fails, BytesWithOptions can fall
-// back to pseudo-random bytes unless WithStrictCryptoRandom is provided. Do not
-// use this helper for secrets, tokens, keys, or nonces; use SecureBytes or
-// package vcrypto instead.
-//
-// Deprecated: use SecureBytes for security-sensitive bytes, or BytesWithOptions
-// with an explicit non-security rationale for compatibility code.
-func Bytes(n int) []byte {
-	b, _ := BytesWithOptions(n)
-	return b
-}
 func String(n int) string                     { return StringWithOptions(n) }
 func Numbers(n int) string                    { return NumbersWithOptions(n) }
 func StringUpper(n int) string                { return StringUpperWithOptions(n) }

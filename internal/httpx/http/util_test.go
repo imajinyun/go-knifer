@@ -162,37 +162,37 @@ func TestDownloadBytesEWithReadError(t *testing.T) {
 	}
 }
 
-func TestCreateRequest(t *testing.T) {
-	req := CreateRequest(MethodPut, "http://example.com")
+func TestNewRequest(t *testing.T) {
+	req := NewRequest(MethodPut, "http://example.com")
 	if req.method != MethodPut {
 		t.Fatalf("method: %v", req.method)
 	}
 }
 
-func TestCreateGetWithFollowRedirects(t *testing.T) {
-	req := CreateGet("http://example.com", false)
+func TestGetWithFollowRedirectsOption(t *testing.T) {
+	req := Get("http://example.com", WithFollowRedirects(false))
 	if req.followRedir == nil || *req.followRedir != false {
 		t.Fatalf("followRedir: %v", req.followRedir)
 	}
 }
 
-func TestCreateWithOptionsAppliesRequestOptions(t *testing.T) {
-	getReq := CreateGetWithOptions("http://example.com", false, WithHeader("X-Create", "get"), WithUserAgent("create-get-agent"))
+func TestNewRequestWithOptionsAppliesRequestOptions(t *testing.T) {
+	getReq := Get("http://example.com", WithFollowRedirects(false), WithHeader("X-Create", "get"), WithUserAgent("create-get-agent"))
 	if getReq.followRedir == nil || *getReq.followRedir {
 		t.Fatalf("followRedir: %v", getReq.followRedir)
 	}
 	if got := getReq.headers.Get("X-Create"); got != "get" {
-		t.Fatalf("CreateGetWithOptions header = %q, want get", got)
+		t.Fatalf("Get header = %q, want get", got)
 	}
 	if got := getReq.userAgent; got != "create-get-agent" {
-		t.Fatalf("CreateGetWithOptions userAgent = %q", got)
+		t.Fatalf("Get userAgent = %q", got)
 	}
 
-	postReq := CreatePostWithOptions("http://example.com", WithHeader("X-Create", "post"))
+	postReq := Post("http://example.com", WithHeader("X-Create", "post"))
 	if postReq.method != MethodPost {
-		t.Fatalf("CreatePostWithOptions method = %v, want POST", postReq.method)
+		t.Fatalf("Post method = %v, want POST", postReq.method)
 	}
 	if got := postReq.headers.Get("X-Create"); got != "post" {
-		t.Fatalf("CreatePostWithOptions header = %q, want post", got)
+		t.Fatalf("Post header = %q, want post", got)
 	}
 }

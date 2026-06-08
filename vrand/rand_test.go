@@ -16,8 +16,8 @@ func TestRandFacade(t *testing.T) {
 		t.Fatal("basic random helpers failed")
 	}
 	_ = Bool()
-	if len(Bytes(8)) != 8 {
-		t.Fatal("Bytes length failed")
+	if b, err := BytesWithOptions(8); err != nil || len(b) != 8 {
+		t.Fatalf("BytesWithOptions length failed: len=%d err=%v", len(b), err)
 	}
 	if s := String(8); len(s) != 8 {
 		t.Fatalf("String length failed: %q", s)

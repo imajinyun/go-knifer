@@ -24,7 +24,11 @@ func TestDownloadString(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	if got := DownloadString(srv.URL, ""); got != "plain" {
+	got, err := DownloadStringE(srv.URL, "")
+	if err != nil {
+		t.Fatalf("DownloadStringE() error = %v", err)
+	}
+	if got != "plain" {
 		t.Fatalf("body: %q", got)
 	}
 }
@@ -39,7 +43,11 @@ func TestDownloadStringWithOptions(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	if got := DownloadStringWithOptions(srv.URL, "", WithHeader("X-Token", "secret")); got != "with-options" {
+	got, err := DownloadStringEWithOptions(srv.URL, "", WithHeader("X-Token", "secret"))
+	if err != nil {
+		t.Fatalf("DownloadStringEWithOptions() error = %v", err)
+	}
+	if got != "with-options" {
 		t.Fatalf("body: %q", got)
 	}
 }
@@ -50,7 +58,10 @@ func TestDownloadBytes(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	got := DownloadBytes(srv.URL)
+	got, err := DownloadBytesE(srv.URL)
+	if err != nil {
+		t.Fatalf("DownloadBytesE() error = %v", err)
+	}
 	if !bytes.Equal(got, []byte{0x01, 0x02, 0x03}) {
 		t.Fatalf("bytes: %v", got)
 	}
@@ -66,7 +77,10 @@ func TestDownloadBytesWithOptions(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	got := DownloadBytesWithOptions(srv.URL, WithHeader("X-Mode", "bytes"))
+	got, err := DownloadBytesEWithOptions(srv.URL, WithHeader("X-Mode", "bytes"))
+	if err != nil {
+		t.Fatalf("DownloadBytesEWithOptions() error = %v", err)
+	}
 	if !bytes.Equal(got, []byte{0x04, 0x05, 0x06}) {
 		t.Fatalf("bytes: %v", got)
 	}

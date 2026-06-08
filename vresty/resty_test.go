@@ -20,8 +20,12 @@ func TestFacadeGetString(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	if got := vresty.GetString(srv.URL); got != "facade" {
-		t.Fatalf("GetString() = %q, want facade", got)
+	got, err := vresty.GetStringE(srv.URL)
+	if err != nil {
+		t.Fatalf("GetStringE() error = %v", err)
+	}
+	if got != "facade" {
+		t.Fatalf("GetStringE() = %q, want facade", got)
 	}
 }
 
@@ -44,7 +48,7 @@ func TestFacadeCloneGlobalHeaders(t *testing.T) {
 	}
 }
 
-func TestFacadeRequestOptions(t *testing.T) {
+func TestFacadeRequestFollowRedirectOptions(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(r.Header.Get("X-Opt") + ":" + r.Header.Get("User-Agent")))
 	}))
@@ -98,7 +102,7 @@ func TestFacadeRestyClientFactoryProvider(t *testing.T) {
 	}
 }
 
-func TestFacadeCreateWithOptions(t *testing.T) {
+func TestFacadeRequestOptions(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/redirect" {
 			http.Redirect(w, r, "/final", http.StatusFound)
@@ -108,20 +112,20 @@ func TestFacadeCreateWithOptions(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	getResp := vresty.CreateGetWithOptions(srv.URL+"/redirect", false, vresty.WithHeader("X-Create", "get")).Execute()
+	getResp := vresty.Get(srv.URL+"/redirect", vresty.WithFollowRedirects(false), vresty.WithHeader("X-Create", "get")).Execute()
 	if getResp.Err() != nil {
 		t.Fatal(getResp.Err())
 	}
 	if got := getResp.Status(); got != http.StatusFound {
-		t.Fatalf("CreateGetWithOptions status = %d, want 302", got)
+		t.Fatalf("Get status = %d, want 302", got)
 	}
 
-	postResp := vresty.CreatePostWithOptions(srv.URL, vresty.WithHeader("X-Create", "post")).Execute()
+	postResp := vresty.Post(srv.URL, vresty.WithHeader("X-Create", "post")).Execute()
 	if postResp.Err() != nil {
 		t.Fatal(postResp.Err())
 	}
 	if got := postResp.Body(); got != "POST:post" {
-		t.Fatalf("CreatePostWithOptions body = %q, want POST:post", got)
+		t.Fatalf("Post body = %q, want POST:post", got)
 	}
 }
 
@@ -136,11 +140,19 @@ func TestFacadeUtilityWrappers(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	if got := vresty.GetWithParamsWithOptions(srv.URL, map[string]any{"q": "go"}, vresty.WithHeader("X-Util", "get")); got != "go:get" {
-		t.Fatalf("GetWithParamsWithOptions() = %q, want go:get", got)
+	got, err := vresty.GetWithParamsEWithOptions(srv.URL, map[string]any{"q": "go"}, vresty.WithHeader("X-Util", "get"))
+	if err != nil {
+		t.Fatalf("GetWithParamsEWithOptions() error = %v", err)
 	}
-	if got := vresty.PostStringWithOptions(srv.URL, "body", vresty.WithHeader("X-Util", "post")); got != "post:body:post" {
-		t.Fatalf("PostStringWithOptions() = %q, want post:body:post", got)
+	if got != "go:get" {
+		t.Fatalf("GetWithParamsEWithOptions() = %q, want go:get", got)
+	}
+	got, err = vresty.PostStringEWithOptions(srv.URL, "body", vresty.WithHeader("X-Util", "post"))
+	if err != nil {
+		t.Fatalf("PostStringEWithOptions() error = %v", err)
+	}
+	if got != "post:body:post" {
+		t.Fatalf("PostStringEWithOptions() = %q, want post:body:post", got)
 	}
 	if !vresty.IsHTTP("http://example.com") || !vresty.IsHTTPS("https://example.com") {
 		t.Fatal("IsHTTP/IsHTTPS wrappers returned false")

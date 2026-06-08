@@ -81,7 +81,10 @@ func TestRequestPostJSON(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	resp := PostJSON(srv.URL, `{"a":1}`)
+	resp, err := PostJSONE(srv.URL, `{"a":1}`)
+	if err != nil {
+		t.Fatalf("PostJSONE() error = %v", err)
+	}
 	if resp != `{"a":1}` {
 		t.Fatalf("body: %q", resp)
 	}

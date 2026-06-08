@@ -60,7 +60,7 @@ func TestFacadeSharedConstants(t *testing.T) {
 	}
 }
 
-func TestFacadeRequestOptions(t *testing.T) {
+func TestFacadeRequestFollowRedirectOptions(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(r.Header.Get("X-Opt") + ":" + r.Header.Get("User-Agent")))
 	}))
@@ -154,7 +154,7 @@ func TestFacadeDefaultTransportProviderLifecycle(t *testing.T) {
 	vhttp.ResetDefaultTransport()
 }
 
-func TestFacadeCreateWithOptions(t *testing.T) {
+func TestFacadeRequestOptions(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/redirect" {
 			http.Redirect(w, r, "/final", http.StatusFound)
@@ -164,20 +164,20 @@ func TestFacadeCreateWithOptions(t *testing.T) {
 	}))
 	defer server.Close()
 
-	getResp := vhttp.CreateGetWithOptions(server.URL+"/redirect", false, vhttp.WithHeader("X-Create", "get")).Execute()
+	getResp := vhttp.Get(server.URL+"/redirect", vhttp.WithFollowRedirects(false), vhttp.WithHeader("X-Create", "get")).Execute()
 	if getResp.Err() != nil {
 		t.Fatal(getResp.Err())
 	}
 	if got := getResp.Status(); got != http.StatusFound {
-		t.Fatalf("CreateGetWithOptions status = %d, want 302", got)
+		t.Fatalf("Get status = %d, want 302", got)
 	}
 
-	postResp := vhttp.CreatePostWithOptions(server.URL, vhttp.WithHeader("X-Create", "post")).Execute()
+	postResp := vhttp.Post(server.URL, vhttp.WithHeader("X-Create", "post")).Execute()
 	if postResp.Err() != nil {
 		t.Fatal(postResp.Err())
 	}
 	if got := postResp.Body(); got != "POST:post" {
-		t.Fatalf("CreatePostWithOptions body = %q, want POST:post", got)
+		t.Fatalf("Post body = %q, want POST:post", got)
 	}
 }
 

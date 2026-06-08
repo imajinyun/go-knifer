@@ -82,81 +82,6 @@ func NewRequestWithConfig(method Method, rawURL string, cfg GlobalConfig, opts .
 	return httpx.NewRequestWithConfig(method, rawURL, cfg, opts...)
 }
 
-// CreateRequest delegates to the internal httpx implementation.
-//
-// Deprecated: use NewRequest for trusted URLs or NewSafeRequest for untrusted URLs.
-func CreateRequest(method Method, rawURL string, opts ...RequestOption) *Request {
-	return CreateRequestWithOptions(method, rawURL, opts...)
-}
-
-// CreateRequestWithOptions delegates to the internal httpx implementation.
-//
-// Deprecated: use NewRequest for trusted URLs or NewSafeRequest for untrusted URLs.
-func CreateRequestWithOptions(method Method, rawURL string, opts ...RequestOption) *Request {
-	return httpx.CreateRequest(method, rawURL, opts...)
-}
-
-// CreateSafeRequest delegates to the internal httpx implementation with SSRF-oriented safety checks enabled.
-//
-// Deprecated: use NewSafeRequest.
-func CreateSafeRequest(method Method, rawURL string, opts ...RequestOption) *Request {
-	return httpx.CreateSafeRequest(method, rawURL, opts...)
-}
-
-// CreateGet delegates to the internal httpx implementation.
-//
-// Deprecated: use Get with WithFollowRedirects.
-func CreateGet(rawURL string, followRedirects bool) *Request {
-	return CreateGetWithOptions(rawURL, followRedirects)
-}
-
-// CreateGetWithOptions delegates to the internal httpx implementation with options.
-//
-// Deprecated: use Get with WithFollowRedirects.
-func CreateGetWithOptions(rawURL string, followRedirects bool, opts ...RequestOption) *Request {
-	return httpx.CreateGetWithOptions(rawURL, followRedirects, opts...)
-}
-
-// CreateGetSafe creates a GET request with SSRF-oriented safety checks enabled and sets whether redirects are followed.
-//
-// Deprecated: use GetSafe with WithFollowRedirects.
-func CreateGetSafe(rawURL string, followRedirects bool, opts ...RequestOption) *Request {
-	return httpx.CreateGetSafe(rawURL, followRedirects, opts...)
-}
-
-// CreatePost delegates to the internal httpx implementation.
-//
-// Deprecated: use Post for trusted URLs or PostSafe for untrusted URLs.
-func CreatePost(rawURL string) *Request {
-	return CreatePostWithOptions(rawURL)
-}
-
-// CreatePostWithOptions delegates to the internal httpx implementation with options.
-//
-// Deprecated: use Post.
-func CreatePostWithOptions(rawURL string, opts ...RequestOption) *Request {
-	return httpx.CreatePostWithOptions(rawURL, opts...)
-}
-
-// CreatePostSafe creates a POST request with SSRF-oriented safety checks enabled.
-//
-// Deprecated: use PostSafe.
-func CreatePostSafe(rawURL string, opts ...RequestOption) *Request {
-	return httpx.CreatePostSafe(rawURL, opts...)
-}
-
-// GetString sends a GET request and returns response body as string.
-//
-// Deprecated: use GetStringE to handle request and read errors explicitly.
-func GetString(rawURL string) string { return GetStringWithOptions(rawURL) }
-
-// GetStringWithOptions sends a GET request with options and returns response body as string.
-//
-// Deprecated: use GetStringEWithOptions to handle request and read errors explicitly.
-func GetStringWithOptions(rawURL string, opts ...RequestOption) string {
-	return httpx.GetStringWithOptions(rawURL, opts...)
-}
-
 // GetStringE sends a GET request and returns response body as string or an error.
 func GetStringE(rawURL string) (string, error) { return GetStringEWithOptions(rawURL) }
 
@@ -170,20 +95,6 @@ func GetStringSafeE(rawURL string, opts ...RequestOption) (string, error) {
 	return httpx.GetStringSafeE(rawURL, opts...)
 }
 
-// GetWithTimeout delegates to the internal httpx implementation.
-//
-// Deprecated: use GetWithTimeoutE to handle request and read errors explicitly.
-func GetWithTimeout(rawURL string, timeout time.Duration) string {
-	return GetWithTimeoutWithOptions(rawURL, timeout)
-}
-
-// GetWithTimeoutWithOptions delegates to the internal httpx implementation with options.
-//
-// Deprecated: use GetWithTimeoutEWithOptions to handle request and read errors explicitly.
-func GetWithTimeoutWithOptions(rawURL string, timeout time.Duration, opts ...RequestOption) string {
-	return httpx.GetWithTimeoutWithOptions(rawURL, timeout, opts...)
-}
-
 // GetWithTimeoutE sends a GET request with a timeout and returns response body or an error.
 func GetWithTimeoutE(rawURL string, timeout time.Duration) (string, error) {
 	return GetWithTimeoutEWithOptions(rawURL, timeout)
@@ -194,20 +105,6 @@ func GetWithTimeoutEWithOptions(rawURL string, timeout time.Duration, opts ...Re
 	return httpx.GetWithTimeoutEWithOptions(rawURL, timeout, opts...)
 }
 
-// GetWithParams delegates to the internal httpx implementation.
-//
-// Deprecated: use GetWithParamsE to handle request and read errors explicitly.
-func GetWithParams(rawURL string, params map[string]any) string {
-	return GetWithParamsWithOptions(rawURL, params)
-}
-
-// GetWithParamsWithOptions delegates to the internal httpx implementation with options.
-//
-// Deprecated: use GetWithParamsEWithOptions to handle request and read errors explicitly.
-func GetWithParamsWithOptions(rawURL string, params map[string]any, opts ...RequestOption) string {
-	return httpx.GetWithParamsWithOptions(rawURL, params, opts...)
-}
-
 // GetWithParamsE sends a GET request with form parameters and returns response body or an error.
 func GetWithParamsE(rawURL string, params map[string]any) (string, error) {
 	return GetWithParamsEWithOptions(rawURL, params)
@@ -216,20 +113,6 @@ func GetWithParamsE(rawURL string, params map[string]any) (string, error) {
 // GetWithParamsEWithOptions sends a GET request with form parameters and custom options, returning body or error.
 func GetWithParamsEWithOptions(rawURL string, params map[string]any, opts ...RequestOption) (string, error) {
 	return httpx.GetWithParamsEWithOptions(rawURL, params, opts...)
-}
-
-// PostForm posts form parameters and returns response body as string.
-//
-// Deprecated: use PostFormE to handle request and read errors explicitly.
-func PostForm(rawURL string, params map[string]any) string {
-	return PostFormWithOptions(rawURL, params)
-}
-
-// PostFormWithOptions posts form parameters with options and returns response body as string.
-//
-// Deprecated: use PostFormEWithOptions to handle request and read errors explicitly.
-func PostFormWithOptions(rawURL string, params map[string]any, opts ...RequestOption) string {
-	return httpx.PostFormWithOptions(rawURL, params, opts...)
 }
 
 // PostFormE posts form parameters and returns response body or an error.
@@ -247,18 +130,6 @@ func PostFormSafeE(rawURL string, params map[string]any, opts ...RequestOption) 
 	return httpx.PostFormSafeE(rawURL, params, opts...)
 }
 
-// PostJSON posts JSON body and returns response body as string.
-//
-// Deprecated: use PostJSONE to handle request and read errors explicitly.
-func PostJSON(rawURL, jsonStr string) string { return PostJSONWithOptions(rawURL, jsonStr) }
-
-// PostJSONWithOptions posts JSON body with options and returns response body as string.
-//
-// Deprecated: use PostJSONEWithOptions to handle request and read errors explicitly.
-func PostJSONWithOptions(rawURL, jsonStr string, opts ...RequestOption) string {
-	return httpx.PostJSONWithOptions(rawURL, jsonStr, opts...)
-}
-
 // PostJSONE posts JSON body and returns response body or an error.
 func PostJSONE(rawURL, jsonStr string) (string, error) { return PostJSONEWithOptions(rawURL, jsonStr) }
 
@@ -270,20 +141,6 @@ func PostJSONEWithOptions(rawURL, jsonStr string, opts ...RequestOption) (string
 // PostJSONSafeE posts JSON body with SSRF-oriented safety checks enabled.
 func PostJSONSafeE(rawURL, jsonStr string, opts ...RequestOption) (string, error) {
 	return httpx.PostJSONSafeE(rawURL, jsonStr, opts...)
-}
-
-// PostString delegates to the internal httpx implementation.
-//
-// Deprecated: use PostStringE to handle request and read errors explicitly.
-func PostString(rawURL, body string) string {
-	return PostStringWithOptions(rawURL, body)
-}
-
-// PostStringWithOptions delegates to the internal httpx implementation with options.
-//
-// Deprecated: use PostStringEWithOptions to handle request and read errors explicitly.
-func PostStringWithOptions(rawURL, body string, opts ...RequestOption) string {
-	return httpx.PostStringWithOptions(rawURL, body, opts...)
 }
 
 // PostStringE posts a string body and returns response body or an error.

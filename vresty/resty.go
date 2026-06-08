@@ -208,67 +208,6 @@ func NewRequestWithConfig(method Method, rawURL string, cfg GlobalConfig, opts .
 	return restyimpl.NewRequestWithConfig(method, rawURL, cfg, opts...)
 }
 
-// CreateRequest creates a request by method.
-//
-// Deprecated: use NewRequest for trusted URLs or NewSafeRequest for untrusted URLs.
-func CreateRequest(method Method, rawURL string, opts ...RequestOption) *Request {
-	return CreateRequestWithOptions(method, rawURL, opts...)
-}
-
-// CreateRequestWithOptions creates a request by method with per-call options.
-//
-// Deprecated: use NewRequest for trusted URLs or NewSafeRequest for untrusted URLs.
-func CreateRequestWithOptions(method Method, rawURL string, opts ...RequestOption) *Request {
-	return restyimpl.CreateRequest(method, rawURL, opts...)
-}
-
-// CreateSafeRequest creates a request with SSRF-oriented safety checks enabled.
-//
-// Deprecated: use NewSafeRequest.
-func CreateSafeRequest(method Method, rawURL string, opts ...RequestOption) *Request {
-	return restyimpl.CreateSafeRequest(method, rawURL, opts...)
-}
-
-// CreateGet creates a GET request and sets whether redirects are followed.
-//
-// Deprecated: use Get with WithFollowRedirects.
-func CreateGet(rawURL string, followRedirects bool) *Request {
-	return CreateGetWithOptions(rawURL, followRedirects)
-}
-
-// CreateGetWithOptions creates a GET request with options and sets whether redirects are followed.
-//
-// Deprecated: use Get with WithFollowRedirects.
-func CreateGetWithOptions(rawURL string, followRedirects bool, opts ...RequestOption) *Request {
-	return restyimpl.CreateGetWithOptions(rawURL, followRedirects, opts...)
-}
-
-// CreateGetSafe creates a GET request with SSRF-oriented safety checks enabled and sets whether redirects are followed.
-//
-// Deprecated: use GetSafe with WithFollowRedirects.
-func CreateGetSafe(rawURL string, followRedirects bool, opts ...RequestOption) *Request {
-	return restyimpl.CreateGetSafe(rawURL, followRedirects, opts...)
-}
-
-// CreatePost creates a POST request.
-//
-// Deprecated: use Post for trusted URLs or PostSafe for untrusted URLs.
-func CreatePost(rawURL string) *Request { return CreatePostWithOptions(rawURL) }
-
-// CreatePostWithOptions creates a POST request with options.
-//
-// Deprecated: use Post.
-func CreatePostWithOptions(rawURL string, opts ...RequestOption) *Request {
-	return restyimpl.CreatePostWithOptions(rawURL, opts...)
-}
-
-// CreatePostSafe creates a POST request with SSRF-oriented safety checks enabled.
-//
-// Deprecated: use PostSafe.
-func CreatePostSafe(rawURL string, opts ...RequestOption) *Request {
-	return restyimpl.CreatePostSafe(rawURL, opts...)
-}
-
 // WithGlobalConfig initializes request defaults from a captured global configuration snapshot.
 func WithGlobalConfig(cfg GlobalConfig) RequestOption { return restyimpl.WithGlobalConfig(cfg) }
 
@@ -384,18 +323,6 @@ func WithSaveOpenFile(openFile func(string, int, fs.FileMode) (io.WriteCloser, e
 	return restyimpl.WithSaveOpenFile(openFile)
 }
 
-// GetString sends a GET request and returns response body as string.
-//
-// Deprecated: use GetStringE to handle request errors explicitly.
-func GetString(rawURL string) string { return GetStringWithOptions(rawURL) }
-
-// GetStringWithOptions sends a GET request with options and returns response body as string.
-//
-// Deprecated: use GetStringEWithOptions to handle request errors explicitly.
-func GetStringWithOptions(rawURL string, opts ...RequestOption) string {
-	return restyimpl.GetStringWithOptions(rawURL, opts...)
-}
-
 // GetStringE sends a GET request and returns response body as string or an error.
 func GetStringE(rawURL string) (string, error) { return GetStringEWithOptions(rawURL) }
 
@@ -409,20 +336,6 @@ func GetStringSafeE(rawURL string, opts ...RequestOption) (string, error) {
 	return restyimpl.GetStringSafeE(rawURL, opts...)
 }
 
-// GetWithTimeout sends a GET request with a timeout.
-//
-// Deprecated: use GetWithTimeoutE to handle request errors explicitly.
-func GetWithTimeout(rawURL string, timeout time.Duration) string {
-	return GetWithTimeoutWithOptions(rawURL, timeout)
-}
-
-// GetWithTimeoutWithOptions sends a GET request with a timeout and custom options.
-//
-// Deprecated: use GetWithTimeoutEWithOptions to handle request errors explicitly.
-func GetWithTimeoutWithOptions(rawURL string, timeout time.Duration, opts ...RequestOption) string {
-	return restyimpl.GetWithTimeoutWithOptions(rawURL, timeout, opts...)
-}
-
 // GetWithTimeoutE sends a GET request with a timeout and returns response body or an error.
 func GetWithTimeoutE(rawURL string, timeout time.Duration) (string, error) {
 	return GetWithTimeoutEWithOptions(rawURL, timeout)
@@ -433,20 +346,6 @@ func GetWithTimeoutEWithOptions(rawURL string, timeout time.Duration, opts ...Re
 	return restyimpl.GetWithTimeoutEWithOptions(rawURL, timeout, opts...)
 }
 
-// GetWithParams sends a GET request with form parameters.
-//
-// Deprecated: use GetWithParamsE to handle request errors explicitly.
-func GetWithParams(rawURL string, params map[string]any) string {
-	return GetWithParamsWithOptions(rawURL, params)
-}
-
-// GetWithParamsWithOptions sends a GET request with form parameters and custom options.
-//
-// Deprecated: use GetWithParamsEWithOptions to handle request errors explicitly.
-func GetWithParamsWithOptions(rawURL string, params map[string]any, opts ...RequestOption) string {
-	return restyimpl.GetWithParamsWithOptions(rawURL, params, opts...)
-}
-
 // GetWithParamsE sends a GET request with form parameters and returns response body or an error.
 func GetWithParamsE(rawURL string, params map[string]any) (string, error) {
 	return GetWithParamsEWithOptions(rawURL, params)
@@ -455,18 +354,6 @@ func GetWithParamsE(rawURL string, params map[string]any) (string, error) {
 // GetWithParamsEWithOptions sends a GET request with form parameters and custom options, returning body or error.
 func GetWithParamsEWithOptions(rawURL string, params map[string]any, opts ...RequestOption) (string, error) {
 	return restyimpl.GetWithParamsEWithOptions(rawURL, params, opts...)
-}
-
-// PostString sends a POST request with a string body.
-//
-// Deprecated: use PostStringE to handle request errors explicitly.
-func PostString(rawURL, body string) string { return PostStringWithOptions(rawURL, body) }
-
-// PostStringWithOptions sends a POST request with a string body and custom options.
-//
-// Deprecated: use PostStringEWithOptions to handle request errors explicitly.
-func PostStringWithOptions(rawURL, body string, opts ...RequestOption) string {
-	return restyimpl.PostStringWithOptions(rawURL, body, opts...)
 }
 
 // PostStringE posts a string body and returns response body or an error.
@@ -482,20 +369,6 @@ func PostStringSafeE(rawURL, body string, opts ...RequestOption) (string, error)
 	return restyimpl.PostStringSafeE(rawURL, body, opts...)
 }
 
-// PostForm posts form parameters and returns response body as string.
-//
-// Deprecated: use PostFormE to handle request errors explicitly.
-func PostForm(rawURL string, params map[string]any) string {
-	return PostFormWithOptions(rawURL, params)
-}
-
-// PostFormWithOptions posts form parameters with options and returns response body as string.
-//
-// Deprecated: use PostFormEWithOptions to handle request errors explicitly.
-func PostFormWithOptions(rawURL string, params map[string]any, opts ...RequestOption) string {
-	return restyimpl.PostFormWithOptions(rawURL, params, opts...)
-}
-
 // PostFormE posts form parameters and returns response body or an error.
 func PostFormE(rawURL string, params map[string]any) (string, error) {
 	return PostFormEWithOptions(rawURL, params)
@@ -509,18 +382,6 @@ func PostFormEWithOptions(rawURL string, params map[string]any, opts ...RequestO
 // PostFormSafeE posts form parameters with SSRF-oriented safety checks enabled.
 func PostFormSafeE(rawURL string, params map[string]any, opts ...RequestOption) (string, error) {
 	return restyimpl.PostFormSafeE(rawURL, params, opts...)
-}
-
-// PostJSON posts JSON body and returns response body as string.
-//
-// Deprecated: use PostJSONE to handle request errors explicitly.
-func PostJSON(rawURL, jsonStr string) string { return PostJSONWithOptions(rawURL, jsonStr) }
-
-// PostJSONWithOptions posts JSON body with options and returns response body as string.
-//
-// Deprecated: use PostJSONEWithOptions to handle request errors explicitly.
-func PostJSONWithOptions(rawURL, jsonStr string, opts ...RequestOption) string {
-	return restyimpl.PostJSONWithOptions(rawURL, jsonStr, opts...)
 }
 
 // PostJSONE posts JSON body and returns response body or an error.
@@ -559,18 +420,6 @@ func DownloadFileWithOptions(rawURL, dest string, requestOpts []RequestOption, s
 	return restyimpl.DownloadFileWithOptions(rawURL, dest, requestOpts, saveOpts...)
 }
 
-// DownloadBytes downloads and returns bytes.
-//
-// Deprecated: use DownloadBytesE to handle request errors explicitly.
-func DownloadBytes(rawURL string) []byte { return DownloadBytesWithOptions(rawURL) }
-
-// DownloadBytesWithOptions downloads and returns bytes with per-request options.
-//
-// Deprecated: use DownloadBytesEWithOptions to handle request errors explicitly.
-func DownloadBytesWithOptions(rawURL string, opts ...RequestOption) []byte {
-	return restyimpl.DownloadBytesWithOptions(rawURL, opts...)
-}
-
 // DownloadBytesE downloads and returns bytes or an error.
 func DownloadBytesE(rawURL string) ([]byte, error) { return DownloadBytesEWithOptions(rawURL) }
 
@@ -582,20 +431,6 @@ func DownloadBytesEWithOptions(rawURL string, opts ...RequestOption) ([]byte, er
 // DownloadBytesSafeE downloads and returns bytes with SSRF-oriented safety checks enabled.
 func DownloadBytesSafeE(rawURL string, opts ...RequestOption) ([]byte, error) {
 	return restyimpl.DownloadBytesSafeE(rawURL, opts...)
-}
-
-// DownloadString downloads remote text.
-//
-// Deprecated: use DownloadStringE to handle request errors explicitly.
-func DownloadString(rawURL, customCharset string) string {
-	return DownloadStringWithOptions(rawURL, customCharset)
-}
-
-// DownloadStringWithOptions downloads remote text with per-request options.
-//
-// Deprecated: use DownloadStringEWithOptions to handle request errors explicitly.
-func DownloadStringWithOptions(rawURL, customCharset string, opts ...RequestOption) string {
-	return restyimpl.DownloadStringWithOptions(rawURL, customCharset, opts...)
 }
 
 // DownloadStringE downloads remote text and returns an error on request failure.

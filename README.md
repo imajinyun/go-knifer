@@ -311,8 +311,8 @@ go get github.com/imajinyun/go-knifer
 
 ## ✅ Recommended API entry points
 
-Use these APIs for new code. Compatibility helpers remain available, but the
-table below points to the safer and clearer path first.
+Use these APIs for new code. Request helpers that can fail return errors
+explicitly instead of swallowing failures.
 
 | Scenario | Recommended API |
 | --- | --- |
@@ -325,26 +325,6 @@ table below points to the safer and clearer path first.
 | Create an LRU cache | `vcache.NewLRU` or `vcache.NewLRUWithTimeout` |
 | Parse a cron expression | `vcron.NewPattern` or `vcron.MustNewPattern` |
 | Load remote configuration from a trust boundary | `vconf.LoadRemoteSafe` or `vconf.LoadRemoteSafeWithOptions` |
-
-## 🔁 Deprecated API migration
-
-Deprecated APIs are kept for source compatibility. New code should prefer these
-replacements:
-
-| Compatibility API | Preferred API |
-| --- | --- |
-| `vhttp.CreateRequest` / `vhttp.CreateRequestWithOptions` | `vhttp.NewRequest` or `vhttp.NewSafeRequest` |
-| `vhttp.CreateGet` / `vhttp.CreateGetWithOptions` | `vhttp.Get(..., vhttp.WithFollowRedirects(...))` |
-| `vhttp.CreatePost` / `vhttp.CreatePostWithOptions` | `vhttp.Post` or `vhttp.PostSafe` |
-| `vhttp.GetString`, `vhttp.PostJSON`, `vhttp.DownloadBytes` | `vhttp.GetStringE`, `vhttp.PostJSONE`, `vhttp.DownloadBytesE` |
-| `vresty.CreateRequest` / `vresty.CreateRequestWithOptions` | `vresty.NewRequest` or `vresty.NewSafeRequest` |
-| `vresty.CreateGet` / `vresty.CreateGetWithOptions` | `vresty.Get(..., vresty.WithFollowRedirects(...))` |
-| `vresty.CreatePost` / `vresty.CreatePostWithOptions` | `vresty.Post` or `vresty.PostSafe` |
-| `vresty.GetString`, `vresty.PostJSON`, `vresty.DownloadBytes` | `vresty.GetStringE`, `vresty.PostJSONE`, `vresty.DownloadBytesE` |
-| `vrand.Bytes` for secrets or tokens | `vrand.SecureBytes` |
-| `vcache.NewLRUCache` | `vcache.NewLRU` |
-| `vcron.NewCronPattern` / `vcron.MustNewCronPattern` | `vcron.NewPattern` / `vcron.MustNewPattern` |
-| `vcaptcha.CreateLineCaptcha` and related `Create*Captcha` helpers | `vcaptcha.NewLineCaptcha` and related `New*Captcha` helpers |
 
 Go will resolve the module according to the subpackages you actually import, for example:
 
@@ -683,8 +663,14 @@ can override defaults independently: `WithTimeout`, `WithHeader`, `WithHeaders`,
 Shortcuts are available for simple cases and downloads:
 
 ```go
-body := vresty.GetString("https://example.com")
-jsonBody := vresty.PostJSON("https://api.example.com/events", `{"event":"created"}`)
+body, err := vresty.GetStringE("https://example.com")
+if err != nil {
+  panic(err)
+}
+jsonBody, err := vresty.PostJSONE("https://api.example.com/events", `{"event":"created"}`)
+if err != nil {
+  panic(err)
+}
 n, err := vresty.DownloadFile("https://example.com/report.csv", "./downloads")
 _, _, _ = body, jsonBody, n
 _ = err

@@ -8,21 +8,11 @@ import (
 	"github.com/imajinyun/go-knifer/internal/cron"
 )
 
-// CronConfig configures a scheduler.
-//
-// Deprecated: use Config.
-type CronConfig = cron.Config
-
 // Config configures a scheduler.
 type Config = cron.Config
 
 // CronError is the cron module error type.
 type CronError = cron.CronError
-
-// CronPattern is a parsed cron pattern.
-//
-// Deprecated: use Pattern.
-type CronPattern = cron.Pattern
 
 // Pattern is a parsed cron pattern.
 type Pattern = cron.Pattern
@@ -81,24 +71,12 @@ const (
 
 var AlwaysTrueMatcher PartMatcher = cron.AlwaysTrueMatcher
 
-// NewCronConfig creates default cron config.
-//
-// Deprecated: use NewConfig.
-func NewCronConfig() *CronConfig { return NewCronConfigWithOptions() }
-
 // WithConfigLocation sets the scheduler time zone on CronConfig.
 func WithConfigLocation(loc *time.Location) ConfigOption { return cron.WithConfigLocation(loc) }
 
 // WithConfigMatchSecond sets whether cron expressions match seconds on CronConfig.
 func WithConfigMatchSecond(matchSecond bool) ConfigOption {
 	return cron.WithConfigMatchSecond(matchSecond)
-}
-
-// NewCronConfigWithOptions creates cron config customized by options.
-//
-// Deprecated: use NewConfigWithOptions.
-func NewCronConfigWithOptions(opts ...ConfigOption) *CronConfig {
-	return cron.NewConfigWithOptions(opts...)
 }
 
 // NewConfigWithOptions creates cron config customized by options.
@@ -109,30 +87,6 @@ func NewConfigWithOptions(opts ...ConfigOption) *Config {
 // WithPatternIntParser sets the integer parser used by NewPatternWithOptions.
 func WithPatternIntParser(parser func(string) (int, error)) PatternOption {
 	return cron.WithPatternIntParser(parser)
-}
-
-// NewCronPattern parses a cron expression.
-//
-// Deprecated: use NewPattern.
-func NewCronPattern(expr string) (*CronPattern, error) { return cron.NewPattern(expr) }
-
-// NewCronPatternWithOptions parses a cron expression with custom parser providers.
-//
-// Deprecated: use NewPatternWithOptions.
-func NewCronPatternWithOptions(expr string, opts ...PatternOption) (*CronPattern, error) {
-	return cron.NewPatternWithOptions(expr, opts...)
-}
-
-// MustNewCronPattern parses a cron expression or panics.
-//
-// Deprecated: use MustNewPattern.
-func MustNewCronPattern(expr string) *CronPattern { return cron.MustNewPattern(expr) }
-
-// MustNewCronPatternWithOptions parses a cron expression with custom parser providers or panics.
-//
-// Deprecated: use MustNewPatternWithOptions.
-func MustNewCronPatternWithOptions(expr string, opts ...PatternOption) *CronPattern {
-	return cron.MustNewPatternWithOptions(expr, opts...)
 }
 
 // NewScheduler creates a cron scheduler.
