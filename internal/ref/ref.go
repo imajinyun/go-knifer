@@ -23,15 +23,17 @@ type fieldAccessConfig struct {
 type FieldAccessOption func(*fieldAccessConfig)
 
 // WithUnsafeAccess controls whether unexported addressable fields may be accessed via unsafe.
+// It is disabled by default; enable it only for trusted in-process values.
 func WithUnsafeAccess(enabled bool) FieldAccessOption {
 	return func(c *fieldAccessConfig) { c.unsafeAccess = enabled }
 }
 
 // WithAllowUnexported controls whether unexported addressable fields may be accessed via unsafe.
+// It is disabled by default; enable it only for trusted in-process values.
 func WithAllowUnexported(enabled bool) FieldAccessOption { return WithUnsafeAccess(enabled) }
 
 func applyFieldAccessOptions(opts []FieldAccessOption) fieldAccessConfig {
-	cfg := fieldAccessConfig{unsafeAccess: true}
+	cfg := fieldAccessConfig{}
 	for _, opt := range opts {
 		if opt != nil {
 			opt(&cfg)

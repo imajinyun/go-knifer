@@ -5,11 +5,20 @@ import httpx "github.com/imajinyun/go-knifer/internal/httpx/http"
 // Request is a chainable HTTP request builder.
 type Request = httpx.HTTPRequest
 
+// Client is an explicit HTTP request factory with a captured configuration snapshot.
+type Client = httpx.Client
+
 // RequestOption customizes one HTTP request at construction time.
 type RequestOption = httpx.RequestOption
 
+// ClientOption customizes a Client.
+type ClientOption = httpx.ClientOption
+
 // GlobalConfig is an immutable snapshot of package-level HTTP defaults.
 type GlobalConfig = httpx.GlobalConfig
+
+// URLPolicy controls SSRF-oriented request validation for untrusted URLs.
+type URLPolicy = httpx.URLPolicy
 
 // Response wraps an HTTP response.
 type Response = httpx.HTTPResponse

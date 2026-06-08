@@ -121,6 +121,33 @@ func TestVerifyRejectsNoneWithoutExplicitSigner(t *testing.T) {
 	}
 }
 
+func TestSetKeyRejectsNoneByDefault(t *testing.T) {
+	tok, err := New().SetSigner(NoneSigner()).SetPayload("sub", "public").Sign()
+	if err != nil {
+		t.Fatalf("sign: %v", err)
+	}
+	parsed, err := Of(tok)
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+
+	if parsed.SetKey([]byte("ignored")).Verify() {
+		t.Fatal("SetKey should not implicitly accept alg=none from an untrusted token")
+	}
+	if err := parsed.SetKeyStrict([]byte("ignored")); err == nil {
+		t.Fatal("SetKeyStrict should reject alg=none without explicit opt-in")
+	}
+	if Verify(tok, []byte("ignored")) {
+		t.Fatal("Verify should reject alg=none without explicit opt-in")
+	}
+	if err := parsed.SetKeyAllowNoneForTrustedToken(nil); err != nil {
+		t.Fatalf("SetKeyAllowNoneForTrustedToken: %v", err)
+	}
+	if !parsed.Verify() {
+		t.Fatal("explicit none opt-in should verify trusted none tokens")
+	}
+}
+
 func TestNeedSigner(t *testing.T) {
 	j := New().SetPayload("sub", "x")
 	if _, err := j.Sign(); err == nil {

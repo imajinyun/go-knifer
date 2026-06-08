@@ -1,11 +1,14 @@
 package http
 
 import (
+	"context"
 	"crypto/tls"
 	"io"
+	"net"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -360,6 +363,32 @@ func TestRequestOptionsOverrideGlobalDefaults(t *testing.T) {
 	}
 }
 
+func TestClientUsesCapturedConfig(t *testing.T) {
+	oldUA := GetGlobalUserAgent()
+	oldFollow := GetGlobalFollowRedirects()
+	defer SetGlobalUserAgent(oldUA)
+	defer SetGlobalFollowRedirects(oldFollow)
+
+	SetGlobalUserAgent("client-agent")
+	SetGlobalFollowRedirects(false)
+	client := NewClient()
+	SetGlobalUserAgent("mutated-agent")
+	SetGlobalFollowRedirects(true)
+
+	req := client.Get("https://example.com")
+	if req.userAgent != "client-agent" {
+		t.Fatalf("client request userAgent = %q, want captured client-agent", req.userAgent)
+	}
+	if req.followRedir == nil || *req.followRedir {
+		t.Fatalf("client request followRedirects = %v, want captured false", req.followRedir)
+	}
+
+	isolated := NewIsolatedClient().Get("https://example.com")
+	if isolated.userAgent != "" || isolated.followRedir == nil || !*isolated.followRedir {
+		t.Fatalf("isolated client defaults ua=%q follow=%v", isolated.userAgent, isolated.followRedir)
+	}
+}
+
 func TestRequestOptionContentTypeAndCharset(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(r.Header.Get("Content-Type")))
@@ -513,6 +542,52 @@ func TestDefaultTransportProviderCanBeConfiguredAndReset(t *testing.T) {
 	}
 	if _, ok := client.Transport.(*http.Transport); !ok {
 		t.Fatalf("reset default transport type = %T, want *http.Transport", client.Transport)
+	}
+}
+
+func TestSafeRequestRejectsPrivateAndUnsafeRedirects(t *testing.T) {
+	if err := GetSafe("file:///tmp/secret.txt").Execute().Err(); err == nil {
+		t.Fatal("GetSafe should reject non-HTTP schemes")
+	}
+	if err := GetSafe("http://127.0.0.1/config.yaml").Execute().Err(); err == nil {
+		t.Fatal("GetSafe should reject loopback hosts by default")
+	}
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/redirect":
+			http.Redirect(w, r, "http://127.0.0.1/private", http.StatusFound)
+		default:
+			_, _ = w.Write([]byte("ok"))
+		}
+	}))
+	defer srv.Close()
+
+	serverURL, err := url.Parse(srv.URL)
+	if err != nil {
+		t.Fatalf("parse server url: %v", err)
+	}
+	resp := GetSafe(srv.URL, WithAllowedHosts(serverURL.Hostname())).Execute()
+	if body := resp.Body(); body != "ok" || resp.Err() != nil {
+		t.Fatalf("GetSafe allowed host body=%q err=%v", body, resp.Err())
+	}
+	if err := GetSafe(srv.URL+"/redirect", WithAllowedHosts(serverURL.Hostname())).Execute().Err(); err == nil {
+		t.Fatal("GetSafe should reject unsafe redirect targets")
+	}
+}
+
+func TestSafeRequestRevalidatesHostAtRoundTrip(t *testing.T) {
+	req := GetSafe("http://example.com/config.yaml",
+		WithLookupIP(func(context.Context, string) ([]net.IP, error) {
+			return []net.IP{net.ParseIP("127.0.0.1")}, nil
+		}),
+		WithTransport(roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+			return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("ok")), Header: make(http.Header)}, nil
+		})),
+	)
+
+	if err := req.Execute().Err(); err == nil {
+		t.Fatal("GetSafe should reject a host that resolves private during RoundTrip")
 	}
 }
 

@@ -2,10 +2,12 @@ package http
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"sort"
@@ -91,6 +93,15 @@ type HTTPRequest struct {
 	newRequest   NewRequestFunc
 	multipartNew MultipartWriterFactory
 	decodeConfig responseDecodeConfig
+	urlPolicy    *URLPolicy
+}
+
+// URLPolicy controls SSRF-oriented request validation for untrusted URLs.
+type URLPolicy struct {
+	AllowedSchemes []string
+	AllowedHosts   []string
+	RejectPrivate  bool
+	LookupIP       func(context.Context, string) ([]net.IP, error)
 }
 
 type formFile struct {
@@ -114,6 +125,98 @@ func (f *formFile) clone() *formFile {
 
 // RequestOption customizes one HTTP request at construction time.
 type RequestOption func(*HTTPRequest)
+
+// Client is an explicit HTTP request factory with a captured configuration snapshot.
+// Use it when code should not read package-level global defaults on every request.
+type Client struct {
+	cfg  GlobalConfig
+	opts []RequestOption
+}
+
+// ClientOption customizes a Client.
+type ClientOption func(*Client)
+
+// WithClientGlobalConfig sets the configuration snapshot used by a Client.
+func WithClientGlobalConfig(cfg GlobalConfig) ClientOption {
+	return func(c *Client) { c.cfg = cfg }
+}
+
+// WithClientRequestOptions sets request options applied to every request created by a Client.
+func WithClientRequestOptions(opts ...RequestOption) ClientOption {
+	return func(c *Client) { c.opts = append([]RequestOption(nil), opts...) }
+}
+
+// NewClient creates a request factory using the current global configuration snapshot.
+func NewClient(opts ...ClientOption) *Client {
+	c := &Client{cfg: SnapshotGlobalConfig()}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(c)
+		}
+	}
+	return c
+}
+
+// NewIsolatedClient creates a request factory without reading package-level global defaults.
+func NewIsolatedClient(opts ...ClientOption) *Client {
+	c := &Client{cfg: GlobalConfig{FollowRedirects: true, MaxRedirects: 10}}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(c)
+		}
+	}
+	return c
+}
+
+// NewClientWithConfig creates a request factory from an explicit configuration snapshot.
+func NewClientWithConfig(cfg GlobalConfig, opts ...RequestOption) *Client {
+	return &Client{cfg: cfg, opts: append([]RequestOption(nil), opts...)}
+}
+
+// NewRequest creates a request from the Client's captured configuration.
+func (c *Client) NewRequest(method Method, rawURL string, opts ...RequestOption) *HTTPRequest {
+	if c == nil {
+		return NewIsolatedRequest(method, rawURL, opts...)
+	}
+	all := append(append([]RequestOption(nil), c.opts...), opts...)
+	return NewRequestWithConfig(method, rawURL, c.cfg, all...)
+}
+
+// NewSafeRequest creates a safe request from the Client's captured configuration.
+func (c *Client) NewSafeRequest(method Method, rawURL string, opts ...RequestOption) *HTTPRequest {
+	if c == nil {
+		return NewSafeRequest(method, rawURL, opts...)
+	}
+	safe := make([]RequestOption, 0, 3+len(c.opts)+len(opts))
+	safe = append(safe,
+		WithURLPolicy(URLPolicy{AllowedSchemes: []string{"http", "https"}, RejectPrivate: true}),
+		WithTimeout(10*time.Second),
+		WithMaxRedirects(10),
+	)
+	safe = append(safe, c.opts...)
+	safe = append(safe, opts...)
+	return NewRequestWithConfig(method, rawURL, c.cfg, safe...)
+}
+
+// Get creates a GET request from the Client's captured configuration.
+func (c *Client) Get(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return c.NewRequest(MethodGet, rawURL, opts...)
+}
+
+// GetSafe creates a safe GET request from the Client's captured configuration.
+func (c *Client) GetSafe(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return c.NewSafeRequest(MethodGet, rawURL, opts...)
+}
+
+// Post creates a POST request from the Client's captured configuration.
+func (c *Client) Post(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return c.NewRequest(MethodPost, rawURL, opts...)
+}
+
+// PostSafe creates a safe POST request from the Client's captured configuration.
+func (c *Client) PostSafe(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return c.NewSafeRequest(MethodPost, rawURL, opts...)
+}
 
 // NewRequestFunc creates an outgoing HTTP request.
 type NewRequestFunc func(method, url string, body io.Reader) (*http.Request, error)
@@ -145,8 +248,8 @@ func WithGlobalConfig(cfg GlobalConfig) RequestOption {
 // NewRequest creates a request with the specified method and URL.
 //
 // Security: NewRequest is for trusted URLs. This package does not apply
-// SSRF-oriented host validation by default; use vresty.NewSafeRequest or a
-// custom transport policy when the URL is untrusted.
+// SSRF-oriented host validation by default; use NewSafeRequest, GetSafe, or
+// PostSafe when the URL may come from users, config, or another untrusted trust boundary.
 func NewRequest(method Method, rawURL string, opts ...RequestOption) *HTTPRequest {
 	return NewRequestWithConfig(method, rawURL, SnapshotGlobalConfig(), opts...)
 }
@@ -159,8 +262,8 @@ func NewIsolatedRequest(method Method, rawURL string, opts ...RequestOption) *HT
 // NewRequestWithConfig creates a request from an explicit global configuration snapshot.
 //
 // Security: NewRequestWithConfig is for trusted URLs. This package does not
-// apply SSRF-oriented host validation by default; use vresty.NewSafeRequest or a
-// custom transport policy when the URL is untrusted.
+// apply SSRF-oriented host validation by default; use NewSafeRequest when the
+// URL may come from users, config, or another untrusted trust boundary.
 func NewRequestWithConfig(method Method, rawURL string, cfg GlobalConfig, opts ...RequestOption) *HTTPRequest {
 	follow := cfg.FollowRedirects
 	r := &HTTPRequest{
@@ -188,18 +291,38 @@ func NewRequestWithConfig(method Method, rawURL string, cfg GlobalConfig, opts .
 
 // Get creates a GET request.
 //
-// Security: Get is for trusted URLs. Use vresty.GetSafe or a custom transport
-// policy when the URL is untrusted.
+// Security: Get is for trusted URLs. Use GetSafe when the URL is untrusted.
 func Get(rawURL string, opts ...RequestOption) *HTTPRequest {
 	return NewRequest(MethodGet, rawURL, opts...)
 }
 
+// GetSafe creates a GET request with SSRF-oriented safety checks enabled.
+func GetSafe(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return NewSafeRequest(MethodGet, rawURL, opts...)
+}
+
 // Post creates a POST request.
 //
-// Security: Post is for trusted URLs. Use vresty.PostSafe or a custom transport
-// policy when the URL is untrusted.
+// Security: Post is for trusted URLs. Use PostSafe when the URL is untrusted.
 func Post(rawURL string, opts ...RequestOption) *HTTPRequest {
 	return NewRequest(MethodPost, rawURL, opts...)
+}
+
+// PostSafe creates a POST request with SSRF-oriented safety checks enabled.
+func PostSafe(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return NewSafeRequest(MethodPost, rawURL, opts...)
+}
+
+// NewSafeRequest creates a request with SSRF-oriented safety checks enabled.
+func NewSafeRequest(method Method, rawURL string, opts ...RequestOption) *HTTPRequest {
+	safe := make([]RequestOption, 0, 3+len(opts))
+	safe = append(safe,
+		WithURLPolicy(URLPolicy{AllowedSchemes: []string{"http", "https"}, RejectPrivate: true}),
+		WithTimeout(10*time.Second),
+		WithMaxRedirects(10),
+	)
+	safe = append(safe, opts...)
+	return NewRequest(method, rawURL, safe...)
 }
 
 // Put creates a PUT request.
@@ -320,6 +443,36 @@ func WithMultipartWriterFactory(factory MultipartWriterFactory) RequestOption {
 	}
 }
 
+// WithURLPolicy sets SSRF-oriented validation for the request URL and redirect targets.
+func WithURLPolicy(policy URLPolicy) RequestOption {
+	return func(r *HTTPRequest) {
+		p := policy
+		p.AllowedSchemes = append([]string(nil), policy.AllowedSchemes...)
+		p.AllowedHosts = append([]string(nil), policy.AllowedHosts...)
+		r.urlPolicy = &p
+	}
+}
+
+// WithAllowedHosts restricts Safe requests to the provided host names.
+func WithAllowedHosts(hosts ...string) RequestOption {
+	return func(r *HTTPRequest) {
+		if r.urlPolicy == nil {
+			r.urlPolicy = &URLPolicy{AllowedSchemes: []string{"http", "https"}, RejectPrivate: true}
+		}
+		r.urlPolicy.AllowedHosts = append([]string(nil), hosts...)
+	}
+}
+
+// WithLookupIP sets the host resolver used by SSRF-oriented URL validation.
+func WithLookupIP(lookupIP func(context.Context, string) ([]net.IP, error)) RequestOption {
+	return func(r *HTTPRequest) {
+		if r.urlPolicy == nil {
+			r.urlPolicy = &URLPolicy{AllowedSchemes: []string{"http", "https"}, RejectPrivate: true}
+		}
+		r.urlPolicy.LookupIP = lookupIP
+	}
+}
+
 // WithContentDecoder registers a per-request response body decoder for encoding.
 func WithContentDecoder(encoding string, decoder ContentDecoder) RequestOption {
 	return func(r *HTTPRequest) { r.decodeConfig.setDecoder(encoding, decoder) }
@@ -362,6 +515,7 @@ func (r *HTTPRequest) Clone() *HTTPRequest {
 		newRequest:   r.newRequest,
 		multipartNew: r.multipartNew,
 		decodeConfig: r.decodeConfig.normalized(),
+		urlPolicy:    cloneURLPolicy(r.urlPolicy),
 	}
 	if r.followRedir != nil {
 		follow := *r.followRedir
@@ -461,6 +615,12 @@ func (r *HTTPRequest) Transport(t http.RoundTripper) *HTTPRequest {
 
 // Client sets a custom *http.Client, overriding Transport, Timeout, and related options.
 func (r *HTTPRequest) Client(c *http.Client) *HTTPRequest { r.httpClient = c; return r }
+
+// URLPolicy sets SSRF-oriented validation for this request.
+func (r *HTTPRequest) URLPolicy(policy URLPolicy) *HTTPRequest {
+	r.urlPolicy = cloneURLPolicy(&policy)
+	return r
+}
 
 // BasicAuth sets Basic Auth.
 func (r *HTTPRequest) BasicAuth(user, pass string) *HTTPRequest {
@@ -640,6 +800,16 @@ func cloneAnyMap(m map[string]any) map[string]any {
 	return out
 }
 
+func cloneURLPolicy(policy *URLPolicy) *URLPolicy {
+	if policy == nil {
+		return nil
+	}
+	p := *policy
+	p.AllowedSchemes = append([]string(nil), policy.AllowedSchemes...)
+	p.AllowedHosts = append([]string(nil), policy.AllowedHosts...)
+	return &p
+}
+
 func (r *HTTPRequest) hasStreamingBody() bool {
 	if r.bodyReader != nil {
 		return true
@@ -667,7 +837,13 @@ func (r *HTTPRequest) beginExecution() error {
 
 func (r *HTTPRequest) buildClient() *http.Client {
 	if r.httpClient != nil {
-		return r.httpClient
+		if r.urlPolicy == nil {
+			return r.httpClient
+		}
+		clone := *r.httpClient
+		clone.Transport = safeHTTPTransport(clone.Transport, r.urlPolicy)
+		clone.CheckRedirect = redirectPolicy(r.followRedir, r.maxRedirects, r.urlPolicy, r.httpClient.CheckRedirect)
+		return &clone
 	}
 	transport := r.transport
 	if transport == nil && r.transportFn != nil {
@@ -689,19 +865,14 @@ func (r *HTTPRequest) buildClient() *http.Client {
 		follow = *r.followRedir
 	}
 	max := r.maxRedirects
+	if r.urlPolicy != nil {
+		transport = safeHTTPTransport(transport, r.urlPolicy)
+	}
 	c := &http.Client{
-		Timeout:   timeout,
-		Transport: transport,
-		Jar:       r.cookieJar,
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			if !follow {
-				return http.ErrUseLastResponse
-			}
-			if max > 0 && len(via) >= max {
-				return HTTPErrorfWithCode(knifer.ErrCodeUnsupported, "stopped after %d redirects", max)
-			}
-			return nil
-		},
+		Timeout:       timeout,
+		Transport:     transport,
+		Jar:           r.cookieJar,
+		CheckRedirect: redirectPolicy(&follow, max, r.urlPolicy, nil),
 	}
 	return c
 }
@@ -710,6 +881,15 @@ func (r *HTTPRequest) doExecute() (*HTTPResponse, error) {
 	finalURL, err := r.buildURL()
 	if err != nil {
 		return nil, err
+	}
+	if r.urlPolicy != nil {
+		parsed, err := url.Parse(finalURL)
+		if err != nil {
+			return nil, NewHTTPErrorWithCode(knifer.ErrCodeInvalidInput, "invalid url", err)
+		}
+		if err := validateRequestURL(parsed, r.urlPolicy); err != nil {
+			return nil, err
+		}
 	}
 	if err := r.beginExecution(); err != nil {
 		return nil, err
@@ -724,6 +904,15 @@ func (r *HTTPRequest) doExecute() (*HTTPResponse, error) {
 		finalURL, err = r.buildURL()
 		if err != nil {
 			return nil, err
+		}
+		if r.urlPolicy != nil {
+			parsed, err := url.Parse(finalURL)
+			if err != nil {
+				return nil, NewHTTPErrorWithCode(knifer.ErrCodeInvalidInput, "invalid url", err)
+			}
+			if err := validateRequestURL(parsed, r.urlPolicy); err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -760,6 +949,202 @@ func (r *HTTPRequest) doExecute() (*HTTPResponse, error) {
 		return nil, NewHTTPError("send request failed", err)
 	}
 	return wrapResponse(resp, r.decodeConfig), nil
+}
+
+func redirectPolicy(followRedir *bool, max int, policy *URLPolicy, next func(*http.Request, []*http.Request) error) func(*http.Request, []*http.Request) error {
+	follow := true
+	if followRedir != nil {
+		follow = *followRedir
+	}
+	return func(req *http.Request, via []*http.Request) error {
+		if !follow {
+			return http.ErrUseLastResponse
+		}
+		if max > 0 && len(via) >= max {
+			return HTTPErrorfWithCode(knifer.ErrCodeUnsupported, "stopped after %d redirects", max)
+		}
+		if req == nil || req.URL == nil {
+			return HTTPErrorf("redirect url is nil")
+		}
+		if err := validateRequestURL(req.URL, policy); err != nil {
+			return err
+		}
+		if next != nil {
+			return next(req, via)
+		}
+		return nil
+	}
+}
+
+func safeHTTPTransport(base http.RoundTripper, policy *URLPolicy) http.RoundTripper {
+	if base == nil {
+		base = http.DefaultTransport
+	}
+	if transport, ok := base.(*http.Transport); ok {
+		transportClone := transport.Clone()
+		transportClone.DialContext = safeDialContext(policy)
+		base = transportClone
+	}
+	return safeRoundTripper{base: base, policy: policy}
+}
+
+func safeDialContext(policy *URLPolicy) func(context.Context, string, string) (net.Conn, error) {
+	dialer := &net.Dialer{}
+	return func(ctx context.Context, network, address string) (net.Conn, error) {
+		host, port, err := net.SplitHostPort(address)
+		if err != nil {
+			return nil, err
+		}
+		host = strings.ToLower(strings.TrimSpace(host))
+		if host == "" {
+			return nil, HTTPErrorf("dial host is blank")
+		}
+		if policy != nil && containsFold(policy.AllowedHosts, host) {
+			return dialer.DialContext(ctx, network, address)
+		}
+		ips, err := publicHostIPs(ctx, policy, host)
+		if err != nil {
+			return nil, err
+		}
+		return dialer.DialContext(ctx, network, net.JoinHostPort(ips[0].String(), port))
+	}
+}
+
+type safeRoundTripper struct {
+	base   http.RoundTripper
+	policy *URLPolicy
+}
+
+func (t safeRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	if req == nil || req.URL == nil {
+		return nil, HTTPErrorf("request url is nil")
+	}
+	if err := validateRequestURL(req.URL, t.policy); err != nil {
+		return nil, err
+	}
+	if req.URL.Scheme == "http" || req.URL.Scheme == "https" {
+		host := strings.ToLower(req.URL.Hostname())
+		if t.policy != nil && t.policy.RejectPrivate && !containsFold(t.policy.AllowedHosts, host) {
+			private, err := isPrivateHost(req.Context(), t.policy.LookupIP, host)
+			if err != nil {
+				return nil, NewHTTPError("resolve url host failed", err)
+			}
+			if private {
+				return nil, HTTPErrorf("url host %q resolves to a private address", host)
+			}
+		}
+	}
+	return t.base.RoundTrip(req)
+}
+
+func validateRequestURL(u *url.URL, policy *URLPolicy) error {
+	if policy == nil {
+		return nil
+	}
+	if u == nil {
+		return HTTPErrorf("url is nil")
+	}
+	scheme := strings.ToLower(strings.TrimSpace(u.Scheme))
+	if len(policy.AllowedSchemes) > 0 && !containsFold(policy.AllowedSchemes, scheme) {
+		return HTTPErrorf("url scheme %q is not allowed", scheme)
+	}
+	if scheme != "http" && scheme != "https" {
+		return nil
+	}
+	host := strings.ToLower(u.Hostname())
+	if host == "" {
+		return HTTPErrorf("http url host is blank")
+	}
+	if len(policy.AllowedHosts) > 0 && !containsFold(policy.AllowedHosts, host) {
+		return HTTPErrorf("url host %q is not allowed", host)
+	}
+	if policy.RejectPrivate && !containsFold(policy.AllowedHosts, host) {
+		private, err := isPrivateHost(context.Background(), policy.LookupIP, host)
+		if err != nil {
+			return NewHTTPError("resolve url host failed", err)
+		}
+		if private {
+			return HTTPErrorf("url host %q resolves to a private address", host)
+		}
+	}
+	return nil
+}
+
+func containsFold(values []string, target string) bool {
+	target = strings.TrimSpace(target)
+	for _, value := range values {
+		if strings.EqualFold(strings.TrimSpace(value), target) {
+			return true
+		}
+	}
+	return false
+}
+
+func isPrivateHost(ctx context.Context, lookupIP func(context.Context, string) ([]net.IP, error), host string) (bool, error) {
+	if strings.EqualFold(host, "localhost") {
+		return true, nil
+	}
+	if ip := net.ParseIP(host); ip != nil {
+		return isPrivateIP(ip), nil
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if lookupIP == nil {
+		lookupIP = defaultLookupIP
+	}
+	ips, err := lookupIP(ctx, host)
+	if err != nil {
+		return false, err
+	}
+	for _, ip := range ips {
+		if isPrivateIP(ip) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func defaultLookupIP(ctx context.Context, host string) ([]net.IP, error) {
+	return net.DefaultResolver.LookupIP(ctx, "ip", host)
+}
+
+func publicHostIPs(ctx context.Context, policy *URLPolicy, host string) ([]net.IP, error) {
+	if strings.EqualFold(host, "localhost") {
+		return nil, HTTPErrorf("url host %q resolves to a private address", host)
+	}
+	if ip := net.ParseIP(host); ip != nil {
+		if isPrivateIP(ip) {
+			return nil, HTTPErrorf("url host %q resolves to a private address", host)
+		}
+		return []net.IP{ip}, nil
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	lookupIP := defaultLookupIP
+	if policy != nil && policy.LookupIP != nil {
+		lookupIP = policy.LookupIP
+	}
+	ips, err := lookupIP(ctx, host)
+	if err != nil {
+		return nil, NewHTTPError("resolve url host failed", err)
+	}
+	if len(ips) == 0 {
+		return nil, HTTPErrorf("resolve url host %q: no addresses", host)
+	}
+	public := make([]net.IP, 0, len(ips))
+	for _, ip := range ips {
+		if isPrivateIP(ip) {
+			return nil, HTTPErrorf("url host %q resolves to a private address", host)
+		}
+		public = append(public, ip)
+	}
+	return public, nil
+}
+
+func isPrivateIP(ip net.IP) bool {
+	return ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() || ip.IsUnspecified()
 }
 
 func toString(v any) string {

@@ -46,14 +46,20 @@ func TestFieldHelpers(t *testing.T) {
 	if len(GetFields(s)) < 4 || len(GetFieldsDirectly(s, false)) != 4 {
 		t.Fatal("fields direct/embedded failed")
 	}
-	if got := GetFieldValue(s, "hidden"); got != "secret" {
-		t.Fatalf("GetFieldValue hidden = %v", got)
+	if got := GetFieldValue(s, "hidden"); got != nil {
+		t.Fatalf("GetFieldValue hidden without opt-in = %v", got)
+	}
+	if got := GetFieldValueWithOptions(s, "hidden", WithUnsafeAccess(true)); got != "secret" {
+		t.Fatalf("GetFieldValue hidden with opt-in = %v", got)
 	}
 	if err := SetFieldValue(s, "name", "bob"); err != nil || s.Name != "bob" {
 		t.Fatalf("SetFieldValue exported = %v name=%s", err, s.Name)
 	}
-	if err := SetFieldValue(s, "hidden", "changed"); err != nil || s.hidden != "changed" {
-		t.Fatalf("SetFieldValue hidden = %v hidden=%s", err, s.hidden)
+	if err := SetFieldValue(s, "hidden", "changed"); err == nil || s.hidden != "secret" {
+		t.Fatalf("SetFieldValue hidden without opt-in err=%v hidden=%s", err, s.hidden)
+	}
+	if err := SetFieldValueWithOptions(s, "hidden", "changed", WithUnsafeAccess(true)); err != nil || s.hidden != "changed" {
+		t.Fatalf("SetFieldValue hidden with opt-in = %v hidden=%s", err, s.hidden)
 	}
 	values := GetFieldsValue(s, func(f reflect.StructField) bool { return f.Name == "Age" })
 	if len(values) != 1 || values[0] != 18 {

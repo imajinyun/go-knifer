@@ -11,6 +11,10 @@
 #   5. Public package doc.go files contain a package comment.
 #   6. New production panics are blocked unless they are known compatibility
 #      panics or are in explicit Must/Panic-style APIs.
+#   7. Public v* facades stay thin: implementation logic is blocked outside
+#      known compatibility shims.
+#   8. Public v* production imports do not add new third-party dependencies
+#      unless explicitly allowed for that facade.
 #
 # It relies on the Go toolchain (go list) for accurate import analysis instead
 # of fragile text matching, so it transparently handles abbreviated package
@@ -35,6 +39,29 @@ fail=0
 err() {
 	echo "ARCH VIOLATION: $*" >&2
 	fail=1
+}
+
+allowed_facade_external_import() {
+	case "$1:$2" in
+	verr:github.com/evalphobia/logrus_sentry | \
+	verr:github.com/getsentry/raven-go | \
+	verr:github.com/sirupsen/logrus | \
+	vpoi:github.com/xuri/excelize/v2 | \
+	vresty:resty.dev/v3)
+		return 0
+		;;
+	esac
+	return 1
+}
+
+is_external_import() {
+	first="${1%%/*}"
+	case "${first}" in
+	*.*)
+		return 0
+		;;
+	esac
+	return 1
 }
 
 # Collect public package directories (top-level v* dirs containing .go files).
@@ -73,6 +100,13 @@ for dir in v*/; do
 			rel="${imp#"${MODULE}"/}"
 			if [ ! -d "${rel}" ]; then
 				err "${pkg}: imports non-existent internal path ${imp}"
+			fi
+			;;
+		"${MODULE}"*)
+			;;
+		*)
+			if is_external_import "${imp}" && ! allowed_facade_external_import "${pkg}" "${imp}"; then
+				err "${pkg}: imports third-party dependency ${imp} (facade dependency surface must be allowlisted)"
 			fi
 			;;
 		esac
@@ -165,6 +199,22 @@ allowed_panic_paths = {
 }
 
 allowed_panic_funcs = re.compile(r"^(?:func\s+(?:\([^)]*\)\s*)?(?:Must|Panic)\w*\b)")
+unsafe_ref_access = re.compile(r"fieldAccessConfig\{\s*unsafeAccess:\s*true\s*\}")
+facade_logic = re.compile(r"^(?:if|for|switch|select|defer|go)\b|:=")
+
+allowed_facade_logic_paths = {
+	# Existing compatibility shims that predate the thin-facade policy. Keep new
+	# facade files as aliases/delegates and move implementation details into
+	# internal/* instead of extending this list.
+	"vcache/cache.go",
+	"vcrypto/errors.go",
+	"vjob/job.go",
+	"vnum/arith.go",
+	"vrand/rand.go",
+	"vset/set.go",
+	"vskt/socket.go",
+	"vxml/element.go",
+}
 
 
 def enclosing_func(lines: list[str], idx: int) -> str:
@@ -192,8 +242,36 @@ def check_panic_policy() -> None:
 			violations.append(f"{rel}:{i + 1}: production panic is not allowed outside known compatibility or Must/Panic-style APIs")
 
 
+def check_ref_unsafe_opt_in() -> None:
+	path = root / "internal/ref/ref.go"
+	if not path.exists():
+		return
+	for i, line in enumerate(path.read_text().splitlines(), start=1):
+		if unsafe_ref_access.search(line) and "call(" not in enclosing_func(path.read_text().splitlines(), i - 1):
+			violations.append(f"internal/ref/ref.go:{i}: unsafe field access must require explicit FieldAccessOption opt-in")
+
+
+def check_facade_boundary_policy() -> None:
+	for path in sorted(root.glob("v*/*.go")):
+		if path.name == "doc.go" or path.name.endswith("_test.go"):
+			continue
+		rel = path.relative_to(root).as_posix()
+		if rel in allowed_facade_logic_paths:
+			continue
+		for i, raw in enumerate(path.read_text().splitlines(), start=1):
+			line = raw.strip()
+			if not line or line.startswith("//"):
+				continue
+			if facade_logic.search(line):
+				violations.append(
+					f"{rel}:{i}: facade packages should not contain implementation control flow or local state; move logic to internal/*"
+				)
+
+
 check_package_docs()
 check_panic_policy()
+check_ref_unsafe_opt_in()
+check_facade_boundary_policy()
 
 for violation in violations:
 	print(f"ARCH VIOLATION: {violation}", file=sys.stderr)

@@ -22,6 +22,13 @@ func IntRange(min, max int) int { return IntRangeWithOptions(min, max) }
 func Long() int64               { return LongWithOptions() }
 func Float() float64            { return FloatWithOptions() }
 func Bool() bool                { return BoolWithOptions() }
+
+// Bytes returns n random bytes.
+//
+// Compatibility: when the cryptographic reader fails, BytesWithOptions can fall
+// back to pseudo-random bytes unless WithStrictCryptoRandom is provided. Do not
+// use this helper for secrets, tokens, keys, or nonces; use SecureBytes or
+// package vcrypto instead.
 func Bytes(n int) []byte {
 	b, _ := BytesWithOptions(n)
 	return b
@@ -35,10 +42,11 @@ func Ele[T any](a []T) T                      { return EleWithOptions(a) }
 // WithRandomSource sets the pseudo-random source used by numeric, string, element, and fallback byte helpers.
 func WithRandomSource(source *mathrand.Rand) RandomOption { return randimpl.WithRandomSource(source) }
 
-// WithRandomReader sets the byte source used by BytesWithOptions.
+// WithRandomReader sets the byte source used by BytesWithOptions and SecureBytesWithOptions.
 func WithRandomReader(reader io.Reader) RandomOption { return randimpl.WithRandomReader(reader) }
 
 // WithStrictCryptoRandom makes BytesWithOptions return reader errors instead of falling back to pseudo-random bytes.
+// Prefer SecureBytes for security-sensitive bytes.
 func WithStrictCryptoRandom() RandomOption { return randimpl.WithStrictCryptoRandom() }
 
 func IntWithOptions(max int, opts ...RandomOption) int {
@@ -57,6 +65,14 @@ func BoolWithOptions(opts ...RandomOption) bool { return randimpl.RandomBoolWith
 
 func BytesWithOptions(n int, opts ...RandomOption) ([]byte, error) {
 	return randimpl.RandomBytesWithOptions(n, opts...)
+}
+
+// SecureBytes returns n cryptographically secure random bytes and fails closed on entropy errors.
+func SecureBytes(n int) ([]byte, error) { return SecureBytesWithOptions(n) }
+
+// SecureBytesWithOptions returns n cryptographically secure random bytes with per-call options.
+func SecureBytesWithOptions(n int, opts ...RandomOption) ([]byte, error) {
+	return randimpl.SecureRandomBytesWithOptions(n, opts...)
 }
 
 func StringWithOptions(n int, opts ...RandomOption) string {

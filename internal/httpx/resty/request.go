@@ -70,6 +70,98 @@ var defaultRestyClientProvider = struct {
 // RequestOption customizes one HTTP request at construction time.
 type RequestOption func(*HTTPRequest)
 
+// Client is an explicit resty request factory with a captured configuration snapshot.
+// Use it when code should not read package-level global defaults on every request.
+type Client struct {
+	cfg  GlobalConfig
+	opts []RequestOption
+}
+
+// ClientOption customizes a Client.
+type ClientOption func(*Client)
+
+// WithClientGlobalConfig sets the configuration snapshot used by a Client.
+func WithClientGlobalConfig(cfg GlobalConfig) ClientOption {
+	return func(c *Client) { c.cfg = cfg }
+}
+
+// WithClientRequestOptions sets request options applied to every request created by a Client.
+func WithClientRequestOptions(opts ...RequestOption) ClientOption {
+	return func(c *Client) { c.opts = append([]RequestOption(nil), opts...) }
+}
+
+// NewClient creates a request factory using the current global configuration snapshot.
+func NewClient(opts ...ClientOption) *Client {
+	c := &Client{cfg: SnapshotGlobalConfig()}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(c)
+		}
+	}
+	return c
+}
+
+// NewIsolatedClient creates a request factory without reading package-level global defaults.
+func NewIsolatedClient(opts ...ClientOption) *Client {
+	c := &Client{cfg: isolatedGlobalConfig()}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(c)
+		}
+	}
+	return c
+}
+
+// NewClientWithConfig creates a request factory from an explicit configuration snapshot.
+func NewClientWithConfig(cfg GlobalConfig, opts ...RequestOption) *Client {
+	return &Client{cfg: cfg, opts: append([]RequestOption(nil), opts...)}
+}
+
+// NewRequest creates a request from the Client's captured configuration.
+func (c *Client) NewRequest(method Method, rawURL string, opts ...RequestOption) *HTTPRequest {
+	if c == nil {
+		return NewIsolatedRequest(method, rawURL, opts...)
+	}
+	all := append(append([]RequestOption(nil), c.opts...), opts...)
+	return NewRequestWithConfig(method, rawURL, c.cfg, all...)
+}
+
+// NewSafeRequest creates a safe request from the Client's captured configuration.
+func (c *Client) NewSafeRequest(method Method, rawURL string, opts ...RequestOption) *HTTPRequest {
+	if c == nil {
+		return NewSafeRequest(method, rawURL, opts...)
+	}
+	safe := make([]RequestOption, 0, 3+len(c.opts)+len(opts))
+	safe = append(safe,
+		WithURLPolicy(URLPolicy{AllowedSchemes: []string{"http", "https"}, RejectPrivate: true}),
+		WithTimeout(10*time.Second),
+		WithMaxRedirects(10),
+	)
+	safe = append(safe, c.opts...)
+	safe = append(safe, opts...)
+	return NewRequestWithConfig(method, rawURL, c.cfg, safe...)
+}
+
+// Get creates a GET request from the Client's captured configuration.
+func (c *Client) Get(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return c.NewRequest(MethodGet, rawURL, opts...)
+}
+
+// GetSafe creates a safe GET request from the Client's captured configuration.
+func (c *Client) GetSafe(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return c.NewSafeRequest(MethodGet, rawURL, opts...)
+}
+
+// Post creates a POST request from the Client's captured configuration.
+func (c *Client) Post(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return c.NewRequest(MethodPost, rawURL, opts...)
+}
+
+// PostSafe creates a safe POST request from the Client's captured configuration.
+func (c *Client) PostSafe(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return c.NewSafeRequest(MethodPost, rawURL, opts...)
+}
+
 // NewRequest creates a request with the specified method and URL.
 //
 // Security: NewRequest is for trusted URLs unless callers provide WithURLPolicy

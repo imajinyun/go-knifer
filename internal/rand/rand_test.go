@@ -117,6 +117,21 @@ func TestRandomBytesWithOptionsReaderAndStrictMode(t *testing.T) {
 	}
 }
 
+func TestSecureRandomBytesFailClosed(t *testing.T) {
+	b, err := SecureRandomBytesWithOptions(4, WithRandomReader(strings.NewReader("abcd")))
+	if err != nil || string(b) != "abcd" {
+		t.Fatalf("SecureRandomBytesWithOptions = %q, %v", b, err)
+	}
+
+	_, err = SecureRandomBytesWithOptions(4,
+		WithRandomReader(errReader{}),
+		WithRandomSource(mathrand.New(mathrand.NewSource(1))),
+	)
+	if err == nil {
+		t.Fatal("SecureRandomBytesWithOptions error = nil, want entropy error")
+	}
+}
+
 type errReader struct{}
 
 func (errReader) Read([]byte) (int, error) { return 0, errors.New("boom") }

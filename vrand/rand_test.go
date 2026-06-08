@@ -67,6 +67,13 @@ func TestRandFacadeOptions(t *testing.T) {
 	_ = StringUpperWithOptions(3, WithRandomSource(mathrand.New(mathrand.NewSource(1))))
 }
 
+func TestSecureBytes(t *testing.T) {
+	b, err := SecureBytesWithOptions(3, WithRandomReader(strings.NewReader("abc")))
+	if err != nil || string(b) != "abc" {
+		t.Fatalf("SecureBytesWithOptions = %q, %v", b, err)
+	}
+}
+
 func TestRandFacadeDefaultSourceProvider(t *testing.T) {
 	ResetDefaultRandomSource()
 	t.Cleanup(ResetDefaultRandomSource)

@@ -39,12 +39,13 @@ func WithRandomSource(source *mathrand.Rand) RandomOption {
 	return func(c *randomConfig) { c.source = source }
 }
 
-// WithRandomReader sets the byte source used by RandomBytesWithOptions.
+// WithRandomReader sets the byte source used by RandomBytesWithOptions and SecureRandomBytesWithOptions.
 func WithRandomReader(reader io.Reader) RandomOption {
 	return func(c *randomConfig) { c.reader = reader }
 }
 
 // WithStrictCryptoRandom makes RandomBytesWithOptions return reader errors instead of falling back to pseudo-random bytes.
+// Prefer SecureRandomBytes for security-sensitive bytes.
 func WithStrictCryptoRandom() RandomOption {
 	return func(c *randomConfig) { c.strictCrypto = true }
 }
@@ -157,13 +158,22 @@ func RandomBoolWithOptions(opts ...RandomOption) bool {
 	return randomIntn(cfg, 2) == 0
 }
 
-// RandomBytes returns n cryptographically secure random bytes when possible.
+// RandomBytes returns n random bytes.
+//
+// Compatibility: when the cryptographic reader fails, RandomBytesWithOptions can
+// fall back to pseudo-random bytes unless WithStrictCryptoRandom is provided.
+// Do not use this helper for secrets, tokens, keys, or nonces; use
+// SecureRandomBytes or package vcrypto instead.
 func RandomBytes(n int) []byte {
 	b, _ := RandomBytesWithOptions(n)
 	return b
 }
 
 // RandomBytesWithOptions returns n random bytes with per-call options.
+//
+// Compatibility: unless WithStrictCryptoRandom is provided, reader failures fall
+// back to pseudo-random bytes. Use SecureRandomBytesWithOptions for
+// security-sensitive bytes.
 func RandomBytesWithOptions(n int, opts ...RandomOption) ([]byte, error) {
 	if n <= 0 {
 		return []byte{}, nil
@@ -172,6 +182,17 @@ func RandomBytesWithOptions(n int, opts ...RandomOption) ([]byte, error) {
 	buf := make([]byte, n)
 	err := fillRandomBytesWithConfig(buf, cfg)
 	return buf, err
+}
+
+// SecureRandomBytes returns n cryptographically secure random bytes and fails closed on entropy errors.
+func SecureRandomBytes(n int) ([]byte, error) { return SecureRandomBytesWithOptions(n) }
+
+// SecureRandomBytesWithOptions returns n cryptographically secure random bytes with per-call options.
+func SecureRandomBytesWithOptions(n int, opts ...RandomOption) ([]byte, error) {
+	strict := make([]RandomOption, 0, len(opts)+1)
+	strict = append(strict, opts...)
+	strict = append(strict, WithStrictCryptoRandom())
+	return RandomBytesWithOptions(n, strict...)
 }
 
 func fillRandomBytes(buf []byte) {

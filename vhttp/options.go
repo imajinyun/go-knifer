@@ -1,8 +1,10 @@
 package vhttp
 
 import (
+	"context"
 	"crypto/tls"
 	"io"
+	"net"
 	"net/http"
 	"time"
 
@@ -89,4 +91,15 @@ func WithRequestFactory(newRequest NewRequestFunc) RequestOption {
 // WithMultipartWriterFactory sets the multipart writer factory used when building multipart request bodies.
 func WithMultipartWriterFactory(factory MultipartWriterFactory) RequestOption {
 	return httpx.WithMultipartWriterFactory(factory)
+}
+
+// WithURLPolicy sets SSRF-oriented validation for the request URL and redirect targets.
+func WithURLPolicy(policy URLPolicy) RequestOption { return httpx.WithURLPolicy(policy) }
+
+// WithAllowedHosts restricts Safe requests to the provided host names.
+func WithAllowedHosts(hosts ...string) RequestOption { return httpx.WithAllowedHosts(hosts...) }
+
+// WithLookupIP sets the host resolver used by SSRF-oriented URL validation.
+func WithLookupIP(lookupIP func(context.Context, string) ([]net.IP, error)) RequestOption {
+	return httpx.WithLookupIP(lookupIP)
 }

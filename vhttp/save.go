@@ -44,6 +44,11 @@ func DownloadWithOptions(rawURL string, w io.Writer, opts ...RequestOption) (int
 	return httpx.DownloadWithOptions(rawURL, w, opts...)
 }
 
+// DownloadSafe downloads rawURL into w with SSRF-oriented safety checks enabled.
+func DownloadSafe(rawURL string, w io.Writer, opts ...RequestOption) (int64, error) {
+	return httpx.DownloadSafe(rawURL, w, opts...)
+}
+
 // DownloadFile downloads rawURL to dest.
 func DownloadFile(rawURL, dest string, opts ...SaveOption) (int64, error) {
 	return DownloadFileWithOptions(rawURL, dest, nil, opts...)
