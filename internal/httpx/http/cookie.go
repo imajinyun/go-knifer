@@ -9,12 +9,12 @@ import (
 // GlobalCookie provides global cookie management, aligned with the utility toolkit-http GlobalCookieManager.
 var (
 	cookieMu  sync.RWMutex
-	cookieJar http.CookieJar
+	cookieJar = newDefaultCookieJar()
 )
 
-func init() {
+func newDefaultCookieJar() http.CookieJar {
 	jar, _ := cookiejar.New(nil)
-	cookieJar = jar
+	return jar
 }
 
 // SetCookieJar customizes the global CookieJar; nil disables cookie management.

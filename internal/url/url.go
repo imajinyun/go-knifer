@@ -54,6 +54,7 @@ type resourceConfig struct {
 	openFile       func(string) (io.ReadCloser, error)
 	stat           func(string) (os.FileInfo, error)
 	requestFactory func(context.Context, string, string) (*http.Request, error)
+	lookupIP       func(context.Context, string) ([]net.IP, error)
 	allowedSchemes []string
 	allowedHosts   []string
 	rejectPrivate  bool
@@ -121,6 +122,11 @@ func WithRequestFactory(factory func(context.Context, string, string) (*http.Req
 	return func(c *resourceConfig) { c.requestFactory = factory }
 }
 
+// WithLookupIP sets the host resolver used by SSRF-oriented URL validation and safe dialing.
+func WithLookupIP(lookupIP func(context.Context, string) ([]net.IP, error)) ResourceOption {
+	return func(c *resourceConfig) { c.lookupIP = lookupIP }
+}
+
 // WithAllowedSchemes restricts resource helpers to the provided URL schemes.
 func WithAllowedSchemes(schemes ...string) ResourceOption {
 	return func(c *resourceConfig) { c.allowedSchemes = append([]string(nil), schemes...) }
@@ -142,7 +148,7 @@ func WithAllowLocalFiles(allow bool) ResourceOption {
 }
 
 func applyResourceOptions(opts []ResourceOption) resourceConfig {
-	cfg := resourceConfig{ctx: context.Background(), client: http.DefaultClient, openFile: defaultOpenFile, stat: os.Stat, requestFactory: defaultRequestFactory, allowLocal: true}
+	cfg := resourceConfig{ctx: context.Background(), client: http.DefaultClient, openFile: defaultOpenFile, stat: os.Stat, requestFactory: defaultRequestFactory, lookupIP: defaultLookupIP, allowLocal: true}
 	for _, opt := range opts {
 		if opt != nil {
 			opt(&cfg)
@@ -162,6 +168,9 @@ func applyResourceOptions(opts []ResourceOption) resourceConfig {
 	}
 	if cfg.requestFactory == nil {
 		cfg.requestFactory = defaultRequestFactory
+	}
+	if cfg.lookupIP == nil {
+		cfg.lookupIP = defaultLookupIP
 	}
 	return cfg
 }
@@ -186,6 +195,10 @@ func defaultOpenFile(path string) (io.ReadCloser, error) {
 
 func defaultRequestFactory(ctx context.Context, method, raw string) (*http.Request, error) {
 	return http.NewRequestWithContext(ctx, method, raw, nil)
+}
+
+func defaultLookupIP(ctx context.Context, host string) ([]net.IP, error) {
+	return net.DefaultResolver.LookupIP(ctx, "ip", host)
 }
 
 type normalizeConfig struct {
@@ -572,6 +585,9 @@ func doResourceRequest(raw, method string, cfg resourceConfig) (*http.Response, 
 		}
 		client = &clone
 	}
+	if cfg.rejectPrivate {
+		client = clientWithSafeTransport(client, cfg)
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
@@ -600,7 +616,7 @@ func validateResourceURL(u *neturl.URL, cfg resourceConfig) error {
 			return fmt.Errorf("url host %q is not allowed", host)
 		}
 		if cfg.rejectPrivate && !containsFold(cfg.allowedHosts, host) {
-			private, err := isPrivateHost(host)
+			private, err := isPrivateHost(cfg.ctx, cfg.lookupIP, host)
 			if err != nil {
 				return err
 			}
@@ -626,14 +642,20 @@ func containsFold(values []string, target string) bool {
 	return false
 }
 
-func isPrivateHost(host string) (bool, error) {
+func isPrivateHost(ctx context.Context, lookupIP func(context.Context, string) ([]net.IP, error), host string) (bool, error) {
 	if strings.EqualFold(host, "localhost") {
 		return true, nil
 	}
 	if ip := net.ParseIP(host); ip != nil {
 		return isPrivateIP(ip), nil
 	}
-	ips, err := net.LookupIP(host)
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if lookupIP == nil {
+		lookupIP = defaultLookupIP
+	}
+	ips, err := lookupIP(ctx, host)
 	if err != nil {
 		return false, fmt.Errorf("resolve url host %q: %w", host, err)
 	}
@@ -647,6 +669,104 @@ func isPrivateHost(host string) (bool, error) {
 
 func isPrivateIP(ip net.IP) bool {
 	return ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() || ip.IsUnspecified()
+}
+
+func clientWithSafeTransport(client *http.Client, cfg resourceConfig) *http.Client {
+	clone := *client
+	base := client.Transport
+	if base == nil {
+		base = http.DefaultTransport
+	}
+	if transport, ok := base.(*http.Transport); ok {
+		transportClone := transport.Clone()
+		transportClone.DialContext = safeDialContext(cfg)
+		base = transportClone
+	}
+	clone.Transport = safeResourceTransport{base: base, cfg: cfg}
+	return &clone
+}
+
+func safeDialContext(cfg resourceConfig) func(context.Context, string, string) (net.Conn, error) {
+	dialer := &net.Dialer{}
+	return func(ctx context.Context, network, address string) (net.Conn, error) {
+		host, port, err := net.SplitHostPort(address)
+		if err != nil {
+			return nil, err
+		}
+		host = strings.ToLower(strings.TrimSpace(host))
+		if host == "" {
+			return nil, fmt.Errorf("dial host is blank")
+		}
+		if containsFold(cfg.allowedHosts, host) {
+			return dialer.DialContext(ctx, network, address)
+		}
+		ips, err := publicHostIPs(ctx, cfg, host)
+		if err != nil {
+			return nil, err
+		}
+		return dialer.DialContext(ctx, network, net.JoinHostPort(ips[0].String(), port))
+	}
+}
+
+func publicHostIPs(ctx context.Context, cfg resourceConfig, host string) ([]net.IP, error) {
+	if strings.EqualFold(host, "localhost") {
+		return nil, fmt.Errorf("url host %q resolves to a private address", host)
+	}
+	if ip := net.ParseIP(host); ip != nil {
+		if isPrivateIP(ip) {
+			return nil, fmt.Errorf("url host %q resolves to a private address", host)
+		}
+		return []net.IP{ip}, nil
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	lookupIP := cfg.lookupIP
+	if lookupIP == nil {
+		lookupIP = defaultLookupIP
+	}
+	ips, err := lookupIP(ctx, host)
+	if err != nil {
+		return nil, fmt.Errorf("resolve url host %q: %w", host, err)
+	}
+	if len(ips) == 0 {
+		return nil, fmt.Errorf("resolve url host %q: no addresses", host)
+	}
+	public := make([]net.IP, 0, len(ips))
+	for _, ip := range ips {
+		if isPrivateIP(ip) {
+			return nil, fmt.Errorf("url host %q resolves to a private address", host)
+		}
+		public = append(public, ip)
+	}
+	return public, nil
+}
+
+type safeResourceTransport struct {
+	base http.RoundTripper
+	cfg  resourceConfig
+}
+
+func (t safeResourceTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if req == nil || req.URL == nil {
+		return nil, fmt.Errorf("request url is nil")
+	}
+	if err := validateResourceURL(req.URL, t.cfg); err != nil {
+		return nil, err
+	}
+	if req.URL.Scheme == "http" || req.URL.Scheme == "https" {
+		host := strings.ToLower(req.URL.Hostname())
+		if !containsFold(t.cfg.allowedHosts, host) {
+			private, err := isPrivateHost(req.Context(), t.cfg.lookupIP, host)
+			if err != nil {
+				return nil, err
+			}
+			if private {
+				return nil, fmt.Errorf("url host %q resolves to a private address", host)
+			}
+		}
+	}
+	return t.base.RoundTrip(req)
 }
 
 // Normalize normalizes a URL string by adding a default scheme and cleaning slashes.

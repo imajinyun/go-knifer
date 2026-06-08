@@ -9,13 +9,19 @@ import (
 // Global default configuration, aligned with the utility toolkit-http HttpGlobalConfig.
 var (
 	globalMu               sync.RWMutex
-	globalTimeout          = 0 * time.Second // 0 means using the HTTP client's default timeout.
-	globalMaxRedirects     = 10
+	globalTimeout          = defaultGlobalTimeout // 0 means using the HTTP client's default timeout.
+	globalMaxRedirects     = defaultGlobalMaxRedirects
 	globalIgnoreEOFError   = true
 	globalDecodeURL        = false
 	globalFollowRedirects  = true
 	globalDefaultUserAgent = ""
-	globalBoundary         = "--------------------gokitFormBoundary"
+	globalBoundary         = defaultGlobalBoundary
+)
+
+const (
+	defaultGlobalTimeout      = 0 * time.Second
+	defaultGlobalMaxRedirects = 10
+	defaultGlobalBoundary     = "--------------------gokitFormBoundary"
 )
 
 // GlobalConfig is an immutable snapshot of package-level HTTP defaults.
@@ -47,6 +53,55 @@ func SnapshotGlobalConfig() GlobalConfig {
 	cfg.Headers = CloneGlobalHeaders()
 	cfg.CookieJar = GetCookieJar()
 	return cfg
+}
+
+// ResetGlobalConfig restores package-level HTTP defaults, including headers and cookie jar.
+func ResetGlobalConfig() { applyGlobalConfig(defaultGlobalConfig()) }
+
+// ConfigureGlobalConfig replaces package-level HTTP defaults with cfg.
+func ConfigureGlobalConfig(cfg GlobalConfig) { applyGlobalConfig(cfg) }
+
+// WithScopedGlobalConfig runs fn with cfg installed as package-level HTTP defaults,
+// then restores the previous defaults. It is intended for tests and serialized setup code.
+func WithScopedGlobalConfig(cfg GlobalConfig, fn func()) {
+	previous := SnapshotGlobalConfig()
+	ConfigureGlobalConfig(cfg)
+	defer ConfigureGlobalConfig(previous)
+	if fn != nil {
+		fn()
+	}
+}
+
+func defaultGlobalConfig() GlobalConfig {
+	return GlobalConfig{
+		Timeout:          defaultGlobalTimeout,
+		MaxRedirects:     defaultGlobalMaxRedirects,
+		IgnoreEOFError:   true,
+		DecodeURL:        false,
+		FollowRedirects:  true,
+		DefaultUserAgent: "",
+		Boundary:         defaultGlobalBoundary,
+		Headers:          defaultGlobalHeaders(),
+		CookieJar:        newDefaultCookieJar(),
+	}
+}
+
+func applyGlobalConfig(cfg GlobalConfig) {
+	globalMu.Lock()
+	globalTimeout = cfg.Timeout
+	globalMaxRedirects = cfg.MaxRedirects
+	globalIgnoreEOFError = cfg.IgnoreEOFError
+	globalDecodeURL = cfg.DecodeURL
+	globalFollowRedirects = cfg.FollowRedirects
+	globalDefaultUserAgent = cfg.DefaultUserAgent
+	globalBoundary = cfg.Boundary
+	globalMu.Unlock()
+
+	globalHeadersMu.Lock()
+	globalHeaders = cloneHeader(cfg.Headers)
+	globalHeadersMu.Unlock()
+
+	SetCookieJar(cfg.CookieJar)
 }
 
 // SetGlobalTimeout sets the global default timeout.

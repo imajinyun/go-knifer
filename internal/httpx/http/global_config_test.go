@@ -143,3 +143,64 @@ func TestSnapshotGlobalConfigClonesMutableDefaults(t *testing.T) {
 		t.Fatalf("snapshot headers should be cloned; global header = %q", got)
 	}
 }
+
+func TestResetGlobalConfigRestoresDefaults(t *testing.T) {
+	previous := SnapshotGlobalConfig()
+	defer ConfigureGlobalConfig(previous)
+
+	SetGlobalTimeout(9 * time.Second)
+	SetGlobalMaxRedirects(2)
+	SetGlobalFollowRedirects(false)
+	SetIgnoreEOFError(false)
+	SetGlobalDecodeURL(true)
+	SetGlobalUserAgent("mutated-agent")
+	SetGlobalBoundary("mutated-boundary")
+	SetGlobalHeader("X-Reset", "mutated")
+	CloseCookie()
+
+	ResetGlobalConfig()
+	cfg := SnapshotGlobalConfig()
+	if cfg.Timeout != 0 || cfg.MaxRedirects != 10 || !cfg.FollowRedirects || !cfg.IgnoreEOFError || cfg.DecodeURL || cfg.DefaultUserAgent != "" || cfg.Boundary != "--------------------gokitFormBoundary" {
+		t.Fatalf("reset scalar config = %#v", cfg)
+	}
+	if cfg.Headers.Get("X-Reset") != "" || cfg.Headers.Get("User-Agent") == "" || cfg.CookieJar == nil {
+		t.Fatalf("reset mutable config header=%q ua=%q cookie=%v", cfg.Headers.Get("X-Reset"), cfg.Headers.Get("User-Agent"), cfg.CookieJar)
+	}
+}
+
+func TestWithScopedGlobalConfigRestoresPreviousDefaults(t *testing.T) {
+	previous := SnapshotGlobalConfig()
+	defer ConfigureGlobalConfig(previous)
+
+	ConfigureGlobalConfig(GlobalConfig{
+		Timeout:          time.Second,
+		MaxRedirects:     4,
+		IgnoreEOFError:   true,
+		FollowRedirects:  true,
+		DefaultUserAgent: "outer-agent",
+		Boundary:         "outer-boundary",
+		Headers:          http.Header{"X-Scope": []string{"outer"}},
+		CookieJar:        previous.CookieJar,
+	})
+
+	WithScopedGlobalConfig(GlobalConfig{
+		Timeout:          2 * time.Second,
+		MaxRedirects:     1,
+		IgnoreEOFError:   false,
+		FollowRedirects:  false,
+		DefaultUserAgent: "inner-agent",
+		Boundary:         "inner-boundary",
+		Headers:          http.Header{"X-Scope": []string{"inner"}},
+		CookieJar:        nil,
+	}, func() {
+		cfg := SnapshotGlobalConfig()
+		if cfg.Timeout != 2*time.Second || cfg.MaxRedirects != 1 || cfg.FollowRedirects || cfg.IgnoreEOFError || cfg.DefaultUserAgent != "inner-agent" || cfg.Headers.Get("X-Scope") != "inner" || cfg.CookieJar != nil {
+			t.Fatalf("scoped inner config = %#v", cfg)
+		}
+	})
+
+	cfg := SnapshotGlobalConfig()
+	if cfg.Timeout != time.Second || cfg.MaxRedirects != 4 || !cfg.FollowRedirects || !cfg.IgnoreEOFError || cfg.DefaultUserAgent != "outer-agent" || cfg.Boundary != "outer-boundary" || cfg.Headers.Get("X-Scope") != "outer" || cfg.CookieJar != previous.CookieJar {
+		t.Fatalf("scoped restored config = %#v", cfg)
+	}
+}

@@ -32,9 +32,11 @@ func TestFacadeBuildBasicAuth(t *testing.T) {
 }
 
 func TestFacadeCloneGlobalHeaders(t *testing.T) {
+	previous := vresty.SnapshotGlobalConfig()
+	defer vresty.ConfigureGlobalConfig(previous)
+
 	vresty.SetGlobalHeader("X-Facade", "one")
 	vresty.AddGlobalHeader("X-Facade", "two")
-	defer vresty.RemoveGlobalHeader("X-Facade")
 
 	headers := vresty.CloneGlobalHeaders()
 	if got := headers["X-Facade"]; len(got) != 2 || got[0] != "one" || got[1] != "two" {
@@ -149,10 +151,11 @@ func TestFacadeUtilityWrappers(t *testing.T) {
 }
 
 func TestFacadeRequestGlobalConfigAPIs(t *testing.T) {
+	previous := vresty.SnapshotGlobalConfig()
+	defer vresty.ConfigureGlobalConfig(previous)
+
 	vresty.SetGlobalTimeout(321 * time.Millisecond)
 	vresty.SetGlobalHeader("X-Facade-Config", "global")
-	defer vresty.SetGlobalTimeout(0)
-	defer vresty.RemoveGlobalHeader("X-Facade-Config")
 
 	cfg := vresty.SnapshotGlobalConfig()
 	cfg.Headers["X-Facade-Config"][0] = "snapshot"
@@ -178,6 +181,31 @@ func TestFacadeRequestGlobalConfigAPIs(t *testing.T) {
 	}
 	if got := resp.Body(); got != "snapshot:facade-config-agent" {
 		t.Fatalf("NewIsolatedRequest WithGlobalConfig body = %q", got)
+	}
+}
+
+func TestFacadeScopedGlobalConfig(t *testing.T) {
+	previous := vresty.SnapshotGlobalConfig()
+	defer vresty.ConfigureGlobalConfig(previous)
+
+	vresty.ResetGlobalConfig()
+	vresty.WithScopedGlobalConfig(vresty.GlobalConfig{
+		Timeout:          3 * time.Second,
+		MaxRedirects:     1,
+		FollowRedirects:  false,
+		DefaultUserAgent: "facade-scope-agent",
+		Headers:          vresty.HeaderValues{"X-Facade-Scope": []string{"inner"}},
+		CookieDisabled:   true,
+	}, func() {
+		cfg := vresty.SnapshotGlobalConfig()
+		if cfg.Timeout != 3*time.Second || cfg.MaxRedirects != 1 || cfg.FollowRedirects || cfg.DefaultUserAgent != "facade-scope-agent" || cfg.Headers["X-Facade-Scope"][0] != "inner" || !cfg.CookieDisabled {
+			t.Fatalf("facade scoped config = %#v", cfg)
+		}
+	})
+
+	cfg := vresty.SnapshotGlobalConfig()
+	if cfg.Timeout != 0 || cfg.MaxRedirects != 10 || !cfg.FollowRedirects || len(cfg.Headers["X-Facade-Scope"]) != 0 || cfg.CookieDisabled {
+		t.Fatalf("facade config not restored after scoped helper: %#v", cfg)
 	}
 }
 

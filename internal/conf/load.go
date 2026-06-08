@@ -34,6 +34,8 @@ type LoadOptions struct {
 	Headers http.Header
 	// RequestFactory optionally builds remote config requests. When set, Headers are applied after factory creation.
 	RequestFactory func(ctx context.Context, rawURL string) (*http.Request, error)
+	// LookupIP resolves remote hosts for SSRF-oriented validation and safe dialing.
+	LookupIP func(context.Context, string) ([]net.IP, error)
 	// RemoteAllowedHosts restricts remote config HTTP(S) hosts when non-empty.
 	RemoteAllowedHosts []string
 	// RejectPrivateRemoteHosts rejects localhost, loopback, private, and link-local HTTP(S) hosts unless allowed explicitly.
@@ -229,6 +231,9 @@ func loadRemote(rawURL string, opts LoadOptions) (*Conf, error) {
 		}
 		client = &clone
 	}
+	if opts.RejectPrivateRemoteHosts {
+		client = clientWithSafeTransport(client, opts)
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, wrapConfigIO("fetch remote config "+rawURL, err)
@@ -269,7 +274,7 @@ func validateRemoteConfigURL(rawURL string, opts LoadOptions) error {
 		return invalidInputf("remote config host %q is not allowed", host)
 	}
 	if opts.RejectPrivateRemoteHosts && !containsFold(opts.RemoteAllowedHosts, host) {
-		private, err := isPrivateHost(host)
+		private, err := isPrivateHost(context.Background(), opts.LookupIP, host)
 		if err != nil {
 			return invalidInputf("resolve remote config host %q: %s", host, err.Error())
 		}
@@ -290,14 +295,20 @@ func containsFold(values []string, target string) bool {
 	return false
 }
 
-func isPrivateHost(host string) (bool, error) {
+func isPrivateHost(ctx context.Context, lookupIP func(context.Context, string) ([]net.IP, error), host string) (bool, error) {
 	if strings.EqualFold(host, "localhost") {
 		return true, nil
 	}
 	if ip := net.ParseIP(host); ip != nil {
 		return isPrivateIP(ip), nil
 	}
-	ips, err := net.LookupIP(host)
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if lookupIP == nil {
+		lookupIP = defaultLookupIP
+	}
+	ips, err := lookupIP(ctx, host)
 	if err != nil {
 		return false, err
 	}
@@ -311,6 +322,106 @@ func isPrivateHost(host string) (bool, error) {
 
 func isPrivateIP(ip net.IP) bool {
 	return ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() || ip.IsUnspecified()
+}
+
+func defaultLookupIP(ctx context.Context, host string) ([]net.IP, error) {
+	return net.DefaultResolver.LookupIP(ctx, "ip", host)
+}
+
+func clientWithSafeTransport(client *http.Client, opts LoadOptions) *http.Client {
+	clone := *client
+	base := client.Transport
+	if base == nil {
+		base = http.DefaultTransport
+	}
+	if transport, ok := base.(*http.Transport); ok {
+		transportClone := transport.Clone()
+		transportClone.DialContext = safeDialContext(opts)
+		base = transportClone
+	}
+	clone.Transport = safeRemoteTransport{base: base, opts: opts}
+	return &clone
+}
+
+func safeDialContext(opts LoadOptions) func(context.Context, string, string) (net.Conn, error) {
+	dialer := &net.Dialer{}
+	return func(ctx context.Context, network, address string) (net.Conn, error) {
+		host, port, err := net.SplitHostPort(address)
+		if err != nil {
+			return nil, err
+		}
+		host = strings.ToLower(strings.TrimSpace(host))
+		if host == "" {
+			return nil, invalidInputf("remote config dial host is blank")
+		}
+		if containsFold(opts.RemoteAllowedHosts, host) {
+			return dialer.DialContext(ctx, network, address)
+		}
+		ips, err := publicHostIPs(ctx, opts, host)
+		if err != nil {
+			return nil, err
+		}
+		return dialer.DialContext(ctx, network, net.JoinHostPort(ips[0].String(), port))
+	}
+}
+
+func publicHostIPs(ctx context.Context, opts LoadOptions, host string) ([]net.IP, error) {
+	if strings.EqualFold(host, "localhost") {
+		return nil, invalidInputf("remote config host %q resolves to a private address", host)
+	}
+	if ip := net.ParseIP(host); ip != nil {
+		if isPrivateIP(ip) {
+			return nil, invalidInputf("remote config host %q resolves to a private address", host)
+		}
+		return []net.IP{ip}, nil
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	lookupIP := opts.LookupIP
+	if lookupIP == nil {
+		lookupIP = defaultLookupIP
+	}
+	ips, err := lookupIP(ctx, host)
+	if err != nil {
+		return nil, invalidInputf("resolve remote config host %q: %s", host, err.Error())
+	}
+	if len(ips) == 0 {
+		return nil, invalidInputf("resolve remote config host %q: no addresses", host)
+	}
+	public := make([]net.IP, 0, len(ips))
+	for _, ip := range ips {
+		if isPrivateIP(ip) {
+			return nil, invalidInputf("remote config host %q resolves to a private address", host)
+		}
+		public = append(public, ip)
+	}
+	return public, nil
+}
+
+type safeRemoteTransport struct {
+	base http.RoundTripper
+	opts LoadOptions
+}
+
+func (t safeRemoteTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if req == nil || req.URL == nil {
+		return nil, invalidInputf("invalid remote config request: request url is nil")
+	}
+	if err := validateRemoteConfigURL(req.URL.String(), t.opts); err != nil {
+		return nil, err
+	}
+	host := strings.ToLower(req.URL.Hostname())
+	if !containsFold(t.opts.RemoteAllowedHosts, host) {
+		private, err := isPrivateHost(req.Context(), t.opts.LookupIP, host)
+		if err != nil {
+			return nil, invalidInputf("resolve remote config host %q: %s", host, err.Error())
+		}
+		if private {
+			return nil, invalidInputf("remote config host %q resolves to a private address", host)
+		}
+	}
+	return t.base.RoundTrip(req)
 }
 
 func readFileLimit(path string, maxBytes int64) ([]byte, error) {

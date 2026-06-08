@@ -666,16 +666,22 @@ func UnzipReaderToWithOptions(r *archivezip.Reader, destDir string, opts ...Arch
 				return invalidInputf("uncompressed size exceeds int64 limit")
 			}
 			size := int64(f.UncompressedSize64) // #nosec G115 -- guarded by the maxInt64 check above.
-			if total > maxInt64-size {
-				return invalidInputf("uncompressed size exceeds int64 limit")
-			}
-			total += size
-			if total > cfg.maxBytes {
+			if size > cfg.maxBytes-total {
 				return invalidInputf("uncompressed size exceeds limit")
 			}
 		}
-		if err := extractFile(f, destDir, cfg); err != nil {
+		written, err := extractFile(f, destDir, cfg, cfg.maxBytes-total)
+		if err != nil {
 			return err
+		}
+		if cfg.maxBytes > 0 {
+			if total > maxInt64-written {
+				return invalidInputf("uncompressed size exceeds int64 limit")
+			}
+			total += written
+			if total > cfg.maxBytes {
+				return invalidInputf("uncompressed size exceeds limit")
+			}
 		}
 	}
 	return nil
@@ -865,7 +871,7 @@ func UnGzipReaderWithOptions(r io.Reader, estimatedLength int, opts ...ArchiveOp
 	defer func() { _ = zr.Close() }()
 	var buf bytes.Buffer
 	buf.Grow(estimatedLength)
-	err = copyLimit(&buf, zr, cfg.maxBytes) // #nosec G110 -- this low-level helper intentionally decompresses caller-provided gzip data.
+	_, err = copyLimit(&buf, zr, cfg.maxBytes) // #nosec G110 -- this low-level helper intentionally decompresses caller-provided gzip data.
 	return buf.Bytes(), err
 }
 
@@ -956,7 +962,7 @@ func UnZlibReaderWithOptions(r io.Reader, estimatedLength int, opts ...ArchiveOp
 	defer func() { _ = zr.Close() }()
 	var buf bytes.Buffer
 	buf.Grow(estimatedLength)
-	err = copyLimit(&buf, zr, cfg.maxBytes) // #nosec G110 -- this low-level helper intentionally decompresses caller-provided zlib data.
+	_, err = copyLimit(&buf, zr, cfg.maxBytes) // #nosec G110 -- this low-level helper intentionally decompresses caller-provided zlib data.
 	return buf.Bytes(), err
 }
 
@@ -1113,24 +1119,24 @@ func addFile(zw *archivezip.Writer, path, zipName string, info os.FileInfo, cfg 
 	return err
 }
 
-func extractFile(f *archivezip.File, destDir string, cfg archiveConfig) error {
+func extractFile(f *archivezip.File, destDir string, cfg archiveConfig, remainingBytes int64) (int64, error) {
 	target, err := safeZipTarget(destDir, f.Name)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	if f.FileInfo().IsDir() {
 		perm := cfg.dirPerm
 		if cfg.preserveMode {
 			perm = f.Mode()
 		}
-		return cfg.mkdirAll(target, perm)
+		return 0, cfg.mkdirAll(target, perm)
 	}
 	if err := cfg.mkdirAll(filepath.Dir(target), cfg.dirPerm); err != nil {
-		return err
+		return 0, err
 	}
 	r, err := f.Open()
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer func() { _ = r.Close() }()
 	perm := cfg.filePerm
@@ -1143,13 +1149,14 @@ func extractFile(f *archivezip.File, destDir string, cfg archiveConfig) error {
 	}
 	w, err := cfg.openFile(target, flag, perm)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	if _, err := io.Copy(w, r); err != nil { // #nosec G110 -- unzip extraction is guarded by safeZipTarget and optional UnzipToLimit size checks.
+	written, err := copyLimit(w, r, remainingBytes)
+	if err != nil {
 		_ = w.Close()
-		return err
+		return written, err
 	}
-	return w.Close()
+	return written, w.Close()
 }
 
 func readAllLimit(r io.Reader, maxBytes int64) ([]byte, error) {
@@ -1167,20 +1174,24 @@ func readAllLimit(r io.Reader, maxBytes int64) ([]byte, error) {
 	return b, nil
 }
 
-func copyLimit(dst io.Writer, src io.Reader, maxBytes int64) error {
+func copyLimit(dst io.Writer, src io.Reader, maxBytes int64) (int64, error) {
 	if maxBytes <= 0 {
-		_, err := io.Copy(dst, src)
-		return err
+		return io.Copy(dst, src)
 	}
-	limited := &io.LimitedReader{R: src, N: maxBytes + 1}
+	limited := &io.LimitedReader{R: src, N: maxBytes}
 	n, err := io.Copy(dst, limited)
 	if err != nil {
-		return err
+		return n, err
 	}
-	if n > maxBytes {
-		return invalidInputf("archive data exceeds max bytes: %d", maxBytes)
+	var extra [1]byte
+	extraN, extraErr := src.Read(extra[:])
+	if extraN > 0 {
+		return n, invalidInputf("archive data exceeds max bytes: %d", maxBytes)
 	}
-	return nil
+	if extraErr != nil && extraErr != io.EOF {
+		return n, extraErr
+	}
+	return n, nil
 }
 
 func copyExistingEntry(zw *archivezip.Writer, f *archivezip.File) error {

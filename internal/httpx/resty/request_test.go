@@ -2,13 +2,16 @@ package resty
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"io"
 	"io/fs"
+	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -365,6 +368,62 @@ func TestWithGlobalConfigOptionOverridesConstructionDefaults(t *testing.T) {
 	}
 }
 
+func TestResetGlobalConfigRestoresDefaults(t *testing.T) {
+	previous := SnapshotGlobalConfig()
+	defer ConfigureGlobalConfig(previous)
+
+	SetGlobalTimeout(time.Second)
+	SetGlobalMaxRedirects(2)
+	SetGlobalFollowRedirects(false)
+	SetGlobalUserAgent("mutated-agent")
+	SetGlobalHeader("X-Reset", "mutated")
+	CloseCookie()
+
+	ResetGlobalConfig()
+	cfg := SnapshotGlobalConfig()
+	if cfg.Timeout != 0 || cfg.MaxRedirects != 10 || !cfg.FollowRedirects || cfg.DefaultUserAgent != "" || cfg.CookieDisabled {
+		t.Fatalf("reset scalar config = %#v", cfg)
+	}
+	if got := cfg.Headers["X-Reset"]; len(got) != 0 {
+		t.Fatalf("reset retained X-Reset header: %v", got)
+	}
+	if got := cfg.Headers[string(HeaderUserAgent)]; len(got) == 0 || got[0] == "" {
+		t.Fatalf("reset default User-Agent header = %v", got)
+	}
+}
+
+func TestWithScopedGlobalConfigRestoresPreviousDefaults(t *testing.T) {
+	previous := SnapshotGlobalConfig()
+	defer ConfigureGlobalConfig(previous)
+
+	ConfigureGlobalConfig(GlobalConfig{
+		Timeout:          time.Second,
+		MaxRedirects:     4,
+		FollowRedirects:  true,
+		DefaultUserAgent: "outer-agent",
+		Headers:          HeaderValues{"X-Scope": []string{"outer"}},
+	})
+
+	WithScopedGlobalConfig(GlobalConfig{
+		Timeout:          2 * time.Second,
+		MaxRedirects:     1,
+		FollowRedirects:  false,
+		DefaultUserAgent: "inner-agent",
+		Headers:          HeaderValues{"X-Scope": []string{"inner"}},
+		CookieDisabled:   true,
+	}, func() {
+		cfg := SnapshotGlobalConfig()
+		if cfg.Timeout != 2*time.Second || cfg.MaxRedirects != 1 || cfg.FollowRedirects || cfg.DefaultUserAgent != "inner-agent" || cfg.Headers["X-Scope"][0] != "inner" || !cfg.CookieDisabled {
+			t.Fatalf("scoped inner config = %#v", cfg)
+		}
+	})
+
+	cfg := SnapshotGlobalConfig()
+	if cfg.Timeout != time.Second || cfg.MaxRedirects != 4 || !cfg.FollowRedirects || cfg.DefaultUserAgent != "outer-agent" || cfg.Headers["X-Scope"][0] != "outer" || cfg.CookieDisabled {
+		t.Fatalf("scoped restored config = %#v", cfg)
+	}
+}
+
 func TestRequestOptionContentTypeAndCharset(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(r.Header.Get("Content-Type")))
@@ -386,6 +445,61 @@ func TestRequestOptionTLSConfig(t *testing.T) {
 	c := Get("https://example.com", WithTLSConfig(&tls.Config{ServerName: "example.com"})).buildClient()
 	if c == nil {
 		t.Fatal("client is nil")
+	}
+}
+
+func TestSafeRequestRejectsPrivateAndUnsafeRedirects(t *testing.T) {
+	if err := GetSafe("file:///tmp/secret.txt").Execute().Err(); err == nil {
+		t.Fatal("GetSafe should reject non-HTTP schemes")
+	}
+	if err := GetSafe("http://127.0.0.1/config.yaml").Execute().Err(); err == nil {
+		t.Fatal("GetSafe should reject loopback hosts by default")
+	}
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/redirect" {
+			http.Redirect(w, r, "http://127.0.0.1/private", http.StatusFound)
+			return
+		}
+		_, _ = w.Write([]byte("safe"))
+	}))
+	defer srv.Close()
+	serverURL, err := url.Parse(srv.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp := GetSafe(srv.URL, WithAllowedHosts(serverURL.Hostname())).Execute()
+	if resp.Err() != nil || resp.Body() != "safe" {
+		t.Fatalf("GetSafe allowed host body=%q err=%v", resp.Body(), resp.Err())
+	}
+	if err := GetSafe(srv.URL+"/redirect", WithAllowedHosts(serverURL.Hostname())).Execute().Err(); err == nil {
+		t.Fatal("GetSafe should reject unsafe redirect targets")
+	}
+}
+
+func TestSafeRequestRevalidatesHostAtRoundTrip(t *testing.T) {
+	lookups := [][]net.IP{{net.ParseIP("93.184.216.34")}, {net.ParseIP("127.0.0.1")}}
+	lookupCount := 0
+	client := grestry.New().SetTransport(restyRoundTripperFunc(func(*http.Request) (*http.Response, error) {
+		t.Fatal("unsafe request reached base transport")
+		return nil, nil
+	}))
+	resp := GetSafe("http://example.com/config.yaml",
+		WithRestyClient(client),
+		WithLookupIP(func(context.Context, string) ([]net.IP, error) {
+			if lookupCount >= len(lookups) {
+				return lookups[len(lookups)-1], nil
+			}
+			ips := lookups[lookupCount]
+			lookupCount++
+			return ips, nil
+		}),
+	).Execute()
+	if resp.Err() == nil {
+		t.Fatal("GetSafe should reject a host that resolves private during RoundTrip")
+	}
+	if lookupCount != 2 {
+		t.Fatalf("lookup count = %d, want 2", lookupCount)
 	}
 }
 
@@ -475,3 +589,7 @@ func TestSaveAsProviderOptions(t *testing.T) {
 type nopWriteCloser struct{ io.Writer }
 
 func (w nopWriteCloser) Close() error { return nil }
+
+type restyRoundTripperFunc func(*http.Request) (*http.Response, error)
+
+func (f restyRoundTripperFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }

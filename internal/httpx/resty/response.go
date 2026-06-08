@@ -277,7 +277,7 @@ func (r *HTTPResponse) ErrorResult() any {
 	if r.resp == nil {
 		return nil
 	}
-	return r.resp.Error()
+	return r.resp.ResultError()
 }
 
 func (r *HTTPResponse) fileName() string {

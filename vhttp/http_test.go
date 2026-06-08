@@ -247,6 +247,9 @@ func TestFacadeServerStarterLifecycle(t *testing.T) {
 }
 
 func TestFacadeHelperNamesWithoutHTTPPrefix(t *testing.T) {
+	previous := vhttp.SnapshotGlobalConfig()
+	defer vhttp.ConfigureGlobalConfig(previous)
+
 	vhttp.SetGlobalTimeout(2 * time.Second)
 	if got := vhttp.GetGlobalTimeout(); got != 2*time.Second {
 		t.Fatalf("GetGlobalTimeout() = %v, want 2s", got)
@@ -267,6 +270,33 @@ func TestFacadeHelperNamesWithoutHTTPPrefix(t *testing.T) {
 	}
 	if got := vurl.EncodeQueryMap(map[string]any{"q": "go", "page": 1}); !strings.Contains(got, "q=go") || !strings.Contains(got, "page=1") {
 		t.Fatalf("EncodeQueryMap() = %q", got)
+	}
+}
+
+func TestFacadeScopedGlobalConfig(t *testing.T) {
+	previous := vhttp.SnapshotGlobalConfig()
+	defer vhttp.ConfigureGlobalConfig(previous)
+
+	vhttp.ResetGlobalConfig()
+	vhttp.WithScopedGlobalConfig(vhttp.GlobalConfig{
+		Timeout:          3 * time.Second,
+		MaxRedirects:     1,
+		IgnoreEOFError:   true,
+		FollowRedirects:  false,
+		DefaultUserAgent: "facade-scope-agent",
+		Boundary:         "facade-boundary",
+		Headers:          http.Header{"X-Facade-Scope": []string{"inner"}},
+		CookieJar:        nil,
+	}, func() {
+		cfg := vhttp.SnapshotGlobalConfig()
+		if cfg.Timeout != 3*time.Second || cfg.MaxRedirects != 1 || cfg.FollowRedirects || cfg.DefaultUserAgent != "facade-scope-agent" || cfg.Headers.Get("X-Facade-Scope") != "inner" || cfg.CookieJar != nil {
+			t.Fatalf("facade scoped config = %#v", cfg)
+		}
+	})
+
+	cfg := vhttp.SnapshotGlobalConfig()
+	if cfg.Timeout != 0 || cfg.MaxRedirects != 10 || !cfg.FollowRedirects || cfg.Headers.Get("X-Facade-Scope") != "" || cfg.CookieJar == nil {
+		t.Fatalf("facade config not restored after scoped helper: %#v", cfg)
 	}
 }
 

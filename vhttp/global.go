@@ -28,6 +28,16 @@ func CloneGlobalHeaders() http.Header { return httpx.CloneGlobalHeaders() }
 // SnapshotGlobalConfig returns a consistent copy of the current package-level HTTP defaults.
 func SnapshotGlobalConfig() GlobalConfig { return httpx.SnapshotGlobalConfig() }
 
+// ResetGlobalConfig restores package-level HTTP defaults, including headers and cookie jar.
+func ResetGlobalConfig() { httpx.ResetGlobalConfig() }
+
+// ConfigureGlobalConfig replaces package-level HTTP defaults with cfg.
+func ConfigureGlobalConfig(cfg GlobalConfig) { httpx.ConfigureGlobalConfig(cfg) }
+
+// WithScopedGlobalConfig runs fn with cfg installed as package-level HTTP defaults,
+// then restores the previous defaults.
+func WithScopedGlobalConfig(cfg GlobalConfig, fn func()) { httpx.WithScopedGlobalConfig(cfg, fn) }
+
 // SetGlobalMaxRedirects delegates to the internal httpx implementation.
 func SetGlobalMaxRedirects(n int) {
 	httpx.SetGlobalMaxRedirects(n)

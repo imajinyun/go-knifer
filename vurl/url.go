@@ -3,6 +3,7 @@ package vurl
 import (
 	"context"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -87,6 +88,11 @@ func WithStat(stat func(string) (os.FileInfo, error)) ResourceOption { return ur
 // WithRequestFactory sets the HTTP request factory used by resource helpers.
 func WithRequestFactory(factory func(context.Context, string, string) (*http.Request, error)) ResourceOption {
 	return urlimpl.WithRequestFactory(factory)
+}
+
+// WithLookupIP sets the host resolver used by SSRF-oriented URL validation and safe dialing.
+func WithLookupIP(lookupIP func(context.Context, string) ([]net.IP, error)) ResourceOption {
+	return urlimpl.WithLookupIP(lookupIP)
 }
 
 // WithAllowedSchemes restricts resource helpers to the provided URL schemes.

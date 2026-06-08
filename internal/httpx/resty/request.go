@@ -1,11 +1,15 @@
 package resty
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"io"
+	"net"
+	"net/http"
 	"net/url"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -38,6 +42,7 @@ type HTTPRequest struct {
 	jsonUnmarshal func([]byte, any) error
 	jsonReadAll   func(io.Reader) ([]byte, error)
 	maxDecode     int64
+	urlPolicy     *URLPolicy
 	result        any
 	errorResult   any
 }
@@ -47,6 +52,14 @@ type formFile struct {
 	fileName string
 	data     []byte
 	reader   io.Reader
+}
+
+// URLPolicy controls SSRF-oriented request validation for untrusted URLs.
+type URLPolicy struct {
+	AllowedSchemes []string
+	AllowedHosts   []string
+	RejectPrivate  bool
+	LookupIP       func(context.Context, string) ([]net.IP, error)
 }
 
 var defaultRestyClientProvider = struct {
@@ -108,9 +121,31 @@ func Get(rawURL string, opts ...RequestOption) *HTTPRequest {
 	return NewRequest(MethodGet, rawURL, opts...)
 }
 
+// GetSafe creates a GET request with SSRF-oriented safety checks enabled.
+func GetSafe(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return NewSafeRequest(MethodGet, rawURL, opts...)
+}
+
 // Post creates a POST request.
 func Post(rawURL string, opts ...RequestOption) *HTTPRequest {
 	return NewRequest(MethodPost, rawURL, opts...)
+}
+
+// PostSafe creates a POST request with SSRF-oriented safety checks enabled.
+func PostSafe(rawURL string, opts ...RequestOption) *HTTPRequest {
+	return NewSafeRequest(MethodPost, rawURL, opts...)
+}
+
+// NewSafeRequest creates a request with SSRF-oriented safety checks enabled.
+func NewSafeRequest(method Method, rawURL string, opts ...RequestOption) *HTTPRequest {
+	safe := make([]RequestOption, 0, 3+len(opts))
+	safe = append(safe,
+		WithURLPolicy(URLPolicy{AllowedSchemes: []string{"http", "https"}, RejectPrivate: true}),
+		WithTimeout(10*time.Second),
+		WithMaxRedirects(10),
+	)
+	safe = append(safe, opts...)
+	return NewRequest(method, rawURL, safe...)
 }
 
 // Put creates a PUT request.
@@ -240,6 +275,36 @@ func WithMaxDecodeBytes(maxBytes int64) RequestOption {
 	return func(r *HTTPRequest) { r.maxDecode = maxBytes }
 }
 
+// WithURLPolicy sets SSRF-oriented validation for the request URL and redirect targets.
+func WithURLPolicy(policy URLPolicy) RequestOption {
+	return func(r *HTTPRequest) {
+		p := policy
+		p.AllowedSchemes = append([]string(nil), policy.AllowedSchemes...)
+		p.AllowedHosts = append([]string(nil), policy.AllowedHosts...)
+		r.urlPolicy = &p
+	}
+}
+
+// WithAllowedHosts restricts Safe requests to the provided host names.
+func WithAllowedHosts(hosts ...string) RequestOption {
+	return func(r *HTTPRequest) {
+		if r.urlPolicy == nil {
+			r.urlPolicy = &URLPolicy{AllowedSchemes: []string{"http", "https"}, RejectPrivate: true}
+		}
+		r.urlPolicy.AllowedHosts = append([]string(nil), hosts...)
+	}
+}
+
+// WithLookupIP sets the host resolver used by SSRF-oriented URL validation.
+func WithLookupIP(lookupIP func(context.Context, string) ([]net.IP, error)) RequestOption {
+	return func(r *HTTPRequest) {
+		if r.urlPolicy == nil {
+			r.urlPolicy = &URLPolicy{AllowedSchemes: []string{"http", "https"}, RejectPrivate: true}
+		}
+		r.urlPolicy.LookupIP = lookupIP
+	}
+}
+
 // Method sets the HTTP method.
 func (r *HTTPRequest) Method(m Method) *HTTPRequest { r.method = m; return r }
 
@@ -301,6 +366,15 @@ func (r *HTTPRequest) TLSConfig(cfg *tls.Config) *HTTPRequest { r.tlsConfig = cf
 
 // RestyClient sets a custom resty client.
 func (r *HTTPRequest) RestyClient(c *grestry.Client) *HTTPRequest { r.restyClient = c; return r }
+
+// URLPolicy sets SSRF-oriented validation for this request.
+func (r *HTTPRequest) URLPolicy(policy URLPolicy) *HTTPRequest {
+	p := policy
+	p.AllowedSchemes = append([]string(nil), policy.AllowedSchemes...)
+	p.AllowedHosts = append([]string(nil), policy.AllowedHosts...)
+	r.urlPolicy = &p
+	return r
+}
 
 // BasicAuth sets Basic Auth.
 func (r *HTTPRequest) BasicAuth(user, pass string) *HTTPRequest {
@@ -409,6 +483,11 @@ func (r *HTTPRequest) MustExecute() *HTTPResponse {
 
 func (r *HTTPRequest) buildClient() *grestry.Client {
 	if r.restyClient != nil {
+		if r.urlPolicy != nil {
+			c := r.restyClient.Clone(context.Background())
+			c.SetTransport(safeRestyTransport(c.Transport(), r.urlPolicy))
+			return c
+		}
 		return r.restyClient
 	}
 	c := r.newRestyClient()
@@ -421,14 +500,24 @@ func (r *HTTPRequest) buildClient() *grestry.Client {
 	if r.tlsConfig != nil {
 		c.SetTLSClientConfig(r.tlsConfig.Clone())
 	}
+	if r.urlPolicy != nil {
+		c.SetTransport(safeRestyTransport(c.Transport(), r.urlPolicy))
+	}
 	follow := true
 	if r.followRedir != nil {
 		follow = *r.followRedir
 	}
-	if !follow {
-		c.SetRedirectPolicy(grestry.NoRedirectPolicy())
-	} else if r.maxRedirects > 0 {
-		c.SetRedirectPolicy(grestry.FlexibleRedirectPolicy(r.maxRedirects))
+	switch {
+	case !follow:
+		c.SetRedirectPolicy(grestry.RedirectNoPolicy())
+	case r.urlPolicy != nil:
+		if r.maxRedirects > 0 {
+			c.SetRedirectPolicy(grestry.RedirectFlexiblePolicy(r.maxRedirects), safeRedirectPolicy(r.urlPolicy))
+		} else {
+			c.SetRedirectPolicy(safeRedirectPolicy(r.urlPolicy))
+		}
+	case r.maxRedirects > 0:
+		c.SetRedirectPolicy(grestry.RedirectFlexiblePolicy(r.maxRedirects))
 	}
 	if r.jsonMarshal != nil {
 		c.AddContentTypeEncoder("json", func(w io.Writer, v any) error {
@@ -470,8 +559,12 @@ func (r *HTTPRequest) newRestyClient() *grestry.Client {
 }
 
 func (r *HTTPRequest) doExecute() (*HTTPResponse, error) {
-	if _, err := url.Parse(r.rawURL); err != nil {
+	parsed, err := url.Parse(r.rawURL)
+	if err != nil {
 		return nil, NewHTTPError("invalid url", err)
+	}
+	if err := validateRequestURL(parsed, r.urlPolicy); err != nil {
+		return nil, err
 	}
 	req := r.buildClient().R()
 	for k, vs := range r.headers {
@@ -492,7 +585,7 @@ func (r *HTTPRequest) doExecute() (*HTTPResponse, error) {
 		req.SetResult(r.result)
 	}
 	if r.errorResult != nil {
-		req.SetError(r.errorResult)
+		req.SetResultError(r.errorResult)
 	}
 	keys := make([]string, 0, len(r.queryParams))
 	for k := range r.queryParams {
@@ -549,4 +642,184 @@ func toString(v any) string {
 	default:
 		return fmt.Sprintf("%v", v)
 	}
+}
+
+func safeRedirectPolicy(policy *URLPolicy) grestry.RedirectPolicy {
+	return grestry.RedirectPolicyFunc(func(req *http.Request, via []*http.Request) error {
+		if req == nil || req.URL == nil {
+			return HTTPErrorf("redirect url is nil")
+		}
+		return validateRequestURL(req.URL, policy)
+	})
+}
+
+func safeRestyTransport(base http.RoundTripper, policy *URLPolicy) http.RoundTripper {
+	if base == nil {
+		base = http.DefaultTransport
+	}
+	if transport, ok := base.(*http.Transport); ok {
+		transportClone := transport.Clone()
+		transportClone.DialContext = safeDialContext(policy)
+		base = transportClone
+	}
+	return safeRestyRoundTripper{base: base, policy: policy}
+}
+
+func safeDialContext(policy *URLPolicy) func(context.Context, string, string) (net.Conn, error) {
+	dialer := &net.Dialer{}
+	return func(ctx context.Context, network, address string) (net.Conn, error) {
+		host, port, err := net.SplitHostPort(address)
+		if err != nil {
+			return nil, err
+		}
+		host = strings.ToLower(strings.TrimSpace(host))
+		if host == "" {
+			return nil, HTTPErrorf("dial host is blank")
+		}
+		if policy != nil && containsFold(policy.AllowedHosts, host) {
+			return dialer.DialContext(ctx, network, address)
+		}
+		ips, err := publicHostIPs(ctx, policy, host)
+		if err != nil {
+			return nil, err
+		}
+		return dialer.DialContext(ctx, network, net.JoinHostPort(ips[0].String(), port))
+	}
+}
+
+type safeRestyRoundTripper struct {
+	base   http.RoundTripper
+	policy *URLPolicy
+}
+
+func (t safeRestyRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	if req == nil || req.URL == nil {
+		return nil, HTTPErrorf("request url is nil")
+	}
+	if err := validateRequestURL(req.URL, t.policy); err != nil {
+		return nil, err
+	}
+	if req.URL.Scheme == "http" || req.URL.Scheme == "https" {
+		host := strings.ToLower(req.URL.Hostname())
+		if t.policy != nil && t.policy.RejectPrivate && !containsFold(t.policy.AllowedHosts, host) {
+			private, err := isPrivateHost(req.Context(), t.policy.LookupIP, host)
+			if err != nil {
+				return nil, NewHTTPError("resolve url host failed", err)
+			}
+			if private {
+				return nil, HTTPErrorf("url host %q resolves to a private address", host)
+			}
+		}
+	}
+	return t.base.RoundTrip(req)
+}
+
+func validateRequestURL(u *url.URL, policy *URLPolicy) error {
+	if policy == nil {
+		return nil
+	}
+	if u == nil {
+		return HTTPErrorf("url is nil")
+	}
+	scheme := strings.ToLower(strings.TrimSpace(u.Scheme))
+	if len(policy.AllowedSchemes) > 0 && !containsFold(policy.AllowedSchemes, scheme) {
+		return HTTPErrorf("url scheme %q is not allowed", scheme)
+	}
+	if scheme != "http" && scheme != "https" {
+		return nil
+	}
+	host := strings.ToLower(u.Hostname())
+	if host == "" {
+		return HTTPErrorf("http url host is blank")
+	}
+	if len(policy.AllowedHosts) > 0 && !containsFold(policy.AllowedHosts, host) {
+		return HTTPErrorf("url host %q is not allowed", host)
+	}
+	if policy.RejectPrivate && !containsFold(policy.AllowedHosts, host) {
+		private, err := isPrivateHost(context.Background(), policy.LookupIP, host)
+		if err != nil {
+			return NewHTTPError("resolve url host failed", err)
+		}
+		if private {
+			return HTTPErrorf("url host %q resolves to a private address", host)
+		}
+	}
+	return nil
+}
+
+func containsFold(values []string, target string) bool {
+	target = strings.TrimSpace(target)
+	for _, value := range values {
+		if strings.EqualFold(strings.TrimSpace(value), target) {
+			return true
+		}
+	}
+	return false
+}
+
+func isPrivateHost(ctx context.Context, lookupIP func(context.Context, string) ([]net.IP, error), host string) (bool, error) {
+	if strings.EqualFold(host, "localhost") {
+		return true, nil
+	}
+	if ip := net.ParseIP(host); ip != nil {
+		return isPrivateIP(ip), nil
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if lookupIP == nil {
+		lookupIP = defaultLookupIP
+	}
+	ips, err := lookupIP(ctx, host)
+	if err != nil {
+		return false, err
+	}
+	for _, ip := range ips {
+		if isPrivateIP(ip) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func defaultLookupIP(ctx context.Context, host string) ([]net.IP, error) {
+	return net.DefaultResolver.LookupIP(ctx, "ip", host)
+}
+
+func publicHostIPs(ctx context.Context, policy *URLPolicy, host string) ([]net.IP, error) {
+	if strings.EqualFold(host, "localhost") {
+		return nil, HTTPErrorf("url host %q resolves to a private address", host)
+	}
+	if ip := net.ParseIP(host); ip != nil {
+		if isPrivateIP(ip) {
+			return nil, HTTPErrorf("url host %q resolves to a private address", host)
+		}
+		return []net.IP{ip}, nil
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	lookupIP := defaultLookupIP
+	if policy != nil && policy.LookupIP != nil {
+		lookupIP = policy.LookupIP
+	}
+	ips, err := lookupIP(ctx, host)
+	if err != nil {
+		return nil, NewHTTPError("resolve url host failed", err)
+	}
+	if len(ips) == 0 {
+		return nil, HTTPErrorf("resolve url host %q: no addresses", host)
+	}
+	public := make([]net.IP, 0, len(ips))
+	for _, ip := range ips {
+		if isPrivateIP(ip) {
+			return nil, HTTPErrorf("url host %q resolves to a private address", host)
+		}
+		public = append(public, ip)
+	}
+	return public, nil
+}
+
+func isPrivateIP(ip net.IP) bool {
+	return ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() || ip.IsUnspecified()
 }

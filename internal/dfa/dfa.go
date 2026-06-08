@@ -273,12 +273,14 @@ func DefaultProcessor(word FoundWord) string {
 	return strings.Repeat("*", len([]rune(word.FoundWord)))
 }
 
-var stopRunes = map[rune]struct{}{}
+var stopRunes = defaultStopRunes()
 
-func init() {
+func defaultStopRunes() map[rune]struct{} {
+	runes := map[rune]struct{}{}
 	for _, r := range " '\u3001。·ˉˇ々—～‖…‘’“”〔〕〈〉《》「」『』〖〗【】±＋－×÷∧∨∑∏∪∩∈√⊥⊙∫∮≡≌≈∽∝≠≮≯≤≥∞∶∵∴∷♂♀°′〃℃＄¤￠￡‰§☆★〇○●◎◇◆□■△▽⊿▲▼◣◤◢◥▁▂▃▄▅▆▇█▉▊▋▌▍▎▏▓※→←↑↓↖↗↘↙〓ⅰⅱⅲⅳⅴⅵⅶⅷⅸⅹ①②③④⑤⑥⑦⑧⑨⑩⒈⒉⒊⒋⒌⒍⒎⒏⒐⒑⒒⒓⒔⒕⒖⒗⒘⒙⒚⒛⑴⑵⑶⑷⑸⑹⑺⑻⑼⑽⑾⑿⒀⒁⒂⒃⒄⒅⒆⒇ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩⅪⅫ！＃￥％＆（）＊，．／０１２３４５６７８９：；＜＝＞？＠＼＾＿｛｜｝ΡΥΦΧΨΩαβγδεζηθικλμνξοπρστυφχψω﹊﹍╭╮╰╯_^/\\\"<>`{}~()-$@*&#卐㎎㎏㎜㎝㎞㎡㏄㏎㏑㏒㏕+=?:.!;]|%" {
-		stopRunes[r] = struct{}{}
+		runes[r] = struct{}{}
 	}
+	return runes
 }
 
 // IsStopChar reports whether r should be ignored by the default matcher.

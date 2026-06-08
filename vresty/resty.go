@@ -1,9 +1,11 @@
 package vresty
 
 import (
+	"context"
 	"crypto/tls"
 	"io"
 	"io/fs"
+	"net"
 	"os"
 	"regexp"
 	"time"
@@ -38,6 +40,9 @@ type HeaderValues = restyimpl.HeaderValues
 
 // GlobalConfig captures resty package-level defaults for explicit request construction.
 type GlobalConfig = restyimpl.GlobalConfig
+
+// URLPolicy controls SSRF-oriented request validation for untrusted URLs.
+type URLPolicy = restyimpl.URLPolicy
 
 // CharsetOption customizes charset extraction helpers per call.
 type CharsetOption = restyimpl.CharsetOption
@@ -115,8 +120,18 @@ const (
 // Get creates a GET request.
 func Get(rawURL string, opts ...RequestOption) *Request { return restyimpl.Get(rawURL, opts...) }
 
+// GetSafe creates a GET request with SSRF-oriented safety checks enabled.
+func GetSafe(rawURL string, opts ...RequestOption) *Request {
+	return restyimpl.GetSafe(rawURL, opts...)
+}
+
 // Post creates a POST request.
 func Post(rawURL string, opts ...RequestOption) *Request { return restyimpl.Post(rawURL, opts...) }
+
+// PostSafe creates a POST request with SSRF-oriented safety checks enabled.
+func PostSafe(rawURL string, opts ...RequestOption) *Request {
+	return restyimpl.PostSafe(rawURL, opts...)
+}
 
 // Put creates a PUT request.
 func Put(rawURL string, opts ...RequestOption) *Request { return restyimpl.Put(rawURL, opts...) }
@@ -138,6 +153,11 @@ func Options(rawURL string, opts ...RequestOption) *Request {
 // NewRequest creates a request by method.
 func NewRequest(method Method, rawURL string, opts ...RequestOption) *Request {
 	return restyimpl.NewRequest(method, rawURL, opts...)
+}
+
+// NewSafeRequest creates a request with SSRF-oriented safety checks enabled.
+func NewSafeRequest(method Method, rawURL string, opts ...RequestOption) *Request {
+	return restyimpl.NewSafeRequest(method, rawURL, opts...)
 }
 
 // NewIsolatedRequest creates a request without reading package-level global defaults.
@@ -245,6 +265,17 @@ func WithJSONDecodeReadAllFunc(readAll func(io.Reader) ([]byte, error)) RequestO
 // WithMaxDecodeBytes limits bytes read before custom JSON unmarshalling. Non-positive means unlimited.
 func WithMaxDecodeBytes(maxBytes int64) RequestOption {
 	return restyimpl.WithMaxDecodeBytes(maxBytes)
+}
+
+// WithURLPolicy sets SSRF-oriented validation for the request URL and redirect targets.
+func WithURLPolicy(policy URLPolicy) RequestOption { return restyimpl.WithURLPolicy(policy) }
+
+// WithAllowedHosts restricts Safe requests to the provided host names.
+func WithAllowedHosts(hosts ...string) RequestOption { return restyimpl.WithAllowedHosts(hosts...) }
+
+// WithLookupIP sets the host resolver used by SSRF-oriented URL validation.
+func WithLookupIP(lookupIP func(context.Context, string) ([]net.IP, error)) RequestOption {
+	return restyimpl.WithLookupIP(lookupIP)
 }
 
 // WithSaveFilePerm sets the file permission used when creating the destination file.
@@ -393,6 +424,16 @@ func GetGlobalUserAgent() string { return restyimpl.GetGlobalUserAgent() }
 
 // SnapshotGlobalConfig returns a copy of the package-level resty defaults.
 func SnapshotGlobalConfig() GlobalConfig { return restyimpl.SnapshotGlobalConfig() }
+
+// ResetGlobalConfig restores package-level resty defaults, including headers and cookies.
+func ResetGlobalConfig() { restyimpl.ResetGlobalConfig() }
+
+// ConfigureGlobalConfig replaces package-level resty defaults with cfg.
+func ConfigureGlobalConfig(cfg GlobalConfig) { restyimpl.ConfigureGlobalConfig(cfg) }
+
+// WithScopedGlobalConfig runs fn with cfg installed as package-level resty defaults,
+// then restores the previous defaults.
+func WithScopedGlobalConfig(cfg GlobalConfig, fn func()) { restyimpl.WithScopedGlobalConfig(cfg, fn) }
 
 // SetGlobalHeader sets a global HTTP header.
 func SetGlobalHeader(name, value string) { restyimpl.SetGlobalHeader(name, value) }

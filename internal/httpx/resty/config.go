@@ -20,25 +20,33 @@ type GlobalConfig struct {
 
 var (
 	globalMu               sync.RWMutex
-	globalTimeout          time.Duration
-	globalMaxRedirects     = 10
-	globalFollowRedirects  = true
+	globalTimeout          = defaultGlobalTimeout
+	globalMaxRedirects     = defaultGlobalMaxRedirects
+	globalFollowRedirects  = defaultGlobalFollowRedirects
 	globalDefaultUserAgent = ""
 
 	globalHeadersMu sync.RWMutex
-	globalHeaders   = HeaderValues{}
+	globalHeaders   = defaultGlobalHeaders()
 
 	cookieMu       sync.RWMutex
 	cookieDisabled bool
 )
 
-func init() {
-	setHeader(globalHeaders, string(HeaderAccept), "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-	setHeader(globalHeaders, string(HeaderAcceptEncoding), "gzip, deflate")
-	setHeader(globalHeaders, string(HeaderAcceptLanguage), "zh-CN,zh;q=0.8")
-	setHeader(globalHeaders, string(HeaderUserAgent),
+const (
+	defaultGlobalTimeout         = 0 * time.Second
+	defaultGlobalMaxRedirects    = 10
+	defaultGlobalFollowRedirects = true
+)
+
+func defaultGlobalHeaders() HeaderValues {
+	headers := HeaderValues{}
+	setHeader(headers, string(HeaderAccept), "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+	setHeader(headers, string(HeaderAcceptEncoding), "gzip, deflate")
+	setHeader(headers, string(HeaderAcceptLanguage), "zh-CN,zh;q=0.8")
+	setHeader(headers, string(HeaderUserAgent),
 		"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) "+
 			"Chrome/72.0.3626.109 Safari/537.36")
+	return headers
 }
 
 // SnapshotGlobalConfig returns a copy of the package-level resty defaults.
@@ -56,8 +64,53 @@ func SnapshotGlobalConfig() GlobalConfig {
 	return cfg
 }
 
+// ResetGlobalConfig restores package-level resty defaults, including headers and cookies.
+func ResetGlobalConfig() { applyGlobalConfig(defaultGlobalConfig()) }
+
+// ConfigureGlobalConfig replaces package-level resty defaults with cfg.
+func ConfigureGlobalConfig(cfg GlobalConfig) { applyGlobalConfig(cfg) }
+
+// WithScopedGlobalConfig runs fn with cfg installed as package-level resty defaults,
+// then restores the previous defaults. It is intended for tests and serialized setup code.
+func WithScopedGlobalConfig(cfg GlobalConfig, fn func()) {
+	previous := SnapshotGlobalConfig()
+	ConfigureGlobalConfig(cfg)
+	defer ConfigureGlobalConfig(previous)
+	if fn != nil {
+		fn()
+	}
+}
+
+func defaultGlobalConfig() GlobalConfig {
+	return GlobalConfig{
+		Timeout:          defaultGlobalTimeout,
+		MaxRedirects:     defaultGlobalMaxRedirects,
+		FollowRedirects:  defaultGlobalFollowRedirects,
+		DefaultUserAgent: "",
+		Headers:          defaultGlobalHeaders(),
+		CookieDisabled:   false,
+	}
+}
+
+func applyGlobalConfig(cfg GlobalConfig) {
+	globalMu.Lock()
+	globalTimeout = cfg.Timeout
+	globalMaxRedirects = cfg.MaxRedirects
+	globalFollowRedirects = cfg.FollowRedirects
+	globalDefaultUserAgent = cfg.DefaultUserAgent
+	globalMu.Unlock()
+
+	globalHeadersMu.Lock()
+	globalHeaders = cloneHeaders(cfg.Headers)
+	globalHeadersMu.Unlock()
+
+	cookieMu.Lock()
+	cookieDisabled = cfg.CookieDisabled
+	cookieMu.Unlock()
+}
+
 func isolatedGlobalConfig() GlobalConfig {
-	return GlobalConfig{FollowRedirects: true, MaxRedirects: 10}
+	return GlobalConfig{FollowRedirects: defaultGlobalFollowRedirects, MaxRedirects: defaultGlobalMaxRedirects}
 }
 
 func cloneHeaders(headers HeaderValues) HeaderValues {

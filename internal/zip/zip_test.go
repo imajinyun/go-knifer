@@ -203,6 +203,35 @@ func TestUnzipDefaultLimitCanBeOverridden(t *testing.T) {
 	}
 }
 
+func TestUnzipEnforcesActualCopiedBytes(t *testing.T) {
+	var buf bytes.Buffer
+	if err := ZipEntriesToWriter(&buf, EntryData{Name: "a.txt", Data: []byte("abcd")}); err != nil {
+		t.Fatalf("ZipEntriesToWriter: %v", err)
+	}
+	r, err := archivezip.NewReader(bytes.NewReader(buf.Bytes()), int64(buf.Len()))
+	if err != nil {
+		t.Fatalf("NewReader: %v", err)
+	}
+	if len(r.File) != 1 {
+		t.Fatalf("archive entries = %d, want 1", len(r.File))
+	}
+	// Simulate an archive whose declared uncompressed size is smaller than the
+	// actual stream. Extraction must enforce the copy-time limit as a second line
+	// of defense instead of trusting central-directory metadata only.
+	r.File[0].UncompressedSize64 = 1
+	dest := filepath.Join(t.TempDir(), "dest")
+	if err := UnzipReaderToWithOptions(r, dest, WithMaxBytes(3)); err == nil {
+		t.Fatal("UnzipReaderToWithOptions should reject streams exceeding the actual copy limit")
+	}
+	data, err := os.ReadFile(filepath.Join(dest, "a.txt"))
+	if err != nil {
+		t.Fatalf("read partial extraction: %v", err)
+	}
+	if len(data) > 3 {
+		t.Fatalf("partial extraction wrote %d bytes, want at most 3", len(data))
+	}
+}
+
 func TestZipCreationUsingOptions(t *testing.T) {
 	tmp := t.TempDir()
 	src := filepath.Join(tmp, "src")
