@@ -48,7 +48,7 @@ func newTaskExecutorManager(s *Scheduler) *taskExecutorManager {
 }
 
 // spawn creates a TaskExecutor for a CronTask and submits it to the scheduler executor.
-func (m *taskExecutorManager) spawn(task *CronTask) *TaskExecutor {
+func (m *taskExecutorManager) spawn(task *CronTask) {
 	e := &TaskExecutor{scheduler: m.scheduler, task: task}
 	m.mu.Lock()
 	if len(m.executors) == 0 {
@@ -57,7 +57,6 @@ func (m *taskExecutorManager) spawn(task *CronTask) *TaskExecutor {
 	m.executors = append(m.executors, e)
 	m.mu.Unlock()
 	m.scheduler.submit(e.run)
-	return e
 }
 
 // completed removes an executor from the running list after task execution completes.
@@ -113,6 +112,7 @@ type taskLauncher struct {
 
 func (l *taskLauncher) run() {
 	defer l.scheduler.launcherMgr.completed(l)
+	defer func() { _ = recover() }()
 	l.scheduler.taskTable.executeIfMatch(l.scheduler, l.millis)
 }
 
@@ -133,7 +133,7 @@ func newTaskLauncherManager(s *Scheduler) *taskLauncherManager {
 	return m
 }
 
-func (m *taskLauncherManager) spawn(millis int64) *taskLauncher {
+func (m *taskLauncherManager) spawn(millis int64) {
 	l := &taskLauncher{scheduler: m.scheduler, millis: millis}
 	m.mu.Lock()
 	if len(m.launchers) == 0 {
@@ -142,7 +142,6 @@ func (m *taskLauncherManager) spawn(millis int64) *taskLauncher {
 	m.launchers = append(m.launchers, l)
 	m.mu.Unlock()
 	m.scheduler.submit(l.run)
-	return l
 }
 
 func (m *taskLauncherManager) completed(l *taskLauncher) {

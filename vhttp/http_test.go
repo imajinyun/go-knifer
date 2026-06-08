@@ -48,13 +48,9 @@ func TestFacadeUsesNamesWithoutHTTPPrefix(t *testing.T) {
 }
 
 func TestFacadeSharedConstants(t *testing.T) {
-	var _ vhttp.Method = vhttp.MethodTrace
-	var _ vhttp.Method = vhttp.MethodConnect
-	var _ vhttp.Header = vhttp.HeaderContentType
-	var _ vhttp.Header = vhttp.HeaderUserAgent
-	var _ vhttp.Header = vhttp.HeaderLocation
-	var _ vhttp.ContentType = vhttp.ContentTypeJSON
-	var _ vhttp.ContentType = vhttp.ContentTypeEventStream
+	_ = []vhttp.Method{vhttp.MethodTrace, vhttp.MethodConnect}
+	_ = []vhttp.Header{vhttp.HeaderContentType, vhttp.HeaderUserAgent, vhttp.HeaderLocation}
+	_ = []vhttp.ContentType{vhttp.ContentTypeJSON, vhttp.ContentTypeEventStream}
 
 	if vhttp.MethodTrace.String() != http.MethodTrace {
 		t.Fatalf("MethodTrace = %q", vhttp.MethodTrace.String())

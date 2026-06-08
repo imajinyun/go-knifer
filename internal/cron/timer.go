@@ -25,7 +25,7 @@ func newCronTimer(s *Scheduler) *cronTimer {
 func (t *cronTimer) run() {
 	defer t.scheduler.timerWG.Done()
 	unit := timerUnitMinute
-	if t.scheduler.config.MatchSecond {
+	if t.scheduler.Config().MatchSecond {
 		unit = timerUnitSecond
 	}
 	thisTime := t.scheduler.nowMillis()

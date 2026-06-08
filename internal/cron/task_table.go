@@ -106,9 +106,10 @@ func (t *TaskTable) executeIfMatch(s *Scheduler, fireTime int64) {
 	pats := append([]*Pattern(nil), t.patterns...)
 	tasks := append([]Task(nil), t.tasks...)
 	t.mu.RUnlock()
-	tt := timeFromMillisInLocation(fireTime, s.config.Location)
+	cfg := s.Config()
+	tt := timeFromMillisInLocation(fireTime, cfg.Location)
 	for i, p := range pats {
-		if p.Match(tt, s.config.MatchSecond) {
+		if p.Match(tt, cfg.MatchSecond) {
 			ct := NewCronTask(ids[i], p, tasks[i])
 			s.executorMgr.spawn(ct)
 		}

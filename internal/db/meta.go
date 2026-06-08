@@ -123,6 +123,9 @@ func listTablesSQL(d Dialect) (string, error) {
 }
 
 func listColumnsSQL(d Dialect, table string) (string, []any, columnScanner, error) {
+	if err := validateIdentifier(table, "metadata table"); err != nil {
+		return "", nil, nil, err
+	}
 	switch d {
 	case DialectSQLite:
 		return "PRAGMA table_info(" + WrapperForDialect(DialectSQLite).Wrap(table) + ")", nil, scanSQLiteColumn, nil

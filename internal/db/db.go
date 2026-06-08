@@ -198,8 +198,7 @@ func (db *DB) FindLike(ctx context.Context, table, field string, value any, mode
 
 // Count counts rows in table matching conditions.
 func (db *DB) Count(ctx context.Context, table string, conds ...Condition) (int64, error) {
-	b := NewBuilder(WithDialect(db.dialect), WithWrapper(db.wrapper)).Select("COUNT(*)").From(table).Where(conds...)
-	sqlText, args, err := b.SQL()
+	sqlText, args, err := buildCountSQL(db.dialect, db.wrapper, []string{table}, conds...)
 	if err != nil {
 		return 0, err
 	}
@@ -213,7 +212,7 @@ func (db *DB) Page(ctx context.Context, q Query, page Page) (PageResult[Entity],
 	if err != nil {
 		return PageResult[Entity]{}, err
 	}
-	countSQL, countArgs, err := NewBuilder(WithDialect(db.dialect), WithWrapper(db.wrapper)).Select("COUNT(*)").From(q.Tables...).Where(q.Conditions...).SQL()
+	countSQL, countArgs, err := buildCountSQL(db.dialect, db.wrapper, q.Tables, q.Conditions...)
 	if err != nil {
 		return PageResult[Entity]{}, err
 	}
@@ -327,6 +326,27 @@ func deleteRows(ctx context.Context, exec sqlExecutor, dialect Dialect, wrapper 
 		return nil, wrapInternal("db: delete rows", err)
 	}
 	return result, nil
+}
+
+func buildCountSQL(dialect Dialect, wrapper Wrapper, tables []string, conds ...Condition) (string, []any, error) {
+	if len(tables) == 0 {
+		return "", nil, invalidInputf("db: COUNT requires table")
+	}
+	if err := validateIdentifierList(tables, "COUNT tables", false); err != nil {
+		return "", nil, err
+	}
+	parts := []string{"SELECT COUNT(*) FROM", wrapList(tables, wrapper)}
+	if len(conds) == 0 {
+		return strings.Join(parts, " "), nil, nil
+	}
+	where, args, _, err := buildConditions(conds, dialect, wrapper, 1)
+	if err != nil {
+		return "", nil, err
+	}
+	if where != "" {
+		parts = append(parts, "WHERE", where)
+	}
+	return strings.Join(parts, " "), args, nil
 }
 
 func scanInt64(row *sql.Row) (int64, error) {

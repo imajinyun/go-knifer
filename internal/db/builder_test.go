@@ -118,6 +118,27 @@ func TestSQLBuilderRejectsUnsafeIdentifiers(t *testing.T) {
 	}
 }
 
+func TestBuildCountSQL(t *testing.T) {
+	sqlText, args, err := buildCountSQL(DialectPostgres, WrapperForDialect(DialectPostgres), []string{"users"}, Eq("status", "active"))
+	if err != nil {
+		t.Fatalf("buildCountSQL() error = %v", err)
+	}
+	if sqlText != `SELECT COUNT(*) FROM "users" WHERE "status" = $1` {
+		t.Fatalf("sql = %q", sqlText)
+	}
+	if !reflect.DeepEqual(args, []any{"active"}) {
+		t.Fatalf("args = %#v", args)
+	}
+
+	_, _, err = buildCountSQL(DialectQuestion, Wrapper{}, []string{"users; drop table users"})
+	assertDBCode(t, err, knifer.ErrCodeInvalidInput)
+}
+
+func TestListColumnsSQLRejectsUnsafeTable(t *testing.T) {
+	_, _, _, err := listColumnsSQL(DialectSQLite, "users; drop table users")
+	assertDBCode(t, err, knifer.ErrCodeInvalidInput)
+}
+
 func TestUpsertSQL(t *testing.T) {
 	entity := NewEntity("users").Set("id", 1).Set("name", "alice")
 	sqlText, args, err := buildUpsertSQL(DialectSQLite, WrapperForDialect(DialectSQLite), entity, []string{"id"})

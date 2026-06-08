@@ -11,6 +11,7 @@ import (
 // Scheduler is aligned with the utility toolkit Scheduler and is the core scheduler of gkcron.
 type Scheduler struct {
 	mu          sync.Mutex
+	configMu    sync.RWMutex
 	config      *Config
 	started     atomic.Bool
 	timer       *cronTimer
@@ -142,20 +143,45 @@ func (s *Scheduler) parsePattern(pattern string, opts ...PatternOption) (*Patter
 	return NewPatternWithOptions(pattern, allOpts...)
 }
 
-// Config returns the scheduler config.
-func (s *Scheduler) Config() *Config { return s.config }
+// Config returns a snapshot of the scheduler config.
+func (s *Scheduler) Config() *Config {
+	s.configMu.RLock()
+	defer s.configMu.RUnlock()
+	cfg := *s.config
+	return &cfg
+}
 
-// SetMatchSecond sets whether expressions match seconds; changes after start do not take effect.
+// SetMatchSecond sets whether expressions match seconds; calls while started are ignored.
 func (s *Scheduler) SetMatchSecond(b bool) *Scheduler {
+	if s.started.Load() {
+		return s
+	}
+	s.configMu.Lock()
+	defer s.configMu.Unlock()
+	if s.started.Load() {
+		return s
+	}
 	s.config.MatchSecond = b
 	return s
 }
 
 // IsMatchSecond reports whether expressions match seconds.
-func (s *Scheduler) IsMatchSecond() bool { return s.config.MatchSecond }
+func (s *Scheduler) IsMatchSecond() bool {
+	s.configMu.RLock()
+	defer s.configMu.RUnlock()
+	return s.config.MatchSecond
+}
 
-// SetTimeZone sets the scheduler time zone.
+// SetTimeZone sets the scheduler time zone; calls while started are ignored.
 func (s *Scheduler) SetTimeZone(loc *time.Location) *Scheduler {
+	if s.started.Load() {
+		return s
+	}
+	s.configMu.Lock()
+	defer s.configMu.Unlock()
+	if s.started.Load() {
+		return s
+	}
 	if loc == nil {
 		loc = time.Local
 	}
@@ -231,6 +257,9 @@ func (s *Scheduler) ScheduleWithIDWithPatternOptions(id, pattern string, task Ta
 
 // SchedulePattern registers a task with an already parsed Pattern.
 func (s *Scheduler) SchedulePattern(id string, p *Pattern, task Task) error {
+	if p == nil {
+		return NewCronError("pattern must not be nil")
+	}
 	return s.taskTable.Add(id, p, task)
 }
 

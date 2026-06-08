@@ -3,10 +3,13 @@ package cron
 import (
 	"bytes"
 	"context"
+	"errors"
 	"strconv"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	knifer "github.com/imajinyun/go-knifer"
 )
 
 func TestSchedulerLifecycle(t *testing.T) {
@@ -122,11 +125,13 @@ func (l *testListener) OnStart(*TaskExecutor) {
 		l.started.Add(1)
 	}
 }
+
 func (l *testListener) OnSucceeded(*TaskExecutor) {
 	if l.succ != nil {
 		l.succ.Add(1)
 	}
 }
+
 func (l *testListener) OnFailed(*TaskExecutor, any) {
 	if l.failed != nil {
 		l.failed.Add(1)
@@ -144,11 +149,13 @@ func (l *panicListener) OnStart(*TaskExecutor) {
 		panic("start listener")
 	}
 }
+
 func (l *panicListener) OnSucceeded(*TaskExecutor) {
 	if l.onSucceeded {
 		panic("success listener")
 	}
 }
+
 func (l *panicListener) OnFailed(*TaskExecutor, any) {
 	if l.onFailed {
 		panic("failed listener")
@@ -181,6 +188,28 @@ func TestSchedulerDuplicateID(t *testing.T) {
 	}
 }
 
+func TestSchedulerSchedulePatternRejectsNil(t *testing.T) {
+	s := NewScheduler()
+	err := s.SchedulePattern("nil", nil, TaskFunc(func() {}))
+	if err == nil {
+		t.Fatal("SchedulePattern nil pattern error = nil")
+	}
+	if !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("errors.Is(%v, %s) = false", err, knifer.ErrCodeInvalidInput)
+	}
+}
+
+func TestSchedulerLauncherPanicsAreIsolated(t *testing.T) {
+	s := NewSchedulerWithOptions(WithExecutor(func(fn func()) { fn() }))
+	if err := s.taskTable.Add("bad", nil, TaskFunc(func() {})); err != nil {
+		t.Fatalf("add invalid task: %v", err)
+	}
+	s.launcherMgr.spawn(time.Now().UnixMilli())
+	if got := s.LaunchingCount(); got != 0 {
+		t.Fatalf("LaunchingCount = %d, want 0", got)
+	}
+}
+
 func TestSchedulerStartTwice(t *testing.T) {
 	s := NewScheduler()
 	if err := s.Start(); err != nil {
@@ -189,6 +218,35 @@ func TestSchedulerStartTwice(t *testing.T) {
 	defer s.Stop()
 	if err := s.Start(); err == nil {
 		t.Fatalf("expect error on second start")
+	}
+}
+
+func TestSchedulerConfigSettersIgnoredWhileStarted(t *testing.T) {
+	loc := time.FixedZone("before", 3600)
+	after := time.FixedZone("after", 7200)
+	s := NewSchedulerWithOptions(WithLocation(loc), WithMatchSecond(true))
+	if err := s.Start(); err != nil {
+		t.Fatalf("start: %v", err)
+	}
+	s.SetMatchSecond(false).SetTimeZone(after)
+	cfg := s.Config()
+	if cfg.Location != loc || !cfg.MatchSecond {
+		t.Fatalf("started scheduler config mutated: %#v", cfg)
+	}
+	s.Stop()
+	s.SetMatchSecond(false).SetTimeZone(after)
+	cfg = s.Config()
+	if cfg.Location != after || cfg.MatchSecond {
+		t.Fatalf("stopped scheduler config not updated: %#v", cfg)
+	}
+}
+
+func TestSchedulerConfigReturnsSnapshot(t *testing.T) {
+	s := NewSchedulerWithOptions(WithMatchSecond(true))
+	cfg := s.Config()
+	cfg.MatchSecond = false
+	if !s.IsMatchSecond() {
+		t.Fatal("mutating Config snapshot changed scheduler")
 	}
 }
 

@@ -112,13 +112,9 @@ func ParseTokenWithOptions(token string, opts ...JSONOption) (*JWT, error) {
 	return OfWithOptions(token, opts...)
 }
 
-// Verify 使用 HS256 密钥校验 token。
+// Verify verifies a token using the algorithm declared by the token header.
 func Verify(token string, key []byte) bool {
-	j, err := Of(token)
-	if err != nil {
-		return false
-	}
-	return j.SetKey(key).Verify()
+	return VerifyStrict(token, key)
 }
 
 // VerifyStrict verifies a token using the header algorithm without fallback.
