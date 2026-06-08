@@ -11,11 +11,6 @@ func PBKDF2(password, salt []byte, iterations, keyLen int, fn func() hash.Hash) 
 	return cryptoimpl.PBKDF2(password, salt, iterations, keyLen, fn)
 }
 
-// PBKDF2SHA1 derives a key using PBKDF2-HMAC-SHA1.
-func PBKDF2SHA1(password, salt []byte, iterations, keyLen int) ([]byte, error) {
-	return cryptoimpl.PBKDF2SHA1(password, salt, iterations, keyLen)
-}
-
 // PBKDF2SHA256 derives a key using PBKDF2-HMAC-SHA256.
 func PBKDF2SHA256(password, salt []byte, iterations, keyLen int) ([]byte, error) {
 	return cryptoimpl.PBKDF2SHA256(password, salt, iterations, keyLen)

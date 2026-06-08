@@ -80,7 +80,6 @@ type HTTPRequest struct {
 	timeout      time.Duration
 	followRedir  *bool
 	maxRedirects int
-	tlsSkip      bool
 	tlsConfig    *tls.Config
 	userAgent    string
 	transport    http.RoundTripper
@@ -139,7 +138,6 @@ func WithGlobalConfig(cfg GlobalConfig) RequestOption {
 		follow := cfg.FollowRedirects
 		r.followRedir = &follow
 		r.maxRedirects = cfg.MaxRedirects
-		r.tlsSkip = cfg.TrustAnyHost
 		r.userAgent = cfg.DefaultUserAgent
 	}
 }
@@ -167,7 +165,6 @@ func NewRequestWithConfig(method Method, rawURL string, cfg GlobalConfig, opts .
 		timeout:      cfg.Timeout,
 		followRedir:  &follow,
 		maxRedirects: cfg.MaxRedirects,
-		tlsSkip:      cfg.TrustAnyHost,
 		userAgent:    cfg.DefaultUserAgent,
 		newRequest:   http.NewRequest,
 		multipartNew: newMultipartWriter,
@@ -234,9 +231,6 @@ func WithFollowRedirects(b bool) RequestOption { return func(r *HTTPRequest) { r
 
 // WithMaxRedirects sets the per-request redirect limit.
 func WithMaxRedirects(n int) RequestOption { return func(r *HTTPRequest) { r.MaxRedirects(n) } }
-
-// WithSkipTLSVerify sets per-request TLS verification behavior.
-func WithSkipTLSVerify(b bool) RequestOption { return func(r *HTTPRequest) { r.SkipTLSVerify(b) } }
 
 // WithTLSConfig sets a per-request TLS config. It is ignored when a custom client or transport is set.
 func WithTLSConfig(cfg *tls.Config) RequestOption { return func(r *HTTPRequest) { r.TLSConfig(cfg) } }
@@ -344,7 +338,6 @@ func (r *HTTPRequest) Clone() *HTTPRequest {
 		charset:      r.charset,
 		timeout:      r.timeout,
 		maxRedirects: r.maxRedirects,
-		tlsSkip:      r.tlsSkip,
 		userAgent:    r.userAgent,
 		transport:    r.transport,
 		transportFn:  r.transportFn,
@@ -441,9 +434,6 @@ func (r *HTTPRequest) FollowRedirects(b bool) *HTTPRequest {
 
 // MaxRedirects sets the maximum redirect count.
 func (r *HTTPRequest) MaxRedirects(n int) *HTTPRequest { r.maxRedirects = n; return r }
-
-// SkipTLSVerify skips TLS certificate verification.
-func (r *HTTPRequest) SkipTLSVerify(b bool) *HTTPRequest { r.tlsSkip = b; return r }
 
 // TLSConfig sets a custom TLS config for the generated HTTP transport.
 func (r *HTTPRequest) TLSConfig(cfg *tls.Config) *HTTPRequest { r.tlsConfig = cfg; return r }
@@ -671,16 +661,9 @@ func (r *HTTPRequest) buildClient() *http.Client {
 	}
 	if transport == nil {
 		baseTransport := getDefaultTransport()
-		if r.tlsSkip || r.tlsConfig != nil {
+		if r.tlsConfig != nil {
 			t := baseTransport.Clone()
-			if r.tlsConfig != nil {
-				t.TLSClientConfig = r.tlsConfig.Clone()
-			} else {
-				t.TLSClientConfig = &tls.Config{}
-			}
-			if r.tlsSkip {
-				t.TLSClientConfig.InsecureSkipVerify = true
-			}
+			t.TLSClientConfig = r.tlsConfig.Clone()
 			transport = t
 		} else {
 			transport = baseTransport

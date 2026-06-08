@@ -130,44 +130,6 @@ func RSADecryptOAEPWithOptions(cipherText []byte, priv *rsa.PrivateKey, label []
 	return rsa.DecryptOAEP(cfg.oaepHash(), cfg.random, priv, cipherText, label)
 }
 
-// RSAEncryptPKCS1v15 encrypts data using RSA PKCS#1 v1.5 padding.
-func RSAEncryptPKCS1v15(plain []byte, pub *rsa.PublicKey) ([]byte, error) {
-	return RSAEncryptPKCS1v15WithOptions(plain, pub)
-}
-
-// RSAEncryptPKCS1v15WithOptions encrypts data using RSA PKCS#1 v1.5 padding with options.
-func RSAEncryptPKCS1v15WithOptions(plain []byte, pub *rsa.PublicKey, opts ...RSAOption) ([]byte, error) {
-	cfg := applyRSAOptions(opts...)
-	return rsa.EncryptPKCS1v15(cfg.random, pub, plain)
-}
-
-// RSADecryptPKCS1v15 decrypts data using RSA PKCS#1 v1.5 padding.
-func RSADecryptPKCS1v15(cipherText []byte, priv *rsa.PrivateKey) ([]byte, error) {
-	return RSADecryptPKCS1v15WithOptions(cipherText, priv)
-}
-
-// RSADecryptPKCS1v15WithOptions decrypts data using RSA PKCS#1 v1.5 padding with options.
-func RSADecryptPKCS1v15WithOptions(cipherText []byte, priv *rsa.PrivateKey, opts ...RSAOption) ([]byte, error) {
-	cfg := applyRSAOptions(opts...)
-	return rsa.DecryptPKCS1v15(cfg.random, priv, cipherText)
-}
-
-// RSASignPKCS1v15 signs digest using RSA PKCS#1 v1.5.
-func RSASignPKCS1v15(priv *rsa.PrivateKey, hash stdcrypto.Hash, digest []byte) ([]byte, error) {
-	return RSASignPKCS1v15WithOptions(priv, hash, digest)
-}
-
-// RSASignPKCS1v15WithOptions signs digest using RSA PKCS#1 v1.5 with options.
-func RSASignPKCS1v15WithOptions(priv *rsa.PrivateKey, hash stdcrypto.Hash, digest []byte, opts ...RSAOption) ([]byte, error) {
-	cfg := applyRSAOptions(opts...)
-	return rsa.SignPKCS1v15(cfg.random, priv, hash, digest)
-}
-
-// RSAVerifyPKCS1v15 verifies an RSA PKCS#1 v1.5 signature.
-func RSAVerifyPKCS1v15(pub *rsa.PublicKey, hash stdcrypto.Hash, digest, sig []byte) error {
-	return rsa.VerifyPKCS1v15(pub, hash, digest, sig)
-}
-
 // RSASignPSS signs digest using RSA-PSS.
 func RSASignPSS(priv *rsa.PrivateKey, hash stdcrypto.Hash, digest []byte) ([]byte, error) {
 	return RSASignPSSWithOptions(priv, hash, digest)
@@ -204,18 +166,12 @@ func VerifySHA256WithRSA(data, sig []byte, pub *rsa.PublicKey) error {
 func SignWithRSAOptions(data []byte, priv *rsa.PrivateKey, opts ...RSADigestOption) ([]byte, error) {
 	cfg := applyRSADigestOptions(opts...)
 	digest := Digest(data, cfg.newHash)
-	if cfg.pss {
-		return rsa.SignPSS(cfg.random, priv, cfg.hashID, digest, cfg.pssOptions)
-	}
-	return rsa.SignPKCS1v15(cfg.random, priv, cfg.hashID, digest)
+	return rsa.SignPSS(cfg.random, priv, cfg.hashID, digest, cfg.pssOptions)
 }
 
 // VerifyWithRSAOptions hashes data and verifies an RSA signature with configurable options.
 func VerifyWithRSAOptions(data, sig []byte, pub *rsa.PublicKey, opts ...RSADigestOption) error {
 	cfg := applyRSADigestOptions(opts...)
 	digest := Digest(data, cfg.newHash)
-	if cfg.pss {
-		return rsa.VerifyPSS(pub, cfg.hashID, digest, sig, cfg.pssOptions)
-	}
-	return rsa.VerifyPKCS1v15(pub, cfg.hashID, digest, sig)
+	return rsa.VerifyPSS(pub, cfg.hashID, digest, sig, cfg.pssOptions)
 }

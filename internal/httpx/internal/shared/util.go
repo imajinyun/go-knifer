@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	knifer "github.com/imajinyun/go-knifer"
 )
 
 var (
@@ -91,6 +93,11 @@ func GetMimeType(filename string) string {
 	return mimeTypes[ext]
 }
 
+// NormalizeEncoding normalizes HTTP content-encoding tokens.
+func NormalizeEncoding(encoding string) string {
+	return strings.ToLower(strings.TrimSpace(encoding))
+}
+
 // FilenameFromContentDisposition extracts a filename from a Content-Disposition header.
 func FilenameFromContentDisposition(cd string) string {
 	if cd == "" {
@@ -105,6 +112,50 @@ func FilenameFromContentDisposition(cd string) string {
 		return strings.TrimSpace(name)
 	}
 	return ""
+}
+
+// SafeDownloadedFilename validates an automatically discovered download file name.
+// It rejects absolute paths, path separators, and parent-directory references so
+// server-provided Content-Disposition values cannot escape the caller's target directory.
+func SafeDownloadedFilename(name string) (string, error) {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return "", nil
+	}
+	if filepath.IsAbs(name) || strings.Contains(name, "/") || strings.Contains(name, `\`) {
+		return "", HTTPErrorfWithCode(knifer.ErrCodeInvalidInput, "unsafe download filename: %q", name)
+	}
+	clean := filepath.Clean(name)
+	if clean == "." || clean == ".." || strings.HasPrefix(clean, ".."+string(filepath.Separator)) {
+		return "", HTTPErrorfWithCode(knifer.ErrCodeInvalidInput, "unsafe download filename: %q", name)
+	}
+	base := filepath.Base(clean)
+	if base != clean || base == "." || base == ".." {
+		return "", HTTPErrorfWithCode(knifer.ErrCodeInvalidInput, "unsafe download filename: %q", name)
+	}
+	return base, nil
+}
+
+// SafeJoinDownloadPath joins a sanitized download file name under dir and verifies
+// the resulting absolute path remains inside dir.
+func SafeJoinDownloadPath(dir, fileName string) (string, error) {
+	dirAbs, err := filepath.Abs(dir)
+	if err != nil {
+		return "", NewHTTPErrorWithCode(knifer.ErrCodeInvalidInput, "resolve download directory failed", err)
+	}
+	target := filepath.Join(dirAbs, fileName)
+	targetAbs, err := filepath.Abs(target)
+	if err != nil {
+		return "", NewHTTPErrorWithCode(knifer.ErrCodeInvalidInput, "resolve download target failed", err)
+	}
+	rel, err := filepath.Rel(dirAbs, targetAbs)
+	if err != nil {
+		return "", NewHTTPErrorWithCode(knifer.ErrCodeInvalidInput, "validate download target failed", err)
+	}
+	if rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) || filepath.IsAbs(rel) {
+		return "", HTTPErrorfWithCode(knifer.ErrCodeInvalidInput, "download target escapes destination directory: %q", fileName)
+	}
+	return targetAbs, nil
 }
 
 var mimeTypes = map[string]string{

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"io"
 	"io/fs"
 	"net/http"
@@ -14,6 +15,7 @@ import (
 	"testing"
 	"time"
 
+	knifer "github.com/imajinyun/go-knifer"
 	grestry "resty.dev/v3"
 )
 
@@ -289,19 +291,16 @@ func TestSnapshotGlobalConfigAndExplicitRequestConfig(t *testing.T) {
 	oldMaxRedirects := GetGlobalMaxRedirects()
 	oldFollow := GetGlobalFollowRedirects()
 	oldUA := GetGlobalUserAgent()
-	oldTrust := IsTrustAnyHost()
 	defer SetGlobalTimeout(oldTimeout)
 	defer SetGlobalMaxRedirects(oldMaxRedirects)
 	defer SetGlobalFollowRedirects(oldFollow)
 	defer SetGlobalUserAgent(oldUA)
-	defer SetTrustAnyHost(oldTrust)
 	defer RemoveGlobalHeader("X-Snapshot")
 
 	SetGlobalTimeout(123 * time.Millisecond)
 	SetGlobalMaxRedirects(3)
 	SetGlobalFollowRedirects(false)
 	SetGlobalUserAgent("snapshot-agent")
-	SetTrustAnyHost(true)
 	SetGlobalHeader("X-Snapshot", "one")
 
 	cfg := SnapshotGlobalConfig()
@@ -309,8 +308,8 @@ func TestSnapshotGlobalConfigAndExplicitRequestConfig(t *testing.T) {
 	cfg.Headers["X-Snapshot"][0] = "cfg"
 
 	req := NewRequestWithConfig(MethodGet, "http://example.com", cfg)
-	if req.timeout != 123*time.Millisecond || req.maxRedirects != 3 || req.followRedir == nil || *req.followRedir || !req.tlsSkip || req.userAgent != "snapshot-agent" {
-		t.Fatalf("request config not applied: timeout=%v max=%d follow=%v tls=%v ua=%q", req.timeout, req.maxRedirects, req.followRedir, req.tlsSkip, req.userAgent)
+	if req.timeout != 123*time.Millisecond || req.maxRedirects != 3 || req.followRedir == nil || *req.followRedir || req.userAgent != "snapshot-agent" {
+		t.Fatalf("request config not applied: timeout=%v max=%d follow=%v ua=%q", req.timeout, req.maxRedirects, req.followRedir, req.userAgent)
 	}
 	if got := req.headers["X-Snapshot"]; len(got) != 1 || got[0] != "cfg" {
 		t.Fatalf("explicit config headers = %v, want [cfg]", got)
@@ -325,24 +324,21 @@ func TestNewIsolatedRequestDoesNotReadGlobals(t *testing.T) {
 	oldMaxRedirects := GetGlobalMaxRedirects()
 	oldFollow := GetGlobalFollowRedirects()
 	oldUA := GetGlobalUserAgent()
-	oldTrust := IsTrustAnyHost()
 	defer SetGlobalTimeout(oldTimeout)
 	defer SetGlobalMaxRedirects(oldMaxRedirects)
 	defer SetGlobalFollowRedirects(oldFollow)
 	defer SetGlobalUserAgent(oldUA)
-	defer SetTrustAnyHost(oldTrust)
 	defer RemoveGlobalHeader("X-Isolated")
 
 	SetGlobalTimeout(time.Second)
 	SetGlobalMaxRedirects(1)
 	SetGlobalFollowRedirects(false)
 	SetGlobalUserAgent("global-agent")
-	SetTrustAnyHost(true)
 	SetGlobalHeader("X-Isolated", "global")
 
 	req := NewIsolatedRequest(MethodGet, "http://example.com")
-	if req.timeout != 0 || req.maxRedirects != 10 || req.followRedir == nil || !*req.followRedir || req.tlsSkip || req.userAgent != "" {
-		t.Fatalf("isolated request leaked globals: timeout=%v max=%d follow=%v tls=%v ua=%q", req.timeout, req.maxRedirects, req.followRedir, req.tlsSkip, req.userAgent)
+	if req.timeout != 0 || req.maxRedirects != 10 || req.followRedir == nil || !*req.followRedir || req.userAgent != "" {
+		t.Fatalf("isolated request leaked globals: timeout=%v max=%d follow=%v ua=%q", req.timeout, req.maxRedirects, req.followRedir, req.userAgent)
 	}
 	if got := req.headers["X-Isolated"]; len(got) != 0 {
 		t.Fatalf("isolated request should not include global header: %v", got)
@@ -416,6 +412,32 @@ func TestSaveAsOptions(t *testing.T) {
 	}
 	if string(data) != "resty-save" {
 		t.Fatalf("content = %q", data)
+	}
+}
+
+func TestSaveAsRejectsUnsafeContentDispositionFilename(t *testing.T) {
+	tests := []string{
+		`attachment; filename="../outside"`,
+		`attachment; filename="..\outside"`,
+		`attachment; filename="/tmp/outside"`,
+	}
+	for _, cd := range tests {
+		t.Run(cd, func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Disposition", cd)
+				_, _ = w.Write([]byte("unsafe"))
+			}))
+			defer srv.Close()
+
+			dir := t.TempDir()
+			_, err := Get(srv.URL).Execute().SaveAs(dir)
+			if !errors.Is(err, knifer.ErrCodeInvalidInput) {
+				t.Fatalf("SaveAs error = %v, want invalid input", err)
+			}
+			if _, statErr := os.Stat(filepath.Join(dir, "outside")); !errors.Is(statErr, os.ErrNotExist) {
+				t.Fatalf("unsafe file should not be created, stat err = %v", statErr)
+			}
+		})
 	}
 }
 

@@ -220,11 +220,17 @@ func (r *HTTPResponse) SaveAs(dest string, opts ...SaveOption) (n int64, err err
 	cfg := applySaveOptions(opts)
 	target := dest
 	if info, err := cfg.stat(dest); err == nil && info.IsDir() {
-		fileName := r.fileName()
+		fileName, err := shared.SafeDownloadedFilename(r.fileName())
+		if err != nil {
+			return 0, err
+		}
 		if fileName == "" {
 			fileName = cfg.defaultFilename
 		}
-		target = filepath.Join(dest, fileName)
+		target, err = shared.SafeJoinDownloadPath(dest, fileName)
+		if err != nil {
+			return 0, err
+		}
 	}
 	if cfg.createParents {
 		if err := cfg.mkdirAll(filepath.Dir(target), cfg.dirPerm); err != nil {

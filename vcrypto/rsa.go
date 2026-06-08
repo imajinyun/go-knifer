@@ -67,41 +67,6 @@ func RSADecryptOAEPWithOptions(cipherText []byte, priv *rsa.PrivateKey, label []
 	return cryptoimpl.RSADecryptOAEPWithOptions(cipherText, priv, label, opts...)
 }
 
-// RSAEncryptPKCS1v15 encrypts data using RSA PKCS#1 v1.5 padding.
-func RSAEncryptPKCS1v15(plain []byte, pub *rsa.PublicKey) ([]byte, error) {
-	return cryptoimpl.RSAEncryptPKCS1v15(plain, pub)
-}
-
-// RSAEncryptPKCS1v15WithOptions encrypts data using RSA PKCS#1 v1.5 padding with options.
-func RSAEncryptPKCS1v15WithOptions(plain []byte, pub *rsa.PublicKey, opts ...RSAOption) ([]byte, error) {
-	return cryptoimpl.RSAEncryptPKCS1v15WithOptions(plain, pub, opts...)
-}
-
-// RSADecryptPKCS1v15 decrypts data using RSA PKCS#1 v1.5 padding.
-func RSADecryptPKCS1v15(cipherText []byte, priv *rsa.PrivateKey) ([]byte, error) {
-	return cryptoimpl.RSADecryptPKCS1v15(cipherText, priv)
-}
-
-// RSADecryptPKCS1v15WithOptions decrypts data using RSA PKCS#1 v1.5 padding with options.
-func RSADecryptPKCS1v15WithOptions(cipherText []byte, priv *rsa.PrivateKey, opts ...RSAOption) ([]byte, error) {
-	return cryptoimpl.RSADecryptPKCS1v15WithOptions(cipherText, priv, opts...)
-}
-
-// RSASignPKCS1v15 signs digest using RSA PKCS#1 v1.5.
-func RSASignPKCS1v15(priv *rsa.PrivateKey, hash stdcrypto.Hash, digest []byte) ([]byte, error) {
-	return cryptoimpl.RSASignPKCS1v15(priv, hash, digest)
-}
-
-// RSASignPKCS1v15WithOptions signs digest using RSA PKCS#1 v1.5 with options.
-func RSASignPKCS1v15WithOptions(priv *rsa.PrivateKey, hash stdcrypto.Hash, digest []byte, opts ...RSAOption) ([]byte, error) {
-	return cryptoimpl.RSASignPKCS1v15WithOptions(priv, hash, digest, opts...)
-}
-
-// RSAVerifyPKCS1v15 verifies an RSA PKCS#1 v1.5 signature.
-func RSAVerifyPKCS1v15(pub *rsa.PublicKey, hash stdcrypto.Hash, digest, sig []byte) error {
-	return cryptoimpl.RSAVerifyPKCS1v15(pub, hash, digest, sig)
-}
-
 // RSASignPSS signs digest using RSA-PSS.
 func RSASignPSS(priv *rsa.PrivateKey, hash stdcrypto.Hash, digest []byte) ([]byte, error) {
 	return cryptoimpl.RSASignPSS(priv, hash, digest)

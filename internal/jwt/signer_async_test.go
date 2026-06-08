@@ -10,39 +10,6 @@ import (
 	"time"
 )
 
-func TestRSASigner_RoundTrip(t *testing.T) {
-	priv, err := rsa.GenerateKey(rand.Reader, 2048)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, alg := range []string{AlgRS256, AlgRS384, AlgRS512} {
-		signer, err := NewRSASigner(alg, priv, nil)
-		if err != nil {
-			t.Fatalf("%s: %v", alg, err)
-		}
-		token, err := New().AddPayloads(map[string]any{"u": 1}).SetSigner(signer).Sign()
-		if err != nil {
-			t.Fatalf("%s sign: %v", alg, err)
-		}
-		// 验签
-		j, err := Of(token)
-		if err != nil {
-			t.Fatalf("%s parse: %v", alg, err)
-		}
-		if !j.VerifyWith(signer) {
-			t.Fatalf("%s verify failed", alg)
-		}
-		// 用单独 pub 验签
-		verifier, err := NewRSASigner(alg, nil, &priv.PublicKey)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if !j.VerifyWith(verifier) {
-			t.Fatalf("%s pub verify failed", alg)
-		}
-	}
-}
-
 func TestRSAPSSSigner_RoundTrip(t *testing.T) {
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
@@ -183,13 +150,10 @@ func TestSignerUtilFactories(t *testing.T) {
 		t.Fatal()
 	}
 
-	// RS*
+	// PS*
 	priv, err := rsa.GenerateKey(rand.Reader, 1024)
 	if err != nil {
 		t.Fatal(err)
-	}
-	if RS256(priv, nil).Algorithm() != AlgRS256 {
-		t.Fatal()
 	}
 	if PS256(priv, nil).Algorithm() != AlgPS256 {
 		t.Fatal()
@@ -210,7 +174,6 @@ func TestAlgorithmName(t *testing.T) {
 		AlgHS256: "HmacSHA256",
 		AlgHS384: "HmacSHA384",
 		AlgHS512: "HmacSHA512",
-		AlgRS256: "SHA256withRSA",
 		AlgPS256: "SHA256withRSA_PSS",
 		AlgES256: "SHA256withECDSA",
 		AlgNone:  "None",

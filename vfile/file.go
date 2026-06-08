@@ -30,6 +30,8 @@ type (
 	RemoveAllFunc = fileimpl.RemoveAllFunc
 )
 
+const DefaultMaxBytes = fileimpl.DefaultMaxBytes
+
 // Error is the file module error type.
 type Error = fileimpl.FileError
 
@@ -48,8 +50,11 @@ func WithCreateParents(create bool) WriteOption { return fileimpl.WithCreatePare
 // WithMkdirPerm sets the directory permission used by Mkdir.
 func WithMkdirPerm(perm fs.FileMode) DirOption { return fileimpl.WithMkdirPerm(perm) }
 
-// WithMaxBytes limits how many bytes a read helper may consume. Non-positive means unlimited.
+// WithMaxBytes limits how many bytes a read helper may consume. Non-positive restores the default limit.
 func WithMaxBytes(n int64) ReadOption { return fileimpl.WithMaxBytes(n) }
+
+// WithUnlimitedRead disables the default read-size guard for callers that explicitly need it.
+func WithUnlimitedRead() ReadOption { return fileimpl.WithUnlimitedRead() }
 
 // WithInitialLineBuffer sets the initial scanner buffer for line reads.
 func WithInitialLineBuffer(n int) ReadOption { return fileimpl.WithInitialLineBuffer(n) }

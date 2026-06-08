@@ -2,7 +2,6 @@ package crypto
 
 import (
 	"crypto/hmac"
-	"crypto/sha1"
 	"crypto/sha256"
 	"hash"
 )
@@ -40,11 +39,6 @@ func PBKDF2(password, salt []byte, iterations, keyLen int, fn func() hash.Hash) 
 		derived = append(derived, t...)
 	}
 	return derived[:keyLen], nil
-}
-
-// PBKDF2SHA1 derives a key using PBKDF2-HMAC-SHA1.
-func PBKDF2SHA1(password, salt []byte, iterations, keyLen int) ([]byte, error) {
-	return PBKDF2(password, salt, iterations, keyLen, sha1.New)
 }
 
 // PBKDF2SHA256 derives a key using PBKDF2-HMAC-SHA256.

@@ -14,30 +14,6 @@ func DigestHex(data []byte, newHash func() hash.Hash) string {
 	return cryptoimpl.DigestHex(data, newHash)
 }
 
-// MD5Hex returns the MD5 digest of s in lower-case hex form.
-func MD5Hex(s string) string { return cryptoimpl.MD5Hex([]byte(s)) }
-
-// MD5HexBytes returns the MD5 digest of data in lower-case hex form.
-func MD5HexBytes(data []byte) string { return cryptoimpl.MD5Hex(data) }
-
-// MD5 returns the MD5 digest bytes of data.
-func MD5(data []byte) []byte { return cryptoimpl.MD5(data) }
-
-// MD5Hex16 returns the middle 16 characters of the MD5 hex digest.
-func MD5Hex16(data []byte) string { return cryptoimpl.MD5Hex16(data) }
-
-// MD5HexTo16 returns the middle 16 characters of a 32-character MD5 hex digest.
-func MD5HexTo16(md5Hex string) string { return cryptoimpl.MD5HexTo16(md5Hex) }
-
-// SHA1Hex returns the SHA1 digest of s in lower-case hex form.
-func SHA1Hex(s string) string { return cryptoimpl.SHA1Hex([]byte(s)) }
-
-// SHA1 returns the SHA1 digest bytes of data.
-func SHA1(data []byte) []byte { return cryptoimpl.SHA1(data) }
-
-// SHA1HexBytes returns the SHA1 digest of data in lower-case hex form.
-func SHA1HexBytes(data []byte) string { return cryptoimpl.SHA1Hex(data) }
-
 // SHA224 returns the SHA224 digest bytes of data.
 func SHA224(data []byte) []byte { return cryptoimpl.SHA224(data) }
 

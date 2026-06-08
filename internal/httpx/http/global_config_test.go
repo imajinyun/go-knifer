@@ -59,16 +59,6 @@ func TestGlobalIgnoreEOFError(t *testing.T) {
 	}
 }
 
-func TestGlobalTrustAnyHost(t *testing.T) {
-	old := IsTrustAnyHost()
-	defer SetTrustAnyHost(old)
-
-	SetTrustAnyHost(true)
-	if !IsTrustAnyHost() {
-		t.Fatal("expected true")
-	}
-}
-
 func TestGlobalHeadersDefault(t *testing.T) {
 	headers := CloneGlobalHeaders()
 	if headers.Get("User-Agent") == "" {
@@ -126,13 +116,11 @@ func TestSnapshotGlobalConfigClonesMutableDefaults(t *testing.T) {
 	oldTimeout := GetGlobalTimeout()
 	oldFollow := GetGlobalFollowRedirects()
 	oldMax := GetGlobalMaxRedirects()
-	oldTrust := IsTrustAnyHost()
 	jar := GetCookieJar()
 	defer SetGlobalUserAgent(oldUA)
 	defer SetGlobalTimeout(oldTimeout)
 	defer SetGlobalFollowRedirects(oldFollow)
 	defer SetGlobalMaxRedirects(oldMax)
-	defer SetTrustAnyHost(oldTrust)
 	defer SetCookieJar(jar)
 	defer RemoveGlobalHeader("X-Snapshot")
 
@@ -140,12 +128,11 @@ func TestSnapshotGlobalConfigClonesMutableDefaults(t *testing.T) {
 	SetGlobalTimeout(9 * time.Second)
 	SetGlobalFollowRedirects(false)
 	SetGlobalMaxRedirects(2)
-	SetTrustAnyHost(true)
 	SetGlobalHeader("X-Snapshot", "old")
 	CloseCookie()
 
 	cfg := SnapshotGlobalConfig()
-	if cfg.DefaultUserAgent != "snapshot-agent" || cfg.Timeout != 9*time.Second || cfg.FollowRedirects || cfg.MaxRedirects != 2 || !cfg.TrustAnyHost {
+	if cfg.DefaultUserAgent != "snapshot-agent" || cfg.Timeout != 9*time.Second || cfg.FollowRedirects || cfg.MaxRedirects != 2 {
 		t.Fatalf("snapshot scalar config = %#v", cfg)
 	}
 	if cfg.CookieJar != nil || cfg.Headers.Get("X-Snapshot") != "old" {

@@ -29,7 +29,8 @@ func NewBuilder(opts ...Option) *SQLBuilder {
 	return &SQLBuilder{dialect: cfg.Dialect, wrapper: cfg.Wrapper}
 }
 
-// Raw creates a builder from a raw SQL fragment.
+// Raw creates a builder from a trusted raw SQL fragment.
+// Do not pass untrusted/user-controlled text here; use structured builders and placeholders instead.
 func Raw(sql string, args ...any) *SQLBuilder {
 	b := NewBuilder()
 	b.raw = append(b.raw, sql)
@@ -74,7 +75,8 @@ func (b *SQLBuilder) GroupBy(fields ...string) *SQLBuilder {
 	return b
 }
 
-// Having sets HAVING expression.
+// Having sets a trusted HAVING expression.
+// Do not pass untrusted/user-controlled text here.
 func (b *SQLBuilder) Having(expr string) *SQLBuilder { b.having = expr; return b }
 
 // OrderBy appends ORDER BY fields.
@@ -83,7 +85,8 @@ func (b *SQLBuilder) OrderBy(orders ...Order) *SQLBuilder {
 	return b
 }
 
-// Join appends a raw JOIN fragment.
+// Join appends a trusted raw JOIN fragment.
+// Do not pass untrusted/user-controlled text here.
 func (b *SQLBuilder) Join(join string) *SQLBuilder {
 	b.joins = append(b.joins, strings.TrimSpace(join))
 	return b
@@ -92,7 +95,8 @@ func (b *SQLBuilder) Join(join string) *SQLBuilder {
 // Page applies pagination.
 func (b *SQLBuilder) Page(page Page) *SQLBuilder { b.page = &page; return b }
 
-// Append appends raw SQL.
+// Append appends trusted raw SQL.
+// Do not pass untrusted/user-controlled text here; args are still parameterized.
 func (b *SQLBuilder) Append(sql string, args ...any) *SQLBuilder {
 	b.raw = append(b.raw, sql)
 	b.params = append(b.params, args...)

@@ -11,6 +11,8 @@ import (
 	"strings"
 )
 
+const DefaultMaxBytes int64 = 64 << 20
+
 // This section provides IO helpers aligned with the utility toolkit-core IoUtil.
 
 type (
@@ -60,6 +62,7 @@ func defaultConfig() fileConfig {
 		dirPerm:          0o755,
 		overwrite:        true,
 		createParents:    true,
+		maxBytes:         DefaultMaxBytes,
 		initialLineBytes: 64 * 1024,
 		maxLineBytes:     1024 * 1024,
 		open:             defaultOpen,
@@ -99,8 +102,19 @@ func WithCreateParents(create bool) WriteOption {
 // WithMkdirPerm sets the directory permission used by Mkdir.
 func WithMkdirPerm(perm fs.FileMode) DirOption { return func(c *fileConfig) { c.dirPerm = perm } }
 
-// WithMaxBytes limits how many bytes a read helper may consume. Non-positive means unlimited.
-func WithMaxBytes(n int64) ReadOption { return func(c *fileConfig) { c.maxBytes = n } }
+// WithMaxBytes limits how many bytes a read helper may consume. Non-positive restores DefaultMaxBytes.
+func WithMaxBytes(n int64) ReadOption {
+	return func(c *fileConfig) {
+		if n > 0 {
+			c.maxBytes = n
+		} else {
+			c.maxBytes = DefaultMaxBytes
+		}
+	}
+}
+
+// WithUnlimitedRead disables the default read-size guard for callers that explicitly need it.
+func WithUnlimitedRead() ReadOption { return func(c *fileConfig) { c.maxBytes = 0 } }
 
 // WithInitialLineBuffer sets the initial scanner buffer for line reads.
 func WithInitialLineBuffer(n int) ReadOption { return func(c *fileConfig) { c.initialLineBytes = n } }

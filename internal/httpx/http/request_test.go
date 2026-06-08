@@ -433,11 +433,6 @@ func TestRequestOptionTLSConfig(t *testing.T) {
 	if transport.TLSClientConfig == nil || transport.TLSClientConfig.ServerName != "example.com" {
 		t.Fatalf("TLS config = %#v", transport.TLSClientConfig)
 	}
-	client = Get("https://example.com", WithTLSConfig(&tls.Config{ServerName: "example.com"}), WithSkipTLSVerify(true)).buildClient()
-	transport = client.Transport.(*http.Transport)
-	if !transport.TLSClientConfig.InsecureSkipVerify || transport.TLSClientConfig.ServerName != "example.com" {
-		t.Fatalf("TLS config with skip verify = %#v", transport.TLSClientConfig)
-	}
 }
 
 func TestRequestOptionCookieJar(t *testing.T) {
@@ -482,24 +477,6 @@ func TestDefaultTransportIsReused(t *testing.T) {
 	}
 	if clientB.Transport != shared {
 		t.Fatalf("request with timeout transport = %p, want shared default transport %p", clientB.Transport, shared)
-	}
-}
-
-func TestSkipTLSVerifyUsesClonedTransport(t *testing.T) {
-	client := Get("https://example.com").SkipTLSVerify(true).buildClient()
-	shared := getDefaultTransport()
-	transport, ok := client.Transport.(*http.Transport)
-	if !ok {
-		t.Fatalf("transport type = %T, want *http.Transport", client.Transport)
-	}
-	if transport == shared {
-		t.Fatal("SkipTLSVerify should clone the default transport instead of mutating it")
-	}
-	if transport.TLSClientConfig == nil || !transport.TLSClientConfig.InsecureSkipVerify {
-		t.Fatal("SkipTLSVerify should enable InsecureSkipVerify on the cloned transport")
-	}
-	if shared.TLSClientConfig != nil && shared.TLSClientConfig.InsecureSkipVerify {
-		t.Fatal("default transport must not be mutated by SkipTLSVerify")
 	}
 }
 

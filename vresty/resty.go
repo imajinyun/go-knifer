@@ -196,9 +196,6 @@ func WithFollowRedirects(b bool) RequestOption { return restyimpl.WithFollowRedi
 // WithMaxRedirects sets the per-request redirect limit.
 func WithMaxRedirects(n int) RequestOption { return restyimpl.WithMaxRedirects(n) }
 
-// WithSkipTLSVerify sets per-request TLS verification behavior.
-func WithSkipTLSVerify(b bool) RequestOption { return restyimpl.WithSkipTLSVerify(b) }
-
 // WithTLSConfig sets a per-request TLS config. It is ignored when WithRestyClient is set.
 func WithTLSConfig(cfg *tls.Config) RequestOption { return restyimpl.WithTLSConfig(cfg) }
 
@@ -393,12 +390,6 @@ func SetGlobalUserAgent(ua string) { restyimpl.SetGlobalUserAgent(ua) }
 
 // GetGlobalUserAgent returns the global default User-Agent.
 func GetGlobalUserAgent() string { return restyimpl.GetGlobalUserAgent() }
-
-// SetTrustAnyHost sets whether all hosts are trusted, skipping HTTPS certificate verification.
-func SetTrustAnyHost(b bool) { restyimpl.SetTrustAnyHost(b) }
-
-// IsTrustAnyHost reports whether all hosts are trusted.
-func IsTrustAnyHost() bool { return restyimpl.IsTrustAnyHost() }
 
 // SnapshotGlobalConfig returns a copy of the package-level resty defaults.
 func SnapshotGlobalConfig() GlobalConfig { return restyimpl.SnapshotGlobalConfig() }

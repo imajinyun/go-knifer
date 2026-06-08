@@ -56,7 +56,7 @@ func TestVNetFacade(t *testing.T) {
 	if !vnet.IsValidPort(80) || vnet.HideIPPart("192.168.1.2") != "192.168.1.*" {
 		t.Fatal("port or hide helper failed")
 	}
-	if vnet.CreateTLSConfig(false) == nil || vnet.NewUploadSetting().MemoryThreshold == 0 {
+	if vnet.CreateTLSConfig() == nil || vnet.NewUploadSetting().MemoryThreshold == 0 {
 		t.Fatal("TLS/upload helpers failed")
 	}
 }

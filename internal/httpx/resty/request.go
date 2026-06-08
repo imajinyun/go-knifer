@@ -26,7 +26,6 @@ type HTTPRequest struct {
 	timeout       time.Duration
 	followRedir   *bool
 	maxRedirects  int
-	tlsSkip       bool
 	tlsConfig     *tls.Config
 	userAgent     string
 	cookieOff     bool
@@ -80,7 +79,6 @@ func NewRequestWithConfig(method Method, rawURL string, cfg GlobalConfig, opts .
 		timeout:      cfg.Timeout,
 		followRedir:  &follow,
 		maxRedirects: cfg.MaxRedirects,
-		tlsSkip:      cfg.TrustAnyHost,
 		userAgent:    cfg.DefaultUserAgent,
 		cookieOff:    cfg.CookieDisabled,
 	}
@@ -100,7 +98,6 @@ func WithGlobalConfig(cfg GlobalConfig) RequestOption {
 		r.timeout = cfg.Timeout
 		r.followRedir = &follow
 		r.maxRedirects = cfg.MaxRedirects
-		r.tlsSkip = cfg.TrustAnyHost
 		r.userAgent = cfg.DefaultUserAgent
 		r.cookieOff = cfg.CookieDisabled
 	}
@@ -159,9 +156,6 @@ func WithFollowRedirects(b bool) RequestOption { return func(r *HTTPRequest) { r
 
 // WithMaxRedirects sets the per-request redirect limit.
 func WithMaxRedirects(n int) RequestOption { return func(r *HTTPRequest) { r.MaxRedirects(n) } }
-
-// WithSkipTLSVerify sets per-request TLS verification behavior.
-func WithSkipTLSVerify(b bool) RequestOption { return func(r *HTTPRequest) { r.SkipTLSVerify(b) } }
 
 // WithTLSConfig sets a per-request TLS config. It is ignored when a custom resty client is set.
 func WithTLSConfig(cfg *tls.Config) RequestOption { return func(r *HTTPRequest) { r.TLSConfig(cfg) } }
@@ -302,9 +296,6 @@ func (r *HTTPRequest) FollowRedirects(b bool) *HTTPRequest { r.followRedir = &b;
 // MaxRedirects sets the maximum redirect count.
 func (r *HTTPRequest) MaxRedirects(n int) *HTTPRequest { r.maxRedirects = n; return r }
 
-// SkipTLSVerify skips TLS certificate verification.
-func (r *HTTPRequest) SkipTLSVerify(b bool) *HTTPRequest { r.tlsSkip = b; return r }
-
 // TLSConfig sets a custom TLS config for the generated resty client.
 func (r *HTTPRequest) TLSConfig(cfg *tls.Config) *HTTPRequest { r.tlsConfig = cfg; return r }
 
@@ -429,14 +420,6 @@ func (r *HTTPRequest) buildClient() *grestry.Client {
 	}
 	if r.tlsConfig != nil {
 		c.SetTLSClientConfig(r.tlsConfig.Clone())
-	}
-	if r.tlsSkip {
-		cfg := &tls.Config{}
-		if r.tlsConfig != nil {
-			cfg = r.tlsConfig.Clone()
-		}
-		cfg.InsecureSkipVerify = true
-		c.SetTLSClientConfig(cfg) // #nosec G402 -- caller explicitly requested skipping TLS verification.
 	}
 	follow := true
 	if r.followRedir != nil {

@@ -14,12 +14,6 @@ func HMACBytes(fn func() hash.Hash, key, data []byte) []byte {
 	return cryptoimpl.HMACBytes(fn, key, data)
 }
 
-// HMACMD5Hex returns HMAC-MD5 in lower-case hex form.
-func HMACMD5Hex(key, data []byte) string { return cryptoimpl.HMACMD5Hex(key, data) }
-
-// HMACSHA1Hex returns HMAC-SHA1 in lower-case hex form.
-func HMACSHA1Hex(key, data []byte) string { return cryptoimpl.HMACSHA1Hex(key, data) }
-
 // HMACSHA256Hex returns HMAC-SHA256 in lower-case hex form.
 func HMACSHA256Hex(key, data []byte) string { return cryptoimpl.HMACSHA256Hex(key, data) }
 

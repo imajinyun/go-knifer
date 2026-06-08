@@ -68,16 +68,6 @@ func IsIgnoreEOFError() bool {
 	return httpx.IsIgnoreEOFError()
 }
 
-// SetTrustAnyHost delegates to the internal httpx implementation.
-func SetTrustAnyHost(b bool) {
-	httpx.SetTrustAnyHost(b)
-}
-
-// IsTrustAnyHost delegates to the internal httpx implementation.
-func IsTrustAnyHost() bool {
-	return httpx.IsTrustAnyHost()
-}
-
 // SetGlobalBoundary delegates to the internal httpx implementation.
 func SetGlobalBoundary(b string) {
 	httpx.SetGlobalBoundary(b)

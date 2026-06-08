@@ -14,7 +14,6 @@ type GlobalConfig struct {
 	MaxRedirects     int
 	FollowRedirects  bool
 	DefaultUserAgent string
-	TrustAnyHost     bool
 	Headers          HeaderValues
 	CookieDisabled   bool
 }
@@ -25,7 +24,6 @@ var (
 	globalMaxRedirects     = 10
 	globalFollowRedirects  = true
 	globalDefaultUserAgent = ""
-	globalTrustAnyHost     = false
 
 	globalHeadersMu sync.RWMutex
 	globalHeaders   = HeaderValues{}
@@ -51,7 +49,6 @@ func SnapshotGlobalConfig() GlobalConfig {
 		MaxRedirects:     globalMaxRedirects,
 		FollowRedirects:  globalFollowRedirects,
 		DefaultUserAgent: globalDefaultUserAgent,
-		TrustAnyHost:     globalTrustAnyHost,
 	}
 	globalMu.RUnlock()
 	cfg.Headers = CloneGlobalHeaders()
@@ -118,12 +115,6 @@ func GetGlobalUserAgent() string {
 	defer globalMu.RUnlock()
 	return globalDefaultUserAgent
 }
-
-// SetTrustAnyHost sets whether all hosts are trusted, skipping HTTPS certificate verification.
-func SetTrustAnyHost(b bool) { globalMu.Lock(); defer globalMu.Unlock(); globalTrustAnyHost = b }
-
-// IsTrustAnyHost reports whether all hosts are trusted.
-func IsTrustAnyHost() bool { globalMu.RLock(); defer globalMu.RUnlock(); return globalTrustAnyHost }
 
 // SetGlobalHeader sets a global default request header.
 func SetGlobalHeader(name, value string) {

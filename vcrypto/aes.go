@@ -28,44 +28,6 @@ func WithGCMBlockFactory(factory func([]byte) (cipher.Block, error)) AESGCMOptio
 	return cryptoimpl.WithGCMBlockFactory(factory)
 }
 
-// AESEncryptCBC encrypts plain data using AES-CBC with PKCS#7 padding.
-func AESEncryptCBC(plain, key, iv []byte) ([]byte, error) {
-	return cryptoimpl.AESEncryptCBC(plain, key, iv)
-}
-
-// AESEncryptCBCWithOptions encrypts plain data using AES-CBC with options.
-func AESEncryptCBCWithOptions(plain, key, iv []byte, opts ...AESBlockOption) ([]byte, error) {
-	return cryptoimpl.AESEncryptCBCWithOptions(plain, key, iv, opts...)
-}
-
-// AESDecryptCBC decrypts AES-CBC data using PKCS#7 padding.
-func AESDecryptCBC(cipherText, key, iv []byte) ([]byte, error) {
-	return cryptoimpl.AESDecryptCBC(cipherText, key, iv)
-}
-
-// AESDecryptCBCWithOptions decrypts AES-CBC data with options.
-func AESDecryptCBCWithOptions(cipherText, key, iv []byte, opts ...AESBlockOption) ([]byte, error) {
-	return cryptoimpl.AESDecryptCBCWithOptions(cipherText, key, iv, opts...)
-}
-
-// AESEncryptECB encrypts plain data using AES-ECB with PKCS#7 padding.
-func AESEncryptECB(plain, key []byte) ([]byte, error) { return cryptoimpl.AESEncryptECB(plain, key) }
-
-// AESEncryptECBWithOptions encrypts plain data using AES-ECB with options.
-func AESEncryptECBWithOptions(plain, key []byte, opts ...AESBlockOption) ([]byte, error) {
-	return cryptoimpl.AESEncryptECBWithOptions(plain, key, opts...)
-}
-
-// AESDecryptECB decrypts AES-ECB data using PKCS#7 padding.
-func AESDecryptECB(cipherText, key []byte) ([]byte, error) {
-	return cryptoimpl.AESDecryptECB(cipherText, key)
-}
-
-// AESDecryptECBWithOptions decrypts AES-ECB data with options.
-func AESDecryptECBWithOptions(cipherText, key []byte, opts ...AESBlockOption) ([]byte, error) {
-	return cryptoimpl.AESDecryptECBWithOptions(cipherText, key, opts...)
-}
-
 // AESEncryptCTR encrypts or decrypts data using AES-CTR.
 func AESEncryptCTR(data, key, iv []byte) ([]byte, error) {
 	return cryptoimpl.AESEncryptCTR(data, key, iv)

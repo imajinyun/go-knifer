@@ -19,17 +19,17 @@
 
 ## ✨ go-knifer 如何改变编码方式
 
-以前，计算一个 MD5 往往需要在业务代码里重复写样板逻辑：
+以前，计算一个 SHA-256 往往需要在业务代码里重复写样板逻辑：
 
 ```go
-sum := md5.Sum([]byte("hello"))
+sum := sha256.Sum256([]byte("hello"))
 text := hex.EncodeToString(sum[:])
 ```
 
 现在，使用 `go-knifer` 可以直接调用工具方法：
 
 ```go
-text := vcrypto.MD5Hex("hello")
+text := vcrypto.SHA256Hex("hello")
 ```
 
 这类封装能减少重复代码、降低复制粘贴带来的隐患，也让团队内相同场景使用一致的 API。
@@ -45,7 +45,7 @@ text := vcrypto.MD5Hex("hello")
 | 创建、查询、转换、合并、差集或排序 map | `vmap` |
 | 把 `any` 宽松转成 int/float/bool/string | `vconv` |
 | 精确运算、舍入、表达式计算 | `vnum` |
-| MD5/SHA/HMAC、AES/RSA、参数签名 | `vcrypto` |
+| SHA/HMAC、AES-GCM/RSA-PSS、参数签名 | `vcrypto` |
 | 非加密哈希（FNV、BKDR 等） | `vhash` |
 | URL 编解码、query 构建/解析 | `vurl` |
 | Base64 / Hex 编解码 | `vcodec` |
@@ -100,14 +100,14 @@ text := vcrypto.MD5Hex("hello")
 | `vcache` | `github.com/imajinyun/go-knifer/vcache` | 泛型缓存：FIFO、LFU、LRU、Timed、Weak、NoCache，支持 TTL、clock、淘汰监听、懒加载、ticker/runner provider 和 weak-cache finalizer provider。 |
 | `vcaptcha` | `github.com/imajinyun/go-knifer/vcaptcha` | 图片验证码：线条、圆圈、扭曲、GIF 验证码，支持随机/数学表达式生成器。 |
 | `vcron` | `github.com/imajinyun/go-knifer/vcron` | Cron 表达式解析与任务调度，支持默认/自定义调度器、可配置 cron options、ID random-reader/clock/sleeper/runner provider，以及单次调用隔离的默认调度器覆盖。 |
-| `vcrypto` | `github.com/imajinyun/go-knifer/vcrypto` | 加密与摘要：MD5/SHA、provider-backed digest、HMAC、PBKDF2、参数签名、随机字节、支持 block-factory options 的 AES CBC/ECB/CTR/CFB/OFB/GCM、DES/3DES、RC4、Vigenere、XXTEA、RSA OAEP/PKCS#1/PSS 与可配置数据签名、PEM 与 X.509 证书工具。 |
+| `vcrypto` | `github.com/imajinyun/go-knifer/vcrypto` | 加密与摘要：SHA-2、provider-backed digest、HMAC、PBKDF2-SHA256、参数签名、随机字节、支持 block-factory options 的 AES CTR/CFB/OFB/GCM、Vigenere、XXTEA、RSA OAEP/PSS 与可配置数据签名、PEM 与 X.509 证书工具。 |
 | `vdb` | `github.com/imajinyun/go-knifer/vdb` | 基于 database/sql 的数据库工具：SQL 执行、命名参数、Entity、条件、查询构造器、事务、分页、轻量元信息查询和可注入的 `sql.Open` provider。 |
 | `vdfa` | `github.com/imajinyun/go-knifer/vdfa` | DFA 词树匹配：停顿字符过滤、首个/全部匹配、密集/贪婪匹配、命中词位置元信息、包级匹配器、隔离 matcher options、`Any` 辅助函数的 JSON marshal/unmarshal provider、文本替换，以及用于包级异步初始化的可重置 async runner provider。 |
 | `vhttp` | `github.com/imajinyun/go-knifer/vhttp` | 链式 HTTP 客户端、隔离/global-config 请求构建、create/get/post `WithOptions` 辅助函数、provider-backed transport/request factory/multipart writer/download save、BasicAuth、User-Agent 解析、provider-backed HTML 清理/标签过滤、可重置 transport/server starters、异步服务端 runner option 和简易服务端辅助函数。 |
 | `vresty` | `github.com/imajinyun/go-knifer/vresty` | 基于 Resty v3 的 HTTP facade：链式请求、JSON/form/multipart 请求体、隔离/global-config 请求构建、create/get/post `WithOptions` 辅助函数、单次请求 client factory、可重置默认 Resty client provider、下载与轻量响应工具。 |
 | `vjson` | `github.com/imajinyun/go-knifer/vjson` | 有序 JSON 对象/数组、JSON 解析与格式化、路径表达式读写、provider-backed marshal/unmarshal、可注入 scalar parse/format 函数、可配置 Object/Array/Bean/List 转换，以及带 parser/writer options 的 XML/JSON 转换。 |
 | `vxml` | `github.com/imajinyun/go-knifer/vxml` | XML 工具：解析/读取/写出/格式化、树节点访问、简单 XPath 风格查询、转义、支持 parser/codec/scalar parser options 的 Map/Bean 转换、transform options 和命名空间辅助。 |
-| `vjwt` | `github.com/imajinyun/go-knifer/vjwt` | JWT 创建、解析、签名、验签与时间字段校验，支持 HMAC、RSA、ECDSA、none 等 signer，以及 provider-backed JSON marshal/unmarshal options。 |
+| `vjwt` | `github.com/imajinyun/go-knifer/vjwt` | JWT 创建、解析、签名、验签与时间字段校验，支持 HMAC、RSA-PSS、ECDSA、none 等 signer，以及 provider-backed JSON marshal/unmarshal options。 |
 | `vlog` | `github.com/imajinyun/go-knifer/vlog` | 日志 facade：console/color console logger、可注入颜色工厂、日志级别、全局 logger、静态日志函数、单次调用 logger options 和 isolated logger 创建。 |
 | `verr` | `github.com/imajinyun/go-knifer/verr` | 错误工具：panic recover、错误聚合、multierror 匹配、collector 构造 options、堆栈捕获/格式化、可重置 log/stack cache、可注入的 logging/stack/exit/timer/runner provider、隔离 logrus 创建，以及可选 logrus/Sentry 集成。 |
 | `vconf` | `github.com/imajinyun/go-knifer/vconf` | 分组配置读取：setting/properties 风格文本和简单 YAML 子集，支持类型化读取、profile/remote/file 加载 options、环境变量展开 provider 和 watch ticker/runner provider。 |
@@ -155,14 +155,14 @@ Provider 覆盖重点：
 | 文件 / 配置 / 压缩 / POI | `vfile` provider options、`vconf.LoadWithOptions`、`vconf.WatchWithOptions`、`vconf.WatchOptions.Runner`、`vzip` provider options、`vpoi.WithOpenFileFunc`、`vpoi.WithNewFileFunc`、`vpoi.WithSaveAsFunc` |
 | Cron / DFA / ID / 身份 / 随机数 | `vcron.WithDefaultSchedulerOptions`、`vcron.NewConfigWithOptions`、`vcron.WithIDRandomReader`、`vcron.WithRunner`、`vcron.CronScheduleWithOptions`、`vdfa.WithMatcherWords`、`vdfa.WithJSONMarshal`、`vdfa.WithJSONUnmarshal`、`vdfa.ContainsWithOptions`、`vdfa.ConfigureAsyncRunner`、`vdfa.ResetAsyncRunner`、`vid.NewIsolatedSnowflake`、`vid.CreateSnowflakeWithOptions`、`vid.WithSnowflakeCache`、`vid.WithFallbackRandomSource`、`vid.ConfigureDefaultFallbackRandomSourceProvider`、`vid.ResetDefaultFallbackRandomSource`、`vid.SetFallbackRandomSeed`、`vrand.ConfigureDefaultRandomSourceProvider`、`vrand.ResetDefaultRandomSource`、`vrand.SetSeed`、`vident.BirthDateWithOptions` |
 | 编解码 / JSON / XML / JWT / hash | `vcodec.Base64EncodeWithEncoding`、`vcodec.Base64DecodeWithEncoding`、`vcodec.Base64RawURLEncode`、`vcodec.Base64RawURLDecode`、`vhash.Hash32`、`vjson.WithMarshalFunc`、`vjson.WithUnmarshalFunc`、`vjson.WithParseUnmarshalFunc`、`vjson.WithBeanUnmarshalFunc`、`vjson.WithSprintFunc`、`vjson.WithParseIntFunc`、`vjson.WithParseFloatFunc`、`vjson.WithParseBoolFunc`、`vjson.WithFormatIntFunc`、`vjson.WithFormatFloatFunc`、`vjson.ParseObjWithOptions`、`vjson.ParseArrayWithOptions`、`vjson.ToBeanWithOptions`、`vjson.ToListWithOptions`、`vjson.XMLToJSONWithOptions`、`vjson.ToXMLWithOptions`、`vxml.WithScalarIntParser`、`vxml.WithScalarFloatParser`、`vxml.XMLToMapWithOptions`、`vxml.XMLNodeToMapWithOptions`、`vxml.XMLToMapIntoWithOptions`、`vxml.XMLNodeToMapIntoWithOptions`、`vxml.XMLToBeanWithOptions`、`vxml.XMLNodeToBeanWithOptions`、`vxml.TransformWithOptions`、`vxml.FormatWithOptions`、`vjwt.WithJSONMarshalFunc`、`vjwt.WithJSONUnmarshalFunc`、`vjwt.ParseTokenWithOptions`、`vjwt.WithTokenJSONOptions` |
-| 加密 / 模板 / 正则 / 校验 / 字符串 | `vcrypto.Digest`、`vcrypto.DigestHex`、`vcrypto.WithAESBlockFactory`、`vcrypto.WithGCMBlockFactory`、`vcrypto.AESEncryptCBCWithOptions`、`vcrypto.AESEncryptGCMWithOptions`、`vcrypto.SignWithRSAOptions`、`vcrypto.VerifyWithRSAOptions`、`vtpl.RenderWithOptions`、`vtpl.WithFuncMap`、`vtpl.WithTemplateFactory`、`vregex.WithCompileFunc`、`vregex.WithDotAll`、`vregex.MatchWithOptions`、`vregex.ReplaceAllFuncWithOptions`、`vvalid.IsEmailWithOptions`、`vvalid.WithMobileMatcher`、`vstr.ContainsEmojiWithOptions`、`vstr.RemoveEmojiWithOptions` |
+| 加密 / 模板 / 正则 / 校验 / 字符串 | `vcrypto.Digest`、`vcrypto.DigestHex`、`vcrypto.WithAESBlockFactory`、`vcrypto.WithGCMBlockFactory`、`vcrypto.AESEncryptCTRWithOptions`、`vcrypto.AESEncryptGCMWithOptions`、`vcrypto.SignWithRSAOptions`、`vcrypto.VerifyWithRSAOptions`、`vtpl.RenderWithOptions`、`vtpl.WithFuncMap`、`vtpl.WithTemplateFactory`、`vregex.WithCompileFunc`、`vregex.WithDotAll`、`vregex.MatchWithOptions`、`vregex.ReplaceAllFuncWithOptions`、`vvalid.IsEmailWithOptions`、`vvalid.WithMobileMatcher`、`vstr.ContainsEmojiWithOptions`、`vstr.RemoveEmojiWithOptions` |
 | DB / 网络 / 数字 / URL / 系统 / 反射 / socket | `vdb.WithSQLOpenFunc`、`vnet.WithConnectDialer`、`vnet.WithPingDialer`、`vnet.WithAddressNetwork`、`vnet.WithTCPAddrResolver`、`vnet.WithUploadOpenSource`、`vnet.WithIPParser`、`vnet.WithCIDRParser`、`vnet.WithIPIntParser`、`vnet.WithWildcardIPParser`、`vnet.WithWildcardIntParser`、`vnet.IPv4ToLongWithOptions`、`vnet.IsInRangeWithOptions`、`vnum.WithParseFloatFunc`、`vnum.WithDoubleParseFloatFunc`、`vnum.WithDoubleFormatFloatFunc`、`vnum.CalculateWithOptions`、`vnum.ToDoubleWithOptions`、`vurl.WithQueryEscapeFunc`、`vurl.WithPathEscapeFunc`、`vurl.EncodeQueryWithOptions`、`vurl.EncodePathSegmentWithOptions`、`vurl.FormURLEncodeWithOptions`、`vsys.WithGoEnvOutputFunc`、`vsys.WithGoRootEnvLookupFunc`、`vsys.WithOSEnvLookupFunc`、`vsys.WithEnvLookupFunc`、`vsys.ResetInfoCache`、`vref.WithUnsafeAccess`、`vskt.WithThreadPoolSizeFunc`、`vskt.WithRunner`、`vskt.WithSocketIPParser` |
 | 错误 / 缓存 / 日志 / 运行时 | `verr.NewCollectorWithOptions`、`verr.WithCollectorLogFunc`、`verr.WithCollectorRunner`、`verr.WithCollectorContext`、`verr.WithCollectorLevel`、`verr.WithCollectorTimerFactory`、`verr.WithCollectorStackCaptureOptions`、`verr.WithLogFunc`、`verr.WithCollectorStackOptions`、`verr.WithDebugStackFunc`、`verr.WithCallersFunc`、`verr.WithFuncForPCFunc`、`verr.WithStackFrameCache`、`verr.ResetStackFrameCache`、`verr.ResetDefaultLogFunc`、`verr.NewIsolatedLogrusWithOptions`、`verr.MustExitWithOptions`、`vcache.WithClock`、`vcache.WithTickerFactory`、`vcache.WithRunner`、`vcache.WithWeakFinalizerFunc`、`vcache.WithWeakFinalizerEnabled`、`vlog.WithLogColorFactory`、`vlog.NewIsolatedLogger`、`vlog.LoggerWithOptions`、`vlog.InfoWithOptions` |
 
 领域边界规则：
 
-- `vhash` 面向非加密 hash 能力，例如 Additive/FNV（分桶、布隆过滤器等场景）；`vcrypto` 独占所有
-  安全相关摘要（MD5/SHA 系列）、HMAC、加解密、密钥和 PEM 编解码。
+- `vhash` 面向非加密 hash 能力，例如 Additive/FNV（分桶、布隆过滤器等场景）；`vcrypto` 独占
+  安全相关 SHA-2 摘要、HMAC、加解密、密钥和 PEM 编解码。
 - `vhttp` 是基于标准库的轻量 HTTP facade；`vresty` 是基于 Resty 的链式高级 HTTP client facade。两者都不再重复暴露 URL 工具：URL 转义、query 构建/解析、协议判断（`IsHTTP`/`IsHTTPS`、`EncodeQueryMap`、`DecodeQuery` 等）统一归 `vurl`。
 - `vdb` 负责基于 `database/sql` 的 SQL 数据库辅助能力；调用方继续通过 `*sql.DB` 和单次调用 options
   控制驱动和连接池。
@@ -397,16 +397,16 @@ func main() {
 ```
 
 如果确实需要统一默认值，仍然可以使用全局配置；但新代码更推荐使用单次请求
-options，让每个请求的超时、Header、重定向、TLS、Cookie、User-Agent 等行为在调用点
+options，让每个请求的超时、Header、重定向、TLS 配置、Cookie、User-Agent 等行为在调用点
 显式声明，避免全局状态影响其他请求。可用 options 包括 `WithTimeout`、`WithHeader`、
-`WithHeaders`、`WithFollowRedirects`、`WithMaxRedirects`、`WithSkipTLSVerify`、
-`WithTransport`、`WithClient`、`WithCookieJar` 和 `WithUserAgent`。
+`WithHeaders`、`WithFollowRedirects`、`WithMaxRedirects`、`WithTLSConfig`、`WithTransport`、
+`WithClient`、`WithCookieJar` 和 `WithUserAgent`。
 
 ### Resty v3 HTTP facade
 
 `vresty` 是基于 `resty.dev/v3` 的轻量链式 facade，适合直接发起常见 HTTP
 请求。它支持 query 参数、Header、Cookie、Basic/Bearer Auth、JSON/form 请求体、
-multipart 文件上传、单次请求 options、跳过 TLS 校验、重定向控制以及下载等能力；响应侧
+multipart 文件上传、单次请求 options、TLS 配置、重定向控制以及下载等能力；响应侧
 提供状态码、Header、Cookie、Content-Type、字符串/字节正文、保存到文件等便捷方法。
 
 ```go
@@ -444,7 +444,7 @@ func main() {
 
 `vresty` 同样支持构造请求时传入 options，从而让每次调用独立覆盖默认行为：
 `WithTimeout`、`WithHeader`、`WithHeaders`、`WithFollowRedirects`、`WithMaxRedirects`、
-`WithSkipTLSVerify`、`WithRestyClient`、`WithUserAgent` 和 `WithCookieDisabled`。
+`WithTLSConfig`、`WithRestyClient`、`WithUserAgent` 和 `WithCookieDisabled`。
 
 简单请求和下载也可以使用快捷函数：
 
@@ -795,11 +795,11 @@ func main() {
 
   aesKey := []byte("1234567890123456")
   iv := []byte("abcdefghijklmnop")
-  cipherText, err := vcrypto.AESEncryptCBC([]byte("secret message"), aesKey, iv)
+  cipherText, err := vcrypto.AESEncryptGCM([]byte("secret message"), aesKey, iv[:12], nil)
   if err != nil {
     panic(err)
   }
-  plain, err := vcrypto.AESDecryptCBC(cipherText, aesKey, iv)
+  plain, err := vcrypto.AESDecryptGCM(cipherText, aesKey, iv[:12], nil)
   if err != nil {
     panic(err)
   }

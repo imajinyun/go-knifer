@@ -24,9 +24,6 @@ func WithFollowRedirects(b bool) RequestOption { return httpx.WithFollowRedirect
 // WithMaxRedirects sets the per-request redirect limit.
 func WithMaxRedirects(n int) RequestOption { return httpx.WithMaxRedirects(n) }
 
-// WithSkipTLSVerify sets per-request TLS verification behavior.
-func WithSkipTLSVerify(b bool) RequestOption { return httpx.WithSkipTLSVerify(b) }
-
 // WithTLSConfig sets a per-request TLS config. It is ignored when WithClient or WithTransport is set.
 func WithTLSConfig(cfg *tls.Config) RequestOption { return httpx.WithTLSConfig(cfg) }
 

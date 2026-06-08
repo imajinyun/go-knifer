@@ -6,7 +6,6 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/asn1"
@@ -18,9 +17,6 @@ import (
 
 // 非对称签名相关算法 ID。
 const (
-	AlgRS256 = "RS256"
-	AlgRS384 = "RS384"
-	AlgRS512 = "RS512"
 	AlgPS256 = "PS256"
 	AlgPS384 = "PS384"
 	AlgPS512 = "PS512"
@@ -29,13 +25,12 @@ const (
 	AlgES512 = "ES512"
 )
 
-// rsaSigner 对应 the utility toolkit AsymmetricJWTSigner（仅限 RSA / RSA-PSS）。
+// rsaSigner 对应 the utility toolkit AsymmetricJWTSigner（仅限 RSA-PSS）。
 type rsaSigner struct {
 	alg        string
 	pub        *rsa.PublicKey
 	priv       *rsa.PrivateKey
 	hashID     crypto.Hash
-	usePSS     bool
 	random     io.Reader
 	pssOptions *rsa.PSSOptions
 }
@@ -85,30 +80,6 @@ func defaultPSSOptions() *rsa.PSSOptions {
 	return &rsa.PSSOptions{SaltLength: rsa.PSSSaltLengthEqualsHash}
 }
 
-// NewRSASigner 创建 RSA 签名器（PKCS1v15）。
-// algorithm: RS256 / RS384 / RS512。
-// privKey、pubKey 至少其一不为 nil；签名需要 priv，验签需要 pub。
-func NewRSASigner(algorithm string, priv *rsa.PrivateKey, pub *rsa.PublicKey) (JWTSigner, error) {
-	return NewRSASignerWithOptions(algorithm, priv, pub)
-}
-
-// NewRSASignerWithOptions 创建可配置 RSA 签名器（PKCS1v15）。
-func NewRSASignerWithOptions(algorithm string, priv *rsa.PrivateKey, pub *rsa.PublicKey, opts ...SignerOption) (JWTSigner, error) {
-	algorithm = strings.ToUpper(strings.TrimSpace(algorithm))
-	hashID, ok := rsaHashOf(algorithm, false)
-	if !ok {
-		return nil, unsupportedJWTErrorf("unsupported RSA algorithm: %s", algorithm)
-	}
-	if priv != nil && pub == nil {
-		pub = &priv.PublicKey
-	}
-	if priv == nil && pub == nil {
-		return nil, NewJWTError("RSA signer requires private key or public key")
-	}
-	cfg := applySignerOptions(opts)
-	return &rsaSigner{alg: algorithm, priv: priv, pub: pub, hashID: hashID, usePSS: false, random: cfg.random, pssOptions: cfg.pssOptions}, nil
-}
-
 // NewRSAPSSSigner 创建 RSA-PSS 签名器。
 // algorithm: PS256 / PS384 / PS512。
 func NewRSAPSSSigner(algorithm string, priv *rsa.PrivateKey, pub *rsa.PublicKey) (JWTSigner, error) {
@@ -118,7 +89,7 @@ func NewRSAPSSSigner(algorithm string, priv *rsa.PrivateKey, pub *rsa.PublicKey)
 // NewRSAPSSSignerWithOptions 创建可配置 RSA-PSS 签名器。
 func NewRSAPSSSignerWithOptions(algorithm string, priv *rsa.PrivateKey, pub *rsa.PublicKey, opts ...SignerOption) (JWTSigner, error) {
 	algorithm = strings.ToUpper(strings.TrimSpace(algorithm))
-	hashID, ok := rsaHashOf(algorithm, true)
+	hashID, ok := rsaHashOf(algorithm)
 	if !ok {
 		return nil, unsupportedJWTErrorf("unsupported RSA-PSS algorithm: %s", algorithm)
 	}
@@ -129,28 +100,17 @@ func NewRSAPSSSignerWithOptions(algorithm string, priv *rsa.PrivateKey, pub *rsa
 		return nil, NewJWTError("RSA-PSS signer requires private key or public key")
 	}
 	cfg := applySignerOptions(opts)
-	return &rsaSigner{alg: algorithm, priv: priv, pub: pub, hashID: hashID, usePSS: true, random: cfg.random, pssOptions: cfg.pssOptions}, nil
+	return &rsaSigner{alg: algorithm, priv: priv, pub: pub, hashID: hashID, random: cfg.random, pssOptions: cfg.pssOptions}, nil
 }
 
-func rsaHashOf(alg string, pss bool) (crypto.Hash, bool) {
-	if pss {
-		switch alg {
-		case AlgPS256:
-			return crypto.SHA256, true
-		case AlgPS384:
-			return crypto.SHA384, true
-		case AlgPS512:
-			return crypto.SHA512, true
-		}
-	} else {
-		switch alg {
-		case AlgRS256:
-			return crypto.SHA256, true
-		case AlgRS384:
-			return crypto.SHA384, true
-		case AlgRS512:
-			return crypto.SHA512, true
-		}
+func rsaHashOf(alg string) (crypto.Hash, bool) {
+	switch alg {
+	case AlgPS256:
+		return crypto.SHA256, true
+	case AlgPS384:
+		return crypto.SHA384, true
+	case AlgPS512:
+		return crypto.SHA512, true
 	}
 	return 0, false
 }
@@ -162,13 +122,7 @@ func (s *rsaSigner) Sign(headerB64, payloadB64 string) string {
 		return ""
 	}
 	digest := digestOf(s.hashID, headerB64+"."+payloadB64)
-	var sig []byte
-	var err error
-	if s.usePSS {
-		sig, err = rsa.SignPSS(s.random, s.priv, s.hashID, digest, s.pssOptions)
-	} else {
-		sig, err = rsa.SignPKCS1v15(s.random, s.priv, s.hashID, digest)
-	}
+	sig, err := rsa.SignPSS(s.random, s.priv, s.hashID, digest, s.pssOptions)
 	if err != nil {
 		return ""
 	}
@@ -184,10 +138,7 @@ func (s *rsaSigner) Verify(headerB64, payloadB64, signB64 string) bool {
 		return false
 	}
 	digest := digestOf(s.hashID, headerB64+"."+payloadB64)
-	if s.usePSS {
-		return rsa.VerifyPSS(s.pub, s.hashID, digest, sig, s.pssOptions) == nil
-	}
-	return rsa.VerifyPKCS1v15(s.pub, s.hashID, digest, sig) == nil
+	return rsa.VerifyPSS(s.pub, s.hashID, digest, sig, s.pssOptions) == nil
 }
 
 // ecdsaSigner 对应 the utility toolkit EllipticCurveJWTSigner。
@@ -300,8 +251,6 @@ func (s *ecdsaSigner) Verify(headerB64, payloadB64, signB64 string) bool {
 func digestOf(h crypto.Hash, data string) []byte {
 	var hh hash.Hash
 	switch h {
-	case crypto.SHA1:
-		hh = sha1.New()
 	case crypto.SHA256:
 		hh = sha256.New()
 	case crypto.SHA384:

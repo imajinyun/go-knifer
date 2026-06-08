@@ -25,16 +25,6 @@ func SignParams(params map[string]any, digestHex func([]byte) string, separator,
 	return digestHex([]byte(stringsJoin(parts, separator)))
 }
 
-// SignParamsMD5 signs sorted params with MD5.
-func SignParamsMD5(params map[string]any, otherParams ...string) string {
-	return SignParams(params, MD5Hex, "", "", true, otherParams...)
-}
-
-// SignParamsSHA1 signs sorted params with SHA1.
-func SignParamsSHA1(params map[string]any, otherParams ...string) string {
-	return SignParams(params, SHA1Hex, "", "", true, otherParams...)
-}
-
 // SignParamsSHA256 signs sorted params with SHA256.
 func SignParamsSHA256(params map[string]any, otherParams ...string) string {
 	return SignParams(params, SHA256Hex, "", "", true, otherParams...)

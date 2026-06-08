@@ -80,12 +80,6 @@ func (b *TLSConfigBuilder) SetMaxVersion(version uint16) *TLSConfigBuilder {
 	return b
 }
 
-// SetInsecureSkipVerify controls certificate verification.
-func (b *TLSConfigBuilder) SetInsecureSkipVerify(skip bool) *TLSConfigBuilder {
-	b.config.InsecureSkipVerify = skip //nolint:gosec // Caller explicitly chooses trust behavior for this helper.
-	return b
-}
-
 // SetServerName sets the TLS server name.
 func (b *TLSConfigBuilder) SetServerName(name string) *TLSConfigBuilder {
 	b.config.ServerName = name
@@ -148,13 +142,10 @@ func (b *TLSConfigBuilder) SetCertificates(certs []tls.Certificate) *TLSConfigBu
 // Build returns a cloned tls.Config.
 func (b *TLSConfigBuilder) Build() *tls.Config { return b.config.Clone() }
 
-// CreateTLSConfig creates a TLS config with optional insecure verification.
-func CreateTLSConfig(insecureSkipVerify bool) *tls.Config {
-	return (&tls.Config{MinVersion: tls.VersionTLS12, InsecureSkipVerify: insecureSkipVerify}).Clone() //nolint:gosec // Caller explicitly chooses trust behavior.
+// CreateTLSConfig creates a TLS config using TLS 1.2 as the minimum version.
+func CreateTLSConfig() *tls.Config {
+	return (&tls.Config{MinVersion: tls.VersionTLS12}).Clone()
 }
-
-// InsecureTLSConfig creates a TLS config that skips certificate verification.
-func InsecureTLSConfig() *tls.Config { return CreateTLSConfig(true) }
 
 // TLSVersion maps a protocol label to crypto/tls version constants.
 func TLSVersion(protocol string) uint16 {

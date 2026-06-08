@@ -11,6 +11,9 @@ import (
 	"time"
 )
 
+// DefaultMaxBytes is the default local/remote configuration read limit.
+const DefaultMaxBytes int64 = 16 << 20
+
 // DecryptFunc decrypts encrypted configuration values.
 type DecryptFunc func(cipherText string) (string, error)
 
@@ -32,7 +35,7 @@ type LoadOptions struct {
 	RequestFactory func(ctx context.Context, rawURL string) (*http.Request, error)
 	// Timeout bounds remote loading when RemoteClient has no timeout.
 	Timeout time.Duration
-	// MaxBytes limits local and remote config bytes. Non-positive means unlimited.
+	// MaxBytes limits local and remote config bytes. Zero uses DefaultMaxBytes; negative disables the limit explicitly.
 	MaxBytes int64
 	// ReadFile optionally reads a local config file. Defaults to os.Open plus MaxBytes limiting.
 	ReadFile func(path string, maxBytes int64) ([]byte, error)
@@ -42,6 +45,7 @@ type LoadOptions struct {
 
 // LoadWithOptions reads and parses a configuration file with advanced options.
 func LoadWithOptions(path string, opts LoadOptions) (*Conf, error) {
+	opts = normalizeLoadOptions(opts)
 	return loadFile(path, opts, map[string]bool{})
 }
 
@@ -66,7 +70,15 @@ func LoadRemote(rawURL string) (*Conf, error) { return LoadRemoteWithOptions(raw
 
 // LoadRemoteWithOptions loads configuration from an HTTP(S) URL with options.
 func LoadRemoteWithOptions(rawURL string, opts LoadOptions) (*Conf, error) {
+	opts = normalizeLoadOptions(opts)
 	return loadRemote(rawURL, opts)
+}
+
+func normalizeLoadOptions(opts LoadOptions) LoadOptions {
+	if opts.MaxBytes == 0 {
+		opts.MaxBytes = DefaultMaxBytes
+	}
+	return opts
 }
 
 // Merge merges configurations in order. Later configurations override earlier ones.

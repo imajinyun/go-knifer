@@ -30,11 +30,7 @@ func AddRootCAReaderWithOptions(b *TLSConfigBuilder, r io.Reader, opts ...TLSFil
 
 func AddRootCABytes(b *TLSConfigBuilder, pem []byte) error { return b.AddRootCABytes(pem) }
 
-func CreateTLSConfig(insecureSkipVerify bool) *tls.Config {
-	return netimpl.CreateTLSConfig(insecureSkipVerify)
-}
-
-func InsecureTLSConfig() *tls.Config { return netimpl.InsecureTLSConfig() }
+func CreateTLSConfig() *tls.Config { return netimpl.CreateTLSConfig() }
 
 func TLSVersion(protocol string) uint16 { return netimpl.TLSVersion(protocol) }
 

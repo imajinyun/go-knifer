@@ -14,6 +14,23 @@ const (
 	Or  LogicalOperator = "OR"
 )
 
+var allowedConditionOps = map[string]struct{}{
+	"=":           {},
+	"<>":          {},
+	"!=":          {},
+	">":           {},
+	">=":          {},
+	"<":           {},
+	"<=":          {},
+	"LIKE":        {},
+	"NOT LIKE":    {},
+	"IN":          {},
+	"NOT IN":      {},
+	"BETWEEN":     {},
+	"IS NULL":     {},
+	"IS NOT NULL": {},
+}
+
 // Condition represents a SQL predicate.
 type Condition struct {
 	Field  string
@@ -127,6 +144,9 @@ func buildCondition(cond Condition, d Dialect, w Wrapper, start int) (string, []
 	op := strings.ToUpper(strings.TrimSpace(cond.Op))
 	if op == "" {
 		op = "="
+	}
+	if _, ok := allowedConditionOps[op]; !ok {
+		return "", nil, start, invalidInputf("db: unsupported condition operator: %q", cond.Op)
 	}
 	field := w.Wrap(cond.Field)
 	switch op {

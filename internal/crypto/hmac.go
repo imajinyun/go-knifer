@@ -2,8 +2,6 @@ package crypto
 
 import (
 	"crypto/hmac"
-	"crypto/md5"
-	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
 	"crypto/subtle"
@@ -24,12 +22,6 @@ func HMACHex(fn func() hash.Hash, key, data []byte) string {
 	_, _ = h.Write(data)
 	return hex.EncodeToString(h.Sum(nil))
 }
-
-// HMACMD5Hex returns HMAC-MD5 in lower-case hex form.
-func HMACMD5Hex(key, data []byte) string { return HMACHex(md5.New, key, data) }
-
-// HMACSHA1Hex returns HMAC-SHA1 in lower-case hex form.
-func HMACSHA1Hex(key, data []byte) string { return HMACHex(sha1.New, key, data) }
 
 // HMACSHA256Hex returns HMAC-SHA256 in lower-case hex form.
 func HMACSHA256Hex(key, data []byte) string { return HMACHex(sha256.New, key, data) }

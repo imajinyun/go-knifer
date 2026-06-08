@@ -35,12 +35,6 @@ const (
 	JWTAlgHS384 = jwtimpl.AlgHS384
 	// JWTAlgHS512 is the HS512 algorithm identifier.
 	JWTAlgHS512 = jwtimpl.AlgHS512
-	// JWTAlgRS256 is the RS256 algorithm identifier.
-	JWTAlgRS256 = jwtimpl.AlgRS256
-	// JWTAlgRS384 is the RS384 algorithm identifier.
-	JWTAlgRS384 = jwtimpl.AlgRS384
-	// JWTAlgRS512 is the RS512 algorithm identifier.
-	JWTAlgRS512 = jwtimpl.AlgRS512
 	// JWTAlgPS256 is the PS256 algorithm identifier.
 	JWTAlgPS256 = jwtimpl.AlgPS256
 	// JWTAlgPS384 is the PS384 algorithm identifier.

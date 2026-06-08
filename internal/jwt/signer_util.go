@@ -17,15 +17,6 @@ func HS384(key []byte) JWTSigner { return MustHMACSigner(AlgHS384, key) }
 // HS512 创建 HS512 签名器。
 func HS512(key []byte) JWTSigner { return MustHMACSigner(AlgHS512, key) }
 
-// RS256 创建 RS256 签名器；priv 用于签名、pub 用于验签，传 nil 表示该方向不可用。
-func RS256(priv *rsa.PrivateKey, pub *rsa.PublicKey) JWTSigner { return mustRSA(AlgRS256, priv, pub) }
-
-// RS384 同上。
-func RS384(priv *rsa.PrivateKey, pub *rsa.PublicKey) JWTSigner { return mustRSA(AlgRS384, priv, pub) }
-
-// RS512 同上。
-func RS512(priv *rsa.PrivateKey, pub *rsa.PublicKey) JWTSigner { return mustRSA(AlgRS512, priv, pub) }
-
 // PS256 创建 RSA-PSS 签名器。
 func PS256(priv *rsa.PrivateKey, pub *rsa.PublicKey) JWTSigner {
 	return PS256WithOptions(priv, pub)
@@ -88,14 +79,6 @@ func ES512WithOptions(priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey, opts ...Sign
 
 // None 返回无签名签名器（the utility toolkit JWTSignerUtil.none）。
 func None() JWTSigner { return NoneSigner() }
-
-func mustRSA(alg string, priv *rsa.PrivateKey, pub *rsa.PublicKey) JWTSigner {
-	s, err := NewRSASigner(alg, priv, pub)
-	if err != nil {
-		panic(err)
-	}
-	return s
-}
 
 func mustRSAPSSWithOptions(alg string, priv *rsa.PrivateKey, pub *rsa.PublicKey, opts ...SignerOption) JWTSigner {
 	s, err := NewRSAPSSSignerWithOptions(alg, priv, pub, opts...)

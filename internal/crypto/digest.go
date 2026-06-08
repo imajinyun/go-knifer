@@ -1,8 +1,6 @@
 package crypto
 
 import (
-	"crypto/md5"
-	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/hex"
@@ -22,41 +20,6 @@ func Digest(data []byte, newHash func() hash.Hash) []byte {
 // DigestHex returns the digest computed by newHash in lower-case hex form.
 func DigestHex(data []byte, newHash func() hash.Hash) string {
 	return hex.EncodeToString(Digest(data, newHash))
-}
-
-// MD5 returns the MD5 digest bytes of data.
-func MD5(data []byte) []byte {
-	sum := md5.Sum(data)
-	return sum[:]
-}
-
-// MD5Hex returns the MD5 digest of data in lower-case hex form.
-func MD5Hex(data []byte) string {
-	sum := md5.Sum(data)
-	return hex.EncodeToString(sum[:])
-}
-
-// MD5Hex16 returns the middle 16 characters of the MD5 hex digest.
-func MD5Hex16(data []byte) string { return MD5HexTo16(MD5Hex(data)) }
-
-// MD5HexTo16 returns the middle 16 characters of a 32-character MD5 hex digest.
-func MD5HexTo16(md5Hex string) string {
-	if len(md5Hex) < 24 {
-		return ""
-	}
-	return md5Hex[8:24]
-}
-
-// SHA1 returns the SHA1 digest bytes of data.
-func SHA1(data []byte) []byte {
-	sum := sha1.Sum(data)
-	return sum[:]
-}
-
-// SHA1Hex returns the SHA1 digest of data in lower-case hex form.
-func SHA1Hex(data []byte) string {
-	sum := sha1.Sum(data)
-	return hex.EncodeToString(sum[:])
 }
 
 // SHA224 returns the SHA224 digest bytes of data.

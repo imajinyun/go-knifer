@@ -24,6 +24,7 @@ type AioSession struct {
 
 	closed atomic.Bool
 	mu     sync.Mutex
+	readMu sync.Mutex
 }
 
 // NewAioSession creates an AioSession.
@@ -96,6 +97,8 @@ func (s *AioSession) run(fn func()) {
 
 // doRead reads once and invokes callbacks; false means read failed or the connection closed.
 func (s *AioSession) doRead() bool {
+	s.readMu.Lock()
+	defer s.readMu.Unlock()
 	if !s.IsOpen() {
 		return false
 	}
@@ -185,7 +188,5 @@ func (s *AioSession) Close() error {
 	if s.conn != nil {
 		_ = s.conn.Close()
 	}
-	s.readBuffer = nil
-	s.writeBuffer = nil
 	return nil
 }

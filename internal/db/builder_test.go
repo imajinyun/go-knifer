@@ -28,6 +28,29 @@ func TestSQLBuilderSelectWherePage(t *testing.T) {
 	}
 }
 
+func TestSQLBuilderRejectsUnsafeConditionOperator(t *testing.T) {
+	_, _, err := NewBuilder(WithDialect(DialectQuestion)).
+		Select("id").
+		From("users").
+		Where(Condition{Field: "name", Op: "= ? OR 1=1 --", Value: "alice"}).
+		SQL()
+	if !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("SQL() error = %v, want invalid input", err)
+	}
+
+	sqlText, args, err := NewBuilder(WithDialect(DialectQuestion)).
+		Select("id").
+		From("users").
+		Where(Condition{Field: "name", Op: "NOT LIKE", Value: "%bot%"}).
+		SQL()
+	if err != nil {
+		t.Fatalf("SQL() NOT LIKE error = %v", err)
+	}
+	if sqlText != "SELECT id FROM users WHERE name NOT LIKE ?" || !reflect.DeepEqual(args, []any{"%bot%"}) {
+		t.Fatalf("NOT LIKE sql=%q args=%#v", sqlText, args)
+	}
+}
+
 func TestSQLBuilderInsertUpdateDelete(t *testing.T) {
 	entity := NewEntity("users").Set("name", "alice").Set("age", 18)
 	insertSQL, insertArgs, err := NewBuilder(WithDialect(DialectQuestion)).Insert(entity).SQL()

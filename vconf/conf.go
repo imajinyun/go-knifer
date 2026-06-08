@@ -42,11 +42,12 @@ type (
 )
 
 const (
-	TypeString = confimpl.TypeString
-	TypeBool   = confimpl.TypeBool
-	TypeInt    = confimpl.TypeInt
-	TypeFloat  = confimpl.TypeFloat
-	TypeList   = confimpl.TypeList
+	TypeString      = confimpl.TypeString
+	TypeBool        = confimpl.TypeBool
+	TypeInt         = confimpl.TypeInt
+	TypeFloat       = confimpl.TypeFloat
+	TypeList        = confimpl.TypeList
+	DefaultMaxBytes = confimpl.DefaultMaxBytes
 )
 
 // New creates an empty Conf.

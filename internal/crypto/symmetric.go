@@ -1,59 +1,8 @@
 package crypto
 
-import (
-	"crypto/des"
-	"crypto/rc4"
-	"encoding/binary"
-)
+import "encoding/binary"
 
 const xxteaDelta uint32 = 0x9E3779B9
-
-// DESEncryptCBC encrypts plain data using DES-CBC with PKCS#7 padding.
-func DESEncryptCBC(plain, key, iv []byte) ([]byte, error) {
-	block, err := des.NewCipher(key)
-	if err != nil {
-		return nil, err
-	}
-	return encryptCBC(block, plain, iv)
-}
-
-// DESDecryptCBC decrypts DES-CBC data using PKCS#7 padding.
-func DESDecryptCBC(cipherText, key, iv []byte) ([]byte, error) {
-	block, err := des.NewCipher(key)
-	if err != nil {
-		return nil, err
-	}
-	return decryptCBC(block, cipherText, iv)
-}
-
-// TripleDESEncryptCBC encrypts plain data using 3DES-CBC with PKCS#7 padding.
-func TripleDESEncryptCBC(plain, key, iv []byte) ([]byte, error) {
-	block, err := des.NewTripleDESCipher(key)
-	if err != nil {
-		return nil, err
-	}
-	return encryptCBC(block, plain, iv)
-}
-
-// TripleDESDecryptCBC decrypts 3DES-CBC data using PKCS#7 padding.
-func TripleDESDecryptCBC(cipherText, key, iv []byte) ([]byte, error) {
-	block, err := des.NewTripleDESCipher(key)
-	if err != nil {
-		return nil, err
-	}
-	return decryptCBC(block, cipherText, iv)
-}
-
-// RC4Crypt encrypts or decrypts data using RC4.
-func RC4Crypt(data, key []byte) ([]byte, error) {
-	c, err := rc4.NewCipher(key)
-	if err != nil {
-		return nil, err
-	}
-	out := make([]byte, len(data))
-	c.XORKeyStream(out, data)
-	return out, nil
-}
 
 // VigenereEncrypt encrypts printable ASCII text using the Vigenere helper algorithm.
 func VigenereEncrypt(data, cipherKey string) (string, error) {

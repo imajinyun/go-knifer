@@ -55,6 +55,16 @@ func TestReadOptions(t *testing.T) {
 	}
 }
 
+func TestReadOptionsDefaultLimitAndExplicitUnlimited(t *testing.T) {
+	if _, err := ReadStringWithOptions(ReaderFromString(strings.Repeat("x", int(DefaultMaxBytes)+1))); !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("ReadStringWithOptions default limit error = %v, want invalid input", err)
+	}
+	got, err := ReadStringWithOptions(ReaderFromString("abcd"), WithMaxBytes(3), WithUnlimitedRead())
+	if err != nil || got != "abcd" {
+		t.Fatalf("WithUnlimitedRead() = %q, %v", got, err)
+	}
+}
+
 func TestFileWriteRead(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "sub", "a.txt")

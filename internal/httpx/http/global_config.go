@@ -15,7 +15,6 @@ var (
 	globalDecodeURL        = false
 	globalFollowRedirects  = true
 	globalDefaultUserAgent = ""
-	globalTrustAnyHost     = false
 	globalBoundary         = "--------------------gokitFormBoundary"
 )
 
@@ -27,7 +26,6 @@ type GlobalConfig struct {
 	DecodeURL        bool
 	FollowRedirects  bool
 	DefaultUserAgent string
-	TrustAnyHost     bool
 	Boundary         string
 	Headers          http.Header
 	CookieJar        http.CookieJar
@@ -43,7 +41,6 @@ func SnapshotGlobalConfig() GlobalConfig {
 		DecodeURL:        globalDecodeURL,
 		FollowRedirects:  globalFollowRedirects,
 		DefaultUserAgent: globalDefaultUserAgent,
-		TrustAnyHost:     globalTrustAnyHost,
 		Boundary:         globalBoundary,
 	}
 	globalMu.RUnlock()
@@ -120,20 +117,6 @@ func IsIgnoreEOFError() bool {
 	globalMu.RLock()
 	defer globalMu.RUnlock()
 	return globalIgnoreEOFError
-}
-
-// SetTrustAnyHost sets whether all hosts are trusted, skipping HTTPS certificate verification.
-func SetTrustAnyHost(b bool) {
-	globalMu.Lock()
-	defer globalMu.Unlock()
-	globalTrustAnyHost = b
-}
-
-// IsTrustAnyHost reports whether all hosts are trusted.
-func IsTrustAnyHost() bool {
-	globalMu.RLock()
-	defer globalMu.RUnlock()
-	return globalTrustAnyHost
 }
 
 // SetGlobalBoundary sets the default multipart boundary.

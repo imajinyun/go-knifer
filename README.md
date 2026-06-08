@@ -19,17 +19,17 @@ The root package `github.com/imajinyun/go-knifer` only acts as the module entry 
 
 ## ✨ How go-knifer changes the way we code
 
-Before, calculating an MD5 digest often meant writing repetitive boilerplate in business code:
+Before, calculating a SHA-256 digest often meant writing repetitive boilerplate in business code:
 
 ```go
-sum := md5.Sum([]byte("hello"))
+sum := sha256.Sum256([]byte("hello"))
 text := hex.EncodeToString(sum[:])
 ```
 
 Now, with `go-knifer`, you can call a utility function directly:
 
 ```go
-text := vcrypto.MD5Hex("hello")
+text := vcrypto.SHA256Hex("hello")
 ```
 
 This style of utility wrapping reduces repeated code, avoids hidden risks from copy-paste snippets, and keeps the same scenarios represented by consistent APIs across a team.
@@ -45,7 +45,7 @@ Not sure which package to import? Start from what you want to do:
 | Create, query, transform, merge, diff, or sort maps | `vmap` |
 | Loosely convert `any` to int/float/bool/string | `vconv` |
 | Precise arithmetic, rounding, or evaluate an expression | `vnum` |
-| MD5/SHA/HMAC, AES/RSA, sign parameters | `vcrypto` |
+| SHA/HMAC, AES-GCM/RSA-PSS, sign parameters | `vcrypto` |
 | Non-cryptographic hashes (FNV, BKDR, …) | `vhash` |
 | Encode/parse URLs, build/parse query strings | `vurl` |
 | Base64 / Hex encode-decode | `vcodec` |
@@ -100,14 +100,14 @@ The project follows an “internal implementation + public facade” layout: `in
 | `vcache` | `github.com/imajinyun/go-knifer/vcache` | Generic caches: FIFO, LFU, LRU, Timed, Weak, and NoCache; supports TTL, clocks, removal listeners, lazy loading, ticker/runner providers, and weak-cache finalizer providers. Removal listeners run outside cache locks, so callbacks can safely re-enter the same cache. |
 | `vcaptcha` | `github.com/imajinyun/go-knifer/vcaptcha` | Image captcha generation: line, circle, shear, and GIF captchas, with random and math-expression generators. |
 | `vcron` | `github.com/imajinyun/go-knifer/vcron` | Cron expression parsing and task scheduling, including default/custom schedulers, configurable cron options, ID random-reader/clock/sleeper/runner providers, isolated per-call default scheduler overrides, running-task metrics, `Wait`, and graceful `Shutdown(ctx)`. |
-| `vcrypto` | `github.com/imajinyun/go-knifer/vcrypto` | Cryptography and digests: MD5/SHA, provider-backed digest helpers, HMAC, PBKDF2, parameter signing, random bytes, AES CBC/ECB/CTR/CFB/OFB/GCM with block-factory options, DES/3DES, RC4, Vigenere, XXTEA, RSA OAEP/PKCS#1/PSS plus configurable data-signing options, PEM, and X.509 certificate helpers. |
+| `vcrypto` | `github.com/imajinyun/go-knifer/vcrypto` | Cryptography and digests: SHA-2, provider-backed digest helpers, HMAC, PBKDF2-SHA256, parameter signing, random bytes, AES CTR/CFB/OFB/GCM with block-factory options, Vigenere, XXTEA, RSA OAEP/PSS plus configurable data-signing options, PEM, and X.509 certificate helpers. |
 | `vdb` | `github.com/imajinyun/go-knifer/vdb` | Database helpers built on database/sql: SQL execution, named parameters, entities, conditions, query builders, transactions, pagination, lightweight metadata lookup, and injectable `sql.Open` providers. |
 | `vdfa` | `github.com/imajinyun/go-knifer/vdfa` | DFA word-tree matching: stop-rune filtering, first/all matches, dense and greedy match modes, found-word metadata, package-level matcher helpers, isolated matcher options, JSON marshal/unmarshal providers for `Any` helpers, text replacement, and resettable async runner providers for package-level initialization. |
 | `vhttp` | `github.com/imajinyun/go-knifer/vhttp` | Chainable HTTP client, isolated/global-config request construction, create/get/post `WithOptions` helpers, explicit-error `E` shortcuts, code-classified HTTP errors, provider-backed transports/request factories/multipart writers/download saves, BasicAuth, User-Agent parsing, provider-backed HTML cleaning/filtering, resettable transport/server starters, async server runner options, and simple server helpers. |
 | `vresty` | `github.com/imajinyun/go-knifer/vresty` | Resty v3 based HTTP facade: chainable requests, JSON/form/multipart bodies, isolated/global-config request construction, create/get/post `WithOptions` helpers, per-request client factories, resettable default Resty client providers, downloads, and lightweight response helpers. |
 | `vjson` | `github.com/imajinyun/go-knifer/vjson` | Ordered JSON objects/arrays, JSON parsing and formatting, path-based get/put, provider-backed marshal/unmarshal, injectable scalar parse/format functions, configurable object/array/bean/list conversion, and XML/JSON conversion with parser/writer options. |
 | `vxml` | `github.com/imajinyun/go-knifer/vxml` | XML helpers: parse/read/write/format, tree navigation, simple XPath-style lookup, escaping, map/bean conversion with parser/codec/scalar parser options, transform options, and namespace utilities. |
-| `vjwt` | `github.com/imajinyun/go-knifer/vjwt` | JWT creation, parsing, signing, verification, and time-claim validation; supports HMAC, RSA, ECDSA, none signers, and provider-backed JSON marshal/unmarshal options. |
+| `vjwt` | `github.com/imajinyun/go-knifer/vjwt` | JWT creation, parsing, signing, verification, and time-claim validation; supports HMAC, RSA-PSS, ECDSA, none signers, and provider-backed JSON marshal/unmarshal options. |
 | `vlog` | `github.com/imajinyun/go-knifer/vlog` | Logging facade: console/color console loggers, injectable color factories, log levels, global logger, static logging functions, per-call logger options, and isolated logger creation. |
 | `verr` | `github.com/imajinyun/go-knifer/verr` | Error helpers: panic recovery, error aggregation, multierror matching, collector construction options, stack capture/formatting, resettable log/stack caches, injectable logging/stack/exit/timer/runner providers, isolated logrus creation, and optional logrus/Sentry integration. |
 | `vconf` | `github.com/imajinyun/go-knifer/vconf` | Grouped configuration reader for setting/properties-style text and a simple YAML subset, with typed getters, profile/remote/file loading options, environment expansion providers, watch ticker/runner providers, read-only snapshot guidance, and deep-copy `Clone` support. |
@@ -172,14 +172,14 @@ Provider coverage highlights:
 | File / config / archive / POI | `vfile` provider options, `vconf.LoadWithOptions`, `vconf.WatchWithOptions`, `vconf.WatchOptions.Runner`, `(*vconf.Conf).Clone`, `vzip` provider options, `vpoi.WithOpenFileFunc`, `vpoi.WithNewFileFunc`, `vpoi.WithSaveAsFunc` |
 | Cron / DFA / ID / identity / random | `vcron.WithDefaultSchedulerOptions`, `vcron.NewConfigWithOptions`, `vcron.WithIDRandomReader`, `vcron.WithRunner`, `vcron.CronScheduleWithOptions`, `(*vcron.Scheduler).RunningCount`, `(*vcron.Scheduler).Wait`, `vcron.CronShutdown`, `vdfa.WithMatcherWords`, `vdfa.WithJSONMarshal`, `vdfa.WithJSONUnmarshal`, `vdfa.ContainsWithOptions`, `vdfa.ConfigureAsyncRunner`, `vdfa.ResetAsyncRunner`, `vid.NewIsolatedSnowflake`, `vid.CreateSnowflakeWithOptions`, `vid.WithSnowflakeCache`, `vid.WithFallbackRandomSource`, `vid.ConfigureDefaultFallbackRandomSourceProvider`, `vid.ResetDefaultFallbackRandomSource`, `vid.SetFallbackRandomSeed`, `vrand.ConfigureDefaultRandomSourceProvider`, `vrand.ResetDefaultRandomSource`, `vrand.SetSeed`, `vident.BirthDateWithOptions` |
 | Encoding / JSON / XML / JWT / hash | `vcodec.Base64EncodeWithEncoding`, `vcodec.Base64DecodeWithEncoding`, `vcodec.Base64RawURLEncode`, `vcodec.Base64RawURLDecode`, `vhash.Hash32`, `vjson.WithMarshalFunc`, `vjson.WithUnmarshalFunc`, `vjson.WithParseUnmarshalFunc`, `vjson.WithBeanUnmarshalFunc`, `vjson.WithSprintFunc`, `vjson.WithParseIntFunc`, `vjson.WithParseFloatFunc`, `vjson.WithParseBoolFunc`, `vjson.WithFormatIntFunc`, `vjson.WithFormatFloatFunc`, `vjson.ParseObjWithOptions`, `vjson.ParseArrayWithOptions`, `vjson.ToBeanWithOptions`, `vjson.ToListWithOptions`, `vjson.XMLToJSONWithOptions`, `vjson.ToXMLWithOptions`, `vxml.WithScalarIntParser`, `vxml.WithScalarFloatParser`, `vxml.XMLToMapWithOptions`, `vxml.XMLNodeToMapWithOptions`, `vxml.XMLToMapIntoWithOptions`, `vxml.XMLNodeToMapIntoWithOptions`, `vxml.XMLToBeanWithOptions`, `vxml.XMLNodeToBeanWithOptions`, `vxml.TransformWithOptions`, `vxml.FormatWithOptions`, `vjwt.WithJSONMarshalFunc`, `vjwt.WithJSONUnmarshalFunc`, `vjwt.ParseTokenWithOptions`, `vjwt.WithTokenJSONOptions` |
-| Crypto / template / regex / validation / strings | `vcrypto.Digest`, `vcrypto.DigestHex`, `vcrypto.WithAESBlockFactory`, `vcrypto.WithGCMBlockFactory`, `vcrypto.AESEncryptCBCWithOptions`, `vcrypto.AESEncryptGCMWithOptions`, `vcrypto.SignWithRSAOptions`, `vcrypto.VerifyWithRSAOptions`, `vtpl.RenderWithOptions`, `vtpl.WithFuncMap`, `vtpl.WithTemplateFactory`, `vregex.WithCompileFunc`, `vregex.WithDotAll`, `vregex.MatchWithOptions`, `vregex.ReplaceAllFuncWithOptions`, `vvalid.IsEmailWithOptions`, `vvalid.WithMobileMatcher`, `vstr.ContainsEmojiWithOptions`, `vstr.RemoveEmojiWithOptions` |
+| Crypto / template / regex / validation / strings | `vcrypto.Digest`, `vcrypto.DigestHex`, `vcrypto.WithAESBlockFactory`, `vcrypto.WithGCMBlockFactory`, `vcrypto.AESEncryptCTRWithOptions`, `vcrypto.AESEncryptGCMWithOptions`, `vcrypto.SignWithRSAOptions`, `vcrypto.VerifyWithRSAOptions`, `vtpl.RenderWithOptions`, `vtpl.WithFuncMap`, `vtpl.WithTemplateFactory`, `vregex.WithCompileFunc`, `vregex.WithDotAll`, `vregex.MatchWithOptions`, `vregex.ReplaceAllFuncWithOptions`, `vvalid.IsEmailWithOptions`, `vvalid.WithMobileMatcher`, `vstr.ContainsEmojiWithOptions`, `vstr.RemoveEmojiWithOptions` |
 | DB / network / number / URL / system / reflection / socket | `vdb.WithSQLOpenFunc`, `vnet.WithConnectDialer`, `vnet.WithPingDialer`, `vnet.WithAddressNetwork`, `vnet.WithTCPAddrResolver`, `vnet.WithUploadOpenSource`, `vnet.WithIPParser`, `vnet.WithCIDRParser`, `vnet.WithIPIntParser`, `vnet.WithWildcardIPParser`, `vnet.WithWildcardIntParser`, `vnet.IPv4ToLongWithOptions`, `vnet.IsInRangeWithOptions`, `vnum.WithParseFloatFunc`, `vnum.WithDoubleParseFloatFunc`, `vnum.WithDoubleFormatFloatFunc`, `vnum.CalculateWithOptions`, `vnum.ToDoubleWithOptions`, `vurl.WithQueryEscapeFunc`, `vurl.WithPathEscapeFunc`, `vurl.EncodeQueryWithOptions`, `vurl.EncodePathSegmentWithOptions`, `vurl.FormURLEncodeWithOptions`, `vsys.WithGoEnvOutputFunc`, `vsys.WithGoRootEnvLookupFunc`, `vsys.WithOSEnvLookupFunc`, `vsys.WithEnvLookupFunc`, `vsys.ResetInfoCache`, `vref.WithUnsafeAccess`, `vskt.WithThreadPoolSizeFunc`, `vskt.WithRunner`, `vskt.WithSocketIPParser` |
 | Errors / cache / logging / runtime | `verr.NewCollectorWithOptions`, `verr.WithCollectorLogFunc`, `verr.WithCollectorRunner`, `verr.WithCollectorContext`, `verr.WithCollectorLevel`, `verr.WithCollectorTimerFactory`, `verr.WithCollectorStackCaptureOptions`, `verr.WithLogFunc`, `verr.WithCollectorStackOptions`, `verr.WithDebugStackFunc`, `verr.WithCallersFunc`, `verr.WithFuncForPCFunc`, `verr.WithStackFrameCache`, `verr.ResetStackFrameCache`, `verr.ResetDefaultLogFunc`, `verr.NewIsolatedLogrusWithOptions`, `verr.MustExitWithOptions`, `vcache.WithClock`, `vcache.WithTickerFactory`, `vcache.WithRunner`, `vcache.WithWeakFinalizerFunc`, `vcache.WithWeakFinalizerEnabled`, `vlog.WithLogColorFactory`, `vlog.NewIsolatedLogger`, `vlog.LoggerWithOptions`, `vlog.InfoWithOptions` |
 
 Domain boundary rules:
 
 - `vhash` is for non-cryptographic hash helpers such as additive/FNV (bucketing,
-  bloom filters); `vcrypto` owns all security-oriented digests (MD5/SHA family),
+  bloom filters); `vcrypto` owns security-oriented SHA-2 digests,
   HMAC, encryption, and key/PEM operations.
 - `vhttp` is the lightweight standard-library HTTP facade; `vresty` is the
   Resty-based chainable client facade. Neither re-exports URL helpers: URL
@@ -503,7 +503,7 @@ Request defaults can still be configured globally when needed, but new code
 should prefer per-call options to keep request behavior explicit and avoid
 cross-request state coupling. Available options include `WithTimeout`,
 `WithHeader`, `WithHeaders`, `WithFollowRedirects`, `WithMaxRedirects`,
-`WithSkipTLSVerify`, `WithTransport`, `WithClient`, `WithCookieJar`, and
+`WithTransport`, `WithClient`, `WithCookieJar`, and
 `WithUserAgent`.
 
 HTTP errors are code-classified for routing and retry logic: malformed URLs and
@@ -519,7 +519,7 @@ code.
 `vresty` provides a thin, chainable facade over `resty.dev/v3`. It keeps the
 public API lightweight while supporting common HTTP operations such as query
 parameters, headers, cookies, Basic/Bearer auth, JSON/form bodies, multipart
-uploads, per-call options, TLS skip verification, redirect control, and
+uploads, per-call options, TLS configuration, redirect control, and
 downloads.
 
 ```go
@@ -557,8 +557,8 @@ func main() {
 
 Like `vhttp`, `vresty` supports construction-time request options so each call
 can override defaults independently: `WithTimeout`, `WithHeader`, `WithHeaders`,
-`WithFollowRedirects`, `WithMaxRedirects`, `WithSkipTLSVerify`,
-`WithRestyClient`, `WithUserAgent`, and `WithCookieDisabled`.
+`WithFollowRedirects`, `WithMaxRedirects`, `WithTLSConfig`, `WithRestyClient`,
+`WithUserAgent`, and `WithCookieDisabled`.
 
 Shortcuts are available for simple cases and downloads:
 
@@ -959,11 +959,11 @@ func main() {
 
   aesKey := []byte("1234567890123456")
   iv := []byte("abcdefghijklmnop")
-  cipherText, err := vcrypto.AESEncryptCBC([]byte("secret message"), aesKey, iv)
+  cipherText, err := vcrypto.AESEncryptGCM([]byte("secret message"), aesKey, iv[:12], nil)
   if err != nil {
     panic(err)
   }
-  plain, err := vcrypto.AESDecryptCBC(cipherText, aesKey, iv)
+  plain, err := vcrypto.AESDecryptGCM(cipherText, aesKey, iv[:12], nil)
   if err != nil {
     panic(err)
   }

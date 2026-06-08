@@ -962,6 +962,35 @@ func TestLoadWithOptionsReadFileProvider(t *testing.T) {
 	}
 }
 
+func TestLoadWithOptionsReadFileProviderUsesDefaultMaxBytes(t *testing.T) {
+	_, err := LoadWithOptions("virtual.setting", LoadOptions{
+		ReadFile: func(path string, maxBytes int64) ([]byte, error) {
+			if maxBytes != DefaultMaxBytes {
+				t.Fatalf("default maxBytes=%d, want %d", maxBytes, DefaultMaxBytes)
+			}
+			return []byte("name=fake"), nil
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestLoadWithOptionsAllowsExplicitUnlimitedMaxBytes(t *testing.T) {
+	_, err := LoadWithOptions("virtual.setting", LoadOptions{
+		MaxBytes: -1,
+		ReadFile: func(path string, maxBytes int64) ([]byte, error) {
+			if maxBytes != -1 {
+				t.Fatalf("maxBytes=%d, want -1", maxBytes)
+			}
+			return []byte("name=fake"), nil
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestLoadWithOptionsReadFileProviderEnforcesMaxBytes(t *testing.T) {
 	_, err := LoadWithOptions("virtual.setting", LoadOptions{
 		MaxBytes: 4,

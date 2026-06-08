@@ -16,16 +16,6 @@ func JWTSignerHMAC(algorithm string, key []byte) (JWTSigner, error) {
 // JWTSignerHS256 creates an HS256 signer.
 func JWTSignerHS256(key []byte) JWTSigner { return jwtimpl.HS256(key) }
 
-// JWTSignerRSA creates an RSA signer.
-func JWTSignerRSA(algorithm string, priv *rsa.PrivateKey, pub *rsa.PublicKey) (JWTSigner, error) {
-	return jwtimpl.NewRSASigner(algorithm, priv, pub)
-}
-
-// JWTSignerRS256 creates an RS256 signer.
-func JWTSignerRS256(priv *rsa.PrivateKey, pub *rsa.PublicKey) JWTSigner {
-	return jwtimpl.RS256(priv, pub)
-}
-
 // JWTSignerECDSA creates an ECDSA signer.
 func JWTSignerECDSA(algorithm string, priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey) (JWTSigner, error) {
 	return jwtimpl.NewECDSASigner(algorithm, priv, pub)
@@ -67,16 +57,6 @@ func CreateSigner(algorithmID string, key []byte) (JWTSigner, error) {
 // AlgorithmName returns the standard cryptographic algorithm name for a JWT algorithm ID.
 func AlgorithmName(idOrAlgorithm string) string {
 	return jwtimpl.AlgorithmName(idOrAlgorithm)
-}
-
-// NewRSASigner creates an RSA signer for RS256, RS384, or RS512.
-func NewRSASigner(algorithm string, priv *rsa.PrivateKey, pub *rsa.PublicKey) (JWTSigner, error) {
-	return jwtimpl.NewRSASigner(algorithm, priv, pub)
-}
-
-// NewRSASignerWithOptions creates an RSA signer for RS256, RS384, or RS512 with options.
-func NewRSASignerWithOptions(algorithm string, priv *rsa.PrivateKey, pub *rsa.PublicKey, opts ...SignerOption) (JWTSigner, error) {
-	return jwtimpl.NewRSASignerWithOptions(algorithm, priv, pub, opts...)
 }
 
 // NewRSAPSSSigner creates an RSA-PSS signer for PS256, PS384, or PS512.
@@ -122,21 +102,6 @@ func HS384(key []byte) JWTSigner {
 // HS512 creates an HS512 signer.
 func HS512(key []byte) JWTSigner {
 	return jwtimpl.HS512(key)
-}
-
-// RS256 creates an RS256 signer.
-func RS256(priv *rsa.PrivateKey, pub *rsa.PublicKey) JWTSigner {
-	return jwtimpl.RS256(priv, pub)
-}
-
-// RS384 creates an RS384 signer.
-func RS384(priv *rsa.PrivateKey, pub *rsa.PublicKey) JWTSigner {
-	return jwtimpl.RS384(priv, pub)
-}
-
-// RS512 creates an RS512 signer.
-func RS512(priv *rsa.PrivateKey, pub *rsa.PublicKey) JWTSigner {
-	return jwtimpl.RS512(priv, pub)
 }
 
 // PS256 creates a PS256 signer.

@@ -103,8 +103,8 @@ func (s *hmacSigner) Verify(headerB64, payloadB64, signB64 string) bool {
 
 // CreateSigner 根据算法 ID 与 HMAC key 自动选择签名器（仅支持 HS* 与 none）。
 //
-// 非对称算法请使用 NewRSASigner / NewRSAPSSSigner / NewECDSASigner，
-// 或 JWTSignerUtil 提供的 RS256/ES256 等便捷工厂。
+// 非对称算法请使用 NewRSAPSSSigner / NewECDSASigner，
+// 或 JWTSignerUtil 提供的 PS256/ES256 等便捷工厂。
 func CreateSigner(algorithmID string, key []byte) (JWTSigner, error) {
 	if IsNoneAlg(algorithmID) {
 		return NoneSigner(), nil
@@ -123,12 +123,6 @@ func AlgorithmName(idOrAlgorithm string) string {
 		return "HmacSHA384"
 	case AlgHS512:
 		return "HmacSHA512"
-	case AlgRS256:
-		return "SHA256withRSA"
-	case AlgRS384:
-		return "SHA384withRSA"
-	case AlgRS512:
-		return "SHA512withRSA"
 	case AlgPS256:
 		return "SHA256withRSA_PSS"
 	case AlgPS384:
