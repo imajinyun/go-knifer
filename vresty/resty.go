@@ -118,6 +118,8 @@ const (
 )
 
 // Get creates a GET request.
+//
+// Security: Get is for trusted URLs. Use GetSafe for untrusted URLs.
 func Get(rawURL string, opts ...RequestOption) *Request { return restyimpl.Get(rawURL, opts...) }
 
 // GetSafe creates a GET request with SSRF-oriented safety checks enabled.
@@ -126,6 +128,8 @@ func GetSafe(rawURL string, opts ...RequestOption) *Request {
 }
 
 // Post creates a POST request.
+//
+// Security: Post is for trusted URLs. Use PostSafe for untrusted URLs.
 func Post(rawURL string, opts ...RequestOption) *Request { return restyimpl.Post(rawURL, opts...) }
 
 // PostSafe creates a POST request with SSRF-oriented safety checks enabled.
@@ -151,6 +155,9 @@ func Options(rawURL string, opts ...RequestOption) *Request {
 }
 
 // NewRequest creates a request by method.
+//
+// Security: NewRequest is for trusted URLs unless callers provide WithURLPolicy
+// with RejectPrivate enabled. Use NewSafeRequest for untrusted URLs.
 func NewRequest(method Method, rawURL string, opts ...RequestOption) *Request {
 	return restyimpl.NewRequest(method, rawURL, opts...)
 }
@@ -166,6 +173,10 @@ func NewIsolatedRequest(method Method, rawURL string, opts ...RequestOption) *Re
 }
 
 // NewRequestWithConfig creates a request from an explicit global configuration snapshot.
+//
+// Security: NewRequestWithConfig is for trusted URLs unless callers provide
+// WithURLPolicy with RejectPrivate enabled. Use NewSafeRequest for untrusted
+// URLs.
 func NewRequestWithConfig(method Method, rawURL string, cfg GlobalConfig, opts ...RequestOption) *Request {
 	return restyimpl.NewRequestWithConfig(method, rawURL, cfg, opts...)
 }

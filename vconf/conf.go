@@ -70,9 +70,18 @@ func LoadFilesWithOptions(opts LoadOptions, paths ...string) (*Conf, error) {
 }
 
 // LoadRemote loads configuration from an HTTP(S) URL.
+//
+// Security: LoadRemote is for trusted URLs only. It follows the supplied HTTP
+// client and option policy and does not enable private-host rejection by default.
+// Use LoadRemoteSafe for URLs that may come from users, config, or other
+// untrusted trust boundaries.
 func LoadRemote(rawURL string) (*Conf, error) { return LoadRemoteWithOptions(rawURL, LoadOptions{}) }
 
 // LoadRemoteWithOptions loads configuration from an HTTP(S) URL with options.
+//
+// Security: LoadRemoteWithOptions is for trusted URLs unless opts enables
+// RejectPrivateRemoteHosts and CheckRemoteRedirect. Use LoadRemoteSafeWithOptions
+// when the URL may be attacker-controlled.
 func LoadRemoteWithOptions(rawURL string, opts LoadOptions) (*Conf, error) {
 	return confimpl.LoadRemoteWithOptions(rawURL, opts)
 }

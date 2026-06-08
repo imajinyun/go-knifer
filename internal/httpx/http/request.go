@@ -143,6 +143,10 @@ func WithGlobalConfig(cfg GlobalConfig) RequestOption {
 }
 
 // NewRequest creates a request with the specified method and URL.
+//
+// Security: NewRequest is for trusted URLs. This package does not apply
+// SSRF-oriented host validation by default; use vresty.NewSafeRequest or a
+// custom transport policy when the URL is untrusted.
 func NewRequest(method Method, rawURL string, opts ...RequestOption) *HTTPRequest {
 	return NewRequestWithConfig(method, rawURL, SnapshotGlobalConfig(), opts...)
 }
@@ -153,6 +157,10 @@ func NewIsolatedRequest(method Method, rawURL string, opts ...RequestOption) *HT
 }
 
 // NewRequestWithConfig creates a request from an explicit global configuration snapshot.
+//
+// Security: NewRequestWithConfig is for trusted URLs. This package does not
+// apply SSRF-oriented host validation by default; use vresty.NewSafeRequest or a
+// custom transport policy when the URL is untrusted.
 func NewRequestWithConfig(method Method, rawURL string, cfg GlobalConfig, opts ...RequestOption) *HTTPRequest {
 	follow := cfg.FollowRedirects
 	r := &HTTPRequest{
@@ -179,11 +187,17 @@ func NewRequestWithConfig(method Method, rawURL string, cfg GlobalConfig, opts .
 }
 
 // Get creates a GET request.
+//
+// Security: Get is for trusted URLs. Use vresty.GetSafe or a custom transport
+// policy when the URL is untrusted.
 func Get(rawURL string, opts ...RequestOption) *HTTPRequest {
 	return NewRequest(MethodGet, rawURL, opts...)
 }
 
 // Post creates a POST request.
+//
+// Security: Post is for trusted URLs. Use vresty.PostSafe or a custom transport
+// policy when the URL is untrusted.
 func Post(rawURL string, opts ...RequestOption) *HTTPRequest {
 	return NewRequest(MethodPost, rawURL, opts...)
 }

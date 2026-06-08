@@ -5,6 +5,10 @@ import "encoding/binary"
 const xxteaDelta uint32 = 0x9E3779B9
 
 // VigenereEncrypt encrypts printable ASCII text using the Vigenere helper algorithm.
+//
+// Security: Vigenere is a historical compatibility algorithm, not modern
+// cryptography. Do not use it for confidential or attacker-controlled data;
+// prefer AESSealGCM for new encrypted data.
 func VigenereEncrypt(data, cipherKey string) (string, error) {
 	if cipherKey == "" {
 		return "", ErrInvalidKey
@@ -19,6 +23,10 @@ func VigenereEncrypt(data, cipherKey string) (string, error) {
 }
 
 // VigenereDecrypt decrypts text encrypted by VigenereEncrypt.
+//
+// Security: Vigenere is a historical compatibility algorithm, not modern
+// cryptography. Do not use it for confidential or attacker-controlled data;
+// prefer AESOpenGCM for new encrypted data.
 func VigenereDecrypt(data, cipherKey string) (string, error) {
 	if cipherKey == "" {
 		return "", ErrInvalidKey
@@ -38,6 +46,10 @@ func VigenereDecrypt(data, cipherKey string) (string, error) {
 }
 
 // XXTEAEncrypt encrypts data using XXTEA.
+//
+// Security: XXTEA is provided for legacy compatibility. It is not an
+// authenticated encryption scheme and should not be used for new encrypted data;
+// prefer AESSealGCM.
 func XXTEAEncrypt(data, key []byte) []byte {
 	if len(data) == 0 {
 		return append([]byte(nil), data...)
@@ -46,6 +58,10 @@ func XXTEAEncrypt(data, key []byte) []byte {
 }
 
 // XXTEADecrypt decrypts data using XXTEA.
+//
+// Security: XXTEA is provided for legacy compatibility. It is not an
+// authenticated encryption scheme and should not be used for new encrypted data;
+// prefer AESOpenGCM.
 func XXTEADecrypt(data, key []byte) ([]byte, error) {
 	if len(data) == 0 {
 		return append([]byte(nil), data...), nil

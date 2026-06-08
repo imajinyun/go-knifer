@@ -7,9 +7,15 @@ import (
 )
 
 // Get creates a GET request.
+//
+// Security: Get is for trusted URLs. Use vresty.GetSafe or a custom transport
+// policy when the URL is untrusted.
 func Get(rawURL string, opts ...RequestOption) *Request { return httpx.Get(rawURL, opts...) }
 
 // Post creates a POST request.
+//
+// Security: Post is for trusted URLs. Use vresty.PostSafe or a custom transport
+// policy when the URL is untrusted.
 func Post(rawURL string, opts ...RequestOption) *Request { return httpx.Post(rawURL, opts...) }
 
 // Put creates a PUT request.
@@ -30,6 +36,9 @@ func Options(rawURL string, opts ...RequestOption) *Request {
 }
 
 // NewRequest creates a request by method.
+//
+// Security: NewRequest is for trusted URLs. Use vresty.NewSafeRequest or a
+// custom transport policy when the URL is untrusted.
 func NewRequest(method Method, rawURL string, opts ...RequestOption) *Request {
 	return httpx.NewRequest(method, rawURL, opts...)
 }
@@ -40,6 +49,9 @@ func NewIsolatedRequest(method Method, rawURL string, opts ...RequestOption) *Re
 }
 
 // NewRequestWithConfig creates a request from an explicit global configuration snapshot.
+//
+// Security: NewRequestWithConfig is for trusted URLs. Use vresty.NewSafeRequest
+// or a custom transport policy when the URL is untrusted.
 func NewRequestWithConfig(method Method, rawURL string, cfg GlobalConfig, opts ...RequestOption) *Request {
 	return httpx.NewRequestWithConfig(method, rawURL, cfg, opts...)
 }

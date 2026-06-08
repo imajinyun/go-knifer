@@ -252,9 +252,17 @@ func IsJarURL(u *url.URL) bool { return urlimpl.IsJarURL(u) }
 func IsJarFileURL(u *url.URL) bool { return urlimpl.IsJarFileURL(u) }
 
 // Open opens a URL resource. It supports http, https, file URLs, and plain file paths.
+//
+// Security: Open is for trusted resource locations only because it may access
+// local files and private network addresses. Use OpenSafe for resource locations
+// that may cross a user, configuration, or network trust boundary.
 func Open(raw string) (io.ReadCloser, error) { return urlimpl.Open(raw) }
 
 // OpenWithOptions opens a URL resource with per-call options.
+//
+// Security: OpenWithOptions is for trusted resource locations unless options
+// explicitly restrict schemes, local files, redirects, and private hosts. Prefer
+// OpenSafeWithOptions for untrusted input.
 func OpenWithOptions(raw string, opts ...ResourceOption) (io.ReadCloser, error) {
 	return urlimpl.OpenWithOptions(raw, opts...)
 }
@@ -268,9 +276,17 @@ func OpenSafeWithOptions(raw string, opts ...ResourceOption) (io.ReadCloser, err
 }
 
 // ContentLength returns the resource content length. Unknown lengths return -1.
+//
+// Security: ContentLength is for trusted resource locations only because it may
+// access local files and private network addresses. Use ContentLengthSafe for
+// untrusted input.
 func ContentLength(raw string) (int64, error) { return urlimpl.ContentLength(raw) }
 
 // ContentLengthWithOptions returns the resource content length with per-call options.
+//
+// Security: ContentLengthWithOptions is for trusted resource locations unless
+// options explicitly restrict schemes, local files, redirects, and private hosts.
+// Prefer ContentLengthSafeWithOptions for untrusted input.
 func ContentLengthWithOptions(raw string, opts ...ResourceOption) (int64, error) {
 	return urlimpl.ContentLengthWithOptions(raw, opts...)
 }
@@ -284,9 +300,15 @@ func ContentLengthSafeWithOptions(raw string, opts ...ResourceOption) (int64, er
 }
 
 // Size returns the resource size.
+//
+// Security: Size follows ContentLength and is for trusted resource locations
+// only. Use ContentLengthSafe for untrusted input.
 func Size(raw string) (int64, error) { return urlimpl.Size(raw) }
 
 // SizeWithOptions returns the resource size with per-call options.
+//
+// Security: SizeWithOptions follows ContentLengthWithOptions and is for trusted
+// resource locations unless safe options are enabled.
 func SizeWithOptions(raw string, opts ...ResourceOption) (int64, error) {
 	return urlimpl.SizeWithOptions(raw, opts...)
 }

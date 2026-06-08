@@ -71,6 +71,10 @@ var defaultRestyClientProvider = struct {
 type RequestOption func(*HTTPRequest)
 
 // NewRequest creates a request with the specified method and URL.
+//
+// Security: NewRequest is for trusted URLs unless callers provide WithURLPolicy
+// with RejectPrivate enabled. Use NewSafeRequest, GetSafe, or PostSafe when the
+// URL may come from users, config, or another untrusted trust boundary.
 func NewRequest(method Method, rawURL string, opts ...RequestOption) *HTTPRequest {
 	return NewRequestWithConfig(method, rawURL, SnapshotGlobalConfig(), opts...)
 }
@@ -81,6 +85,10 @@ func NewIsolatedRequest(method Method, rawURL string, opts ...RequestOption) *HT
 }
 
 // NewRequestWithConfig creates a request from an explicit global configuration snapshot.
+//
+// Security: NewRequestWithConfig is for trusted URLs unless callers provide
+// WithURLPolicy with RejectPrivate enabled. Use NewSafeRequest for untrusted
+// URLs.
 func NewRequestWithConfig(method Method, rawURL string, cfg GlobalConfig, opts ...RequestOption) *HTTPRequest {
 	follow := cfg.FollowRedirects
 	r := &HTTPRequest{
@@ -117,6 +125,8 @@ func WithGlobalConfig(cfg GlobalConfig) RequestOption {
 }
 
 // Get creates a GET request.
+//
+// Security: Get is for trusted URLs. Use GetSafe for untrusted URLs.
 func Get(rawURL string, opts ...RequestOption) *HTTPRequest {
 	return NewRequest(MethodGet, rawURL, opts...)
 }
@@ -127,6 +137,8 @@ func GetSafe(rawURL string, opts ...RequestOption) *HTTPRequest {
 }
 
 // Post creates a POST request.
+//
+// Security: Post is for trusted URLs. Use PostSafe for untrusted URLs.
 func Post(rawURL string, opts ...RequestOption) *HTTPRequest {
 	return NewRequest(MethodPost, rawURL, opts...)
 }

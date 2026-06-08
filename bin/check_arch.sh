@@ -5,8 +5,8 @@
 # Rules checked:
 #   1. Every public v* package directory has a doc.go.
 #   2. Public v* packages do not import each other (production code only).
-#   3. Every public v* package imports at least one internal/ implementation
-#      path, and every imported internal/ path actually exists.
+#   3. Every public v* production source file imports at least one internal/
+#      implementation path, and every imported internal/ path actually exists.
 #   4. internal/* implementation packages do not import public v* facades.
 #   5. Public package doc.go files contain a package comment.
 #   6. New production panics are blocked unless they are known compatibility
@@ -63,7 +63,7 @@ for dir in v*/; do
 		esac
 	done <<<"${imports}"
 
-	# Rule 3: must import at least one existing internal/ implementation.
+	# Rule 3: package-level imports must refer only to existing internal implementations.
 	internal_count=0
 	while IFS= read -r imp; do
 		[ -z "${imp}" ] && continue
@@ -78,9 +78,31 @@ for dir in v*/; do
 		esac
 	done <<<"${imports}"
 
-	if [ "${internal_count}" -eq 0 ]; then
-		err "${pkg}: does not import any internal/ implementation (facade must delegate to internal)"
-	fi
+
+	# Rule 3 (per-file): every public facade source file must delegate directly to
+	# internal/. This catches accidental standalone logic in a v* file even when a
+	# sibling file still imports internal/ and keeps the package-level check green.
+	for file in "${pkg}"/*.go; do
+		base="$(basename "${file}")"
+		case "${base}" in
+		doc.go|*_test.go)
+			continue
+			;;
+		esac
+		file_imports="$(go list -f '{{range .Imports}}{{println .}}{{end}}' "${file}")"
+		file_internal_count=0
+		while IFS= read -r imp; do
+			[ -z "${imp}" ] && continue
+			case "${imp}" in
+			"${MODULE}"/internal/*)
+				file_internal_count=$((file_internal_count + 1))
+				;;
+			esac
+		done <<<"${file_imports}"
+		if [ "${file_internal_count}" -eq 0 ]; then
+			err "${file}: does not import any internal/ implementation (each facade source file must delegate to internal)"
+		fi
+	done
 done
 
 # Rule 4: internal implementation packages must not depend on public facades.
