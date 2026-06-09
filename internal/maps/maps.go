@@ -5,6 +5,7 @@ package maps
 
 import (
 	"cmp"
+	"fmt"
 	stdmaps "maps"
 	"sort"
 )
@@ -24,6 +25,12 @@ func NewWithCap[K comparable, V any](hint int) map[K]V {
 	return make(map[K]V, hint)
 }
 
+// Pair stores one typed key-value pair for FromPairs.
+type Pair[K comparable, V any] struct {
+	Key   K
+	Value V
+}
+
 // Of builds a map from alternating key-value pairs.
 // Panics if len(kvs) is odd. Later duplicate keys override earlier ones.
 //
@@ -35,6 +42,37 @@ func Of[K comparable, V any](kvs ...any) map[K]V {
 	out := make(map[K]V, len(kvs)/2)
 	for i := 0; i < len(kvs); i += 2 {
 		out[kvs[i].(K)] = kvs[i+1].(V)
+	}
+	return out
+}
+
+// OfE builds a map from alternating key-value pairs and returns errors instead of panicking.
+// Later duplicate keys override earlier ones.
+func OfE[K comparable, V any](kvs ...any) (map[K]V, error) {
+	if len(kvs)%2 != 0 {
+		return nil, fmt.Errorf("maps.OfE: odd number of arguments")
+	}
+	out := make(map[K]V, len(kvs)/2)
+	for i := 0; i < len(kvs); i += 2 {
+		key, ok := kvs[i].(K)
+		if !ok {
+			return nil, fmt.Errorf("maps.OfE: argument %d has type %T, want key type", i, kvs[i])
+		}
+		value, ok := kvs[i+1].(V)
+		if !ok {
+			return nil, fmt.Errorf("maps.OfE: argument %d has type %T, want value type", i+1, kvs[i+1])
+		}
+		out[key] = value
+	}
+	return out, nil
+}
+
+// FromPairs builds a map from typed key-value pairs.
+// Later duplicate keys override earlier ones.
+func FromPairs[K comparable, V any](pairs ...Pair[K, V]) map[K]V {
+	out := make(map[K]V, len(pairs))
+	for _, pair := range pairs {
+		out[pair.Key] = pair.Value
 	}
 	return out
 }

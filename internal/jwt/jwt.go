@@ -155,7 +155,12 @@ func (j *JWT) ParseWithOptions(token string, opts ...JSONOption) error {
 }
 
 // SetKey sets the key with an HMAC algorithm, defaulting to HS256.
-// If the header declares an HMAC algorithm, that algorithm is used; the none algorithm is always rejected to avoid alg=none authentication bypasses.
+//
+// If the header declares an HMAC algorithm, that algorithm is used; the none
+// algorithm is always rejected to avoid alg=none authentication bypasses. This
+// compatibility helper falls back to HS256 when signer creation fails. New code
+// should prefer SetKeyE, SetKeyStrict, or SetKeyWithAlgorithm when configuration
+// errors must be reported explicitly.
 func (j *JWT) SetKey(key []byte) *JWT {
 	alg := j.Algorithm()
 	if alg == "" {
@@ -171,6 +176,12 @@ func (j *JWT) SetKey(key []byte) *JWT {
 		signer, _ = NewHMACSigner(AlgHS256, key)
 	}
 	return j.SetSigner(signer)
+}
+
+// SetKeyE sets the signer using the current header alg and returns signer creation errors.
+// It defaults a blank alg to HS256 and never silently falls back to another algorithm.
+func (j *JWT) SetKeyE(key []byte) error {
+	return j.SetKeyWithAlgorithm(key, j.Algorithm())
 }
 
 // SetKeyWithAlgorithm sets an HMAC signer with an explicit algorithm and returns any signer creation error.
@@ -211,12 +222,25 @@ func normalizeAlgorithm(algorithm string) string {
 }
 
 // SetSigner sets the signer and writes alg automatically when the header has no alg field.
+// Passing nil clears the signer and leaves headers unchanged.
 func (j *JWT) SetSigner(signer JWTSigner) *JWT {
 	j.signer = signer
+	if signer == nil {
+		return j
+	}
 	if _, ok := j.header[HeaderAlgorithm]; !ok {
 		j.header[HeaderAlgorithm] = signer.Algorithm()
 	}
 	return j
+}
+
+// SetSignerE sets the signer and reports nil signer as an explicit input error.
+func (j *JWT) SetSignerE(signer JWTSigner) error {
+	if signer == nil {
+		return NewJWTError("jwt signer must not be nil")
+	}
+	j.SetSigner(signer)
+	return nil
 }
 
 // Signer returns the current signer.

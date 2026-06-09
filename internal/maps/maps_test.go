@@ -65,6 +65,57 @@ func TestOf_PanicOnOddArgs(t *testing.T) {
 	})
 }
 
+func TestOfE(t *testing.T) {
+	tests := []struct {
+		name    string
+		args    []any
+		want    map[string]int
+		wantErr bool
+	}{
+		{
+			name: "builds map",
+			args: []any{"a", 1, "b", 2, "a", 3},
+			want: map[string]int{"a": 3, "b": 2},
+		},
+		{
+			name:    "rejects odd args",
+			args:    []any{"a", 1, "b"},
+			wantErr: true,
+		},
+		{
+			name:    "rejects invalid key type",
+			args:    []any{1, 1},
+			wantErr: true,
+		},
+		{
+			name:    "rejects invalid value type",
+			args:    []any{"a", "bad"},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := OfE[string, int](tt.args...)
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestFromPairs(t *testing.T) {
+	got := FromPairs(
+		Pair[string, int]{Key: "a", Value: 1},
+		Pair[string, int]{Key: "b", Value: 2},
+		Pair[string, int]{Key: "a", Value: 3},
+	)
+	assert.Equal(t, map[string]int{"a": 3, "b": 2}, got)
+}
+
 func TestOrEmpty(t *testing.T) {
 	var nilMap map[string]int
 	got := OrEmpty(nilMap)

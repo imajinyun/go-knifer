@@ -210,8 +210,15 @@ func TestSaveAsHonorsMaxResponseBytes(t *testing.T) {
 	if !errors.Is(err, knifer.ErrCodeUnsupported) {
 		t.Fatalf("SaveAs() error = %v, want unsupported", err)
 	}
-	if n <= 3 {
-		t.Fatalf("SaveAs() wrote %d bytes, want evidence that the limit was exceeded", n)
+	if n != 3 {
+		t.Fatalf("SaveAs() wrote %d bytes, want exactly the configured limit", n)
+	}
+	data, readErr := os.ReadFile(target)
+	if readErr != nil {
+		t.Fatalf("read partial file: %v", readErr)
+	}
+	if string(data) != "too" {
+		t.Fatalf("partial file = %q, want only bytes within the limit", string(data))
 	}
 }
 

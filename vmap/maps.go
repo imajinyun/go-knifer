@@ -6,12 +6,20 @@ import (
 	mapsimpl "github.com/imajinyun/go-knifer/internal/maps"
 )
 
+type Pair[K comparable, V any] = mapsimpl.Pair[K, V]
+
 func New[K comparable, V any]() map[K]V                { return mapsimpl.New[K, V]() }
 func NewWithCap[K comparable, V any](hint int) map[K]V { return mapsimpl.NewWithCap[K, V](hint) }
 func Of[K comparable, V any](kvs ...any) map[K]V       { return mapsimpl.Of[K, V](kvs...) }
-func OrEmpty[K comparable, V any](m map[K]V) map[K]V   { return mapsimpl.OrEmpty(m) }
-func IsEmpty[K comparable, V any](m map[K]V) bool      { return mapsimpl.IsEmpty(m) }
-func IsNotEmpty[K comparable, V any](m map[K]V) bool   { return mapsimpl.IsNotEmpty(m) }
+func OfE[K comparable, V any](kvs ...any) (map[K]V, error) {
+	return mapsimpl.OfE[K, V](kvs...)
+}
+func FromPairs[K comparable, V any](pairs ...Pair[K, V]) map[K]V {
+	return mapsimpl.FromPairs(pairs...)
+}
+func OrEmpty[K comparable, V any](m map[K]V) map[K]V { return mapsimpl.OrEmpty(m) }
+func IsEmpty[K comparable, V any](m map[K]V) bool    { return mapsimpl.IsEmpty(m) }
+func IsNotEmpty[K comparable, V any](m map[K]V) bool { return mapsimpl.IsNotEmpty(m) }
 
 func ContainsKey[K comparable, V any](m map[K]V, key K) bool { return mapsimpl.ContainsKey(m, key) }
 

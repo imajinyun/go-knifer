@@ -6,6 +6,18 @@ import (
 )
 
 func TestMapFacade(t *testing.T) {
+	fromPairs := FromPairs(
+		Pair[string, int]{Key: "a", Value: 1},
+		Pair[string, int]{Key: "b", Value: 2},
+	)
+	if fromPairs["a"] != 1 || fromPairs["b"] != 2 {
+		t.Fatalf("FromPairs failed: %v", fromPairs)
+	}
+	fromAny, err := OfE[string, int]("a", 1, "b", 2)
+	if err != nil || fromAny["a"] != 1 || fromAny["b"] != 2 {
+		t.Fatalf("OfE failed: %v, %v", fromAny, err)
+	}
+
 	m := map[string]int{"a": 1, "b": 2}
 	if IsEmpty(m) || !IsNotEmpty(m) {
 		t.Fatal("empty checks failed")

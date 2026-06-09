@@ -17,6 +17,9 @@ var (
 type Merge = jobimpl.Merge
 
 // Sliceable describes work that can be split by half-open index ranges.
+// Run may be called concurrently when MaxConcurrency is greater than 1, so
+// implementations must protect shared mutable state. Returned Merge callbacks
+// are replayed serially in shard order after successful shard execution.
 type Sliceable = jobimpl.Sliceable
 
 // OptionCarrier exposes embedded scheduling options for Run.

@@ -120,12 +120,23 @@ func copyWithLimit(w io.Writer, r io.Reader, maxBytes int64) (int64, error) {
 	if maxBytes <= 0 {
 		return io.Copy(w, r)
 	}
-	limited := &io.LimitedReader{R: r, N: maxBytes + 1}
-	n, err := io.Copy(w, limited)
-	if n > maxBytes {
+	n, err := io.CopyN(w, r, maxBytes)
+	if errors.Is(err, io.EOF) {
+		return n, nil
+	}
+	if err != nil {
+		return n, err
+	}
+
+	var extra [1]byte
+	extraN, err := r.Read(extra[:])
+	if extraN > 0 {
 		return n, HTTPErrorfWithCode(knifer.ErrCodeUnsupported, "response body exceeds max bytes: %d", maxBytes)
 	}
-	return n, err
+	if err != nil && !errors.Is(err, io.EOF) {
+		return n, err
+	}
+	return n, nil
 }
 
 type saveConfig struct {

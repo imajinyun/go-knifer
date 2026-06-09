@@ -37,6 +37,9 @@ type Merge func() error
 
 // Sliceable describes work that can be split by half-open index ranges.
 // Implementations only need to define how data is split and how one shard runs.
+// Run may be called concurrently when MaxConcurrency is greater than 1, so
+// implementations must protect shared mutable state. Returned Merge callbacks
+// are replayed serially in shard order after successful shard execution.
 type Sliceable interface {
 	Len() int
 	Run(ctx context.Context, start, end int) (Merge, error)

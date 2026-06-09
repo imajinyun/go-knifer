@@ -95,6 +95,27 @@ func TestSetKeyRejectsNone(t *testing.T) {
 	}
 }
 
+func TestSetKeyEReturnsSignerCreationError(t *testing.T) {
+	j := New().SetHeader(HeaderAlgorithm, AlgPS256)
+	if err := j.SetKeyE([]byte("hmac-key")); err == nil {
+		t.Fatal("SetKeyE should return signer creation error for non-HMAC header alg")
+	}
+}
+
+func TestSetSignerNilIsSafe(t *testing.T) {
+	j := New()
+	j.SetSigner(nil)
+	if j.Signer() != nil {
+		t.Fatal("SetSigner(nil) should clear signer")
+	}
+	if got := j.Algorithm(); got != "" {
+		t.Fatalf("SetSigner(nil) should not write alg, got %q", got)
+	}
+	if err := j.SetSignerE(nil); err == nil {
+		t.Fatal("SetSignerE(nil) should return an error")
+	}
+}
+
 func TestNeedSigner(t *testing.T) {
 	j := New().SetPayload("sub", "x")
 	if _, err := j.Sign(); err == nil {
