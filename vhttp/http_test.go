@@ -296,7 +296,7 @@ func TestFacadeScopedGlobalConfig(t *testing.T) {
 	})
 
 	cfg := vhttp.SnapshotGlobalConfig()
-	if cfg.Timeout != 0 || cfg.MaxRedirects != 10 || cfg.MaxResponseBytes != 64<<20 || !cfg.FollowRedirects || cfg.Headers.Get("X-Facade-Scope") != "" || cfg.CookieJar == nil {
+	if cfg.Timeout != 30*time.Second || cfg.MaxRedirects != 10 || cfg.MaxResponseBytes != 64<<20 || !cfg.FollowRedirects || cfg.Headers.Get("X-Facade-Scope") != "" || cfg.CookieJar == nil {
 		t.Fatalf("facade config not restored after scoped helper: %#v", cfg)
 	}
 }

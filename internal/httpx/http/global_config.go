@@ -9,7 +9,7 @@ import (
 // Global default configuration, aligned with the utility toolkit-http HttpGlobalConfig.
 var (
 	globalMu               sync.RWMutex
-	globalTimeout          = defaultGlobalTimeout // 0 means using the HTTP client's default timeout.
+	globalTimeout          = defaultGlobalTimeout
 	globalMaxRedirects     = defaultGlobalMaxRedirects
 	globalMaxResponseBytes = int64(defaultGlobalMaxResponseBytes)
 	globalIgnoreEOFError   = true
@@ -17,10 +17,12 @@ var (
 	globalFollowRedirects  = true
 	globalDefaultUserAgent = ""
 	globalBoundary         = defaultGlobalBoundary
+	globalHeaders          = defaultGlobalHeaders()
+	cookieJar              = newDefaultCookieJar()
 )
 
 const (
-	defaultGlobalTimeout          = 0 * time.Second
+	defaultGlobalTimeout          = 30 * time.Second
 	defaultGlobalMaxRedirects     = 10
 	defaultGlobalMaxResponseBytes = 64 << 20
 	defaultGlobalBoundary         = "--------------------gokitFormBoundary"
@@ -43,6 +45,8 @@ type GlobalConfig struct {
 // SnapshotGlobalConfig returns a consistent copy of the current package-level HTTP defaults.
 func SnapshotGlobalConfig() GlobalConfig {
 	globalMu.RLock()
+	defer globalMu.RUnlock()
+
 	cfg := GlobalConfig{
 		Timeout:          globalTimeout,
 		MaxRedirects:     globalMaxRedirects,
@@ -52,10 +56,9 @@ func SnapshotGlobalConfig() GlobalConfig {
 		FollowRedirects:  globalFollowRedirects,
 		DefaultUserAgent: globalDefaultUserAgent,
 		Boundary:         globalBoundary,
+		Headers:          cloneHeader(globalHeaders),
+		CookieJar:        cookieJar,
 	}
-	globalMu.RUnlock()
-	cfg.Headers = CloneGlobalHeaders()
-	cfg.CookieJar = GetCookieJar()
 	return cfg
 }
 
@@ -66,7 +69,8 @@ func ResetGlobalConfig() { applyGlobalConfig(defaultGlobalConfig()) }
 func ConfigureGlobalConfig(cfg GlobalConfig) { applyGlobalConfig(cfg) }
 
 // WithScopedGlobalConfig runs fn with cfg installed as package-level HTTP defaults,
-// then restores the previous defaults. It is intended for tests and serialized setup code.
+// then restores the previous defaults. It is intended for tests and serialized setup code;
+// do not use it from parallel tests or production request paths because it mutates package-level state.
 func WithScopedGlobalConfig(cfg GlobalConfig, fn func()) {
 	previous := SnapshotGlobalConfig()
 	ConfigureGlobalConfig(cfg)
@@ -74,6 +78,11 @@ func WithScopedGlobalConfig(cfg GlobalConfig, fn func()) {
 	if fn != nil {
 		fn()
 	}
+}
+
+func cloneGlobalConfig(cfg GlobalConfig) GlobalConfig {
+	cfg.Headers = cloneHeader(cfg.Headers)
+	return cfg
 }
 
 func defaultGlobalConfig() GlobalConfig {
@@ -92,7 +101,11 @@ func defaultGlobalConfig() GlobalConfig {
 }
 
 func applyGlobalConfig(cfg GlobalConfig) {
+	cfg = cloneGlobalConfig(cfg)
+
 	globalMu.Lock()
+	defer globalMu.Unlock()
+
 	globalTimeout = cfg.Timeout
 	globalMaxRedirects = cfg.MaxRedirects
 	globalMaxResponseBytes = cfg.MaxResponseBytes
@@ -101,13 +114,8 @@ func applyGlobalConfig(cfg GlobalConfig) {
 	globalFollowRedirects = cfg.FollowRedirects
 	globalDefaultUserAgent = cfg.DefaultUserAgent
 	globalBoundary = cfg.Boundary
-	globalMu.Unlock()
-
-	globalHeadersMu.Lock()
-	globalHeaders = cloneHeader(cfg.Headers)
-	globalHeadersMu.Unlock()
-
-	SetCookieJar(cfg.CookieJar)
+	globalHeaders = cfg.Headers
+	cookieJar = cfg.CookieJar
 }
 
 // SetGlobalTimeout sets the global default timeout.

@@ -19,6 +19,16 @@ func TestGlobalTimeout(t *testing.T) {
 	}
 }
 
+func TestDefaultGlobalTimeoutIsBounded(t *testing.T) {
+	previous := SnapshotGlobalConfig()
+	defer ConfigureGlobalConfig(previous)
+
+	ResetGlobalConfig()
+	if got := GetGlobalTimeout(); got != defaultGlobalTimeout || got <= 0 {
+		t.Fatalf("default timeout = %v, want positive %v", got, defaultGlobalTimeout)
+	}
+}
+
 func TestGlobalUserAgent(t *testing.T) {
 	old := GetGlobalUserAgent()
 	defer SetGlobalUserAgent(old)
@@ -174,7 +184,7 @@ func TestResetGlobalConfigRestoresDefaults(t *testing.T) {
 
 	ResetGlobalConfig()
 	cfg := SnapshotGlobalConfig()
-	if cfg.Timeout != 0 || cfg.MaxRedirects != 10 || cfg.MaxResponseBytes != defaultGlobalMaxResponseBytes || !cfg.FollowRedirects || !cfg.IgnoreEOFError || cfg.DecodeURL || cfg.DefaultUserAgent != "" || cfg.Boundary != "--------------------gokitFormBoundary" {
+	if cfg.Timeout != defaultGlobalTimeout || cfg.MaxRedirects != 10 || cfg.MaxResponseBytes != defaultGlobalMaxResponseBytes || !cfg.FollowRedirects || !cfg.IgnoreEOFError || cfg.DecodeURL || cfg.DefaultUserAgent != "" || cfg.Boundary != "--------------------gokitFormBoundary" {
 		t.Fatalf("reset scalar config = %#v", cfg)
 	}
 	if cfg.Headers.Get("X-Reset") != "" || cfg.Headers.Get("User-Agent") == "" || cfg.CookieJar == nil {

@@ -159,7 +159,7 @@ func NewClient(opts ...ClientOption) *Client {
 
 // NewIsolatedClient creates a request factory without reading package-level global defaults.
 func NewIsolatedClient(opts ...ClientOption) *Client {
-	c := &Client{cfg: GlobalConfig{FollowRedirects: true, MaxRedirects: 10, MaxResponseBytes: defaultGlobalMaxResponseBytes}}
+	c := &Client{cfg: isolatedGlobalConfig()}
 	for _, opt := range opts {
 		if opt != nil {
 			opt(c)
@@ -258,7 +258,16 @@ func NewRequest(method Method, rawURL string, opts ...RequestOption) *HTTPReques
 
 // NewIsolatedRequest creates a request without reading package-level global defaults.
 func NewIsolatedRequest(method Method, rawURL string, opts ...RequestOption) *HTTPRequest {
-	return NewRequestWithConfig(method, rawURL, GlobalConfig{FollowRedirects: true, MaxRedirects: 10, MaxResponseBytes: defaultGlobalMaxResponseBytes}, opts...)
+	return NewRequestWithConfig(method, rawURL, isolatedGlobalConfig(), opts...)
+}
+
+func isolatedGlobalConfig() GlobalConfig {
+	return GlobalConfig{
+		Timeout:          defaultGlobalTimeout,
+		FollowRedirects:  true,
+		MaxRedirects:     defaultGlobalMaxRedirects,
+		MaxResponseBytes: defaultGlobalMaxResponseBytes,
+	}
 }
 
 // NewRequestWithConfig creates a request from an explicit global configuration snapshot.

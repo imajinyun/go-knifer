@@ -26,16 +26,12 @@ var (
 	globalMaxResponseBytes = int64(defaultGlobalMaxResponseBytes)
 	globalFollowRedirects  = defaultGlobalFollowRedirects
 	globalDefaultUserAgent = ""
-
-	globalHeadersMu sync.RWMutex
-	globalHeaders   = defaultGlobalHeaders()
-
-	cookieMu       sync.RWMutex
-	cookieDisabled bool
+	globalHeaders          = defaultGlobalHeaders()
+	cookieDisabled         bool
 )
 
 const (
-	defaultGlobalTimeout          = 0 * time.Second
+	defaultGlobalTimeout          = 30 * time.Second
 	defaultGlobalMaxRedirects     = 10
 	defaultGlobalMaxResponseBytes = 64 << 20
 	defaultGlobalFollowRedirects  = true
@@ -55,16 +51,17 @@ func defaultGlobalHeaders() HeaderValues {
 // SnapshotGlobalConfig returns a copy of the package-level resty defaults.
 func SnapshotGlobalConfig() GlobalConfig {
 	globalMu.RLock()
+	defer globalMu.RUnlock()
+
 	cfg := GlobalConfig{
 		Timeout:          globalTimeout,
 		MaxRedirects:     globalMaxRedirects,
 		MaxResponseBytes: globalMaxResponseBytes,
 		FollowRedirects:  globalFollowRedirects,
 		DefaultUserAgent: globalDefaultUserAgent,
+		Headers:          cloneHeaders(globalHeaders),
+		CookieDisabled:   cookieDisabled,
 	}
-	globalMu.RUnlock()
-	cfg.Headers = CloneGlobalHeaders()
-	cfg.CookieDisabled = isCookieDisabled()
 	return cfg
 }
 
@@ -75,7 +72,8 @@ func ResetGlobalConfig() { applyGlobalConfig(defaultGlobalConfig()) }
 func ConfigureGlobalConfig(cfg GlobalConfig) { applyGlobalConfig(cfg) }
 
 // WithScopedGlobalConfig runs fn with cfg installed as package-level resty defaults,
-// then restores the previous defaults. It is intended for tests and serialized setup code.
+// then restores the previous defaults. It is intended for tests and serialized setup code;
+// do not use it from parallel tests or production request paths because it mutates package-level state.
 func WithScopedGlobalConfig(cfg GlobalConfig, fn func()) {
 	previous := SnapshotGlobalConfig()
 	ConfigureGlobalConfig(cfg)
@@ -83,6 +81,11 @@ func WithScopedGlobalConfig(cfg GlobalConfig, fn func()) {
 	if fn != nil {
 		fn()
 	}
+}
+
+func cloneGlobalConfig(cfg GlobalConfig) GlobalConfig {
+	cfg.Headers = cloneHeaders(cfg.Headers)
+	return cfg
 }
 
 func defaultGlobalConfig() GlobalConfig {
@@ -98,25 +101,22 @@ func defaultGlobalConfig() GlobalConfig {
 }
 
 func applyGlobalConfig(cfg GlobalConfig) {
+	cfg = cloneGlobalConfig(cfg)
+
 	globalMu.Lock()
+	defer globalMu.Unlock()
+
 	globalTimeout = cfg.Timeout
 	globalMaxRedirects = cfg.MaxRedirects
 	globalMaxResponseBytes = cfg.MaxResponseBytes
 	globalFollowRedirects = cfg.FollowRedirects
 	globalDefaultUserAgent = cfg.DefaultUserAgent
-	globalMu.Unlock()
-
-	globalHeadersMu.Lock()
-	globalHeaders = cloneHeaders(cfg.Headers)
-	globalHeadersMu.Unlock()
-
-	cookieMu.Lock()
+	globalHeaders = cfg.Headers
 	cookieDisabled = cfg.CookieDisabled
-	cookieMu.Unlock()
 }
 
 func isolatedGlobalConfig() GlobalConfig {
-	return GlobalConfig{FollowRedirects: defaultGlobalFollowRedirects, MaxRedirects: defaultGlobalMaxRedirects, MaxResponseBytes: defaultGlobalMaxResponseBytes}
+	return GlobalConfig{Timeout: defaultGlobalTimeout, FollowRedirects: defaultGlobalFollowRedirects, MaxRedirects: defaultGlobalMaxRedirects, MaxResponseBytes: defaultGlobalMaxResponseBytes}
 }
 
 func cloneHeaders(headers HeaderValues) HeaderValues {
@@ -192,42 +192,48 @@ func GetGlobalUserAgent() string {
 
 // SetGlobalHeader sets a global default request header.
 func SetGlobalHeader(name, value string) {
-	globalHeadersMu.Lock()
-	defer globalHeadersMu.Unlock()
+	globalMu.Lock()
+	defer globalMu.Unlock()
+	if globalHeaders == nil {
+		globalHeaders = HeaderValues{}
+	}
 	setHeader(globalHeaders, name, value)
 }
 
 // AddGlobalHeader appends a global default request header value.
 func AddGlobalHeader(name, value string) {
-	globalHeadersMu.Lock()
-	defer globalHeadersMu.Unlock()
+	globalMu.Lock()
+	defer globalMu.Unlock()
+	if globalHeaders == nil {
+		globalHeaders = HeaderValues{}
+	}
 	globalHeaders[name] = append(globalHeaders[name], value)
 }
 
 // RemoveGlobalHeader removes a global default request header.
 func RemoveGlobalHeader(name string) {
-	globalHeadersMu.Lock()
-	defer globalHeadersMu.Unlock()
+	globalMu.Lock()
+	defer globalMu.Unlock()
 	delete(globalHeaders, name)
 }
 
 // CloneGlobalHeaders returns a copy of global default request headers.
 func CloneGlobalHeaders() HeaderValues {
-	globalHeadersMu.RLock()
-	defer globalHeadersMu.RUnlock()
+	globalMu.RLock()
+	defer globalMu.RUnlock()
 	return cloneHeaders(globalHeaders)
 }
 
 // CloseCookie disables global cookie management.
 func CloseCookie() {
-	cookieMu.Lock()
-	defer cookieMu.Unlock()
+	globalMu.Lock()
+	defer globalMu.Unlock()
 	cookieDisabled = true
 }
 
 func isCookieDisabled() bool {
-	cookieMu.RLock()
-	defer cookieMu.RUnlock()
+	globalMu.RLock()
+	defer globalMu.RUnlock()
 	return cookieDisabled
 }
 

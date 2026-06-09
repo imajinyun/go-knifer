@@ -217,7 +217,7 @@ func TestFacadeScopedGlobalConfig(t *testing.T) {
 	})
 
 	cfg := vresty.SnapshotGlobalConfig()
-	if cfg.Timeout != 0 || cfg.MaxRedirects != 10 || cfg.MaxResponseBytes != 64<<20 || !cfg.FollowRedirects || len(cfg.Headers["X-Facade-Scope"]) != 0 || cfg.CookieDisabled {
+	if cfg.Timeout != 30*time.Second || cfg.MaxRedirects != 10 || cfg.MaxResponseBytes != 64<<20 || !cfg.FollowRedirects || len(cfg.Headers["X-Facade-Scope"]) != 0 || cfg.CookieDisabled {
 		t.Fatalf("facade config not restored after scoped helper: %#v", cfg)
 	}
 }

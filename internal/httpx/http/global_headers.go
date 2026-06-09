@@ -2,13 +2,6 @@ package http
 
 import (
 	"net/http"
-	"sync"
-)
-
-// GlobalHeaders maintains global default request headers, aligned with the utility toolkit-http GlobalHeaders.
-var (
-	globalHeadersMu sync.RWMutex
-	globalHeaders   = defaultGlobalHeaders()
 )
 
 func defaultGlobalHeaders() http.Header {
@@ -25,29 +18,35 @@ func defaultGlobalHeaders() http.Header {
 
 // SetGlobalHeader sets a global default request header.
 func SetGlobalHeader(name, value string) {
-	globalHeadersMu.Lock()
-	defer globalHeadersMu.Unlock()
+	globalMu.Lock()
+	defer globalMu.Unlock()
+	if globalHeaders == nil {
+		globalHeaders = http.Header{}
+	}
 	globalHeaders.Set(name, value)
 }
 
 // AddGlobalHeader appends a global default request header value.
 func AddGlobalHeader(name, value string) {
-	globalHeadersMu.Lock()
-	defer globalHeadersMu.Unlock()
+	globalMu.Lock()
+	defer globalMu.Unlock()
+	if globalHeaders == nil {
+		globalHeaders = http.Header{}
+	}
 	globalHeaders.Add(name, value)
 }
 
 // RemoveGlobalHeader removes a global default request header.
 func RemoveGlobalHeader(name string) {
-	globalHeadersMu.Lock()
-	defer globalHeadersMu.Unlock()
+	globalMu.Lock()
+	defer globalMu.Unlock()
 	globalHeaders.Del(name)
 }
 
 // CloneGlobalHeaders returns a copy of global default request headers.
 func CloneGlobalHeaders() http.Header {
-	globalHeadersMu.RLock()
-	defer globalHeadersMu.RUnlock()
+	globalMu.RLock()
+	defer globalMu.RUnlock()
 	return cloneHeader(globalHeaders)
 }
 

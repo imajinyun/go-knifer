@@ -412,6 +412,16 @@ func TestSnapshotGlobalConfigAndExplicitRequestConfig(t *testing.T) {
 	}
 }
 
+func TestDefaultGlobalTimeoutIsBounded(t *testing.T) {
+	previous := SnapshotGlobalConfig()
+	defer ConfigureGlobalConfig(previous)
+
+	ResetGlobalConfig()
+	if got := GetGlobalTimeout(); got != defaultGlobalTimeout || got <= 0 {
+		t.Fatalf("default timeout = %v, want positive %v", got, defaultGlobalTimeout)
+	}
+}
+
 func TestNewIsolatedRequestDoesNotReadGlobals(t *testing.T) {
 	oldTimeout := GetGlobalTimeout()
 	oldMaxRedirects := GetGlobalMaxRedirects()
@@ -430,7 +440,7 @@ func TestNewIsolatedRequestDoesNotReadGlobals(t *testing.T) {
 	SetGlobalHeader("X-Isolated", "global")
 
 	req := NewIsolatedRequest(MethodGet, "http://example.com")
-	if req.timeout != 0 || req.maxRedirects != 10 || req.maxResponse != defaultGlobalMaxResponseBytes || req.followRedir == nil || !*req.followRedir || req.userAgent != "" {
+	if req.timeout != defaultGlobalTimeout || req.maxRedirects != 10 || req.maxResponse != defaultGlobalMaxResponseBytes || req.followRedir == nil || !*req.followRedir || req.userAgent != "" {
 		t.Fatalf("isolated request leaked globals: timeout=%v max=%d maxResponse=%d follow=%v ua=%q", req.timeout, req.maxRedirects, req.maxResponse, req.followRedir, req.userAgent)
 	}
 	if got := req.headers["X-Isolated"]; len(got) != 0 {
@@ -473,7 +483,7 @@ func TestResetGlobalConfigRestoresDefaults(t *testing.T) {
 
 	ResetGlobalConfig()
 	cfg := SnapshotGlobalConfig()
-	if cfg.Timeout != 0 || cfg.MaxRedirects != 10 || cfg.MaxResponseBytes != defaultGlobalMaxResponseBytes || !cfg.FollowRedirects || cfg.DefaultUserAgent != "" || cfg.CookieDisabled {
+	if cfg.Timeout != defaultGlobalTimeout || cfg.MaxRedirects != 10 || cfg.MaxResponseBytes != defaultGlobalMaxResponseBytes || !cfg.FollowRedirects || cfg.DefaultUserAgent != "" || cfg.CookieDisabled {
 		t.Fatalf("reset scalar config = %#v", cfg)
 	}
 	if got := cfg.Headers["X-Reset"]; len(got) != 0 {

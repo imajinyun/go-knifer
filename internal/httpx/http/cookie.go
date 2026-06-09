@@ -3,13 +3,6 @@ package http
 import (
 	"net/http"
 	"net/http/cookiejar"
-	"sync"
-)
-
-// GlobalCookie provides global cookie management, aligned with the utility toolkit-http GlobalCookieManager.
-var (
-	cookieMu  sync.RWMutex
-	cookieJar = newDefaultCookieJar()
 )
 
 func newDefaultCookieJar() http.CookieJar {
@@ -19,15 +12,15 @@ func newDefaultCookieJar() http.CookieJar {
 
 // SetCookieJar customizes the global CookieJar; nil disables cookie management.
 func SetCookieJar(jar http.CookieJar) {
-	cookieMu.Lock()
-	defer cookieMu.Unlock()
+	globalMu.Lock()
+	defer globalMu.Unlock()
 	cookieJar = jar
 }
 
 // GetCookieJar returns the current global CookieJar.
 func GetCookieJar() http.CookieJar {
-	cookieMu.RLock()
-	defer cookieMu.RUnlock()
+	globalMu.RLock()
+	defer globalMu.RUnlock()
 	return cookieJar
 }
 
