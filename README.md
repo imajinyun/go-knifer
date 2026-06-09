@@ -85,7 +85,7 @@ The project follows an “internal implementation + public facade” layout: `in
 | `vver` | `github.com/imajinyun/go-knifer/vver` | Version helpers: version comparison, greater/less predicates, expression matching, inclusive ranges, and custom expression delimiters. |
 | `vref` | `github.com/imajinyun/go-knifer/vref` | Reflection helpers: field lookup and mutation, method discovery and invocation, constructor-style function calls, type/value utilities, method classification, and explicit unsafe/unexported field-access options. |
 | `vbean` | `github.com/imajinyun/go-knifer/vbean` | Bean/struct mapping helpers: struct/map conversion, copy properties, tag and alias matching, ignore-empty/zero options, and weak type conversion. |
-| `vzip` | `github.com/imajinyun/go-knifer/vzip` | ZIP, gzip, and zlib helpers: archive creation/extraction, entry lookup, archive traversal, append, in-memory entries, stream compression, provider-backed archive file operations, and bounded extraction/decompression defaults. |
+| `vzip` | `github.com/imajinyun/go-knifer/vzip` | ZIP, gzip, and zlib helpers: archive creation/extraction, entry lookup, archive traversal, append, in-memory entries, stream compression, provider-backed archive file operations, bounded extraction/decompression defaults, path traversal checks, and symlink escape checks during extraction. |
 | `vpoi` | `github.com/imajinyun/go-knifer/vpoi` | Office document helpers: lightweight Excel XLSX sheet listing, row reading/writing, multi-sheet writing, in-memory workbook creation, and injectable workbook/file-system providers. |
 | `vmask` | `github.com/imajinyun/go-knifer/vmask` | Masking helpers: mask names, IDs, phones, addresses, email, passwords, license plates, bank cards, IPs, passports, and credit codes. |
 | `vnum` | `github.com/imajinyun/go-knifer/vnum` | Numeric helpers: precise arithmetic, rounding modes, provider-backed parsing/formatting, number checks, random unique numbers, ranges, factorial/combinations, gcd/lcm, binary conversion, comparison, byte conversion, expression calculation, and odd/even checks. |
@@ -104,8 +104,8 @@ The project follows an “internal implementation + public facade” layout: `in
 | `vcrypto` | `github.com/imajinyun/go-knifer/vcrypto` | Cryptography and digests: SHA-2, provider-backed digest helpers, HMAC, PBKDF2-SHA256, parameter signing, random bytes, AES-GCM with nonce/tag/block-factory options, RSA OAEP/PSS plus configurable data-signing options, PEM, and X.509 certificate helpers. |
 | `vdb` | `github.com/imajinyun/go-knifer/vdb` | Database helpers built on database/sql: SQL execution, named parameters, entities, conditions, query builders, transactions, pagination, lightweight metadata lookup, and injectable `sql.Open` providers. |
 | `vdfa` | `github.com/imajinyun/go-knifer/vdfa` | DFA word-tree matching: stop-rune filtering, first/all matches, dense and greedy match modes, found-word metadata, package-level matcher helpers, isolated matcher options, JSON marshal/unmarshal providers for `Any` helpers, text replacement, and resettable async runner providers for package-level initialization. |
-| `vhttp` | `github.com/imajinyun/go-knifer/vhttp` | Chainable HTTP client, isolated/global-config request construction, create/get/post `WithOptions` helpers, explicit-error `E` shortcuts, code-classified HTTP errors, provider-backed transports/request factories/multipart writers/download saves, BasicAuth, User-Agent parsing, provider-backed HTML cleaning/filtering, resettable transport/server starters, async server runner options, and simple server helpers. |
-| `vresty` | `github.com/imajinyun/go-knifer/vresty` | Resty v3 based HTTP facade: chainable requests, JSON/form/multipart bodies, isolated/global-config request construction, create/get/post `WithOptions` helpers, per-request client factories, resettable default Resty client providers, downloads, and lightweight response helpers. |
+| `vhttp` | `github.com/imajinyun/go-knifer/vhttp` | Chainable HTTP client, isolated/global-config request construction, create/get/post `WithOptions` helpers, explicit-error `E` shortcuts, code-classified HTTP errors, provider-backed transports/request factories/multipart writers/download saves, safe file downloads, BasicAuth, User-Agent parsing, provider-backed HTML cleaning/filtering, resettable transport/server starters, async server runner options, and simple server helpers. |
+| `vresty` | `github.com/imajinyun/go-knifer/vresty` | Resty v3 based HTTP facade: chainable requests, JSON/form/multipart bodies, isolated/global-config request construction, create/get/post `WithOptions` helpers, per-request client factories, resettable default Resty client providers, downloads and safe file downloads, and lightweight response helpers. |
 | `vjson` | `github.com/imajinyun/go-knifer/vjson` | Ordered JSON objects/arrays, JSON parsing and formatting, path-based get/put, provider-backed marshal/unmarshal, injectable scalar parse/format functions, configurable object/array/bean/list conversion, and XML/JSON conversion with parser/writer options. |
 | `vxml` | `github.com/imajinyun/go-knifer/vxml` | XML helpers: parse/read/write/format, tree navigation, simple XPath-style lookup, escaping, map/bean conversion with parser/codec/scalar parser options, transform options, and namespace utilities. |
 | `vjwt` | `github.com/imajinyun/go-knifer/vjwt` | JWT creation, parsing, signing, verification, and time-claim validation; supports HMAC, RSA-PSS, ECDSA, rejects unsigned `alg=none` tokens, and provides JSON marshal/unmarshal options. |
@@ -170,7 +170,7 @@ Provider coverage highlights:
 
 | Area | Examples |
 | --- | --- |
-| HTTP / Resty | `vhttp.NewIsolatedRequest`, `vhttp.NewRequestWithConfig`, `vhttp.Get`, `vhttp.Post`, `vhttp.GetSafe`, `vhttp.PostSafe`, `vhttp.GetStringE`, `vhttp.GetStringSafeE`, `vhttp.GetWithTimeoutE`, `vhttp.PostJSONE`, `vhttp.PostJSONSafeE`, `vhttp.DownloadBytesE`, `vhttp.DownloadBytesSafeE`, `vhttp.NewErrorWithCode`, `vhttp.WithTransportProvider`, `vhttp.WithRequestFactory`, `vhttp.WithMultipartWriterFactory`, `vhttp.ResetDefaultTransport`, `vhttp.WithListenAndServeFunc`, `vhttp.WithAsyncRunner`, `vhttp.CreateServerWithOptions`, `vhttp.CleanHTMLWithOptions`, `vhttp.FilterHTMLTagWithOptions`, `vhttp.WithHTMLFilterCompileFunc`, `vresty.NewIsolatedRequest`, `vresty.WithGlobalConfig`, `vresty.WithRestyClientFactory`, `vresty.ConfigureDefaultRestyClientProvider`, `vresty.ResetDefaultRestyClientProvider`, `vresty.Get`, `vresty.Post`, `vresty.GetSafe`, `vresty.PostSafe`, `vresty.GetStringE`, `vresty.GetStringSafeE`, `vresty.GetWithTimeoutE`, `vresty.PostJSONE`, `vresty.PostJSONSafeE`, `vresty.DownloadBytesE`, `vresty.DownloadBytesSafeE` |
+| HTTP / Resty | `vhttp.NewIsolatedRequest`, `vhttp.NewRequestWithConfig`, `vhttp.Get`, `vhttp.Post`, `vhttp.GetSafe`, `vhttp.PostSafe`, `vhttp.GetStringE`, `vhttp.GetStringSafeE`, `vhttp.GetWithTimeoutE`, `vhttp.PostJSONE`, `vhttp.PostJSONSafeE`, `vhttp.DownloadBytesE`, `vhttp.DownloadBytesSafeE`, `vhttp.DownloadFile`, `vhttp.DownloadFileSafe`, `vhttp.DownloadFileSafeWithOptions`, `vhttp.NewErrorWithCode`, `vhttp.WithTransportProvider`, `vhttp.WithRequestFactory`, `vhttp.WithMultipartWriterFactory`, `vhttp.ResetDefaultTransport`, `vhttp.WithListenAndServeFunc`, `vhttp.WithAsyncRunner`, `vhttp.CreateServerWithOptions`, `vhttp.CleanHTMLWithOptions`, `vhttp.FilterHTMLTagWithOptions`, `vhttp.WithHTMLFilterCompileFunc`, `vresty.NewIsolatedRequest`, `vresty.WithGlobalConfig`, `vresty.WithRestyClientFactory`, `vresty.ConfigureDefaultRestyClientProvider`, `vresty.ResetDefaultRestyClientProvider`, `vresty.Get`, `vresty.Post`, `vresty.GetSafe`, `vresty.PostSafe`, `vresty.GetStringE`, `vresty.GetStringSafeE`, `vresty.GetWithTimeoutE`, `vresty.PostJSONE`, `vresty.PostJSONSafeE`, `vresty.DownloadBytesE`, `vresty.DownloadBytesSafeE`, `vresty.DownloadFile`, `vresty.DownloadFileSafe`, `vresty.DownloadFileSafeWithOptions` |
 | File / config / archive / POI | `vfile` provider options, `vconf.LoadWithOptions`, `vconf.LoadRemoteSafeWithOptions`, `vconf.WatchWithOptions`, `vconf.WatchOptions.Runner`, `(*vconf.Conf).Clone`, `vzip.WithMaxBytes`, `vzip` provider options, `vpoi.WithOpenFileFunc`, `vpoi.WithNewFileFunc`, `vpoi.WithSaveAsFunc` |
 | Cron / DFA / ID / identity / random | `vcron.WithDefaultSchedulerOptions`, `vcron.NewConfigWithOptions`, `vcron.WithIDRandomReader`, `vcron.WithRunner`, `vcron.CronScheduleWithOptions`, `(*vcron.Scheduler).RunningCount`, `(*vcron.Scheduler).Wait`, `vcron.CronShutdown`, `vdfa.WithMatcherWords`, `vdfa.WithJSONMarshal`, `vdfa.WithJSONUnmarshal`, `vdfa.ContainsWithOptions`, `vdfa.ConfigureAsyncRunner`, `vdfa.ResetAsyncRunner`, `vid.NewIsolatedSnowflake`, `vid.CreateSnowflakeWithOptions`, `vid.WithSnowflakeCache`, `vid.WithFallbackRandomSource`, `vid.ConfigureDefaultFallbackRandomSourceProvider`, `vid.ResetDefaultFallbackRandomSource`, `vid.SetFallbackRandomSeed`, `vrand.SecureBytes`, `vrand.ConfigureDefaultRandomSourceProvider`, `vrand.ResetDefaultRandomSource`, `vrand.SetSeed`, `vident.BirthDateWithOptions` |
 | Encoding / JSON / XML / JWT / hash | `vcodec.Base64EncodeWithEncoding`, `vcodec.Base64DecodeWithEncoding`, `vcodec.Base64RawURLEncode`, `vcodec.Base64RawURLDecode`, `vhash.Hash32`, `vjson.WithMarshalFunc`, `vjson.WithUnmarshalFunc`, `vjson.WithParseUnmarshalFunc`, `vjson.WithBeanUnmarshalFunc`, `vjson.WithSprintFunc`, `vjson.WithParseIntFunc`, `vjson.WithParseFloatFunc`, `vjson.WithParseBoolFunc`, `vjson.WithFormatIntFunc`, `vjson.WithFormatFloatFunc`, `vjson.ParseObjWithOptions`, `vjson.ParseArrayWithOptions`, `vjson.ToBeanWithOptions`, `vjson.ToListWithOptions`, `vjson.XMLToJSONWithOptions`, `vjson.ToXMLWithOptions`, `vxml.WithScalarIntParser`, `vxml.WithScalarFloatParser`, `vxml.XMLToMapWithOptions`, `vxml.XMLNodeToMapWithOptions`, `vxml.XMLToMapIntoWithOptions`, `vxml.XMLNodeToMapIntoWithOptions`, `vxml.XMLToBeanWithOptions`, `vxml.XMLNodeToBeanWithOptions`, `vxml.TransformWithOptions`, `vxml.FormatWithOptions`, `vjwt.WithJSONMarshalFunc`, `vjwt.WithJSONUnmarshalFunc`, `vjwt.ParseTokenWithOptions`, `vjwt.WithTokenJSONOptions` |
@@ -263,7 +263,10 @@ Network and IO helpers prefer bounded, explicit behavior:
   convenience API.
 - HTTP and Resty downloads validate automatically discovered filenames before
   joining them under the destination directory, preventing path traversal when
-  callers pass a directory target.
+  callers pass a directory target. When the source URL is untrusted, use
+  `vhttp.DownloadFileSafe` / `DownloadFileSafeWithOptions` or
+  `vresty.DownloadFileSafe` / `DownloadFileSafeWithOptions`; these combine the
+  safe request URL policy with the same destination-save validation.
 - `vfile` read helpers use `vfile.DefaultMaxBytes` by default. Use
   `vfile.WithMaxBytes(n)` to tighten a read and `vfile.WithUnlimitedRead()` only
   when the caller has already bounded the source elsewhere.
@@ -281,12 +284,17 @@ Network and IO helpers prefer bounded, explicit behavior:
   input. Safe resource helpers default to HTTP(S), reject local files and plain
   filesystem paths, reject private network targets, check HTTP status, apply a
   timeout, and re-check redirects. Use `WithAllowedHosts` to pin trusted hosts;
-  only relax `WithRejectPrivateHosts` or `WithAllowLocalFiles` when the caller
-  has already established a narrower trust boundary.
+  host allowlists narrow the accepted host names but do not bypass private-host
+  rejection. Only relax `WithRejectPrivateHosts` or `WithAllowLocalFiles` when
+  the caller has already established a narrower trust boundary.
 - `vzip` extraction and decompression helpers are bounded by default to reduce
-  zip-bomb risk. Use `vzip.WithMaxBytes(n)` or `UnzipToLimit` /
-  `UnzipReaderToLimit` for a stricter budget; pass a negative max-byte value
-  only when another layer already enforces a trusted size limit.
+  zip-bomb risk. ZIP entry names are cleaned and checked before writing, and
+  extraction resolves destination parents with `filepath.EvalSymlinks` to reject
+  entries that would escape through a symlink. Use `vzip.WithEvalSymlinks` only
+  when tests or virtual filesystems need to replace that resolver. Use
+  `vzip.WithMaxBytes(n)` or `UnzipToLimit` / `UnzipReaderToLimit` for a stricter
+  budget; pass a negative max-byte value only when another layer already
+  enforces a trusted size limit.
 - Bloom filter constructors ending in `E`, such as
   `vblf.NewBitMapBloomFilterE`, `vblf.NewBitSetBloomFilterE`, and
   `vblf.NewFuncFilterE`, return validation errors for invalid sizes or hash
@@ -321,6 +329,7 @@ explicitly instead of swallowing failures.
 | Access user-controlled or otherwise untrusted HTTP(S) URLs | `vhttp.GetStringSafeE`, `vhttp.PostJSONSafeE`, `vhttp.DownloadBytesSafeE` |
 | Use the Resty-backed HTTP facade | `vresty.Get`, `vresty.Post`, `vresty.GetStringE`, `vresty.PostJSONE` |
 | Access untrusted URLs through Resty | `vresty.GetStringSafeE`, `vresty.PostJSONSafeE`, `vresty.DownloadBytesSafeE` |
+| Download a user-controlled URL to a file | `vhttp.DownloadFileSafe` or `vresty.DownloadFileSafe` |
 | Generate bytes for secrets, tokens, keys, nonces, or salts | `vrand.SecureBytes` |
 | Create an LRU cache | `vcache.NewLRU` or `vcache.NewLRUWithTimeout` |
 | Parse a cron expression | `vcron.NewPattern` or `vcron.MustNewPattern` |
@@ -671,7 +680,7 @@ jsonBody, err := vresty.PostJSONE("https://api.example.com/events", `{"event":"c
 if err != nil {
   panic(err)
 }
-n, err := vresty.DownloadFile("https://example.com/report.csv", "./downloads")
+n, err := vresty.DownloadFileSafe("https://example.com/report.csv", "./downloads")
 _, _, _ = body, jsonBody, n
 _ = err
 ```

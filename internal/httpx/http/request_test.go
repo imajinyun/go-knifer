@@ -598,12 +598,35 @@ func TestSafeRequestRejectsPrivateAndUnsafeRedirects(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parse server url: %v", err)
 	}
-	resp := GetSafe(srv.URL, WithAllowedHosts(serverURL.Hostname())).Execute()
+	resp := GetSafe(srv.URL,
+		WithURLPolicy(URLPolicy{AllowedSchemes: []string{"http", "https"}, AllowedHosts: []string{serverURL.Hostname()}}),
+	).Execute()
 	if body := resp.Body(); body != "ok" || resp.Err() != nil {
-		t.Fatalf("GetSafe allowed host body=%q err=%v", body, resp.Err())
+		t.Fatalf("GetSafe allowed public policy host body=%q err=%v", body, resp.Err())
 	}
-	if err := GetSafe(srv.URL+"/redirect", WithAllowedHosts(serverURL.Hostname())).Execute().Err(); err == nil {
+	if err := GetSafe(srv.URL+"/redirect",
+		WithURLPolicy(URLPolicy{AllowedSchemes: []string{"http", "https"}, AllowedHosts: []string{serverURL.Hostname()}}),
+	).Execute().Err(); err == nil {
 		t.Fatal("GetSafe should reject unsafe redirect targets")
+	}
+}
+
+func TestSafeRequestAllowedHostsDoesNotBypassPrivateRejection(t *testing.T) {
+	if err := GetSafe("http://127.0.0.1/config.yaml", WithAllowedHosts("127.0.0.1")).Execute().Err(); err == nil {
+		t.Fatal("GetSafe should reject allowlisted private hosts when RejectPrivate is enabled")
+	}
+
+	req := GetSafe("http://example.com/config.yaml",
+		WithAllowedHosts("example.com"),
+		WithLookupIP(func(context.Context, string) ([]net.IP, error) {
+			return []net.IP{net.ParseIP("127.0.0.1")}, nil
+		}),
+		WithTransport(roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+			return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("ok")), Header: make(http.Header)}, nil
+		})),
+	)
+	if err := req.Execute().Err(); err == nil {
+		t.Fatal("GetSafe should reject allowlisted hosts that resolve private during RoundTrip")
 	}
 }
 

@@ -129,6 +129,20 @@ func DownloadFileWithOptions(rawURL, dest string, requestOpts []RequestOption, s
 	return resp.SaveAs(dest, saveOpts...)
 }
 
+// DownloadFileSafe downloads to a file with SSRF-oriented safety checks enabled.
+func DownloadFileSafe(rawURL, dest string, opts ...SaveOption) (int64, error) {
+	return DownloadFileSafeWithOptions(rawURL, dest, nil, opts...)
+}
+
+// DownloadFileSafeWithOptions downloads to a file with SSRF-oriented safety checks enabled.
+func DownloadFileSafeWithOptions(rawURL, dest string, requestOpts []RequestOption, saveOpts ...SaveOption) (int64, error) {
+	resp := GetSafe(rawURL, requestOpts...).Execute()
+	if err := resp.Err(); err != nil {
+		return 0, err
+	}
+	return resp.SaveAs(dest, saveOpts...)
+}
+
 // Download downloads to a Writer.
 func Download(rawURL string, w io.Writer) (int64, error) { return DownloadWithOptions(rawURL, w) }
 

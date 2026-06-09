@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -349,6 +350,39 @@ func TestFacadeSaveProviderOptions(t *testing.T) {
 	}
 	if mkdirPath != "/virtual" || mkdirPerm != 0o700 || openPath != "/virtual/out.txt" || openPerm != 0o600 || openFlag&os.O_CREATE == 0 || written.String() != "vhttp-save" {
 		t.Fatalf("providers mkdir=%q/%v open=%q flag=%#x perm=%v content=%q", mkdirPath, mkdirPerm, openPath, openFlag, openPerm, written.String())
+	}
+}
+
+func TestFacadeDownloadFileSafe(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("X-Mode") != "safe" {
+			http.Error(w, "missing option header", http.StatusBadRequest)
+			return
+		}
+		_, _ = w.Write([]byte("vhttp-safe-file"))
+	}))
+	defer server.Close()
+
+	dir := t.TempDir()
+	n, err := vhttp.DownloadFileSafeWithOptions(server.URL, dir,
+		[]vhttp.RequestOption{
+			vhttp.WithHeader("X-Mode", "safe"),
+			vhttp.WithURLPolicy(vhttp.URLPolicy{AllowedSchemes: []string{"http", "https"}, RejectPrivate: false}),
+		},
+		vhttp.WithSaveDefaultFilename("safe.txt"),
+	)
+	if err != nil {
+		t.Fatalf("DownloadFileSafeWithOptions() error = %v", err)
+	}
+	if n != int64(len("vhttp-safe-file")) {
+		t.Fatalf("DownloadFileSafeWithOptions() n = %d", n)
+	}
+	data, err := os.ReadFile(filepath.Join(dir, "safe.txt"))
+	if err != nil {
+		t.Fatalf("read saved file: %v", err)
+	}
+	if string(data) != "vhttp-safe-file" {
+		t.Fatalf("saved file = %q", data)
 	}
 }
 

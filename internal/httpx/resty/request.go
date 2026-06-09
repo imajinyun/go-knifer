@@ -434,7 +434,9 @@ func WithURLPolicy(policy URLPolicy) RequestOption {
 	}
 }
 
-// WithAllowedHosts restricts Safe requests to the provided host names.
+// WithAllowedHosts restricts Safe requests to the provided host names. It does
+// not bypass RejectPrivate; allowlisted hosts that resolve to private addresses
+// are still rejected unless the URLPolicy explicitly disables RejectPrivate.
 func WithAllowedHosts(hosts ...string) RequestOption {
 	return func(r *HTTPRequest) {
 		if r.urlPolicy == nil {
@@ -831,7 +833,7 @@ func safeDialContext(policy *URLPolicy) func(context.Context, string, string) (n
 		if host == "" {
 			return nil, HTTPErrorf("dial host is blank")
 		}
-		if policy != nil && containsFold(policy.AllowedHosts, host) {
+		if policy == nil || !policy.RejectPrivate {
 			return dialer.DialContext(ctx, network, address)
 		}
 		ips, err := publicHostIPs(ctx, policy, host)
@@ -856,7 +858,7 @@ func (t safeRestyRoundTripper) RoundTrip(req *http.Request) (*http.Response, err
 	}
 	if req.URL.Scheme == "http" || req.URL.Scheme == "https" {
 		host := strings.ToLower(req.URL.Hostname())
-		if t.policy != nil && t.policy.RejectPrivate && !containsFold(t.policy.AllowedHosts, host) {
+		if t.policy != nil && t.policy.RejectPrivate {
 			private, err := isPrivateHost(req.Context(), t.policy.LookupIP, host)
 			if err != nil {
 				return nil, NewHTTPError("resolve url host failed", err)
@@ -890,7 +892,7 @@ func validateRequestURL(u *url.URL, policy *URLPolicy) error {
 	if len(policy.AllowedHosts) > 0 && !containsFold(policy.AllowedHosts, host) {
 		return HTTPErrorf("url host %q is not allowed", host)
 	}
-	if policy.RejectPrivate && !containsFold(policy.AllowedHosts, host) {
+	if policy.RejectPrivate {
 		private, err := isPrivateHost(context.Background(), policy.LookupIP, host)
 		if err != nil {
 			return NewHTTPError("resolve url host failed", err)

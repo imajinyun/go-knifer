@@ -46,6 +46,7 @@ type (
 	OpenFunc          func(string) (io.ReadCloser, error)
 	ReadFileFunc      func(string) ([]byte, error)
 	OpenFileFunc      func(string, int, os.FileMode) (io.WriteCloser, error)
+	EvalSymlinksFunc  func(string) (string, error)
 	StatFunc          func(string) (os.FileInfo, error)
 	LstatFunc         func(string) (os.FileInfo, error)
 	ReadDirFunc       func(string) ([]os.DirEntry, error)
@@ -79,6 +80,7 @@ type archiveConfig struct {
 	open              OpenFunc
 	readFile          ReadFileFunc
 	openFile          OpenFileFunc
+	evalSymlinks      EvalSymlinksFunc
 	stat              StatFunc
 	lstat             LstatFunc
 	readDir           ReadDirFunc
@@ -104,6 +106,7 @@ func defaultArchiveConfig() archiveConfig {
 		open:              defaultOpen,
 		readFile:          defaultReadFile,
 		openFile:          defaultOpenFile,
+		evalSymlinks:      filepath.EvalSymlinks,
 		stat:              os.Stat,
 		lstat:             os.Lstat,
 		readDir:           os.ReadDir,
@@ -113,6 +116,15 @@ func defaultArchiveConfig() archiveConfig {
 		rename:            os.Rename,
 		openZipReader:     archivezip.OpenReader,
 		createTemp:        defaultCreateTemp,
+	}
+}
+
+// WithEvalSymlinks sets the function used to resolve extraction paths for symlink escape checks.
+func WithEvalSymlinks(evalSymlinks EvalSymlinksFunc) ArchiveOption {
+	return func(c *archiveConfig) {
+		if evalSymlinks != nil {
+			c.evalSymlinks = evalSymlinks
+		}
 	}
 }
 
@@ -316,6 +328,9 @@ func applyArchiveOptions(opts []ArchiveOption) archiveConfig {
 	}
 	if cfg.openFile == nil {
 		cfg.openFile = defaultOpenFile
+	}
+	if cfg.evalSymlinks == nil {
+		cfg.evalSymlinks = filepath.EvalSymlinks
 	}
 	if cfg.stat == nil {
 		cfg.stat = os.Stat
@@ -1135,7 +1150,11 @@ func extractFile(f *archivezip.File, destDir string, cfg archiveConfig, remainin
 		}
 		return 0, cfg.mkdirAll(target, perm)
 	}
-	if err := cfg.mkdirAll(filepath.Dir(target), cfg.dirPerm); err != nil {
+	parent := filepath.Dir(target)
+	if err := cfg.mkdirAll(parent, cfg.dirPerm); err != nil {
+		return 0, err
+	}
+	if err := validateNoSymlinkEscape(cfg, destDir, parent); err != nil {
 		return 0, err
 	}
 	r, err := f.Open()
@@ -1161,6 +1180,33 @@ func extractFile(f *archivezip.File, destDir string, cfg archiveConfig, remainin
 		return written, err
 	}
 	return written, w.Close()
+}
+
+func validateNoSymlinkEscape(cfg archiveConfig, destDir, targetParent string) error {
+	destReal, err := cfg.evalSymlinks(destDir)
+	if err != nil {
+		return err
+	}
+	parentReal, err := cfg.evalSymlinks(targetParent)
+	if err != nil {
+		return err
+	}
+	destAbs, err := filepath.Abs(destReal)
+	if err != nil {
+		return err
+	}
+	parentAbs, err := filepath.Abs(parentReal)
+	if err != nil {
+		return err
+	}
+	rel, err := filepath.Rel(destAbs, parentAbs)
+	if err != nil {
+		return err
+	}
+	if rel == ".." || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
+		return invalidInputf("zip entry target escapes destination through symlink")
+	}
+	return nil
 }
 
 func readAllLimit(r io.Reader, maxBytes int64) ([]byte, error) {

@@ -578,12 +578,37 @@ func TestSafeRequestRejectsPrivateAndUnsafeRedirects(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	resp := GetSafe(srv.URL, WithAllowedHosts(serverURL.Hostname())).Execute()
+	resp := GetSafe(srv.URL,
+		WithURLPolicy(URLPolicy{AllowedSchemes: []string{"http", "https"}, AllowedHosts: []string{serverURL.Hostname()}}),
+	).Execute()
 	if resp.Err() != nil || resp.Body() != "safe" {
-		t.Fatalf("GetSafe allowed host body=%q err=%v", resp.Body(), resp.Err())
+		t.Fatalf("GetSafe allowed public policy host body=%q err=%v", resp.Body(), resp.Err())
 	}
-	if err := GetSafe(srv.URL+"/redirect", WithAllowedHosts(serverURL.Hostname())).Execute().Err(); err == nil {
+	if err := GetSafe(srv.URL+"/redirect",
+		WithURLPolicy(URLPolicy{AllowedSchemes: []string{"http", "https"}, AllowedHosts: []string{serverURL.Hostname()}}),
+	).Execute().Err(); err == nil {
 		t.Fatal("GetSafe should reject unsafe redirect targets")
+	}
+}
+
+func TestSafeRequestAllowedHostsDoesNotBypassPrivateRejection(t *testing.T) {
+	if err := GetSafe("http://127.0.0.1/config.yaml", WithAllowedHosts("127.0.0.1")).Execute().Err(); err == nil {
+		t.Fatal("GetSafe should reject allowlisted private hosts when RejectPrivate is enabled")
+	}
+
+	client := grestry.New().SetTransport(restyRoundTripperFunc(func(*http.Request) (*http.Response, error) {
+		t.Fatal("unsafe request reached base transport")
+		return nil, nil
+	}))
+	resp := GetSafe("http://example.com/config.yaml",
+		WithAllowedHosts("example.com"),
+		WithRestyClient(client),
+		WithLookupIP(func(context.Context, string) ([]net.IP, error) {
+			return []net.IP{net.ParseIP("127.0.0.1")}, nil
+		}),
+	).Execute()
+	if resp.Err() == nil {
+		t.Fatal("GetSafe should reject allowlisted hosts that resolve private during RoundTrip")
 	}
 }
 

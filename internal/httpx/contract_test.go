@@ -196,7 +196,9 @@ func httpContractBackends() []httpContractBackend {
 			invalidURL: func() error { return httpxhttp.Get("http://[::1").Execute().Err() },
 			safeURL:    func(rawURL string) error { return httpxhttp.GetSafe(rawURL).Execute().Err() },
 			safeAllowed: func(rawURL, host string) contractResponse {
-				resp := httpxhttp.GetSafe(rawURL, httpxhttp.WithAllowedHosts(host)).Execute()
+				resp := httpxhttp.GetSafe(rawURL,
+					httpxhttp.WithURLPolicy(httpxhttp.URLPolicy{AllowedSchemes: []string{"http", "https"}, AllowedHosts: []string{host}}),
+				).Execute()
 				return stdlibHTTPContractResponse(resp)
 			},
 		},
@@ -247,7 +249,9 @@ func httpContractBackends() []httpContractBackend {
 			invalidURL: func() error { return httpxresty.Get("http://[::1").Execute().Err() },
 			safeURL:    func(rawURL string) error { return httpxresty.GetSafe(rawURL).Execute().Err() },
 			safeAllowed: func(rawURL, host string) contractResponse {
-				resp := httpxresty.GetSafe(rawURL, httpxresty.WithAllowedHosts(host)).Execute()
+				resp := httpxresty.GetSafe(rawURL,
+					httpxresty.WithURLPolicy(httpxresty.URLPolicy{AllowedSchemes: []string{"http", "https"}, AllowedHosts: []string{host}}),
+				).Execute()
 				return restyContractResponse(resp)
 			},
 		},

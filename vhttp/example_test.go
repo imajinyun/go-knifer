@@ -37,7 +37,7 @@ func ExampleGetStringSafeE() {
 	defer server.Close()
 
 	body, err := vhttp.GetStringSafeE(server.URL,
-		vhttp.WithAllowedHosts("127.0.0.1"),
+		vhttp.WithURLPolicy(vhttp.URLPolicy{AllowedSchemes: []string{"http", "https"}, RejectPrivate: false}),
 	)
 	if err != nil {
 		panic(err)

@@ -455,6 +455,16 @@ func DownloadFileWithOptions(rawURL, dest string, requestOpts []RequestOption, s
 	return restyimpl.DownloadFileWithOptions(rawURL, dest, requestOpts, saveOpts...)
 }
 
+// DownloadFileSafe downloads rawURL to dest with SSRF-oriented safety checks enabled.
+func DownloadFileSafe(rawURL, dest string, opts ...SaveOption) (int64, error) {
+	return DownloadFileSafeWithOptions(rawURL, dest, nil, opts...)
+}
+
+// DownloadFileSafeWithOptions downloads rawURL to dest with SSRF-oriented safety checks enabled.
+func DownloadFileSafeWithOptions(rawURL, dest string, requestOpts []RequestOption, saveOpts ...SaveOption) (int64, error) {
+	return restyimpl.DownloadFileSafeWithOptions(rawURL, dest, requestOpts, saveOpts...)
+}
+
 // DownloadBytesE downloads and returns bytes or an error.
 func DownloadBytesE(rawURL string) ([]byte, error) { return DownloadBytesEWithOptions(rawURL) }
 

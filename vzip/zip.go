@@ -36,6 +36,7 @@ type (
 	OpenFunc          = zipimpl.OpenFunc
 	ReadFileFunc      = zipimpl.ReadFileFunc
 	OpenFileFunc      = zipimpl.OpenFileFunc
+	EvalSymlinksFunc  = zipimpl.EvalSymlinksFunc
 	StatFunc          = zipimpl.StatFunc
 	LstatFunc         = zipimpl.LstatFunc
 	ReadDirFunc       = zipimpl.ReadDirFunc
@@ -83,6 +84,11 @@ func WithReadFile(readFile ReadFileFunc) ArchiveOption { return zipimpl.WithRead
 
 // WithOpenFile sets the function used to open archive/extracted files for writing.
 func WithOpenFile(openFile OpenFileFunc) ArchiveOption { return zipimpl.WithOpenFile(openFile) }
+
+// WithEvalSymlinks sets the function used to resolve extraction paths for symlink escape checks.
+func WithEvalSymlinks(evalSymlinks EvalSymlinksFunc) ArchiveOption {
+	return zipimpl.WithEvalSymlinks(evalSymlinks)
+}
 
 // WithStat sets the function used to inspect existing archive paths.
 func WithStat(stat StatFunc) ArchiveOption { return zipimpl.WithStat(stat) }

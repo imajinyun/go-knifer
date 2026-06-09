@@ -58,3 +58,13 @@ func DownloadFile(rawURL, dest string, opts ...SaveOption) (int64, error) {
 func DownloadFileWithOptions(rawURL, dest string, requestOpts []RequestOption, saveOpts ...SaveOption) (int64, error) {
 	return httpx.DownloadFileWithOptions(rawURL, dest, requestOpts, saveOpts...)
 }
+
+// DownloadFileSafe downloads rawURL to dest with SSRF-oriented safety checks enabled.
+func DownloadFileSafe(rawURL, dest string, opts ...SaveOption) (int64, error) {
+	return DownloadFileSafeWithOptions(rawURL, dest, nil, opts...)
+}
+
+// DownloadFileSafeWithOptions downloads rawURL to dest with SSRF-oriented safety checks enabled.
+func DownloadFileSafeWithOptions(rawURL, dest string, requestOpts []RequestOption, saveOpts ...SaveOption) (int64, error) {
+	return httpx.DownloadFileSafeWithOptions(rawURL, dest, requestOpts, saveOpts...)
+}

@@ -85,7 +85,7 @@ text := vcrypto.SHA256Hex("hello")
 | `vver` | `github.com/imajinyun/go-knifer/vver` | 版本工具：版本号比较、大小关系判断、表达式匹配、闭区间范围和自定义多表达式分隔符。 |
 | `vref` | `github.com/imajinyun/go-knifer/vref` | 反射工具：字段查找与赋值、方法发现与调用、构造函数风格调用、类型/值工具、方法分类判断，以及显式 unsafe/unexported 字段访问选项。 |
 | `vbean` | `github.com/imajinyun/go-knifer/vbean` | Bean/结构体映射工具：struct/map 互转、copy properties、tag/alias 匹配、忽略空值/零值选项和弱类型转换。 |
-| `vzip` | `github.com/imajinyun/go-knifer/vzip` | ZIP、gzip、zlib 工具：压缩包创建/解压、条目读取、遍历、追加、内存条目、流式压缩、provider-backed 归档文件操作，以及默认有边界的解压/解压缩行为。 |
+| `vzip` | `github.com/imajinyun/go-knifer/vzip` | ZIP、gzip、zlib 工具：压缩包创建/解压、条目读取、遍历、追加、内存条目、流式压缩、provider-backed 归档文件操作、默认有边界的解压/解压缩行为、路径穿越检查，以及解压时的符号链接逃逸检查。 |
 | `vpoi` | `github.com/imajinyun/go-knifer/vpoi` | Office 文档工具：轻量 Excel XLSX 工作表列表、行读写、多工作表写入、内存工作簿创建，以及可注入的 workbook/文件系统 provider。 |
 | `vmask` | `github.com/imajinyun/go-knifer/vmask` | 脱敏工具：姓名、证件号、电话、地址、邮箱、密码、车牌、银行卡、IP、护照号和信用代码遮罩。 |
 | `vnum` | `github.com/imajinyun/go-knifer/vnum` | 数字工具：精确加减乘除、舍入模式、provider-backed 解析/格式化、数字判断、不重复随机数、range、阶乘/组合数、最大公约数/最小公倍数、二进制转换、比较、字节转换、表达式计算和奇偶判断。 |
@@ -104,8 +104,8 @@ text := vcrypto.SHA256Hex("hello")
 | `vcrypto` | `github.com/imajinyun/go-knifer/vcrypto` | 加密与摘要：SHA-2、provider-backed digest、HMAC、PBKDF2-SHA256、参数签名、随机字节、支持 nonce/tag/block-factory options 的 AES-GCM、RSA OAEP/PSS 与可配置数据签名、PEM 与 X.509 证书工具。 |
 | `vdb` | `github.com/imajinyun/go-knifer/vdb` | 基于 database/sql 的数据库工具：SQL 执行、命名参数、Entity、条件、查询构造器、事务、分页、轻量元信息查询和可注入的 `sql.Open` provider。 |
 | `vdfa` | `github.com/imajinyun/go-knifer/vdfa` | DFA 词树匹配：停顿字符过滤、首个/全部匹配、密集/贪婪匹配、命中词位置元信息、包级匹配器、隔离 matcher options、`Any` 辅助函数的 JSON marshal/unmarshal provider、文本替换，以及用于包级异步初始化的可重置 async runner provider。 |
-| `vhttp` | `github.com/imajinyun/go-knifer/vhttp` | 链式 HTTP 客户端、隔离/global-config 请求构建、create/get/post `WithOptions` 辅助函数、provider-backed transport/request factory/multipart writer/download save、BasicAuth、User-Agent 解析、provider-backed HTML 清理/标签过滤、可重置 transport/server starters、异步服务端 runner option 和简易服务端辅助函数。 |
-| `vresty` | `github.com/imajinyun/go-knifer/vresty` | 基于 Resty v3 的 HTTP facade：链式请求、JSON/form/multipart 请求体、隔离/global-config 请求构建、create/get/post `WithOptions` 辅助函数、单次请求 client factory、可重置默认 Resty client provider、下载与轻量响应工具。 |
+| `vhttp` | `github.com/imajinyun/go-knifer/vhttp` | 链式 HTTP 客户端、隔离/global-config 请求构建、create/get/post `WithOptions` 辅助函数、显式错误 `E` 快捷函数、带错误码分类的 HTTP 错误、provider-backed transport/request factory/multipart writer/download save、安全文件下载、BasicAuth、User-Agent 解析、provider-backed HTML 清理/标签过滤、可重置 transport/server starters、异步服务端 runner option 和简易服务端辅助函数。 |
+| `vresty` | `github.com/imajinyun/go-knifer/vresty` | 基于 Resty v3 的 HTTP facade：链式请求、JSON/form/multipart 请求体、隔离/global-config 请求构建、create/get/post `WithOptions` 辅助函数、单次请求 client factory、可重置默认 Resty client provider、下载与安全文件下载，以及轻量响应工具。 |
 | `vjson` | `github.com/imajinyun/go-knifer/vjson` | 有序 JSON 对象/数组、JSON 解析与格式化、路径表达式读写、provider-backed marshal/unmarshal、可注入 scalar parse/format 函数、可配置 Object/Array/Bean/List 转换，以及带 parser/writer options 的 XML/JSON 转换。 |
 | `vxml` | `github.com/imajinyun/go-knifer/vxml` | XML 工具：解析/读取/写出/格式化、树节点访问、简单 XPath 风格查询、转义、支持 parser/codec/scalar parser options 的 Map/Bean 转换、transform options 和命名空间辅助。 |
 | `vjwt` | `github.com/imajinyun/go-knifer/vjwt` | JWT 创建、解析、签名、验签与时间字段校验，支持 HMAC、RSA-PSS、ECDSA，拒绝未签名的 `alg=none` token，并提供 JSON marshal/unmarshal options。 |
@@ -152,7 +152,7 @@ Provider 覆盖重点：
 
 | 领域 | 示例 |
 | --- | --- |
-| HTTP / Resty | `vhttp.NewIsolatedRequest`、`vhttp.NewRequestWithConfig`、`vhttp.CreateGetWithOptions`、`vhttp.CreatePostWithOptions`、`vhttp.WithTransportProvider`、`vhttp.WithRequestFactory`、`vhttp.WithMultipartWriterFactory`、`vhttp.ResetDefaultTransport`、`vhttp.WithListenAndServeFunc`、`vhttp.WithAsyncRunner`、`vhttp.CreateServerWithOptions`、`vhttp.ResetServerStarters`、`vhttp.GetWithTimeoutWithOptions`、`vhttp.GetWithParamsWithOptions`、`vhttp.PostStringWithOptions`、`vhttp.CleanHTMLWithOptions`、`vhttp.FilterHTMLTagWithOptions`、`vhttp.WithHTMLFilterCompileFunc`、`vresty.NewIsolatedRequest`、`vresty.WithGlobalConfig`、`vresty.WithRestyClientFactory`、`vresty.ConfigureDefaultRestyClientProvider`、`vresty.ResetDefaultRestyClientProvider`、`vresty.CreateRequestWithOptions`、`vresty.CreateGetWithOptions`、`vresty.CreatePostWithOptions`、`vresty.GetWithTimeoutWithOptions`、`vresty.GetWithParamsWithOptions`、`vresty.PostStringWithOptions`、`vresty.DownloadFileWithOptions` |
+| HTTP / Resty | `vhttp.NewIsolatedRequest`、`vhttp.NewRequestWithConfig`、`vhttp.Get`、`vhttp.Post`、`vhttp.GetSafe`、`vhttp.PostSafe`、`vhttp.GetStringE`、`vhttp.GetStringSafeE`、`vhttp.GetWithTimeoutE`、`vhttp.PostJSONE`、`vhttp.PostJSONSafeE`、`vhttp.DownloadBytesE`、`vhttp.DownloadBytesSafeE`、`vhttp.DownloadFile`、`vhttp.DownloadFileSafe`、`vhttp.DownloadFileSafeWithOptions`、`vhttp.NewErrorWithCode`、`vhttp.WithTransportProvider`、`vhttp.WithRequestFactory`、`vhttp.WithMultipartWriterFactory`、`vhttp.ResetDefaultTransport`、`vhttp.WithListenAndServeFunc`、`vhttp.WithAsyncRunner`、`vhttp.CreateServerWithOptions`、`vhttp.CleanHTMLWithOptions`、`vhttp.FilterHTMLTagWithOptions`、`vhttp.WithHTMLFilterCompileFunc`、`vresty.NewIsolatedRequest`、`vresty.WithGlobalConfig`、`vresty.WithRestyClientFactory`、`vresty.ConfigureDefaultRestyClientProvider`、`vresty.ResetDefaultRestyClientProvider`、`vresty.Get`、`vresty.Post`、`vresty.GetSafe`、`vresty.PostSafe`、`vresty.GetStringE`、`vresty.GetStringSafeE`、`vresty.GetWithTimeoutE`、`vresty.PostJSONE`、`vresty.PostJSONSafeE`、`vresty.DownloadBytesE`、`vresty.DownloadBytesSafeE`、`vresty.DownloadFile`、`vresty.DownloadFileSafe`、`vresty.DownloadFileSafeWithOptions` |
 | 文件 / 配置 / 压缩 / POI | `vfile` provider options、`vconf.LoadWithOptions`、`vconf.LoadRemoteSafeWithOptions`、`vconf.WatchWithOptions`、`vconf.WatchOptions.Runner`、`vzip.WithMaxBytes`、`vzip` provider options、`vpoi.WithOpenFileFunc`、`vpoi.WithNewFileFunc`、`vpoi.WithSaveAsFunc` |
 | Cron / DFA / ID / 身份 / 随机数 | `vcron.WithDefaultSchedulerOptions`、`vcron.NewConfigWithOptions`、`vcron.WithIDRandomReader`、`vcron.WithRunner`、`vcron.CronScheduleWithOptions`、`vdfa.WithMatcherWords`、`vdfa.WithJSONMarshal`、`vdfa.WithJSONUnmarshal`、`vdfa.ContainsWithOptions`、`vdfa.ConfigureAsyncRunner`、`vdfa.ResetAsyncRunner`、`vid.NewIsolatedSnowflake`、`vid.CreateSnowflakeWithOptions`、`vid.WithSnowflakeCache`、`vid.WithFallbackRandomSource`、`vid.ConfigureDefaultFallbackRandomSourceProvider`、`vid.ResetDefaultFallbackRandomSource`、`vid.SetFallbackRandomSeed`、`vrand.ConfigureDefaultRandomSourceProvider`、`vrand.ResetDefaultRandomSource`、`vrand.SetSeed`、`vident.BirthDateWithOptions` |
 | 编解码 / JSON / XML / JWT / hash | `vcodec.Base64EncodeWithEncoding`、`vcodec.Base64DecodeWithEncoding`、`vcodec.Base64RawURLEncode`、`vcodec.Base64RawURLDecode`、`vhash.Hash32`、`vjson.WithMarshalFunc`、`vjson.WithUnmarshalFunc`、`vjson.WithParseUnmarshalFunc`、`vjson.WithBeanUnmarshalFunc`、`vjson.WithSprintFunc`、`vjson.WithParseIntFunc`、`vjson.WithParseFloatFunc`、`vjson.WithParseBoolFunc`、`vjson.WithFormatIntFunc`、`vjson.WithFormatFloatFunc`、`vjson.ParseObjWithOptions`、`vjson.ParseArrayWithOptions`、`vjson.ToBeanWithOptions`、`vjson.ToListWithOptions`、`vjson.XMLToJSONWithOptions`、`vjson.ToXMLWithOptions`、`vxml.WithScalarIntParser`、`vxml.WithScalarFloatParser`、`vxml.XMLToMapWithOptions`、`vxml.XMLNodeToMapWithOptions`、`vxml.XMLToMapIntoWithOptions`、`vxml.XMLNodeToMapIntoWithOptions`、`vxml.XMLToBeanWithOptions`、`vxml.XMLNodeToBeanWithOptions`、`vxml.TransformWithOptions`、`vxml.FormatWithOptions`、`vjwt.WithJSONMarshalFunc`、`vjwt.WithJSONUnmarshalFunc`、`vjwt.ParseTokenWithOptions`、`vjwt.WithTokenJSONOptions` |
@@ -220,6 +220,8 @@ PBKDF2-SHA-256、AES-GCM、RSA-OAEP 加密和 RSA-PSS 签名。JWT RSA
 - TLS 工具通过 `vnet.CreateTLSConfig()` 创建 TLS 1.2+ 的配置。HTTP 客户端通过
   `WithTLSConfig` 接收显式的 `*tls.Config`；不提供跳过证书校验的便利 API。
 - HTTP 与 Resty 下载在把自动识别的文件名拼接到目标目录前会先校验文件名，避免目录穿越。
+  当来源 URL 不可信时，使用 `vhttp.DownloadFileSafe` / `DownloadFileSafeWithOptions` 或
+  `vresty.DownloadFileSafe` / `DownloadFileSafeWithOptions`；这些安全变体会同时应用安全请求 URL 策略与保存目标校验。
 - `vfile` 读取工具默认使用 `vfile.DefaultMaxBytes` 限制读取大小。需要更严格限制时使用
   `vfile.WithMaxBytes(n)`；只有调用方已经在其他层面限制输入时，才使用 `vfile.WithUnlimitedRead()`。
 - `vconf` 本地与远程加载默认使用 `vconf.DefaultMaxBytes`。设置 `LoadOptions.MaxBytes` 可改变限制，
@@ -231,9 +233,11 @@ PBKDF2-SHA-256、AES-GCM、RSA-OAEP 加密和 RSA-PSS 签名。JWT RSA
 - 从不可信输入打开远程资源时，使用 `vurl.OpenSafe`、`OpenSafeWithOptions`、
   `ContentLengthSafe` 或 `ContentLengthSafeWithOptions`。安全资源 helper 默认只允许 HTTP(S)、
   拒绝本地文件和普通文件路径、拒绝私有网络目标、检查 HTTP 状态、设置超时，并重新校验重定向。优先用
-  `WithAllowedHosts` 绑定可信 host；只有调用方已建立更窄的信任边界时，才放宽
-  `WithRejectPrivateHosts` 或 `WithAllowLocalFiles`。
-- `vzip` 解压和解压缩 helper 默认有大小边界，以降低 zip bomb 风险。使用 `vzip.WithMaxBytes(n)`
+  `WithAllowedHosts` 绑定可信 host；host allowlist 只会收窄可接受的主机名，不会绕过私有地址拒绝。
+  只有调用方已建立更窄的信任边界时，才放宽 `WithRejectPrivateHosts` 或 `WithAllowLocalFiles`。
+- `vzip` 解压和解压缩 helper 默认有大小边界，以降低 zip bomb 风险。ZIP 条目名会在写入前清理和校验；
+  解压时会通过 `filepath.EvalSymlinks` 解析目标父目录，拒绝经由符号链接逃出目标目录的条目。
+  只有测试或虚拟文件系统需要替换解析器时才使用 `vzip.WithEvalSymlinks`。使用 `vzip.WithMaxBytes(n)`
   或 `UnzipToLimit` / `UnzipReaderToLimit` 设置更严格的预算；只有其他层已对可信输入设置大小限制时，
   才传入负数关闭 max-byte 限制。
 - 以 `E` 结尾的布隆过滤器构造器，例如 `vblf.NewBitMapBloomFilterE`、
@@ -260,6 +264,23 @@ import (
   "github.com/imajinyun/go-knifer/vhttp"
 )
 ```
+
+## ✅ 推荐 API 入口
+
+新代码建议优先使用这些入口。可能失败的快捷请求应使用显式返回 error 的版本，避免静默吞掉失败。
+
+| 场景 | 推荐 API |
+| --- | --- |
+| 构建可信的标准库 HTTP 请求 | `vhttp.Get`、`vhttp.Post`、`vhttp.NewRequest` |
+| 读取可信 HTTP 响应正文并处理错误 | `vhttp.GetStringE`、`vhttp.PostJSONE`、`vhttp.DownloadBytesE` |
+| 访问用户可控或其他不可信 HTTP(S) URL | `vhttp.GetStringSafeE`、`vhttp.PostJSONSafeE`、`vhttp.DownloadBytesSafeE` |
+| 使用 Resty-backed HTTP facade | `vresty.Get`、`vresty.Post`、`vresty.GetStringE`、`vresty.PostJSONE` |
+| 通过 Resty 访问不可信 URL | `vresty.GetStringSafeE`、`vresty.PostJSONSafeE`、`vresty.DownloadBytesSafeE` |
+| 把用户可控 URL 下载到文件 | `vhttp.DownloadFileSafe` 或 `vresty.DownloadFileSafe` |
+| 生成 secret、token、key、nonce 或 salt 字节 | `vrand.SecureBytes` |
+| 创建 LRU 缓存 | `vcache.NewLRU` 或 `vcache.NewLRUWithTimeout` |
+| 解析 cron 表达式 | `vcron.NewPattern` 或 `vcron.MustNewPattern` |
+| 从信任边界加载远程配置 | `vconf.LoadRemoteSafe` 或 `vconf.LoadRemoteSafeWithOptions` |
 
 ## 📝 快速开始
 
@@ -569,7 +590,7 @@ jsonBody, err := vresty.PostJSONE("https://api.example.com/events", `{"event":"c
 if err != nil {
   panic(err)
 }
-n, err := vresty.DownloadFile("https://example.com/report.csv", "./downloads")
+n, err := vresty.DownloadFileSafe("https://example.com/report.csv", "./downloads")
 _, _, _ = body, jsonBody, n
 _ = err
 ```
