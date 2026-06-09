@@ -1,20 +1,20 @@
 package jwt
 
-// 注册的标准 Header 字段名（对应 the utility toolkit-jwt JWTHeader）。
+// Registered standard Header field names matching the utility toolkit-jwt JWTHeader.
 const (
-	HeaderAlgorithm   = "alg" // 加密算法（如 HS256）
-	HeaderType        = "typ" // 类型（一般为 JWT）
-	HeaderContentType = "cty" // 内容类型
-	HeaderKeyID       = "kid" // 密钥编号
+	HeaderAlgorithm   = "alg" // signing algorithm, such as HS256
+	HeaderType        = "typ" // type, usually JWT
+	HeaderContentType = "cty" // content type
+	HeaderKeyID       = "kid" // key ID
 )
 
-// 注册的标准 Payload 字段名（对应 the utility toolkit-jwt RegisteredPayload）。
+// Registered standard Payload field names matching the utility toolkit-jwt RegisteredPayload.
 const (
-	PayloadIssuer    = "iss" // 签发者
-	PayloadSubject   = "sub" // 面向用户
-	PayloadAudience  = "aud" // 接收方
-	PayloadExpiresAt = "exp" // 过期时间
-	PayloadNotBefore = "nbf" // 生效时间
-	PayloadIssuedAt  = "iat" // 签发时间
-	PayloadJWTID     = "jti" // 唯一身份标识
+	PayloadIssuer    = "iss" // issuer
+	PayloadSubject   = "sub" // subject
+	PayloadAudience  = "aud" // audience
+	PayloadExpiresAt = "exp" // expiration time
+	PayloadNotBefore = "nbf" // not-before time
+	PayloadIssuedAt  = "iat" // issued-at time
+	PayloadJWTID     = "jti" // unique JWT ID
 )

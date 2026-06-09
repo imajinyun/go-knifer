@@ -2,18 +2,18 @@ package log
 
 import "sync"
 
-// LogFactory 对应 the utility toolkit LogFactory，提供根据名称获取 Log 实例的能力。
+// LogFactory matches the utility toolkit LogFactory and provides Log lookup by name.
 //
-// 通过 SetFactory 可全局替换实现，默认返回 ConsoleLog。
+// SetFactory can replace the global implementation; the default returns ConsoleLog.
 type LogFactory interface {
-	// CreateLog 根据名称创建 Log 实例。
+	// CreateLog creates a Log instance by name.
 	CreateLog(name string) Log
 }
 
-// LogFactoryFunc 适配函数为 LogFactory。
+// LogFactoryFunc adapts a function to LogFactory.
 type LogFactoryFunc func(name string) Log
 
-// CreateLog 调用底层函数。
+// CreateLog calls the underlying function.
 func (f LogFactoryFunc) CreateLog(name string) Log { return f(name) }
 
 // LoggerOption customizes logger lookup/creation for one call.
@@ -75,7 +75,7 @@ var (
 	logCacheMu sync.RWMutex
 )
 
-// SetFactory 设置全局日志工厂。设置后会清空已缓存的 Log 实例。
+// SetFactory sets the global log factory and clears cached Log instances.
 func SetFactory(factory LogFactory) {
 	if factory == nil {
 		return
@@ -89,14 +89,14 @@ func SetFactory(factory LogFactory) {
 	logCacheMu.Unlock()
 }
 
-// GetFactory 返回当前的日志工厂。
+// GetFactory returns the current log factory.
 func GetFactory() LogFactory {
 	factoryMu.RLock()
 	defer factoryMu.RUnlock()
 	return currentFactory
 }
 
-// Get 根据名称获取一个 Log 实例（带缓存）。
+// Get gets a cached Log instance by name.
 func Get(name string) Log {
 	logCacheMu.RLock()
 	if l, ok := logCache[name]; ok {
@@ -107,7 +107,7 @@ func Get(name string) Log {
 
 	logCacheMu.Lock()
 	defer logCacheMu.Unlock()
-	// 双重检查
+	// Double-check.
 	if l, ok := logCache[name]; ok {
 		return l
 	}
@@ -134,7 +134,7 @@ func NewIsolatedLogger(name string, opts ...LoggerOption) Log {
 	return cfg.factory.CreateLog(name)
 }
 
-// GetDefault 返回名称为 "default" 的 Log 实例。
+// GetDefault returns the Log instance named "default".
 func GetDefault() Log {
 	return Get("default")
 }

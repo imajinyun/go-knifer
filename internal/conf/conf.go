@@ -234,7 +234,7 @@ func New() *Conf {
 	return &Conf{data: map[string]map[string]string{defaultGroup: {}}}
 }
 
-// Load 读取并解析配置文件。Load reads and parses a configuration file.
+// Load reads and parses a configuration file.
 func Load(path string) (*Conf, error) {
 	return LoadWithOptions(path, LoadOptions{})
 }
@@ -253,10 +253,10 @@ func LoadProfileWithOptions(path, profile string, opts LoadOptions) (*Conf, erro
 	return c.ApplyProfile(profile), nil
 }
 
-// Parse 解析 setting/properties 文本内容。Parse parses setting/properties content.
+// Parse parses setting/properties content.
 func Parse(content string) (*Conf, error) { return ParseBytes([]byte(content)) }
 
-// ParseBytes 解析 setting/properties 字节内容。ParseBytes parses setting/properties content.
+// ParseBytes parses setting/properties content.
 func ParseBytes(content []byte) (*Conf, error) {
 	s := New()
 	group := defaultGroup
@@ -290,7 +290,7 @@ func ParseBytes(content []byte) (*Conf, error) {
 	return s, nil
 }
 
-// Get 从默认分组获取配置值。Get returns a value from the default group.
+// Get returns a value from the default group.
 func (s *Conf) Get(key string) string { return s.GetByGroup(defaultGroup, key) }
 
 // GetExpanded returns a value from default group after variable expansion.
@@ -301,7 +301,7 @@ func (s *Conf) GetExpandedWithOptions(key string, opts ...ExpandOption) string {
 	return s.GetByGroupExpandedWithOptions(defaultGroup, key, opts...)
 }
 
-// GetOrDefault 从默认分组获取配置值，不存在时返回 def。GetOrDefault returns a value from the default group or def when absent.
+// GetOrDefault returns a value from the default group or def when absent.
 func (s *Conf) GetOrDefault(key, def string) string {
 	if v, ok := s.Lookup(defaultGroup, key); ok {
 		return v
@@ -309,7 +309,7 @@ func (s *Conf) GetOrDefault(key, def string) string {
 	return def
 }
 
-// GetByGroup 获取指定分组中的配置值。GetByGroup returns a grouped value.
+// GetByGroup returns a grouped value.
 func (s *Conf) GetByGroup(group, key string) string {
 	v, _ := s.Lookup(group, key)
 	return v
@@ -330,7 +330,7 @@ func (s *Conf) GetByGroupExpandedWithOptions(group, key string, opts ...ExpandOp
 	return s.expandValue(group, v, map[string]bool{}, cfg)
 }
 
-// Lookup 获取指定分组中的配置值并返回是否存在。Lookup returns a grouped value and whether it exists.
+// Lookup returns a grouped value and whether it exists.
 func (s *Conf) Lookup(group, key string) (string, bool) {
 	if s == nil || s.data == nil {
 		return "", false
@@ -343,7 +343,7 @@ func (s *Conf) Lookup(group, key string) (string, bool) {
 	return v, ok
 }
 
-// GetInt 从默认分组获取 int 值，不存在或格式非法时返回 def。GetInt returns an int value from the default group or def when absent/invalid.
+// GetInt returns an int value from the default group or def when absent or invalid.
 func (s *Conf) GetInt(key string, def int) int {
 	return s.GetIntWithOptions(key, def)
 }
@@ -400,7 +400,7 @@ func (s *Conf) GetIntByGroupEWithOptions(group, key string, opts ...ValueOption)
 	return n, nil
 }
 
-// GetBool 从默认分组获取 bool 值，不存在或格式非法时返回 def。GetBool returns a bool value from the default group or def when absent/invalid.
+// GetBool returns a bool value from the default group or def when absent or invalid.
 func (s *Conf) GetBool(key string, def bool) bool {
 	return s.GetBoolWithOptions(key, def)
 }
@@ -457,10 +457,10 @@ func (s *Conf) GetBoolByGroupEWithOptions(group, key string, opts ...ValueOption
 	return b, nil
 }
 
-// Set 将配置值写入默认分组。Set stores a value in the default group.
+// Set stores a value in the default group.
 func (s *Conf) Set(key, value string) { s.SetByGroup(defaultGroup, key, value) }
 
-// SetByGroup 将配置值写入指定分组。SetByGroup stores a grouped value.
+// SetByGroup stores a grouped value.
 func (s *Conf) SetByGroup(group, key, value string) {
 	s.ensureGroup(group)
 	s.data[group][key] = value
@@ -479,7 +479,7 @@ func (s *Conf) DeleteByGroup(group, key string) {
 	}
 }
 
-// Groups 返回全部分组名称。Groups returns all group names.
+// Groups returns all group names.
 func (s *Conf) Groups() []string {
 	if s == nil || s.data == nil {
 		return []string{}
@@ -492,7 +492,7 @@ func (s *Conf) Groups() []string {
 	return groups
 }
 
-// Keys 返回指定分组中的全部键。Keys returns keys from group.
+// Keys returns all keys from group.
 func (s *Conf) Keys(group string) []string {
 	if s == nil || s.data == nil {
 		return []string{}
@@ -506,7 +506,7 @@ func (s *Conf) Keys(group string) []string {
 	return keys
 }
 
-// ToMap 返回所有分组配置的深拷贝。ToMap returns a deep copy of all groups.
+// ToMap returns a deep copy of all groups.
 func (s *Conf) ToMap() map[string]map[string]string {
 	if s == nil || s.data == nil {
 		return map[string]map[string]string{}

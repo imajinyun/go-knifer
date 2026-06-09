@@ -1,16 +1,16 @@
 package log
 
-// AbstractLog 提供 Log 接口的便捷实现，子类型只需实现 LogCore（即 LogE）即可。
-// 通过将 Log 接口的方法委托给 LogE，避免在每个具体实现里重复样板代码。
+// AbstractLog provides a convenience implementation of the Log interface; subtypes only need to implement LogCore, namely LogE.
+// avoids repeated boilerplate in each concrete implementation by delegating Log interface methods to LogE.
 type AbstractLog struct {
-	// Core 由具体实现提供：在指定级别打印日志。
-	// 当 IsEnabled(level) 为 false 时，AbstractLog 会跳过调用。
+	// Core is provided by the concrete implementation to print logs at the specified level.
+	// AbstractLog skips the call when IsEnabled(level) is false.
 	Core func(level Level, err error, format string, args ...any)
-	// IsEnabledFn 由具体实现提供，用于判断指定级别是否启用。
+	// IsEnabledFn is provided by the concrete implementation to decide whether the specified level is enabled.
 	IsEnabledFn func(level Level) bool
 }
 
-// IsEnabled 通过注入函数判断。
+// IsEnabled checks through the injected function.
 func (a *AbstractLog) IsEnabled(level Level) bool {
 	if a.IsEnabledFn == nil {
 		return true
@@ -18,14 +18,14 @@ func (a *AbstractLog) IsEnabled(level Level) bool {
 	return a.IsEnabledFn(level)
 }
 
-// IsTraceEnabled 等便捷方法。
+// IsTraceEnabled and related convenience methods.
 func (a *AbstractLog) IsTraceEnabled() bool { return a.IsEnabled(LevelTrace) }
 func (a *AbstractLog) IsDebugEnabled() bool { return a.IsEnabled(LevelDebug) }
 func (a *AbstractLog) IsInfoEnabled() bool  { return a.IsEnabled(LevelInfo) }
 func (a *AbstractLog) IsWarnEnabled() bool  { return a.IsEnabled(LevelWarn) }
 func (a *AbstractLog) IsErrorEnabled() bool { return a.IsEnabled(LevelError) }
 
-// LogE 通用入口：根据级别打印日志（带错误）。
+// LogE is the common entry point for printing logs with errors by level.
 func (a *AbstractLog) LogE(level Level, err error, format string, args ...any) {
 	if !a.IsEnabled(level) {
 		return
@@ -35,7 +35,7 @@ func (a *AbstractLog) LogE(level Level, err error, format string, args ...any) {
 	}
 }
 
-// Log 通用入口：根据级别打印日志。
+// Log is the common entry point for printing logs by level.
 func (a *AbstractLog) Log(level Level, format string, args ...any) {
 	a.LogE(level, nil, format, args...)
 }

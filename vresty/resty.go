@@ -165,20 +165,55 @@ func PostSafe(rawURL string, opts ...RequestOption) *Request {
 }
 
 // Put creates a PUT request.
+//
+// Security: Put is for trusted URLs. Use PutSafe for untrusted URLs.
 func Put(rawURL string, opts ...RequestOption) *Request { return restyimpl.Put(rawURL, opts...) }
 
+// PutSafe creates a PUT request with SSRF-oriented safety checks enabled.
+func PutSafe(rawURL string, opts ...RequestOption) *Request {
+	return restyimpl.PutSafe(rawURL, opts...)
+}
+
 // Delete creates a DELETE request.
+//
+// Security: Delete is for trusted URLs. Use DeleteSafe for untrusted URLs.
 func Delete(rawURL string, opts ...RequestOption) *Request { return restyimpl.Delete(rawURL, opts...) }
 
+// DeleteSafe creates a DELETE request with SSRF-oriented safety checks enabled.
+func DeleteSafe(rawURL string, opts ...RequestOption) *Request {
+	return restyimpl.DeleteSafe(rawURL, opts...)
+}
+
 // Patch creates a PATCH request.
+//
+// Security: Patch is for trusted URLs. Use PatchSafe for untrusted URLs.
 func Patch(rawURL string, opts ...RequestOption) *Request { return restyimpl.Patch(rawURL, opts...) }
 
+// PatchSafe creates a PATCH request with SSRF-oriented safety checks enabled.
+func PatchSafe(rawURL string, opts ...RequestOption) *Request {
+	return restyimpl.PatchSafe(rawURL, opts...)
+}
+
 // Head creates a HEAD request.
+//
+// Security: Head is for trusted URLs. Use HeadSafe for untrusted URLs.
 func Head(rawURL string, opts ...RequestOption) *Request { return restyimpl.Head(rawURL, opts...) }
 
+// HeadSafe creates a HEAD request with SSRF-oriented safety checks enabled.
+func HeadSafe(rawURL string, opts ...RequestOption) *Request {
+	return restyimpl.HeadSafe(rawURL, opts...)
+}
+
 // Options creates an OPTIONS request.
+//
+// Security: Options is for trusted URLs. Use OptionsSafe for untrusted URLs.
 func Options(rawURL string, opts ...RequestOption) *Request {
 	return restyimpl.Options(rawURL, opts...)
+}
+
+// OptionsSafe creates an OPTIONS request with SSRF-oriented safety checks enabled.
+func OptionsSafe(rawURL string, opts ...RequestOption) *Request {
+	return restyimpl.OptionsSafe(rawURL, opts...)
 }
 
 // NewRequest creates a request by method.

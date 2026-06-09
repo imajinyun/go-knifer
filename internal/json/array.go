@@ -2,16 +2,16 @@ package json
 
 import "strings"
 
-// JSONArray 对应 the utility JSONArray，是有序的 JSON 值列表。
+// JSONArray matches the utility JSONArray as an ordered list of JSON values.
 type JSONArray struct {
 	cfg    *Config
 	values []any
 }
 
-// NewJSONArray 创建空数组。
+// NewJSONArray creates an empty array.
 func NewJSONArray() *JSONArray { return NewJSONArrayWithConfig(nil) }
 
-// NewJSONArrayWithConfig 使用配置创建。
+// NewJSONArrayWithConfig creates a value with config.
 func NewJSONArrayWithConfig(cfg *Config) *JSONArray {
 	if cfg == nil {
 		cfg = NewConfig()
@@ -19,13 +19,13 @@ func NewJSONArrayWithConfig(cfg *Config) *JSONArray {
 	return &JSONArray{cfg: cfg}
 }
 
-// Config 返回配置。
+// Config returns the config.
 func (a *JSONArray) Config() *Config { return a.cfg }
 
-// Len 元素数量。
+// Len returns the element count.
 func (a *JSONArray) Len() int { return len(a.values) }
 
-// Get 索引访问，越界返回 nil,false。
+// Get accesses an index and returns nil, false when out of range.
 func (a *JSONArray) Get(i int) (any, bool) {
 	if i < 0 || i >= len(a.values) {
 		return nil, false
@@ -33,7 +33,7 @@ func (a *JSONArray) Get(i int) (any, bool) {
 	return a.values[i], true
 }
 
-// GetOrDefault 越界返回默认。
+// GetOrDefault returns the default when out of range.
 func (a *JSONArray) GetOrDefault(i int, def any) any {
 	if v, ok := a.Get(i); ok {
 		return v
@@ -41,7 +41,7 @@ func (a *JSONArray) GetOrDefault(i int, def any) any {
 	return def
 }
 
-// IsNull 索引处是否为 JSON null。
+// IsNull reports whether the indexed value is JSON null.
 func (a *JSONArray) IsNull(i int) bool {
 	v, ok := a.Get(i)
 	if !ok {
@@ -50,7 +50,7 @@ func (a *JSONArray) IsNull(i int) bool {
 	return IsNull(v)
 }
 
-// Add 追加元素。
+// Add appends an element.
 func (a *JSONArray) Add(value any) *JSONArray {
 	v := wrap(value, a.cfg)
 	if a.cfg.IgnoreNullValue && IsNull(v) {
@@ -60,7 +60,7 @@ func (a *JSONArray) Add(value any) *JSONArray {
 	return a
 }
 
-// AddAll 批量追加。
+// AddAll appends multiple elements.
 func (a *JSONArray) AddAll(values ...any) *JSONArray {
 	for _, v := range values {
 		a.Add(v)
@@ -68,7 +68,7 @@ func (a *JSONArray) AddAll(values ...any) *JSONArray {
 	return a
 }
 
-// Set 写入指定下标，越界自动 nil 填充。
+// Set writes at the given index and fills gaps with nil.
 func (a *JSONArray) Set(i int, value any) *JSONArray {
 	v := wrap(value, a.cfg)
 	for len(a.values) <= i {
@@ -78,7 +78,7 @@ func (a *JSONArray) Set(i int, value any) *JSONArray {
 	return a
 }
 
-// Insert 在 i 处插入。
+// Insert inserts at index i.
 func (a *JSONArray) Insert(i int, value any) *JSONArray {
 	v := wrap(value, a.cfg)
 	if i < 0 {
@@ -94,7 +94,7 @@ func (a *JSONArray) Insert(i int, value any) *JSONArray {
 	return a
 }
 
-// Remove 删除指定下标元素，越界返回 false。
+// Remove removes the indexed element and returns false when out of range.
 func (a *JSONArray) Remove(i int) bool {
 	if i < 0 || i >= len(a.values) {
 		return false
@@ -103,7 +103,7 @@ func (a *JSONArray) Remove(i int) bool {
 	return true
 }
 
-// Range 顺序遍历元素。
+// Range iterates elements in order.
 func (a *JSONArray) Range(fn func(i int, v any) bool) {
 	for i, v := range a.values {
 		if !fn(i, v) {
@@ -112,14 +112,14 @@ func (a *JSONArray) Range(fn func(i int, v any) bool) {
 	}
 }
 
-// ToSlice 转为 []any。
+// ToSlice converts to []any.
 func (a *JSONArray) ToSlice() []any {
 	out := make([]any, len(a.values))
 	copy(out, a.values)
 	return out
 }
 
-// Join 将所有元素以分隔符连接（值通过 toString 转换）。
+// Join joins all elements with separator after converting values through toString.
 func (a *JSONArray) Join(sep string) string {
 	if len(a.values) == 0 {
 		return ""
@@ -134,12 +134,12 @@ func (a *JSONArray) Join(sep string) string {
 	return b.String()
 }
 
-// 类型化 getter。
+// Typed getters.
 
-// GetString 索引取字符串。
+// GetString gets a string by index.
 func (a *JSONArray) GetString(i int) string { return a.GetStringOr(i, "") }
 
-// GetStringOr 索引取字符串或默认。
+// GetStringOr gets a string by index or the default.
 func (a *JSONArray) GetStringOr(i int, def string) string {
 	v, ok := a.Get(i)
 	if !ok {
@@ -148,13 +148,13 @@ func (a *JSONArray) GetStringOr(i int, def string) string {
 	return toString(v, def, a.cfg)
 }
 
-// GetInt 索引取 int。
+// GetInt gets an int by index.
 func (a *JSONArray) GetInt(i int) int { return int(a.GetInt64Or(i, 0)) }
 
-// GetInt64 索引取 int64。
+// GetInt64 gets an int64 by index.
 func (a *JSONArray) GetInt64(i int) int64 { return a.GetInt64Or(i, 0) }
 
-// GetInt64Or 索引取 int64 或默认。
+// GetInt64Or gets an int64 by index or the default.
 func (a *JSONArray) GetInt64Or(i int, def int64) int64 {
 	v, ok := a.Get(i)
 	if !ok {
@@ -163,10 +163,10 @@ func (a *JSONArray) GetInt64Or(i int, def int64) int64 {
 	return toInt64(v, def, a.cfg)
 }
 
-// GetFloat64 索引取 float64。
+// GetFloat64 gets a float64 by index.
 func (a *JSONArray) GetFloat64(i int) float64 { return a.GetFloat64Or(i, 0) }
 
-// GetFloat64Or 索引取 float64 或默认。
+// GetFloat64Or gets a float64 by index or the default.
 func (a *JSONArray) GetFloat64Or(i int, def float64) float64 {
 	v, ok := a.Get(i)
 	if !ok {
@@ -175,10 +175,10 @@ func (a *JSONArray) GetFloat64Or(i int, def float64) float64 {
 	return toFloat64(v, def, a.cfg)
 }
 
-// GetBool 索引取 bool。
+// GetBool gets a bool by index.
 func (a *JSONArray) GetBool(i int) bool { return a.GetBoolOr(i, false) }
 
-// GetBoolOr 索引取 bool 或默认。
+// GetBoolOr gets a bool by index or the default.
 func (a *JSONArray) GetBoolOr(i int, def bool) bool {
 	v, ok := a.Get(i)
 	if !ok {
@@ -187,7 +187,7 @@ func (a *JSONArray) GetBoolOr(i int, def bool) bool {
 	return toBool(v, def, a.cfg)
 }
 
-// GetJSONObject 索引取 JSONObject。
+// GetJSONObject gets a JSONObject by index.
 func (a *JSONArray) GetJSONObject(i int) *JSONObject {
 	v, ok := a.Get(i)
 	if !ok {
@@ -199,7 +199,7 @@ func (a *JSONArray) GetJSONObject(i int) *JSONObject {
 	return nil
 }
 
-// GetJSONArray 索引取 JSONArray。
+// GetJSONArray gets a JSONArray by index.
 func (a *JSONArray) GetJSONArray(i int) *JSONArray {
 	v, ok := a.Get(i)
 	if !ok {
@@ -211,22 +211,22 @@ func (a *JSONArray) GetJSONArray(i int) *JSONArray {
 	return nil
 }
 
-// String 紧凑输出。
+// String returns compact output.
 func (a *JSONArray) String() string {
 	s, _ := writeValue(a, 0)
 	return s
 }
 
-// ToString 紧凑输出。
+// ToString returns compact output.
 func (a *JSONArray) ToString() string { return a.String() }
 
-// ToStringPretty 4 空格缩进输出。
+// ToStringPretty returns output indented with 4 spaces.
 func (a *JSONArray) ToStringPretty() string {
 	s, _ := writeValue(a, defaultIndent(a.cfg))
 	return s
 }
 
-// MarshalJSON 实现 encoding/json.Marshaler。
+// MarshalJSON implements encoding/json.Marshaler.
 func (a *JSONArray) MarshalJSON() ([]byte, error) {
 	s, err := writeValue(a, 0)
 	if err != nil {
@@ -235,7 +235,7 @@ func (a *JSONArray) MarshalJSON() ([]byte, error) {
 	return []byte(s), nil
 }
 
-// UnmarshalJSON 实现 encoding/json.Unmarshaler。
+// UnmarshalJSON implements encoding/json.Unmarshaler.
 func (a *JSONArray) UnmarshalJSON(b []byte) error {
 	v, err := parseBytes(b)
 	if err != nil {
@@ -250,8 +250,8 @@ func (a *JSONArray) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// GetByPath 路径读取。
+// GetByPath reads by path.
 func (a *JSONArray) GetByPath(path string) any { return getByPath(a, path) }
 
-// PutByPath 路径写入。
+// PutByPath writes by path.
 func (a *JSONArray) PutByPath(path string, value any) error { return putByPath(a, path, value) }

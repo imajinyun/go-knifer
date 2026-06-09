@@ -205,12 +205,12 @@ func TestJWTValidator_Chain(t *testing.T) {
 		t.Fatalf("validator should pass: %v", err)
 	}
 
-	// 算法不匹配
+	// Algorithm mismatch.
 	if err := OfValidator(token).ValidateAlgorithm(HS384([]byte("secret"))).Err(); err == nil {
 		t.Fatal("expected algorithm mismatch error")
 	}
 
-	// 过期场景
+	// Expiration scenario.
 	expired, _ := New().
 		AddPayloads(map[string]any{PayloadExpiresAt: now.Add(-time.Hour).Unix()}).
 		SetSigner(signer).

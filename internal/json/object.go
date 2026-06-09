@@ -5,21 +5,21 @@ import (
 	"strings"
 )
 
-// JSONObject 对应 the utility JSONObject，按插入顺序保留键。
+// JSONObject matches the utility JSONObject and preserves key insertion order.
 type JSONObject struct {
 	cfg    *Config
 	keys   []string
 	values map[string]any
-	// keyMap 在 ignoreCase 时保存小写 → 原始键映射。
+	// keyMap stores lowercase-to-original key mappings when ignoreCase is enabled.
 	keyMap map[string]string
 }
 
-// NewJSONObject 创建空对象。
+// NewJSONObject creates an empty object.
 func NewJSONObject() *JSONObject {
 	return NewJSONObjectWithConfig(nil)
 }
 
-// NewJSONObjectWithConfig 使用指定配置创建对象。
+// NewJSONObjectWithConfig creates an object with the specified config.
 func NewJSONObjectWithConfig(cfg *Config) *JSONObject {
 	if cfg == nil {
 		cfg = NewConfig()
@@ -31,20 +31,20 @@ func NewJSONObjectWithConfig(cfg *Config) *JSONObject {
 	return o
 }
 
-// Config 返回配置。
+// Config returns the config.
 func (o *JSONObject) Config() *Config { return o.cfg }
 
-// Len 键数量。
+// Len returns the key count.
 func (o *JSONObject) Len() int { return len(o.keys) }
 
-// Keys 返回有序键列表的拷贝。
+// Keys returns a copy of keys in insertion order.
 func (o *JSONObject) Keys() []string {
 	out := make([]string, len(o.keys))
 	copy(out, o.keys)
 	return out
 }
 
-// canonicalKey 在 ignoreCase 时返回真实键，否则返回原键。
+// canonicalKey returns the real key when ignoreCase is enabled; otherwise returns the input key.
 func (o *JSONObject) canonicalKey(key string) (string, bool) {
 	if o.cfg.IgnoreCase {
 		if real, ok := o.keyMap[strings.ToLower(key)]; ok {
@@ -56,13 +56,13 @@ func (o *JSONObject) canonicalKey(key string) (string, bool) {
 	return key, ok
 }
 
-// Has 是否存在 key。
+// Has reports whether key exists.
 func (o *JSONObject) Has(key string) bool {
 	_, ok := o.canonicalKey(key)
 	return ok
 }
 
-// Get 获取原始值；不存在时返回 nil,false。
+// Get gets the raw value and returns nil, false when absent.
 func (o *JSONObject) Get(key string) (any, bool) {
 	real, ok := o.canonicalKey(key)
 	if !ok {
@@ -72,7 +72,7 @@ func (o *JSONObject) Get(key string) (any, bool) {
 	return v, ok
 }
 
-// GetOrDefault 获取值或默认。
+// GetOrDefault gets a value or the default.
 func (o *JSONObject) GetOrDefault(key string, def any) any {
 	if v, ok := o.Get(key); ok {
 		return v
@@ -80,7 +80,7 @@ func (o *JSONObject) GetOrDefault(key string, def any) any {
 	return def
 }
 
-// IsNull 判断 key 是否存在并且值为 JSON null。
+// IsNull reports whether key exists and its value is JSON null.
 func (o *JSONObject) IsNull(key string) bool {
 	v, ok := o.Get(key)
 	if !ok {
@@ -89,7 +89,7 @@ func (o *JSONObject) IsNull(key string) bool {
 	return IsNull(v)
 }
 
-// Set 写入键值，返回自身以支持链式调用。
+// Set sets a key-value pair and returns itself for chaining.
 func (o *JSONObject) Set(key string, value any) *JSONObject {
 	value = wrap(value, o.cfg)
 	if o.cfg.IgnoreNullValue && IsNull(value) {
@@ -107,10 +107,10 @@ func (o *JSONObject) Set(key string, value any) *JSONObject {
 	return o
 }
 
-// Put 与 Set 相同（兼容 the utility toolkit 命名）。
+// Put is the same as Set for utility toolkit naming compatibility.
 func (o *JSONObject) Put(key string, value any) *JSONObject { return o.Set(key, value) }
 
-// Remove 删除键，返回是否删除成功。
+// Remove removes a key and reports whether it was removed.
 func (o *JSONObject) Remove(key string) bool {
 	real, ok := o.canonicalKey(key)
 	if !ok {
@@ -129,7 +129,7 @@ func (o *JSONObject) Remove(key string) bool {
 	return true
 }
 
-// ForEach 按插入顺序遍历。
+// ForEach iterates in insertion order.
 func (o *JSONObject) ForEach(fn func(key string, value any) bool) {
 	for _, k := range o.keys {
 		if !fn(k, o.values[k]) {
@@ -138,7 +138,7 @@ func (o *JSONObject) ForEach(fn func(key string, value any) bool) {
 	}
 }
 
-// ToMap 转为普通 map（值为原始 JSON 值）。
+// ToMap converts to a regular map whose values are raw JSON values.
 func (o *JSONObject) ToMap() map[string]any {
 	out := make(map[string]any, len(o.keys))
 	for _, k := range o.keys {
@@ -147,12 +147,12 @@ func (o *JSONObject) ToMap() map[string]any {
 	return out
 }
 
-// 一系列类型化 getter。
+// Typed getters.
 
-// GetString 取字符串，不存在或类型不符时返回 ""。
+// GetString gets a string and returns "" when absent or mismatched.
 func (o *JSONObject) GetString(key string) string { return o.GetStringOr(key, "") }
 
-// GetStringOr 取字符串或默认。
+// GetStringOr gets a string or the default.
 func (o *JSONObject) GetStringOr(key, def string) string {
 	v, ok := o.Get(key)
 	if !ok {
@@ -161,18 +161,18 @@ func (o *JSONObject) GetStringOr(key, def string) string {
 	return toString(v, def, o.cfg)
 }
 
-// GetInt 取 int。
+// GetInt gets an int.
 func (o *JSONObject) GetInt(key string) int { return int(o.GetInt64Or(key, 0)) }
 
-// GetIntOr 取 int 或默认。
+// GetIntOr gets an int or the default.
 func (o *JSONObject) GetIntOr(key string, def int) int {
 	return int(o.GetInt64Or(key, int64(def)))
 }
 
-// GetInt64 取 int64。
+// GetInt64 gets an int64.
 func (o *JSONObject) GetInt64(key string) int64 { return o.GetInt64Or(key, 0) }
 
-// GetInt64Or 取 int64 或默认。
+// GetInt64Or gets an int64 or the default.
 func (o *JSONObject) GetInt64Or(key string, def int64) int64 {
 	v, ok := o.Get(key)
 	if !ok {
@@ -181,10 +181,10 @@ func (o *JSONObject) GetInt64Or(key string, def int64) int64 {
 	return toInt64(v, def, o.cfg)
 }
 
-// GetFloat64 取 float64。
+// GetFloat64 gets a float64.
 func (o *JSONObject) GetFloat64(key string) float64 { return o.GetFloat64Or(key, 0) }
 
-// GetFloat64Or 取 float64 或默认。
+// GetFloat64Or gets a float64 or the default.
 func (o *JSONObject) GetFloat64Or(key string, def float64) float64 {
 	v, ok := o.Get(key)
 	if !ok {
@@ -193,10 +193,10 @@ func (o *JSONObject) GetFloat64Or(key string, def float64) float64 {
 	return toFloat64(v, def, o.cfg)
 }
 
-// GetBool 取 bool。
+// GetBool gets a bool.
 func (o *JSONObject) GetBool(key string) bool { return o.GetBoolOr(key, false) }
 
-// GetBoolOr 取 bool 或默认。
+// GetBoolOr gets a bool or the default.
 func (o *JSONObject) GetBoolOr(key string, def bool) bool {
 	v, ok := o.Get(key)
 	if !ok {
@@ -205,7 +205,7 @@ func (o *JSONObject) GetBoolOr(key string, def bool) bool {
 	return toBool(v, def, o.cfg)
 }
 
-// GetJSONObject 取嵌套对象，不存在或非对象返回 nil。
+// GetJSONObject gets a nested object and returns nil when absent or not an object.
 func (o *JSONObject) GetJSONObject(key string) *JSONObject {
 	v, ok := o.Get(key)
 	if !ok {
@@ -217,7 +217,7 @@ func (o *JSONObject) GetJSONObject(key string) *JSONObject {
 	return nil
 }
 
-// GetJSONArray 取嵌套数组，不存在或非数组返回 nil。
+// GetJSONArray gets a nested array and returns nil when absent or not an array.
 func (o *JSONObject) GetJSONArray(key string) *JSONArray {
 	v, ok := o.Get(key)
 	if !ok {
@@ -229,22 +229,22 @@ func (o *JSONObject) GetJSONArray(key string) *JSONArray {
 	return nil
 }
 
-// String 输出紧凑 JSON 字符串。
+// String returns a compact JSON string.
 func (o *JSONObject) String() string {
 	s, _ := writeValue(o, 0)
 	return s
 }
 
-// ToString 紧凑输出。
+// ToString returns compact output.
 func (o *JSONObject) ToString() string { return o.String() }
 
-// ToStringPretty 4 空格缩进输出。
+// ToStringPretty returns output indented with 4 spaces.
 func (o *JSONObject) ToStringPretty() string {
 	s, _ := writeValue(o, defaultIndent(o.cfg))
 	return s
 }
 
-// MarshalJSON 实现 encoding/json.Marshaler。
+// MarshalJSON implements encoding/json.Marshaler.
 func (o *JSONObject) MarshalJSON() ([]byte, error) {
 	s, err := writeValue(o, 0)
 	if err != nil {
@@ -253,7 +253,7 @@ func (o *JSONObject) MarshalJSON() ([]byte, error) {
 	return []byte(s), nil
 }
 
-// UnmarshalJSON 实现 encoding/json.Unmarshaler。
+// UnmarshalJSON implements encoding/json.Unmarshaler.
 func (o *JSONObject) UnmarshalJSON(b []byte) error {
 	v, err := parseBytes(b)
 	if err != nil {
@@ -270,13 +270,13 @@ func (o *JSONObject) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// GetByPath 通过路径表达式读取值。
+// GetByPath reads a value through a path expression.
 func (o *JSONObject) GetByPath(path string) any { return getByPath(o, path) }
 
-// PutByPath 通过路径表达式写入值。
+// PutByPath writes a value through a path expression.
 func (o *JSONObject) PutByPath(path string, value any) error { return putByPath(o, path, value) }
 
-// defaultIndent 返回配置中的缩进，为 0 返回 4。
+// defaultIndent returns the configured indentation, or 4 when it is 0.
 func defaultIndent(cfg *Config) int {
 	if cfg != nil && cfg.IndentFactor > 0 {
 		return cfg.IndentFactor
@@ -284,7 +284,7 @@ func defaultIndent(cfg *Config) int {
 	return 4
 }
 
-// indexKey 给数字 key 转 int，便于与数组操作互通。
+// indexKey converts numeric keys to int for interoperation with array operations.
 func parseIndex(s string) (int, bool) {
 	n, err := strconv.Atoi(s)
 	if err != nil {

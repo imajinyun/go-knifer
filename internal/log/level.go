@@ -1,29 +1,29 @@
 package log
 
-// Level 日志等级，对应 the utility toolkit log.level.Level。
-// 数值越小越详细：All < Trace < Debug < Info < Warn < Error < Fatal < Off。
+// Level is the log level matching the utility toolkit log.level.Level.
+// Lower values are more detailed: All < Trace < Debug < Info < Warn < Error < Fatal < Off.
 type Level int
 
 const (
-	// LevelAll 所有级别（最低，过滤所有都通过）。
+	// LevelAll allows all levels and is the lowest filtering threshold.
 	LevelAll Level = iota
-	// LevelTrace 跟踪级别。
+	// LevelTrace trace level.
 	LevelTrace
-	// LevelDebug 调试级别。
+	// LevelDebug debug level.
 	LevelDebug
-	// LevelInfo 信息级别。
+	// LevelInfo info level.
 	LevelInfo
-	// LevelWarn 警告级别。
+	// LevelWarn warn level.
 	LevelWarn
-	// LevelError 错误级别。
+	// LevelError error level.
 	LevelError
-	// LevelFatal 致命级别。
+	// LevelFatal fatal level.
 	LevelFatal
-	// LevelOff 关闭日志（最高，过滤所有都不通过）。
+	// LevelOff disables logging and is the highest filtering threshold.
 	LevelOff
 )
 
-// String 返回日志级别的可读名称。
+// String returns the human-readable level name.
 func (l Level) String() string {
 	switch l {
 	case LevelAll:

@@ -242,7 +242,7 @@ PBKDF2-SHA-256、AES-GCM、RSA-OAEP 加密和 RSA-PSS 签名。JWT RSA
 - `vdb` 条件构造器会校验操作符白名单；优先使用 `Eq`、`Like`、`In`、`Between`、
   `IsNull`、`IsNotNull` 等辅助函数，而不是拼接原始 SQL 片段。
 - `vskt.AioSession` 会串行化共享 session buffer 的读取，并在关闭回调期间保留 buffer，便于生命周期钩子安全检查最后收到的数据。
-- JWT `none` 签名只会在显式 `alg: "none"` 时启用；空算法或不支持的算法会被拒绝，不会降级成无签名 token。
+- JWT `alg=none` 始终拒绝；空算法或不支持的算法不会降级成无签名 token。
 
 ## 🚀 安装
 
@@ -561,8 +561,14 @@ func main() {
 简单请求和下载也可以使用快捷函数：
 
 ```go
-body := vresty.GetString("https://example.com")
-jsonBody := vresty.PostJSON("https://api.example.com/events", `{"event":"created"}`)
+body, err := vresty.GetStringE("https://example.com")
+if err != nil {
+  panic(err)
+}
+jsonBody, err := vresty.PostJSONE("https://api.example.com/events", `{"event":"created"}`)
+if err != nil {
+  panic(err)
+}
 n, err := vresty.DownloadFile("https://example.com/report.csv", "./downloads")
 _, _, _ = body, jsonBody, n
 _ = err

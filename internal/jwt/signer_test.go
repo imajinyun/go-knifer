@@ -4,14 +4,14 @@ import (
 	"testing"
 )
 
-// 对应 the utility toolkit-jwt JWTSignerUtilTest 的简化版本。
+// Simplified version of the utility toolkit-jwt JWTSignerUtilTest.
 
 func TestHMACSigner_HS256(t *testing.T) {
 	s, err := NewHMACSigner(AlgHS256, []byte("1234567890"))
 	if err != nil {
 		t.Fatalf("new HS256: %v", err)
 	}
-	// 来自 the utility toolkit 固定 token 的 header / payload
+	// Header and payload from a fixed utility toolkit token.
 	header := "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9"
 	payload := "eyJzdWIiOiIxMjM0NTY3ODkwIiwiYWRtaW4iOnRydWUsIm5hbWUiOiJsb29seSJ9"
 	want := "U2aQkC2THYV9L0fTN-yBBI7gmo5xhmvMhATtu8v0zEA"

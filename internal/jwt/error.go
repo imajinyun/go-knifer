@@ -6,14 +6,14 @@ import (
 	knifer "github.com/imajinyun/go-knifer"
 )
 
-// JWTError JWT 相关错误。
+// JWTError is a JWT-related error.
 type JWTError struct {
 	Code knifer.ErrCode
 	Msg  string
 	Err  error
 }
 
-// Error 实现 error 接口。
+// Error implements the error interface.
 func (e *JWTError) Error() string {
 	if e.Err != nil {
 		return e.Msg + ": " + e.Err.Error()
@@ -29,7 +29,7 @@ func (e *JWTError) ErrorCode() knifer.ErrCode {
 	return e.Code
 }
 
-// Unwrap 返回内部错误。
+// Unwrap returns the wrapped error.
 func (e *JWTError) Unwrap() error {
 	if e == nil {
 		return nil
@@ -37,7 +37,7 @@ func (e *JWTError) Unwrap() error {
 	return e.Err
 }
 
-// Is 支持 errors.Is(err, knifer.ErrCodeXxx) 按错误码匹配。
+// Is supports errors.Is(err, knifer.ErrCodeXxx) matching by error code.
 func (e *JWTError) Is(target error) bool {
 	if e == nil || target == nil {
 		return false
@@ -46,12 +46,12 @@ func (e *JWTError) Is(target error) bool {
 	return ok && e.Code == code
 }
 
-// NewJWTError 构造错误。
+// NewJWTError creates an error.
 func NewJWTError(msg string) *JWTError {
 	return &JWTError{Code: knifer.ErrCodeInvalidInput, Msg: msg}
 }
 
-// JWTErrorf 格式化构造错误。
+// JWTErrorf creates a formatted error.
 func JWTErrorf(format string, args ...any) *JWTError {
 	return &JWTError{Code: knifer.ErrCodeInvalidInput, Msg: fmt.Sprintf(format, args...)}
 }

@@ -6,11 +6,11 @@ import (
 	"time"
 )
 
-// 对应 the utility toolkit-jwt JWTValidatorTest。
+// Matches the utility toolkit-jwt JWTValidatorTest.
 
-// TestExpiredAt 已过期的 token 应返回校验错误。
+// TestExpiredAt should return a validation error for an expired token.
 func TestExpiredAt(t *testing.T) {
-	// 与 the utility toolkit 测试同一 token，exp=1477592 已过期
+	// Use the same token as the utility toolkit test; exp=1477592 is expired.
 	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0Nzc1OTJ9.isvT0Pqx0yjnZk53mUFSeYFJLDs-Ls9IsNAm86gIdZo"
 	j, err := Of(token)
 	if err != nil {
@@ -21,7 +21,7 @@ func TestExpiredAt(t *testing.T) {
 	}
 }
 
-// TestIssueAt 签发时间晚于参考时间应失败。
+// TestIssueAt should fail when issued-at time is after the reference time.
 func TestIssueAt(t *testing.T) {
 	now := time.Now()
 	tok, err := New().SetIssuedAt(now).SetKey([]byte("123456")).Sign()
@@ -35,7 +35,7 @@ func TestIssueAt(t *testing.T) {
 	}
 }
 
-// TestIssueAtPass 签发时间不晚于参考时间应通过。
+// TestIssueAtPass should pass when issued-at time is not after the reference time.
 func TestIssueAtPass(t *testing.T) {
 	now := time.Now()
 	tok, err := New().SetIssuedAt(now).SetKey([]byte("123456")).Sign()
@@ -48,7 +48,7 @@ func TestIssueAtPass(t *testing.T) {
 	}
 }
 
-// TestNotBefore nbf 晚于参考时间应失败。
+// TestNotBefore should fail when nbf is after the reference time.
 func TestNotBefore(t *testing.T) {
 	now := time.Now()
 	j := New().SetNotBefore(now)
@@ -58,7 +58,7 @@ func TestNotBefore(t *testing.T) {
 	}
 }
 
-// TestNotBeforePass nbf 不晚于参考时间应通过。
+// TestNotBeforePass should pass when nbf is not after the reference time.
 func TestNotBeforePass(t *testing.T) {
 	now := time.Now()
 	j := New().SetNotBefore(now)
@@ -67,7 +67,7 @@ func TestNotBeforePass(t *testing.T) {
 	}
 }
 
-// TestValidateAlgorithm 算法一致时校验通过。
+// TestValidateAlgorithm should pass validation when algorithms match.
 func TestValidateAlgorithm(t *testing.T) {
 	tok, err := New().SetNotBefore(time.Now()).SetKey([]byte("123456")).Sign()
 	if err != nil {
@@ -79,7 +79,7 @@ func TestValidateAlgorithm(t *testing.T) {
 	}
 }
 
-// TestValidateAlgorithmMismatch 算法不一致应报错。
+// TestValidateAlgorithmMismatch should return an error when algorithms mismatch.
 func TestValidateAlgorithmMismatch(t *testing.T) {
 	tok, err := New().SetKey([]byte("123456")).Sign()
 	if err != nil {
@@ -101,9 +101,9 @@ func TestValidateAlgorithmRejectsMissingSigner(t *testing.T) {
 	}
 }
 
-// TestValidateExpired 校验整体合法性时过期 token 返回 false（leeway=0）。
+// TestValidateExpired should return false for expired tokens when validating overall validity with leeway=0.
 func TestValidateExpired(t *testing.T) {
-	// 与 the utility toolkit 测试 validateTest 中相同
+	// Same as validateTest in the utility toolkit tests.
 	token := "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9." +
 		"eyJpc3MiOiJNb0xpIiwiZXhwIjoxNjI0OTU4MDk0NTI4LCJpYXQiOjE2MjQ5NTgwMzQ1MjAsInVzZXIiOiJ1c2VyIn0." +
 		"L0uB38p9sZrivbmP0VlDe--j_11YUXTu3TfHhfQhRKc"
@@ -111,14 +111,14 @@ func TestValidateExpired(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parse: %v", err)
 	}
-	// 注意 the utility toolkit 该 token 的 exp 字段单位实际上看似毫秒（1624958094528）。
-	// validate(0) 在 the utility toolkit 中返回 false，这里同样应不通过。
+	// Note that the exp field in this utility toolkit token appears to be milliseconds (1624958094528).
+	// validate(0) returns false in the utility toolkit, so it should fail here too.
 	if j.SetKey([]byte("1234567890")).Validate(0) {
 		t.Fatalf("expected validate=false")
 	}
 }
 
-// TestValidateDateExpired 直接构造已过期 JWT 应被校验拒绝。
+// TestValidateDateExpired should reject a directly constructed expired JWT.
 func TestValidateDateExpired(t *testing.T) {
 	exp, _ := time.Parse("2006-01-02 15:04:05", "2021-10-13 09:59:00")
 	j := New().
@@ -130,7 +130,7 @@ func TestValidateDateExpired(t *testing.T) {
 	}
 }
 
-// TestValidateLeeway leeway 容忍区间内通过。
+// TestValidateLeeway should pass within the leeway tolerance window.
 func TestValidateLeeway(t *testing.T) {
 	now := time.Now()
 	expired := now.Add(3 * time.Second)
@@ -145,12 +145,12 @@ func TestValidateLeeway(t *testing.T) {
 		t.Fatalf("sign: %v", err)
 	}
 	j, _ := Of(tok)
-	// 4 秒前——超过 nbf 边界 1 秒，但 leeway=10 容许
+	// 4 seconds ago: exceeds the nbf boundary by 1 second, but leeway=10 permits it.
 	before := now.Add(-4 * time.Second)
 	if err := ValidateDate(j, before, 10); err != nil {
 		t.Fatalf("should pass with leeway: %v", err)
 	}
-	// 4 秒后——超过 exp 1 秒，但 leeway=10 仍容许
+	// 4 seconds later: exceeds exp by 1 second, but leeway=10 still permits it.
 	after := now.Add(4 * time.Second)
 	if err := ValidateDate(j, after, 10); err != nil {
 		t.Fatalf("should pass with leeway: %v", err)

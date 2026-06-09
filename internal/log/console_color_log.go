@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-// ANSI 颜色码。
+// ANSI color codes.
 const (
 	ansiReset   = "\033[0m"
 	ansiDefault = "\033[39m"
@@ -19,7 +19,7 @@ const (
 	ansiWhite   = "\033[37m"
 )
 
-// ColorFactory 根据级别返回对应的 ANSI 颜色码。
+// ColorFactory returns the ANSI color code for a level.
 type ColorFactory func(level Level) string
 
 var (
@@ -42,7 +42,7 @@ func defaultColorFactory(level Level) string {
 	}
 }
 
-// SetColorFactory 自定义颜色工厂。
+// SetColorFactory customizes the color factory.
 func SetColorFactory(f ColorFactory) {
 	if f == nil {
 		return
@@ -52,25 +52,25 @@ func SetColorFactory(f ColorFactory) {
 	colorFactory = f
 }
 
-// getColorFactory 取当前颜色工厂。
+// getColorFactory returns the current color factory.
 func getColorFactory() ColorFactory {
 	colorFactoryMu.RLock()
 	defer colorFactoryMu.RUnlock()
 	return colorFactory
 }
 
-// ConsoleColorLog 对应 the utility ConsoleColorLog，使用 ANSI 颜色打印日志。
+// ConsoleColorLog matches the utility ConsoleColorLog and prints logs with ANSI colors.
 type ConsoleColorLog struct {
 	*ConsoleLog
 	colorFactory ColorFactory
 }
 
-// NewConsoleColorLog 创建一个带颜色的控制台日志实例。
+// NewConsoleColorLog creates a colored console log instance.
 func NewConsoleColorLog(name string) *ConsoleColorLog {
 	return NewConsoleColorLogWithOptions(name)
 }
 
-// NewConsoleColorLogWithOptions 创建一个带颜色的控制台日志实例，并应用构造选项。
+// NewConsoleColorLogWithOptions creates a colored console log instance and applies constructor options.
 func NewConsoleColorLogWithOptions(name string, opts ...ConsoleLogOption) *ConsoleColorLog {
 	base := NewConsoleLogWithOptions(name, opts...)
 	factory := base.colorFactory
@@ -78,12 +78,12 @@ func NewConsoleColorLogWithOptions(name string, opts ...ConsoleLogOption) *Conso
 		factory = getColorFactory()
 	}
 	c := &ConsoleColorLog{ConsoleLog: base, colorFactory: factory}
-	// 替换 Core 为彩色实现。
+	// Replace Core with the colored implementation.
 	base.Core = c.write
 	return c
 }
 
-// write 带颜色的写入实现。
+// write is the colored write implementation.
 func (c *ConsoleColorLog) write(level Level, err error, format string, args ...any) {
 	msg := renderLogMessage(format, args...)
 	factory := c.colorFactory

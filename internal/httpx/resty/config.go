@@ -231,12 +231,6 @@ func CloseCookie() {
 	cookieDisabled = true
 }
 
-func isCookieDisabled() bool {
-	globalMu.RLock()
-	defer globalMu.RUnlock()
-	return cookieDisabled
-}
-
 func setHeader(headers HeaderValues, name, value string) {
 	headers[name] = []string{value}
 }

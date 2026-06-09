@@ -42,20 +42,51 @@ func Post(rawURL string, opts ...RequestOption) *Request { return httpx.Post(raw
 func PostSafe(rawURL string, opts ...RequestOption) *Request { return httpx.PostSafe(rawURL, opts...) }
 
 // Put creates a PUT request.
+//
+// Security: Put is for trusted URLs. Use PutSafe when the URL is untrusted.
 func Put(rawURL string, opts ...RequestOption) *Request { return httpx.Put(rawURL, opts...) }
 
+// PutSafe creates a PUT request with SSRF-oriented safety checks enabled.
+func PutSafe(rawURL string, opts ...RequestOption) *Request { return httpx.PutSafe(rawURL, opts...) }
+
 // Delete creates a DELETE request.
+//
+// Security: Delete is for trusted URLs. Use DeleteSafe when the URL is untrusted.
 func Delete(rawURL string, opts ...RequestOption) *Request { return httpx.Delete(rawURL, opts...) }
 
+// DeleteSafe creates a DELETE request with SSRF-oriented safety checks enabled.
+func DeleteSafe(rawURL string, opts ...RequestOption) *Request {
+	return httpx.DeleteSafe(rawURL, opts...)
+}
+
 // Patch creates a PATCH request.
+//
+// Security: Patch is for trusted URLs. Use PatchSafe when the URL is untrusted.
 func Patch(rawURL string, opts ...RequestOption) *Request { return httpx.Patch(rawURL, opts...) }
 
+// PatchSafe creates a PATCH request with SSRF-oriented safety checks enabled.
+func PatchSafe(rawURL string, opts ...RequestOption) *Request {
+	return httpx.PatchSafe(rawURL, opts...)
+}
+
 // Head creates a HEAD request.
+//
+// Security: Head is for trusted URLs. Use HeadSafe when the URL is untrusted.
 func Head(rawURL string, opts ...RequestOption) *Request { return httpx.Head(rawURL, opts...) }
 
-// Options delegates to the internal httpx implementation.
+// HeadSafe creates a HEAD request with SSRF-oriented safety checks enabled.
+func HeadSafe(rawURL string, opts ...RequestOption) *Request { return httpx.HeadSafe(rawURL, opts...) }
+
+// Options creates an OPTIONS request.
+//
+// Security: Options is for trusted URLs. Use OptionsSafe when the URL is untrusted.
 func Options(rawURL string, opts ...RequestOption) *Request {
 	return httpx.Options(rawURL, opts...)
+}
+
+// OptionsSafe creates an OPTIONS request with SSRF-oriented safety checks enabled.
+func OptionsSafe(rawURL string, opts ...RequestOption) *Request {
+	return httpx.OptionsSafe(rawURL, opts...)
 }
 
 // NewRequest creates a request by method.

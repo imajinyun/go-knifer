@@ -1,6 +1,6 @@
 package jwt
 
-// 包级便捷函数（对应 the utility toolkit-jwt JWTUtil）。
+// Package-level convenience functions matching the utility toolkit-jwt JWTUtil.
 
 type tokenConfig struct {
 	headers map[string]any
@@ -52,12 +52,12 @@ func applyTokenOptions(opts []TokenOption) tokenConfig {
 	return cfg
 }
 
-// CreateToken 用 HS256 创建 token。
+// CreateToken creates a token with HS256.
 func CreateToken(payload map[string]any, key []byte) (string, error) {
 	return CreateTokenWithHeaders(nil, payload, key)
 }
 
-// CreateTokenWithHeaders 创建带 header 的 token（HS256）。
+// CreateTokenWithHeaders creates a token with headers using HS256.
 func CreateTokenWithHeaders(headers, payload map[string]any, key []byte) (string, error) {
 	j := New().AddHeaders(headers).AddPayloads(payload).SetKey(key)
 	return j.Sign()
@@ -77,12 +77,12 @@ func CreateTokenWithHeadersAndAlgorithm(headers, payload map[string]any, key []b
 	return j.Sign()
 }
 
-// CreateTokenWithSigner 使用自定义签名器创建 token。
+// CreateTokenWithSigner creates a token with a custom signer.
 func CreateTokenWithSigner(payload map[string]any, signer JWTSigner) (string, error) {
 	return CreateTokenWithHeadersAndSigner(nil, payload, signer)
 }
 
-// CreateTokenWithHeadersAndSigner 使用自定义签名器与 header 创建 token。
+// CreateTokenWithHeadersAndSigner creates a token with a custom signer and headers.
 func CreateTokenWithHeadersAndSigner(headers, payload map[string]any, signer JWTSigner) (string, error) {
 	j := New().AddHeaders(headers).AddPayloads(payload).SetSigner(signer)
 	return j.Sign()
@@ -104,7 +104,7 @@ func CreateTokenWithOptions(opts ...TokenOption) (string, error) {
 	return j.SetKey(cfg.key).SignOptsWithOptions(true, cfg.json...)
 }
 
-// ParseToken 解析 token。
+// ParseToken parses a token.
 func ParseToken(token string) (*JWT, error) { return Of(token) }
 
 // ParseTokenWithOptions parses a token with JSON options.
@@ -131,7 +131,7 @@ func VerifyStrict(token string, key []byte) bool {
 	return j.Verify()
 }
 
-// VerifyWithSigner 使用自定义 signer 校验 token。
+// VerifyWithSigner verifies a token with a custom signer.
 func VerifyWithSigner(token string, signer JWTSigner) bool {
 	j, err := Of(token)
 	if err != nil {

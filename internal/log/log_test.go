@@ -298,7 +298,7 @@ func TestSetFactoryReplacesCache(t *testing.T) {
 		lock.Lock()
 		created++
 		lock.Unlock()
-		// 自定义工厂返回带前缀名的 ConsoleLog，便于区分。
+		// The custom factory returns a ConsoleLog with a prefixed name for easy differentiation.
 		return NewConsoleLog("custom:" + name)
 	}))
 	defer SetFactory(LogFactoryFunc(func(name string) Log { return NewConsoleLog(name) }))

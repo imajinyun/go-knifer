@@ -4,9 +4,9 @@ import (
 	"bytes"
 )
 
-// ToBean 将 JSON 值转换到给定 dst（应为指针）。
-// 当传入 *JSONObject/*JSONArray/string/[]byte/map/slice 等时，会先序列化为
-// JSON 字节，再交给 encoding/json 反序列化到 dst。
+// ToBean converts a JSON value into dst, which should be a pointer.
+// When given *JSONObject, *JSONArray, string, []byte, map, slice, or similar values, it first serializes them to
+// JSON bytes, then lets encoding/json unmarshal them into dst.
 func ToBean(src any, dst any) error {
 	return ToBeanWithOptions(src, dst)
 }
@@ -53,7 +53,7 @@ func ToBeanWithOptions(src any, dst any, opts ...BeanOption) error {
 	return nil
 }
 
-// ToList 将 JSON 数组转换到 dst（必须是指向 slice 的指针）。
+// ToList converts a JSON array into dst, which must be a pointer to a slice.
 func ToList(src any, dst any) error { return ToListWithOptions(src, dst) }
 
 // ToListWithOptions converts a JSON array to dst using per-call options.

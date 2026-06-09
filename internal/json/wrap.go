@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// wrap 将任意 Go 值转为 JSON 兼容值（基础类型 / *JSONObject / *JSONArray / Null）。
+// wrap converts any Go value into a JSON-compatible value: primitive, *JSONObject, *JSONArray, or Null.
 func wrap(v any, cfg *Config) any {
 	if cfg == nil {
 		cfg = NewConfig()
@@ -60,7 +60,7 @@ func wrap(v any, cfg *Config) any {
 		}
 		return x.Format(cfg.DateFormat)
 	case []byte:
-		// []byte 视作字符串。
+		// Treat []byte as a string.
 		return string(x)
 	}
 	rv := reflect.ValueOf(v)
@@ -72,7 +72,7 @@ func wrap(v any, cfg *Config) any {
 		return wrap(rv.Elem().Interface(), cfg)
 	case reflect.Map:
 		obj := NewJSONObjectWithConfig(cfg)
-		// 仅支持字符串 key
+		// Only string keys are supported.
 		iter := rv.MapRange()
 		for iter.Next() {
 			k := cfg.sprint(iter.Key().Interface())
@@ -86,7 +86,7 @@ func wrap(v any, cfg *Config) any {
 		}
 		return arr
 	case reflect.Struct:
-		// 通过 encoding/json 反序列化为通用结构后再 wrap，确保 tag 生效。
+		// Unmarshal through encoding/json into generic structures before wrapping, so tags take effect.
 		marshal := json.Marshal
 		if cfg != nil && cfg.MarshalFunc != nil {
 			marshal = cfg.MarshalFunc
@@ -115,7 +115,7 @@ func wrap(v any, cfg *Config) any {
 	return cfg.sprint(v)
 }
 
-// toString 把任意 JSON 值转换为字符串。
+// toString converts any JSON value to a string.
 func toString(v any, def string, cfg *Config) string {
 	cfg = configOrDefault(cfg)
 	if IsNull(v) {
@@ -141,7 +141,7 @@ func toString(v any, def string, cfg *Config) string {
 	return cfg.sprint(v)
 }
 
-// toInt64 转 int64，失败时返回 def。
+// toInt64 converts to int64 and returns def on failure.
 func toInt64(v any, def int64, cfg *Config) int64 {
 	cfg = configOrDefault(cfg)
 	if IsNull(v) {
@@ -170,7 +170,7 @@ func toInt64(v any, def int64, cfg *Config) int64 {
 	return def
 }
 
-// toFloat64 转 float64，失败时返回 def。
+// toFloat64 converts to float64 and returns def on failure.
 func toFloat64(v any, def float64, cfg *Config) float64 {
 	cfg = configOrDefault(cfg)
 	if IsNull(v) {
@@ -195,7 +195,7 @@ func toFloat64(v any, def float64, cfg *Config) float64 {
 	return def
 }
 
-// toBool 转 bool。
+// toBool converts to bool.
 func toBool(v any, def bool, cfg *Config) bool {
 	cfg = configOrDefault(cfg)
 	if IsNull(v) {

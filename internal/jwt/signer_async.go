@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-// 非对称签名相关算法 ID。
+// Asymmetric signing algorithm IDs.
 const (
 	AlgPS256 = "PS256"
 	AlgPS384 = "PS384"
@@ -25,7 +25,7 @@ const (
 	AlgES512 = "ES512"
 )
 
-// rsaSigner 对应 the utility toolkit AsymmetricJWTSigner（仅限 RSA-PSS）。
+// rsaSigner matches the utility toolkit AsymmetricJWTSigner for RSA-PSS only.
 type rsaSigner struct {
 	alg        string
 	pub        *rsa.PublicKey
@@ -80,13 +80,13 @@ func defaultPSSOptions() *rsa.PSSOptions {
 	return &rsa.PSSOptions{SaltLength: rsa.PSSSaltLengthEqualsHash}
 }
 
-// NewRSAPSSSigner 创建 RSA-PSS 签名器。
+// NewRSAPSSSigner creates an RSA-PSS signer.
 // algorithm: PS256 / PS384 / PS512。
 func NewRSAPSSSigner(algorithm string, priv *rsa.PrivateKey, pub *rsa.PublicKey) (JWTSigner, error) {
 	return NewRSAPSSSignerWithOptions(algorithm, priv, pub)
 }
 
-// NewRSAPSSSignerWithOptions 创建可配置 RSA-PSS 签名器。
+// NewRSAPSSSignerWithOptions creates a configurable RSA-PSS signer.
 func NewRSAPSSSignerWithOptions(algorithm string, priv *rsa.PrivateKey, pub *rsa.PublicKey, opts ...SignerOption) (JWTSigner, error) {
 	algorithm = strings.ToUpper(strings.TrimSpace(algorithm))
 	hashID, ok := rsaHashOf(algorithm)
@@ -141,23 +141,23 @@ func (s *rsaSigner) Verify(headerB64, payloadB64, signB64 string) bool {
 	return rsa.VerifyPSS(s.pub, s.hashID, digest, sig, s.pssOptions) == nil
 }
 
-// ecdsaSigner 对应 the utility toolkit EllipticCurveJWTSigner。
+// ecdsaSigner matches the utility toolkit EllipticCurveJWTSigner.
 type ecdsaSigner struct {
 	alg    string
 	priv   *ecdsa.PrivateKey
 	pub    *ecdsa.PublicKey
 	hashID crypto.Hash
-	rSize  int // r/s 在 JWT 序列化中固定字节数
+	rSize  int // r/s fixed byte length in JWT serialization
 	random io.Reader
 }
 
-// NewECDSASigner 创建 ECDSA 签名器。
+// NewECDSASigner creates an ECDSA signer.
 // algorithm: ES256(P-256) / ES384(P-384) / ES512(P-521)。
 func NewECDSASigner(algorithm string, priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey) (JWTSigner, error) {
 	return NewECDSASignerWithOptions(algorithm, priv, pub)
 }
 
-// NewECDSASignerWithOptions 创建可配置 ECDSA 签名器。
+// NewECDSASignerWithOptions creates a configurable ECDSA signer.
 func NewECDSASignerWithOptions(algorithm string, priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey, opts ...SignerOption) (JWTSigner, error) {
 	algorithm = strings.ToUpper(strings.TrimSpace(algorithm))
 	hashID, expectedCurve, rSize, ok := ecdsaParamsOf(algorithm)
@@ -233,11 +233,11 @@ func (s *ecdsaSigner) Verify(headerB64, payloadB64, signB64 string) bool {
 	var r, sVal *big.Int
 	switch len(raw) {
 	case 2 * s.rSize:
-		// JOSE 固定长度 r||s
+		// JOSE fixed-length r||s.
 		r = new(big.Int).SetBytes(raw[:s.rSize])
 		sVal = new(big.Int).SetBytes(raw[s.rSize:])
 	default:
-		// 兼容 ASN.1 DER 形式
+		// Accept ASN.1 DER form for compatibility.
 		var sig struct{ R, S *big.Int }
 		if _, err := asn1.Unmarshal(raw, &sig); err != nil {
 			return false
@@ -247,7 +247,7 @@ func (s *ecdsaSigner) Verify(headerB64, payloadB64, signB64 string) bool {
 	return ecdsa.Verify(s.pub, digest, r, sVal)
 }
 
-// digestOf 计算指定 hash 的摘要。
+// digestOf computes the digest for the specified hash.
 func digestOf(h crypto.Hash, data string) []byte {
 	var hh hash.Hash
 	switch h {

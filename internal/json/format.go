@@ -40,8 +40,8 @@ func applyFormatOptions(opts []FormatOption) formatConfig {
 	return cfg
 }
 
-// FormatJSONStr 对应 the utility JSONStrFormatter.format，
-// 对原始 JSON 字符串进行格式化（4 空格缩进），不构造对象树。
+// FormatJSONStr matches the utility JSONStrFormatter.format,
+// formatting a raw JSON string with 4-space indentation without building an object tree.
 func FormatJSONStr(raw string) string {
 	return FormatJSONStrWithOptions(raw)
 }
@@ -80,7 +80,7 @@ func FormatJSONStrWithOptions(raw string, opts ...FormatOption) string {
 			sb.WriteByte(c)
 		case '{', '[':
 			sb.WriteByte(c)
-			// 空容器原样输出
+			// Keep empty containers unchanged.
 			if i+1 < len(raw) && (raw[i+1] == '}' || raw[i+1] == ']') {
 				continue
 			}
@@ -88,7 +88,7 @@ func FormatJSONStrWithOptions(raw string, opts ...FormatOption) string {
 			sb.WriteByte('\n')
 			writeIndent()
 		case '}', ']':
-			// 移除尾随空白
+			// Remove trailing whitespace.
 			s := strings.TrimRight(sb.String(), " ")
 			sb.Reset()
 			sb.WriteString(s)
@@ -108,7 +108,7 @@ func FormatJSONStrWithOptions(raw string, opts ...FormatOption) string {
 				sb.WriteByte(' ')
 			}
 		case ' ', '\t', '\n', '\r':
-			// 忽略原有空白
+			// Ignore original whitespace.
 		default:
 			sb.WriteByte(c)
 		}

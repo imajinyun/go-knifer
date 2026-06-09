@@ -12,7 +12,7 @@ func defaultYAMLUnmarshal(data []byte, out any) error {
 	return yaml.Unmarshal(data, out)
 }
 
-// ParseYAML 将简单 YAML 子集解析为分组配置。ParseYAML parses a small YAML subset into grouped configuration.
+// ParseYAML parses a small YAML subset into grouped configuration.
 func ParseYAML(content string) (*Conf, error) {
 	s := New()
 	group := defaultGroup

@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// 对应 the utility toolkit-jwt JWTTest。
+// Matches the utility toolkit-jwt JWTTest.
 
 func TestCreateHS256(t *testing.T) {
 	key := []byte("1234567890")
@@ -25,7 +25,7 @@ func TestCreateHS256(t *testing.T) {
 	if len(parts) != 3 {
 		t.Fatalf("token parts: %d", len(parts))
 	}
-	// 解析回来后能验证通过即可
+	// It is enough that the parsed token verifies successfully.
 	parsed, err := Of(tok)
 	if err != nil {
 		t.Fatalf("parse err: %v", err)
@@ -45,7 +45,7 @@ func TestCreateHS256(t *testing.T) {
 }
 
 func TestParseAndVerifyKnownToken(t *testing.T) {
-	// 来自 the utility toolkit 的固定测试 token
+	// Fixed test token from the utility toolkit.
 	rightToken := "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9." +
 		"eyJzdWIiOiIxMjM0NTY3ODkwIiwiYWRtaW4iOnRydWUsIm5hbWUiOiJsb29seSJ9." +
 		"U2aQkC2THYV9L0fTN-yBBI7gmo5xhmvMhATtu8v0zEA"

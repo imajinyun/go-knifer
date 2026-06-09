@@ -199,6 +199,38 @@ func TestSaveAsStreamsWithoutCachingBody(t *testing.T) {
 	}
 }
 
+func TestSaveAsHonorsMaxResponseBytes(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("too-large"))
+	}))
+	defer srv.Close()
+
+	target := filepath.Join(t.TempDir(), "limited.txt")
+	n, err := Get(srv.URL, WithMaxResponseBytes(3)).Execute().SaveAs(target)
+	if !errors.Is(err, knifer.ErrCodeUnsupported) {
+		t.Fatalf("SaveAs() error = %v, want unsupported", err)
+	}
+	if n <= 3 {
+		t.Fatalf("SaveAs() wrote %d bytes, want evidence that the limit was exceeded", n)
+	}
+}
+
+func TestSaveAsHonorsMaxResponseBytesAfterDecode(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Encoding", "gzip")
+		gz := gzip.NewWriter(w)
+		_, _ = gz.Write([]byte("too-large-after-decode"))
+		_ = gz.Close()
+	}))
+	defer srv.Close()
+
+	target := filepath.Join(t.TempDir(), "limited-gzip.txt")
+	_, err := Get(srv.URL, WithMaxResponseBytes(4)).Execute().SaveAs(target)
+	if !errors.Is(err, knifer.ErrCodeUnsupported) {
+		t.Fatalf("SaveAs() gzip error = %v, want unsupported", err)
+	}
+}
+
 func TestSaveAsUsesCachedBodyAfterBodyRead(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("cached"))

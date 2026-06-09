@@ -26,6 +26,10 @@ type LoadOptions struct {
 	AllowInclude bool
 	// IncludeKeys are keys used to discover included files. Defaults to include/import.
 	IncludeKeys []string
+	// AllowAbsoluteInclude permits absolute include/import paths. Disabled by default.
+	AllowAbsoluteInclude bool
+	// IncludeRoot restricts include/import paths to this directory. Defaults to the main config directory.
+	IncludeRoot string
 	// Decrypt decrypts ENC(...) values after loading and merging.
 	Decrypt DecryptFunc
 	// RemoteClient is used by LoadRemote. Defaults to http.DefaultClient.
@@ -55,6 +59,11 @@ type LoadOptions struct {
 // LoadWithOptions reads and parses a configuration file with advanced options.
 func LoadWithOptions(path string, opts LoadOptions) (*Conf, error) {
 	opts = normalizeLoadOptions(opts)
+	var err error
+	opts, err = normalizeIncludeRoot(path, opts)
+	if err != nil {
+		return nil, err
+	}
 	return loadFile(path, opts, map[string]bool{})
 }
 
@@ -110,6 +119,26 @@ func normalizeLoadOptions(opts LoadOptions) LoadOptions {
 		opts.MaxBytes = DefaultMaxBytes
 	}
 	return opts
+}
+
+func normalizeIncludeRoot(path string, opts LoadOptions) (LoadOptions, error) {
+	if !opts.AllowInclude {
+		return opts, nil
+	}
+	root := strings.TrimSpace(opts.IncludeRoot)
+	if root == "" {
+		abs, err := filepath.Abs(path)
+		if err != nil {
+			return opts, wrapConfigIO("resolve config file "+path, err)
+		}
+		root = filepath.Dir(abs)
+	}
+	absRoot, err := filepath.Abs(root)
+	if err != nil {
+		return opts, wrapConfigIO("resolve include root "+root, err)
+	}
+	opts.IncludeRoot = filepath.Clean(absRoot)
+	return opts, nil
 }
 
 // Merge merges configurations in order. Later configurations override earlier ones.
@@ -168,14 +197,14 @@ func loadFile(path string, opts LoadOptions, seen map[string]bool) (*Conf, error
 	baseDir := filepath.Dir(path)
 	merged := New()
 	for _, include := range includes {
-		include = strings.TrimSpace(include)
-		if include == "" {
+		resolved, ok, err := resolveIncludePath(include, baseDir, opts)
+		if err != nil {
+			return nil, err
+		}
+		if !ok {
 			continue
 		}
-		if !filepath.IsAbs(include) {
-			include = filepath.Join(baseDir, include)
-		}
-		c, err := loadFile(include, opts, seen)
+		c, err := loadFile(resolved, opts, seen)
 		if err != nil {
 			return nil, err
 		}
@@ -183,6 +212,54 @@ func loadFile(path string, opts LoadOptions, seen map[string]bool) (*Conf, error
 	}
 	merged.Merge(current)
 	return merged.DecryptValues(opts.Decrypt)
+}
+
+func resolveIncludePath(include, baseDir string, opts LoadOptions) (string, bool, error) {
+	include = strings.TrimSpace(include)
+	if include == "" {
+		return "", false, nil
+	}
+	if filepath.IsAbs(include) {
+		if !opts.AllowAbsoluteInclude {
+			return "", false, invalidInputf("absolute config include is not allowed: %s", include)
+		}
+	} else {
+		include = filepath.Join(baseDir, include)
+	}
+	absInclude, err := filepath.Abs(include)
+	if err != nil {
+		return "", false, wrapConfigIO("resolve config include "+include, err)
+	}
+	absInclude = filepath.Clean(absInclude)
+	if err := validateIncludeWithinRoot(absInclude, opts.IncludeRoot); err != nil {
+		return "", false, err
+	}
+	return absInclude, true, nil
+}
+
+func validateIncludeWithinRoot(path, root string) error {
+	if strings.TrimSpace(root) == "" {
+		return nil
+	}
+	if !pathWithinRoot(path, root) {
+		return invalidInputf("config include %s escapes include root %s", path, root)
+	}
+	realRoot, rootErr := filepath.EvalSymlinks(root)
+	realPath, pathErr := filepath.EvalSymlinks(path)
+	if rootErr == nil && pathErr == nil && !pathWithinRoot(realPath, realRoot) {
+		return invalidInputf("config include %s escapes include root %s", path, root)
+	}
+	return nil
+}
+
+func pathWithinRoot(path, root string) bool {
+	path = filepath.Clean(path)
+	root = filepath.Clean(root)
+	rel, err := filepath.Rel(root, path)
+	if err != nil {
+		return false
+	}
+	return rel == "." || (rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)))
 }
 
 func loadRemote(rawURL string, opts LoadOptions) (*Conf, error) {

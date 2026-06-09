@@ -8,14 +8,14 @@ import (
 	"time"
 )
 
-// 对应 the utility toolkit-jwt JWTValidator。
+// Matches the utility toolkit-jwt JWTValidator.
 
-// JWTValidator JWT 数据校验器，用于：
-//   - 算法是否一致
-//   - 算法签名是否正确
-//   - 字段值是否有效（例如时间未过期等）
+// JWTValidator JWT data validator used for:
+//   - algorithm consistency
+//   - signature correctness
+//   - field validity, such as unexpired time fields
 //
-// 使用方式与 the utility toolkit 类似的链式 API：
+// Chainable API similar to the utility toolkit:
 //
 //	err := gkjwt.OfValidator(token).
 //	    ValidateAlgorithm(signer).
@@ -26,23 +26,23 @@ type JWTValidator struct {
 	err error
 }
 
-// OfValidator 由 token 字符串创建校验器。
+// OfValidator creates a validator from a token string.
 func OfValidator(token string) *JWTValidator {
 	j, err := Of(token)
 	v := &JWTValidator{jwt: j, err: err}
 	return v
 }
 
-// OfValidatorJWT 由 JWT 对象创建校验器。
+// OfValidatorJWT creates a validator from a JWT object.
 func OfValidatorJWT(j *JWT) *JWTValidator { return &JWTValidator{jwt: j} }
 
-// JWT 返回底层 JWT 对象。
+// JWT returns the underlying JWT object.
 func (v *JWTValidator) JWT() *JWT { return v.jwt }
 
-// Err 返回首个失败原因；nil 表示全部通过。
+// Err returns the first failure reason; nil means all checks passed.
 func (v *JWTValidator) Err() error { return v.err }
 
-// ValidateAlgorithm 校验头部 alg 与 signer 一致，并验证签名。signer=nil 时使用 JWT 自带 signer；仍为空则失败。
+// ValidateAlgorithm validates that header alg matches signer and verifies the signature. When signer is nil, the JWT signer is used; validation fails if it is still nil.
 func (v *JWTValidator) ValidateAlgorithm(signer JWTSigner) *JWTValidator {
 	if v.err != nil || v.jwt == nil {
 		return v
@@ -69,7 +69,7 @@ func (v *JWTValidator) ValidateAlgorithm(signer JWTSigner) *JWTValidator {
 	return v
 }
 
-// ValidateDate 校验 nbf/exp/iat 时间字段；leeway 为容忍秒数。
+// ValidateDate validates nbf, exp, and iat time fields; leeway is the allowed leeway in seconds.
 func (v *JWTValidator) ValidateDate(now time.Time, leeway int64) *JWTValidator {
 	if v.err != nil || v.jwt == nil {
 		return v
@@ -80,13 +80,13 @@ func (v *JWTValidator) ValidateDate(now time.Time, leeway int64) *JWTValidator {
 	return v
 }
 
-// ValidateAlgorithm 校验 JWT 算法是否符合预期，并校验签名（包级版本）。
+// ValidateAlgorithm validates that the JWT algorithm matches expectations and verifies the signature as a package-level helper.
 func ValidateAlgorithm(token string, signer JWTSigner) error {
 	return OfValidator(token).ValidateAlgorithm(signer).Err()
 }
 
-// ValidateDate 校验时间字段：nbf 不能晚于当前时间，exp 不能早于当前时间，iat 不能晚于当前时间。
-// leeway 单位为秒，作为容忍空间。
+// ValidateDate validates time fields: nbf must not be after now, exp must not be before now, and iat must not be after now.
+// leeway is in seconds and acts as tolerance.
 func ValidateDate(j *JWT, now time.Time, leeway int64) error {
 	if j == nil {
 		return NewJWTError("jwt is nil")
@@ -116,7 +116,7 @@ func ValidateDate(j *JWT, now time.Time, leeway int64) error {
 	return nil
 }
 
-// payloadAsUnix 将 payload 中的时间字段（可能是 float64/int64/string）转为 Unix 秒。
+// payloadAsUnix converts a time field in payload, possibly float64, int64, or string, into Unix seconds.
 func payloadAsUnix(v any) (int64, bool, error) {
 	if v == nil {
 		return 0, false, nil

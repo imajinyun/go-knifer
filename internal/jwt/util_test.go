@@ -2,7 +2,7 @@ package jwt
 
 import "testing"
 
-// 对应 the utility toolkit-jwt JWTUtilTest（简化）。
+// Simplified utility toolkit-jwt JWTUtilTest.
 
 func TestUtil_CreateAndVerify(t *testing.T) {
 	key := []byte("1234567890")
@@ -80,7 +80,7 @@ func TestUtil_ParseToken(t *testing.T) {
 	if p["loginType"] != "login" {
 		t.Fatalf("loginType: %v", p["loginType"])
 	}
-	// JSON 数字默认解析为 float64
+	// JSON numbers parse as float64 by default.
 	if v, ok := p["eff"].(float64); !ok || int64(v) != 1678285713935 {
 		t.Fatalf("eff: %v (%T)", p["eff"], p["eff"])
 	}

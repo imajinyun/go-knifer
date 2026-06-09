@@ -1,15 +1,15 @@
 package json
 
-// jsonNull 对应 the utility JSONNull，表示 JSON 中的 null。
+// jsonNull matches the utility JSONNull and represents JSON null.
 type jsonNull struct{}
 
-// Null 是单例 JSON null。
+// Null is the singleton JSON null.
 var Null = jsonNull{}
 
-// String 实现 Stringer：输出 "null"。
+// String implements Stringer and returns "null".
 func (jsonNull) String() string { return "null" }
 
-// IsNull 判断 v 是否为 nil 或 JSON Null。
+// IsNull reports whether v is nil or JSON Null.
 func IsNull(v any) bool {
 	if v == nil {
 		return true

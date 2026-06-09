@@ -1,9 +1,9 @@
-// Package log 对应 the utility toolkit-log，提供统一的日志接口与默认控制台实现。
+// Package log provides a unified logging interface and default console implementations matching the utility toolkit-log.
 //
-// 主要类型：
-//   - Level：日志级别（Trace/Debug/Info/Warn/Error/Fatal/All/Off）。
-//   - Log：日志统一接口（Trace/Debug/Info/Warn/Error 等方法）。
-//   - LogFactory：根据名称构造 Log。
-//   - StaticLog：静态便捷方法，可直接打印日志。
-//   - ConsoleLog / ConsoleColorLog：默认控制台实现（可彩色输出）。
+// Main types:
+//   - Level：log levels: Trace, Debug, Info, Warn, Error, Fatal, All, and Off.
+//   - Log：unified logging interface with methods such as Trace, Debug, Info, Warn, and Error.
+//   - LogFactory：constructs Log instances by name.
+//   - StaticLog：static convenience methods for printing logs directly.
+//   - ConsoleLog / ConsoleColorLog：default console implementations, with optional colored output.
 package log

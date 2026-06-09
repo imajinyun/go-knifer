@@ -10,15 +10,15 @@ import (
 
 // Config controls JSON serialization behavior.
 type Config struct {
-	// IgnoreNullValue 序列化时忽略 null。
+	// IgnoreNullValue ignores null values during serialization.
 	IgnoreNullValue bool
-	// IgnoreCase 键不区分大小写（仅在 JSONObject 上生效，写入时按首次出现的大小写存储）。
+	// IgnoreCase makes keys case-insensitive; only JSONObject uses it and writes keys with their first-seen casing.
 	IgnoreCase bool
-	// IgnoreError 在转换失败时忽略错误。
+	// IgnoreError ignores errors on conversion failure.
 	IgnoreError bool
-	// DateFormat 日期格式（time.Time 的 layout），为空时输出毫秒数。
+	// DateFormat sets the date format as a time.Time layout; empty output uses milliseconds.
 	DateFormat string
-	// IndentFactor pretty 输出时缩进字符数。
+	// IndentFactor sets the indentation width for pretty output.
 	IndentFactor int
 	// MarshalFunc serializes arbitrary Go values when struct tags must be honored. nil means encoding/json.Marshal.
 	MarshalFunc func(any) ([]byte, error)
@@ -40,7 +40,7 @@ type Config struct {
 	FormatFloatFunc func(float64, byte, int, int) string
 }
 
-// NewConfig 创建一个默认配置。
+// NewConfig creates a default config.
 func NewConfig() *Config {
 	return &Config{IndentFactor: 4}
 }
@@ -48,7 +48,7 @@ func NewConfig() *Config {
 // CreateConfig creates a default JSON config.
 func CreateConfig() *Config { return NewConfig() }
 
-// Clone 拷贝配置。
+// Clone copies the config.
 func (c *Config) Clone() *Config {
 	if c == nil {
 		return NewConfig()

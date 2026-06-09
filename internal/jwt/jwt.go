@@ -6,14 +6,14 @@ import (
 	"time"
 )
 
-// JWT 表示一个 JWT 对象，由 Header + Payload + Signer 组成。
+// JWT represents a JWT object composed of Header, Payload, and Signer.
 //
-// 对应 the utility toolkit-jwt JWT。
+// matches the utility toolkit-jwt JWT.
 type JWT struct {
 	header  map[string]any
 	payload map[string]any
 	signer  JWTSigner
-	tokens  []string // 解析时保存的三段原始 base64 串
+	tokens  []string // stores the three raw base64 segments when parsed
 }
 
 type validateConfig struct {
@@ -90,7 +90,7 @@ func applyValidateOptions(opts []ValidateOption) validateConfig {
 	return cfg
 }
 
-// New 创建一个空 JWT。
+// New creates an empty JWT.
 func New() *JWT {
 	return &JWT{
 		header:  map[string]any{},
@@ -98,7 +98,7 @@ func New() *JWT {
 	}
 }
 
-// Of 解析已有 token 字符串，得到 JWT 对象。
+// Of parses an existing token string into a JWT object.
 func Of(token string) (*JWT, error) {
 	return OfWithOptions(token)
 }
@@ -112,7 +112,7 @@ func OfWithOptions(token string, opts ...JSONOption) (*JWT, error) {
 	return j, nil
 }
 
-// Parse 解析 token 字符串到当前 JWT。
+// Parse parses a token string into the current JWT.
 func (j *JWT) Parse(token string) error {
 	return j.ParseWithOptions(token)
 }
@@ -154,8 +154,8 @@ func (j *JWT) ParseWithOptions(token string, opts ...JSONOption) error {
 	return nil
 }
 
-// SetKey 使用 HMAC 算法（默认 HS256）设置密钥。
-// 若 header 已声明 HMAC 算法则使用该算法；为避免 alg=none 认证绕过，none 算法始终拒绝。
+// SetKey sets the key with an HMAC algorithm, defaulting to HS256.
+// If the header declares an HMAC algorithm, that algorithm is used; the none algorithm is always rejected to avoid alg=none authentication bypasses.
 func (j *JWT) SetKey(key []byte) *JWT {
 	alg := j.Algorithm()
 	if alg == "" {
@@ -167,7 +167,7 @@ func (j *JWT) SetKey(key []byte) *JWT {
 	}
 	signer, err := CreateSigner(alg, key)
 	if err != nil {
-		// 无法创建时降级为 HS256
+		// Fall back to HS256 when creation fails.
 		signer, _ = NewHMACSigner(AlgHS256, key)
 	}
 	return j.SetSigner(signer)
@@ -185,7 +185,7 @@ func (j *JWT) setKeyWithAlgorithm(key []byte, algorithm string) error {
 		algorithm = AlgHS256
 	}
 	if isNoneAlg(algorithm) {
-		return NewJWTError("jwt alg=none is not supported")
+		return unsupportedJWTErrorf("jwt alg=none is not supported")
 	}
 	signer, err := CreateSigner(algorithm, key)
 	if err != nil {
@@ -210,7 +210,7 @@ func normalizeAlgorithm(algorithm string) string {
 	return strings.ToUpper(algorithm)
 }
 
-// SetSigner 设置签名器；若 header 中无 alg 字段则自动写入。
+// SetSigner sets the signer and writes alg automatically when the header has no alg field.
 func (j *JWT) SetSigner(signer JWTSigner) *JWT {
 	j.signer = signer
 	if _, ok := j.header[HeaderAlgorithm]; !ok {
@@ -219,12 +219,12 @@ func (j *JWT) SetSigner(signer JWTSigner) *JWT {
 	return j
 }
 
-// Signer 返回当前签名器。
+// Signer returns the current signer.
 func (j *JWT) Signer() JWTSigner { return j.signer }
 
-// Header 操作。
+// Header operations.
 
-// Headers 返回头部全部字段（拷贝）。
+// Headers returns a copy of all header fields.
 func (j *JWT) Headers() map[string]any {
 	out := make(map[string]any, len(j.header))
 	for k, v := range j.header {
@@ -233,16 +233,16 @@ func (j *JWT) Headers() map[string]any {
 	return out
 }
 
-// Header 取头字段。
+// Header gets a header field.
 func (j *JWT) Header(name string) any { return j.header[name] }
 
-// SetHeader 设置头字段。
+// SetHeader sets a header field.
 func (j *JWT) SetHeader(name string, value any) *JWT {
 	j.header[name] = value
 	return j
 }
 
-// AddHeaders 批量添加头字段。
+// AddHeaders adds header fields in bulk.
 func (j *JWT) AddHeaders(headers map[string]any) *JWT {
 	for k, v := range headers {
 		j.header[k] = v
@@ -250,7 +250,7 @@ func (j *JWT) AddHeaders(headers map[string]any) *JWT {
 	return j
 }
 
-// Algorithm 取得头部 alg 字段。
+// Algorithm gets the header alg field.
 func (j *JWT) Algorithm() string {
 	if v, ok := j.header[HeaderAlgorithm].(string); ok {
 		return v
@@ -258,7 +258,7 @@ func (j *JWT) Algorithm() string {
 	return ""
 }
 
-// Type 取得头部 typ。
+// Type gets the header typ field.
 func (j *JWT) Type() string {
 	if v, ok := j.header[HeaderType].(string); ok {
 		return v
@@ -266,9 +266,9 @@ func (j *JWT) Type() string {
 	return ""
 }
 
-// Payload 操作。
+// Payload operations.
 
-// Payloads 返回载荷全部字段（拷贝）。
+// Payloads returns a copy of all payload fields.
 func (j *JWT) Payloads() map[string]any {
 	out := make(map[string]any, len(j.payload))
 	for k, v := range j.payload {
@@ -277,16 +277,16 @@ func (j *JWT) Payloads() map[string]any {
 	return out
 }
 
-// Payload 取载荷字段。
+// Payload gets a payload field.
 func (j *JWT) Payload(name string) any { return j.payload[name] }
 
-// SetPayload 设置载荷字段。
+// SetPayload sets a payload field.
 func (j *JWT) SetPayload(name string, value any) *JWT {
 	j.payload[name] = value
 	return j
 }
 
-// AddPayloads 批量添加载荷字段。
+// AddPayloads adds payload fields in bulk.
 func (j *JWT) AddPayloads(payloads map[string]any) *JWT {
 	for k, v := range payloads {
 		j.payload[k] = v
@@ -294,15 +294,15 @@ func (j *JWT) AddPayloads(payloads map[string]any) *JWT {
 	return j
 }
 
-// 注册的 Payload 字段便捷方法。
+// Convenience methods for registered Payload fields.
 
-// SetIssuer 设置 iss。
+// SetIssuer sets iss.
 func (j *JWT) SetIssuer(issuer string) *JWT { return j.SetPayload(PayloadIssuer, issuer) }
 
-// SetSubject 设置 sub。
+// SetSubject sets sub.
 func (j *JWT) SetSubject(subject string) *JWT { return j.SetPayload(PayloadSubject, subject) }
 
-// SetAudience 设置 aud。
+// SetAudience sets aud.
 func (j *JWT) SetAudience(audience ...string) *JWT {
 	if len(audience) == 1 {
 		return j.SetPayload(PayloadAudience, audience[0])
@@ -310,36 +310,36 @@ func (j *JWT) SetAudience(audience ...string) *JWT {
 	return j.SetPayload(PayloadAudience, audience)
 }
 
-// SetExpiresAt 设置 exp（按 Unix 秒）。
+// SetExpiresAt sets exp in Unix seconds.
 func (j *JWT) SetExpiresAt(t time.Time) *JWT {
 	return j.SetPayload(PayloadExpiresAt, t.Unix())
 }
 
-// SetNotBefore 设置 nbf（按 Unix 秒）。
+// SetNotBefore sets nbf in Unix seconds.
 func (j *JWT) SetNotBefore(t time.Time) *JWT {
 	return j.SetPayload(PayloadNotBefore, t.Unix())
 }
 
-// SetIssuedAt 设置 iat（按 Unix 秒）。
+// SetIssuedAt sets iat in Unix seconds.
 func (j *JWT) SetIssuedAt(t time.Time) *JWT {
 	return j.SetPayload(PayloadIssuedAt, t.Unix())
 }
 
-// SetJWTID 设置 jti。
+// SetJWTID sets jti.
 func (j *JWT) SetJWTID(jwtID string) *JWT { return j.SetPayload(PayloadJWTID, jwtID) }
 
-// Sign 进行签名生成 JWT 字符串（自动补 typ=JWT）。
+// Sign signs and generates a JWT string, adding typ=JWT automatically.
 func (j *JWT) Sign() (string, error) {
 	return j.SignOpts(true)
 }
 
-// SignWith 使用指定签名器签名（自动补 typ=JWT）。
+// SignWith signs with the specified signer, adding typ=JWT automatically.
 func (j *JWT) SignWith(signer JWTSigner) (string, error) {
 	j.SetSigner(signer)
 	return j.SignOpts(true)
 }
 
-// SignOpts 进行签名；addTypeIfNot=true 时若无 typ 字段则补 JWT。
+// SignOpts signs; when addTypeIfNot is true, it fills typ=JWT if typ is absent.
 func (j *JWT) SignOpts(addTypeIfNot bool) (string, error) {
 	return j.SignOptsWithOptions(addTypeIfNot)
 }
@@ -372,7 +372,7 @@ func (j *JWT) SignOptsWithOptions(addTypeIfNot bool, opts ...JSONOption) (string
 	return headerB64 + "." + payloadB64 + "." + sig, nil
 }
 
-// MustSign 签名失败时 panic。
+// MustSign panics when signing fails.
 func (j *JWT) MustSign() string {
 	s, err := j.Sign()
 	if err != nil {
@@ -381,14 +381,15 @@ func (j *JWT) MustSign() string {
 	return s
 }
 
-// Verify 使用当前 signer 校验 token 是否合法；未显式设置 signer 时返回 false。
+// Verify verifies the token with the current signer and returns false when no signer is explicitly set.
 func (j *JWT) Verify() bool { return j.VerifyWith(j.signer) }
 
-// VerifyWith 使用指定 signer 校验。
+// VerifyWith verifies with the specified signer.
 //
 // Verification rules:
 //   - nil signer returns false,
-//   - alg=none always returns false.
+//   - alg=none always returns false,
+//   - the token alg must match signer.Algorithm().
 func (j *JWT) VerifyWith(signer JWTSigner) bool {
 	if signer == nil {
 		return false
@@ -399,11 +400,14 @@ func (j *JWT) VerifyWith(signer JWTSigner) bool {
 	if isNoneAlg(j.Algorithm()) {
 		return false
 	}
+	if normalizeAlgorithm(j.Algorithm()) != normalizeAlgorithm(signer.Algorithm()) {
+		return false
+	}
 	return signer.Verify(j.tokens[0], j.tokens[1], j.tokens[2])
 }
 
-// Validate 在 Verify 基础上校验 nbf/exp/iat 时间字段。
-// leeway 为容忍秒数。
+// Validate validates nbf, exp, and iat time fields after Verify.
+// leeway is the allowed leeway in seconds.
 func (j *JWT) Validate(leeway int64) bool {
 	return j.ValidateWithOptions(WithValidateLeeway(leeway))
 }

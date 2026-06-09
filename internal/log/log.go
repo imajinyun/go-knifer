@@ -1,25 +1,25 @@
 package log
 
-// Log 对应 the utility Log 接口，提供统一的日志方法。
+// Log matches the utility Log interface and provides unified logging methods.
 //
-// 与 Java 不同，Go 中没有原生重载，因此采用 *f 后缀区分带格式化模板的方法（与 fmt.Sprintf 兼容）：
+// Unlike Java, Go has no native overloads, so methods with formatting templates use the *f suffix and are compatible with fmt.Sprintf:
 //   - Trace(args ...any)        / Tracef(format string, args ...any)
 //   - Debug / Debugf
 //   - Info  / Infof
 //   - Warn  / Warnf
 //   - Error / Errorf
 //
-// 此外提供：
-//   - Log(level, format, args...) 通用日志入口；
-//   - LogE(level, err, format, args...) 携带错误对象。
+// Additional methods:
+//   - Log(level, format, args...) common logging entry point;
+//   - LogE(level, err, format, args...) includes an error object.
 type Log interface {
-	// GetName 返回日志名称（通常是类/包/类型名）。
+	// GetName returns the log name, usually a class, package, or type name.
 	GetName() string
 
-	// IsEnabled 判断指定级别是否开启。
+	// IsEnabled reports whether the specified level is enabled.
 	IsEnabled(level Level) bool
 
-	// IsTraceEnabled / IsDebugEnabled / ... 等便捷判断。
+	// IsTraceEnabled / IsDebugEnabled / ... and related convenience checks.
 	IsTraceEnabled() bool
 	IsDebugEnabled() bool
 	IsInfoEnabled() bool
@@ -41,8 +41,8 @@ type Log interface {
 	Error(args ...any)
 	Errorf(format string, args ...any)
 
-	// Log 打印指定级别的日志。
+	// Log prints a log at the specified level.
 	Log(level Level, format string, args ...any)
-	// LogE 打印指定级别的日志并附带错误对象。
+	// LogE prints a log at the specified level with an error object.
 	LogE(level Level, err error, format string, args ...any)
 }

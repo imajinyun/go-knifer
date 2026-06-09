@@ -257,7 +257,7 @@ func applyValidOptions(opts []ValidOption) validConfig {
 	return cfg
 }
 
-// Parse 自动判断 JSON 类型：对象/数组/基础值。
+// Parse auto-detects the JSON type: object, array, or primitive value.
 func Parse(src any) (any, error) { return ParseWithConfig(src, nil) }
 
 // ParseWithOptions automatically detects and parses JSON with options.
@@ -274,7 +274,7 @@ func ParseWithOptions(src any, opts ...ParseOption) (any, error) {
 	return ParseWithConfig(src, cfg.cfg)
 }
 
-// ParseWithConfig 解析并使用配置。
+// ParseWithConfig parses with config.
 func ParseWithConfig(src any, cfg *Config) (any, error) {
 	switch x := src.(type) {
 	case nil:
@@ -286,11 +286,11 @@ func ParseWithConfig(src any, cfg *Config) (any, error) {
 	case *JSONObject, *JSONArray:
 		return x, nil
 	}
-	// 复杂类型：先 wrap 再返回
+	// Complex types are wrapped before being returned.
 	return wrap(src, configOrDefault(cfg)), nil
 }
 
-// ParseObj 强制解析为 JSONObject。
+// ParseObj forces parsing as JSONObject.
 func ParseObj(src any) (*JSONObject, error) { return ParseObjWithConfig(src, nil) }
 
 // ParseObjWithOptions parses src as a JSON object with options.
@@ -305,7 +305,7 @@ func ParseObjWithOptions(src any, opts ...ParseOption) (*JSONObject, error) {
 	return nil, NewJSONError("expect json object, got %T", v)
 }
 
-// ParseObjWithConfig 解析为 JSONObject。
+// ParseObjWithConfig parses as JSONObject.
 func ParseObjWithConfig(src any, cfg *Config) (*JSONObject, error) {
 	v, err := ParseWithConfig(src, cfg)
 	if err != nil {
@@ -317,7 +317,7 @@ func ParseObjWithConfig(src any, cfg *Config) (*JSONObject, error) {
 	return nil, NewJSONError("expect json object, got %T", v)
 }
 
-// ParseArray 强制解析为 JSONArray。
+// ParseArray forces parsing as JSONArray.
 func ParseArray(src any) (*JSONArray, error) { return ParseArrayWithConfig(src, nil) }
 
 // ParseArrayWithOptions parses src as a JSON array with options.
@@ -332,7 +332,7 @@ func ParseArrayWithOptions(src any, opts ...ParseOption) (*JSONArray, error) {
 	return nil, NewJSONError("expect json array, got %T", v)
 }
 
-// ParseArrayWithConfig 解析为 JSONArray。
+// ParseArrayWithConfig parses as JSONArray.
 func ParseArrayWithConfig(src any, cfg *Config) (*JSONArray, error) {
 	v, err := ParseWithConfig(src, cfg)
 	if err != nil {
@@ -344,21 +344,21 @@ func ParseArrayWithConfig(src any, cfg *Config) (*JSONArray, error) {
 	return nil, NewJSONError("expect json array, got %T", v)
 }
 
-// ToJSONStr 紧凑序列化。
+// ToJSONStr serializes compactly.
 func ToJSONStr(v any, opts ...EncodeOption) (string, error) {
 	cfg := applyEncodeOptions(0, opts)
 	w := wrap(v, cfg.cfg)
 	return writeValueWithConfig(w, cfg.indent, cfg.cfg)
 }
 
-// ToJSONPrettyStr 4 空格缩进序列化。
+// ToJSONPrettyStr serializes with 4-space indentation.
 func ToJSONPrettyStr(v any, opts ...EncodeOption) (string, error) {
 	cfg := applyEncodeOptions(4, opts)
 	w := wrap(v, cfg.cfg)
 	return writeValueWithConfig(w, cfg.indent, cfg.cfg)
 }
 
-// ToJSONStrIndent 自定义缩进序列化。
+// ToJSONStrIndent serializes with custom indentation.
 func ToJSONStrIndent(v any, indent int, opts ...EncodeOption) (string, error) {
 	cfg := applyEncodeOptions(indent, opts)
 	w := wrap(v, cfg.cfg)
@@ -374,7 +374,7 @@ func ToJSONPrettyStrWithConfig(v any, cfg *Config) (string, error) {
 	return ToJSONPrettyStr(v, WithConfig(cfg), WithIndent(cfg.IndentFactor))
 }
 
-// IsJSON 检查字符串是否合法 JSON。
+// IsJSON checks whether a string is valid JSON.
 func IsJSON(s string) bool {
 	return IsJSONWithOptions(s)
 }
@@ -388,7 +388,7 @@ func IsJSONWithOptions(s string, opts ...ValidOption) bool {
 	return applyValidOptions(opts).valid([]byte(s))
 }
 
-// IsJSONObj 检查字符串是否是 JSON 对象。
+// IsJSONObj checks whether a string is a JSON object.
 func IsJSONObj(s string) bool {
 	return IsJSONObjWithOptions(s)
 }
@@ -402,7 +402,7 @@ func IsJSONObjWithOptions(s string, opts ...ValidOption) bool {
 	return IsJSONWithOptions(s, opts...)
 }
 
-// IsJSONArray 检查字符串是否是 JSON 数组。
+// IsJSONArray checks whether a string is a JSON array.
 func IsJSONArray(s string) bool {
 	return IsJSONArrayWithOptions(s)
 }
@@ -416,10 +416,10 @@ func IsJSONArrayWithOptions(s string, opts ...ValidOption) bool {
 	return IsJSONWithOptions(s, opts...)
 }
 
-// GetByPath 顶层路径查询。
+// GetByPath performs a top-level path query.
 func GetByPath(root any, path string) any { return getByPath(root, path) }
 
-// GetByPathOr 顶层路径查询，缺省回退。
+// GetByPathOr performs a top-level path query with default fallback.
 func GetByPathOr(root any, path string, def any) any {
 	if v := getByPath(root, path); v != nil && !IsNull(v) {
 		return v
@@ -427,17 +427,17 @@ func GetByPathOr(root any, path string, def any) any {
 	return def
 }
 
-// PutByPath 顶层路径写入。
+// PutByPath writes a top-level path.
 func PutByPath(root any, path string, value any) error { return putByPath(root, path, value) }
 
-// Quote 在 JSON 字符串两侧加引号并进行必要转义。
+// Quote quotes a JSON string and applies required escaping.
 func Quote(s string) string {
 	var sb strings.Builder
 	writeQuoted(&sb, s)
 	return sb.String()
 }
 
-// configOrDefault 返回非空配置。
+// configOrDefault returns a non-nil config.
 func configOrDefault(cfg *Config) *Config {
 	if cfg == nil {
 		return NewConfig()

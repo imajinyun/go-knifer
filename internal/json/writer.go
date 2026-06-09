@@ -5,7 +5,7 @@ import (
 	"unicode/utf8"
 )
 
-// writeValue 将值写为 JSON 字符串；indent>0 时进行 pretty 格式化。
+// writeValue writes a value as a JSON string and pretty-formats it when indent > 0.
 func writeValue(v any, indent int) (string, error) {
 	return writeValueWithConfig(v, indent, nil)
 }
@@ -39,17 +39,17 @@ func writeAny(sb *strings.Builder, v any, indent, depth int, cfg *Config) error 
 	case int64:
 		sb.WriteString(cfg.formatInt(x, 10))
 	case float64:
-		// 与 the utility toolkit 一致：尽量使用最短形式。
+		// Match the utility toolkit by using the shortest form where possible.
 		s := cfg.formatFloat(x, 'f', -1, 64)
 		sb.WriteString(s)
 	default:
-		// 通用回退：通过 wrap 转为标准类型再写入。
+		// Generic fallback: wrap into standard types before writing.
 		w := wrap(v, cfg)
 		if _, ok := w.(string); ok {
 			writeQuoted(sb, w.(string))
 			return nil
 		}
-		// 防止递归
+		// Prevent recursion.
 		switch w.(type) {
 		case *JSONObject, *JSONArray, bool, int64, float64, string, jsonNull:
 			return writeAny(sb, w, indent, depth, cfg)
@@ -125,7 +125,7 @@ func writeIndent(sb *strings.Builder, indent, depth int) {
 	}
 }
 
-// writeQuoted 写入带引号、且转义的字符串。
+// writeQuoted writes a quoted and escaped string.
 func writeQuoted(sb *strings.Builder, s string) {
 	sb.WriteByte('"')
 	for i := 0; i < len(s); {

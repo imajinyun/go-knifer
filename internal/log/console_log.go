@@ -8,17 +8,17 @@ import (
 	"time"
 )
 
-// ConsoleLog 对应 the utility ConsoleLog，使用标准输出/错误打印日志。
+// ConsoleLog matches the utility ConsoleLog and prints logs to stdout or stderr.
 //
-// 默认级别为 LevelDebug，可通过 SetConsoleLevel 全局调整。
-// 输出格式为：[date] [level] name: msg
+// The default level is LevelDebug and can be adjusted globally with SetConsoleLevel.
+// Output format: [date] [level] name: msg
 type ConsoleLog struct {
 	*AbstractLog
 	name string
-	// out / errOut 可由测试注入；为 nil 时使用 os.Stdout / os.Stderr。
+	// out / errOut can be injected by tests; nil uses os.Stdout or os.Stderr.
 	out    io.Writer
 	errOut io.Writer
-	// clock / timeLayout 可由测试注入；为空时使用 time.Now / 默认布局。
+	// clock / timeLayout can be injected by tests; empty values use time.Now or the default layout.
 	clock      func() time.Time
 	timeLayout string
 	level      *Level
@@ -77,26 +77,26 @@ var (
 	consoleLevel   = LevelDebug
 )
 
-// SetConsoleLevel 全局设置控制台日志级别（小于该级别的日志将被过滤）。
+// SetConsoleLevel sets the global console log level; logs below this level are filtered.
 func SetConsoleLevel(level Level) {
 	consoleLevelMu.Lock()
 	defer consoleLevelMu.Unlock()
 	consoleLevel = level
 }
 
-// GetConsoleLevel 返回当前控制台日志级别。
+// GetConsoleLevel returns the current console log level.
 func GetConsoleLevel() Level {
 	consoleLevelMu.RLock()
 	defer consoleLevelMu.RUnlock()
 	return consoleLevel
 }
 
-// NewConsoleLog 创建一个使用控制台输出的 Log 实例。
+// NewConsoleLog creates a Log instance that writes to the console.
 func NewConsoleLog(name string) *ConsoleLog {
 	return NewConsoleLogWithOptions(name)
 }
 
-// NewConsoleLogWithOptions 创建一个使用控制台输出的 Log 实例，并应用构造选项。
+// NewConsoleLogWithOptions creates a Log instance that writes to the console and applies constructor options.
 func NewConsoleLogWithOptions(name string, opts ...ConsoleLogOption) *ConsoleLog {
 	c := &ConsoleLog{
 		name:       name,
@@ -115,10 +115,10 @@ func NewConsoleLogWithOptions(name string, opts ...ConsoleLogOption) *ConsoleLog
 	return c
 }
 
-// GetName 返回日志名称。
+// GetName returns the log name.
 func (c *ConsoleLog) GetName() string { return c.name }
 
-// SetOutput 设置标准输出目标，主要用于测试。
+// SetOutput sets the stdout target, mainly for tests.
 func (c *ConsoleLog) SetOutput(out, errOut io.Writer) {
 	c.out = out
 	c.errOut = errOut
@@ -145,7 +145,7 @@ func (c *ConsoleLog) isEnabled(level Level) bool {
 	return GetConsoleLevel() <= level
 }
 
-// write 是底层写入逻辑，由 AbstractLog.Core 调用。
+// write is the low-level write logic called by AbstractLog.Core.
 func (c *ConsoleLog) write(level Level, err error, format string, args ...any) {
 	msg := renderLogMessage(format, args...)
 	line := fmt.Sprintf("[%s] [%-5s] %s: %s", c.now().Format(c.layout()), level.String(), c.name, msg)

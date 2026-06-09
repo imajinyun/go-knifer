@@ -10,17 +10,17 @@ import (
 	"strings"
 )
 
-// JWTSigner JWT 签名器接口（对应 the utility toolkit-jwt JWTSigner）。
+// JWTSigner is the JWT signer interface matching the utility toolkit-jwt JWTSigner.
 type JWTSigner interface {
-	// Algorithm 返回算法 ID（如 HS256）。
+	// Algorithm returns the algorithm ID, such as HS256.
 	Algorithm() string
-	// Sign 对 headerBase64.payloadBase64 计算签名，返回 base64url（无填充）字符串。
+	// Sign signs headerBase64.payloadBase64 and returns an unpadded base64url string.
 	Sign(headerB64, payloadB64 string) string
-	// Verify 校验签名是否匹配。
+	// Verify verifies whether the signature matches.
 	Verify(headerB64, payloadB64, signB64 string) bool
 }
 
-// 算法 ID 常量。
+// Algorithm ID constants.
 const (
 	AlgNone  = "none"
 	AlgHS256 = "HS256"
@@ -28,14 +28,14 @@ const (
 	AlgHS512 = "HS512"
 )
 
-// b64URLEncode 标准 JWT 中使用的 base64url（不带 padding）编码。
+// b64URLEncode encodes base64url without padding as used by standard JWT.
 func b64URLEncode(data []byte) string {
 	return base64.RawURLEncoding.EncodeToString(data)
 }
 
-// b64URLDecode base64url 解码，兼容带 padding 的输入。
+// b64URLDecode decodes base64url and accepts padded input.
 func b64URLDecode(s string) ([]byte, error) {
-	// 优先使用无 padding；若失败则尝试带 padding。
+	// Prefer unpadded decoding and try padded decoding on failure.
 	if b, err := base64.RawURLEncoding.DecodeString(s); err == nil {
 		return b, nil
 	}
@@ -44,14 +44,14 @@ func b64URLDecode(s string) ([]byte, error) {
 
 func isNoneAlg(alg string) bool { return strings.EqualFold(strings.TrimSpace(alg), AlgNone) }
 
-// hmacSigner HMAC 系列签名器。
+// hmacSigner HMAC signer family.
 type hmacSigner struct {
 	alg    string
 	key    []byte
 	hashFn func() hash.Hash
 }
 
-// NewHMACSigner 创建 HMAC 签名器。algorithm 仅支持 HS256/HS384/HS512。
+// NewHMACSigner creates an HMAC signer. algorithm only supports HS256, HS384, and HS512.
 func NewHMACSigner(algorithm string, key []byte) (JWTSigner, error) {
 	algorithm = strings.ToUpper(strings.TrimSpace(algorithm))
 	switch algorithm {
@@ -62,11 +62,11 @@ func NewHMACSigner(algorithm string, key []byte) (JWTSigner, error) {
 	case AlgHS512:
 		return &hmacSigner{alg: AlgHS512, key: append([]byte{}, key...), hashFn: sha512.New}, nil
 	}
-	// 兼容传 SHA384 直接 hash 别名
+	// Accept SHA384 as a direct hash alias for compatibility.
 	return nil, unsupportedJWTErrorf("unsupported HMAC algorithm: %s", algorithm)
 }
 
-// MustHMACSigner 创建 HMAC 签名器，失败 panic。
+// MustHMACSigner creates an HMAC signer and panics on failure.
 func MustHMACSigner(algorithm string, key []byte) JWTSigner {
 	s, err := NewHMACSigner(algorithm, key)
 	if err != nil {
@@ -90,20 +90,20 @@ func (s *hmacSigner) Verify(headerB64, payloadB64, signB64 string) bool {
 	return subtle.ConstantTimeCompare([]byte(expected), []byte(signB64)) == 1
 }
 
-// CreateSigner 根据算法 ID 与 HMAC key 自动选择签名器（仅支持 HS*）。
+// CreateSigner selects a signer from the algorithm ID and HMAC key; only HS* is supported.
 // The none algorithm is always rejected.
 //
-// 非对称算法请使用 NewRSAPSSSigner / NewECDSASigner，
-// 或 JWTSignerUtil 提供的 PS256/ES256 等便捷工厂。
+// Use NewRSAPSSSigner or NewECDSASigner for asymmetric algorithms,
+// or use convenience factories such as PS256 and ES256 provided by JWTSignerUtil.
 func CreateSigner(algorithmID string, key []byte) (JWTSigner, error) {
 	if isNoneAlg(algorithmID) {
-		return nil, NewJWTError("jwt alg=none is not supported")
+		return nil, unsupportedJWTErrorf("jwt alg=none is not supported")
 	}
 	return NewHMACSigner(algorithmID, key)
 }
 
-// AlgorithmName 返回 JWT 算法 ID 对应的标准算法名（the utility toolkit AlgorithmUtil.getAlgorithm）。
-// 若传入未知 ID，则原样返回。
+// AlgorithmName returns the standard algorithm name for a JWT algorithm ID, matching the utility toolkit AlgorithmUtil.getAlgorithm.
+// returns unknown IDs unchanged.
 func AlgorithmName(idOrAlgorithm string) string {
 	id := strings.ToUpper(strings.TrimSpace(idOrAlgorithm))
 	switch id {

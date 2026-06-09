@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"compress/zlib"
+	"errors"
 	"io"
 	"io/fs"
 	"net/http"
@@ -113,6 +114,18 @@ func readAllWithLimit(r io.Reader, maxBytes int64, readAll func(io.Reader) ([]by
 		return data, err
 	}
 	return data, nil
+}
+
+func copyWithLimit(w io.Writer, r io.Reader, maxBytes int64) (int64, error) {
+	if maxBytes <= 0 {
+		return io.Copy(w, r)
+	}
+	limited := &io.LimitedReader{R: r, N: maxBytes + 1}
+	n, err := io.Copy(w, limited)
+	if n > maxBytes {
+		return n, HTTPErrorfWithCode(knifer.ErrCodeUnsupported, "response body exceeds max bytes: %d", maxBytes)
+	}
+	return n, err
 }
 
 type saveConfig struct {
@@ -398,7 +411,11 @@ func (r *HTTPResponse) writeBodyTo(w io.Writer) (int64, error) {
 			}
 		}()
 	}
-	n, err := io.Copy(w, reader)
+	n, err := copyWithLimit(w, reader, r.decodeConfig.maxBytes)
+	if errors.Is(err, knifer.ErrCodeUnsupported) {
+		r.err = err
+		return n, err
+	}
 	if err != nil && (!r.decodeConfig.ignoreEOFError || err != io.ErrUnexpectedEOF) {
 		r.err = NewHTTPError("read response body failed", err)
 		return n, r.err

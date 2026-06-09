@@ -6,12 +6,12 @@ import (
 	"io"
 )
 
-// parseBytes 把 JSON 字节解析为 *JSONObject 或 *JSONArray 或基础值。
+// parseBytes parses JSON bytes into *JSONObject, *JSONArray, or a primitive value.
 func parseBytes(b []byte) (any, error) {
 	return parseBytesWithConfig(b, nil)
 }
 
-// parseBytesWithConfig 使用配置解析 JSON。
+// parseBytesWithConfig parses JSON with config.
 func parseBytesWithConfig(b []byte, cfg *Config) (any, error) {
 	if cfg == nil {
 		cfg = NewConfig()
@@ -53,7 +53,7 @@ func newDecoderWithConfig(r io.Reader, cfg *Config) *json.Decoder {
 	return dec
 }
 
-// parseValue 根据当前 token 递归解析。
+// parseValue parses recursively from the current token.
 func parseValue(dec *json.Decoder, tok json.Token, cfg *Config) (any, error) {
 	switch t := tok.(type) {
 	case json.Delim:
@@ -79,7 +79,7 @@ func parseValue(dec *json.Decoder, tok json.Token, cfg *Config) (any, error) {
 				}
 				obj.Set(key, v)
 			}
-			// 消费 '}'
+			// Consume '}'.
 			if _, err := dec.Token(); err != nil {
 				return nil, WrapJSONError(err, "json: missing '}'")
 			}
@@ -109,7 +109,7 @@ func parseValue(dec *json.Decoder, tok json.Token, cfg *Config) (any, error) {
 	case string:
 		return t, nil
 	case json.Number:
-		// 优先 int64，失败回退 float64
+		// Prefer int64 and fall back to float64 on failure.
 		if i, err := t.Int64(); err == nil {
 			return i, nil
 		}

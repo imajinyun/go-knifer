@@ -4,14 +4,14 @@ import (
 	"strings"
 )
 
-// pathSegment 描述路径中一段：要么是 key，要么是数组下标。
+// pathSegment describes one path segment, either a key or an array index.
 type pathSegment struct {
 	key     string
 	index   int
 	isIndex bool
 }
 
-// parsePath 将 "$.a.b[0].c" / "a.b[0]" 解析为段序列。
+// parsePath parses "$.a.b[0].c" or "a.b[0]" into segments.
 func parsePath(path string) ([]pathSegment, error) {
 	p := strings.TrimSpace(path)
 	if p == "" {
@@ -46,7 +46,7 @@ func parsePath(path string) ([]pathSegment, error) {
 			segs = append(segs, pathSegment{index: n, isIndex: true})
 			i += end + 1
 		default:
-			// 收集到下一个 . 或 [
+			// Collect until the next . or [.
 			end := i
 			for end < len(p) && p[end] != '.' && p[end] != '[' {
 				end++
@@ -58,7 +58,7 @@ func parsePath(path string) ([]pathSegment, error) {
 	return segs, nil
 }
 
-// getByPath 沿路径读取值。
+// getByPath reads a value along a path.
 func getByPath(root any, path string) any {
 	segs, err := parsePath(path)
 	if err != nil {
@@ -89,7 +89,7 @@ func getByPath(root any, path string) any {
 			}
 			cur = v
 		case *JSONArray:
-			// 若 key 是数字也支持
+			// Also supports numeric keys.
 			if n, ok := parseIndex(seg.key); ok {
 				v, ok := x.Get(n)
 				if !ok {
@@ -106,7 +106,7 @@ func getByPath(root any, path string) any {
 	return cur
 }
 
-// putByPath 沿路径写入值，必要时创建中间节点。
+// putByPath writes a value along a path and creates intermediate nodes when needed.
 func putByPath(root any, path string, value any) error {
 	segs, err := parsePath(path)
 	if err != nil {
