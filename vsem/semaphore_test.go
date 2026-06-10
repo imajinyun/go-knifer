@@ -32,6 +32,12 @@ func TestVSemFacade(t *testing.T) {
 }
 
 func TestVSemFacadeErrors(t *testing.T) {
+	if sem, err := vsem.NewE(0); err == nil || sem != nil {
+		t.Fatalf("NewE(0) = %v, %v, want nil + error", sem, err)
+	} else if !errors.Is(err, vsem.ErrInvalidCapacity) {
+		t.Fatalf("NewE(0) error = %v, want ErrInvalidCapacity", err)
+	}
+
 	sem := vsem.New(1)
 	if err := sem.Acquire(context.Background(), 2); !errors.Is(err, vsem.ErrInvalidWeight) {
 		t.Fatalf("Acquire(2) = %v, want ErrInvalidWeight", err)
@@ -56,5 +62,18 @@ func TestVSemFacadeErrors(t *testing.T) {
 	}
 	if code, ok := knifer.CodeOf(vsem.ErrInvalidWeight); !ok || code != knifer.ErrCodeInvalidInput {
 		t.Fatalf("CodeOf(ErrInvalidWeight) = %q, %v; want invalid input", code, ok)
+	}
+	active := vsem.New(1)
+	if err := active.ReleaseE(0); !errors.Is(err, vsem.ErrInvalidWeight) {
+		t.Fatalf("ReleaseE(0) = %v, want ErrInvalidWeight", err)
+	}
+	if err := active.Acquire(context.Background(), 1); err != nil {
+		t.Fatal(err)
+	}
+	if err := active.ReleaseE(1); err != nil {
+		t.Fatalf("ReleaseE(1) = %v, want nil", err)
+	}
+	if err := active.ReleaseE(1); !errors.Is(err, vsem.ErrReleaseTooMany) {
+		t.Fatalf("ReleaseE(1) second = %v, want ErrReleaseTooMany", err)
 	}
 }

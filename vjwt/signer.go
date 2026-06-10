@@ -31,6 +31,11 @@ func NewHMACSigner(algorithm string, key []byte) (JWTSigner, error) {
 	return jwtimpl.NewHMACSigner(algorithm, key)
 }
 
+// NewHMACSignerStrict creates an HMAC signer and enforces the recommended minimum key length.
+func NewHMACSignerStrict(algorithm string, key []byte) (JWTSigner, error) {
+	return jwtimpl.NewHMACSignerStrict(algorithm, key)
+}
+
 // MustHMACSigner creates an HMAC signer and panics on invalid algorithms.
 func MustHMACSigner(algorithm string, key []byte) JWTSigner {
 	return jwtimpl.MustHMACSigner(algorithm, key)
@@ -39,6 +44,16 @@ func MustHMACSigner(algorithm string, key []byte) JWTSigner {
 // CreateSigner creates an HMAC signer from algorithm ID. The none algorithm is always rejected.
 func CreateSigner(algorithmID string, key []byte) (JWTSigner, error) {
 	return jwtimpl.CreateSigner(algorithmID, key)
+}
+
+// CreateSignerStrict creates an HMAC signer and enforces the recommended minimum key length.
+func CreateSignerStrict(algorithmID string, key []byte) (JWTSigner, error) {
+	return jwtimpl.CreateSignerStrict(algorithmID, key)
+}
+
+// MinHMACKeyBytes returns the minimum recommended HMAC key length for an HS* JWT algorithm.
+func MinHMACKeyBytes(algorithm string) (int, error) {
+	return jwtimpl.MinHMACKeyBytes(algorithm)
 }
 
 // AlgorithmName returns the standard cryptographic algorithm name for a JWT algorithm ID.

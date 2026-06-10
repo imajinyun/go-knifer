@@ -73,7 +73,7 @@ func WithCompressionMethod(method uint16) ArchiveOption { return zipimpl.WithCom
 // WithCompressionLevel sets the deflate compression level used for newly created entries.
 func WithCompressionLevel(level int) ArchiveOption { return zipimpl.WithCompressionLevel(level) }
 
-// WithMaxBytes limits bytes read from archive entries or decompressed streams.
+// WithMaxBytes limits bytes read from archive entries, decompressed streams, or compression inputs.
 func WithMaxBytes(n int64) ArchiveOption { return zipimpl.WithMaxBytes(n) }
 
 // WithOpen sets the function used to open source files for reading.
@@ -374,9 +374,19 @@ func ZlibFileWithOptions(path string, level int, opts ...ArchiveOption) ([]byte,
 // ZlibLevel compresses data using zlib with the specified compression level.
 func ZlibLevel(data []byte, level int) ([]byte, error) { return zipimpl.ZlibLevel(data, level) }
 
+// ZlibLevelWithOptions compresses data using zlib with the specified compression level and per-call options.
+func ZlibLevelWithOptions(data []byte, level int, opts ...ArchiveOption) ([]byte, error) {
+	return zipimpl.ZlibLevelWithOptions(data, level, opts...)
+}
+
 // ZlibReader compresses all bytes from r using zlib with the specified compression level.
 func ZlibReader(r io.Reader, level, estimatedLength int) ([]byte, error) {
 	return zipimpl.ZlibReader(r, level, estimatedLength)
+}
+
+// ZlibReaderWithOptions compresses all bytes from r using zlib with the specified compression level and per-call options.
+func ZlibReaderWithOptions(r io.Reader, level, estimatedLength int, opts ...ArchiveOption) ([]byte, error) {
+	return zipimpl.ZlibReaderWithOptions(r, level, estimatedLength, opts...)
 }
 
 // UnZlib decompresses zlib data.

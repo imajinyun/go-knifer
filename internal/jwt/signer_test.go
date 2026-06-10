@@ -49,9 +49,44 @@ func TestHMACSigner_UnsupportedAlg(t *testing.T) {
 	}
 }
 
+func TestHMACSignerStrictRejectsWeakKeys(t *testing.T) {
+	tests := []struct {
+		name     string
+		alg      string
+		minBytes int
+	}{
+		{name: "HS256", alg: AlgHS256, minBytes: MinHMACKeyBytesHS256},
+		{name: "HS384", alg: AlgHS384, minBytes: MinHMACKeyBytesHS384},
+		{name: "HS512", alg: AlgHS512, minBytes: MinHMACKeyBytesHS512},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			weak := make([]byte, tt.minBytes-1)
+			if _, err := NewHMACSignerStrict(tt.alg, weak); err == nil {
+				t.Fatalf("NewHMACSignerStrict(%s) should reject %d-byte key", tt.alg, len(weak))
+			}
+
+			strong := make([]byte, tt.minBytes)
+			signer, err := NewHMACSignerStrict(tt.alg, strong)
+			if err != nil {
+				t.Fatalf("NewHMACSignerStrict(%s) strong key: %v", tt.alg, err)
+			}
+			if signer.Algorithm() != tt.alg {
+				t.Fatalf("algorithm = %q, want %q", signer.Algorithm(), tt.alg)
+			}
+		})
+	}
+}
+
 func TestCreateSigner(t *testing.T) {
 	if _, err := CreateSigner("none", nil); err == nil {
 		t.Fatalf("CreateSigner should reject none")
+	}
+	if _, err := CreateSignerStrict("none", []byte("ignored")); err == nil {
+		t.Fatalf("CreateSignerStrict should reject none")
+	}
+	if _, err := CreateSignerStrict(AlgHS256, []byte("weak")); err == nil {
+		t.Fatalf("CreateSignerStrict should reject weak keys")
 	}
 	if _, err := CreateSigner("", []byte("k")); err == nil {
 		t.Fatalf("expected error for empty alg")

@@ -191,7 +191,7 @@ func WithCompressionLevel(level int) ArchiveOption {
 	return func(c *archiveConfig) { c.compressionLevel = level }
 }
 
-// WithMaxBytes limits bytes read from archive entries or decompressed streams. Non-positive means unlimited.
+// WithMaxBytes limits bytes read from archive entries, decompressed streams, or compression inputs. Non-positive means unlimited.
 func WithMaxBytes(n int64) ArchiveOption {
 	return func(c *archiveConfig) {
 		c.maxBytes = n
@@ -625,7 +625,7 @@ func ZipStreamsToWriterWithOptions(out io.Writer, entries []StreamEntry, opts ..
 		if err != nil {
 			return err
 		}
-		if _, err := io.Copy(w, entry.Reader); err != nil {
+		if _, err := copyLimit(w, entry.Reader, cfg.maxBytes); err != nil {
 			return err
 		}
 	}
@@ -845,7 +845,7 @@ func GzipReaderWithOptions(r io.Reader, estimatedLength int, opts ...ArchiveOpti
 	if err != nil {
 		return nil, err
 	}
-	if _, err := io.Copy(w, r); err != nil {
+	if _, err := copyLimit(w, r, cfg.maxBytes); err != nil {
 		_ = w.Close()
 		return nil, err
 	}
@@ -917,7 +917,7 @@ func ZlibFileWithOptions(path string, level int, opts ...ArchiveOption) ([]byte,
 	if err != nil {
 		return nil, err
 	}
-	return ZlibReader(f, level, int(info.Size()))
+	return ZlibReaderWithOptions(f, level, int(info.Size()), opts...)
 }
 
 // ZlibLevel compresses data using zlib with the specified compression level.
@@ -925,18 +925,29 @@ func ZlibLevel(data []byte, level int) ([]byte, error) {
 	return ZlibReader(bytes.NewReader(data), level, len(data))
 }
 
+// ZlibLevelWithOptions compresses data using zlib with the specified compression level and per-call options.
+func ZlibLevelWithOptions(data []byte, level int, opts ...ArchiveOption) ([]byte, error) {
+	return ZlibReaderWithOptions(bytes.NewReader(data), level, len(data), opts...)
+}
+
 // ZlibReader compresses all bytes from r using zlib with the specified compression level.
 func ZlibReader(r io.Reader, level, estimatedLength int) ([]byte, error) {
+	return ZlibReaderWithOptions(r, level, estimatedLength)
+}
+
+// ZlibReaderWithOptions compresses all bytes from r using zlib with the specified compression level and per-call options.
+func ZlibReaderWithOptions(r io.Reader, level, estimatedLength int, opts ...ArchiveOption) ([]byte, error) {
 	if estimatedLength <= 0 {
 		estimatedLength = defaultBufferSize
 	}
+	cfg := applyArchiveOptions(opts)
 	var buf bytes.Buffer
 	buf.Grow(estimatedLength)
 	w, err := zlib.NewWriterLevel(&buf, level)
 	if err != nil {
 		return nil, err
 	}
-	if _, err := io.Copy(w, r); err != nil {
+	if _, err := copyLimit(w, r, cfg.maxBytes); err != nil {
 		_ = w.Close()
 		return nil, err
 	}

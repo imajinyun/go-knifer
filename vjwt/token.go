@@ -70,6 +70,9 @@ func WithTokenPayload(payload map[string]any) TokenOption { return jwtimpl.WithT
 // WithTokenKey sets the HMAC key used by CreateTokenWithOptions.
 func WithTokenKey(key []byte) TokenOption { return jwtimpl.WithTokenKey(key) }
 
+// WithTokenStrictKey makes CreateTokenWithOptions enforce the recommended HMAC key length.
+func WithTokenStrictKey() TokenOption { return jwtimpl.WithTokenStrictKey() }
+
 // WithTokenAlgorithm sets the HMAC algorithm used by CreateTokenWithOptions.
 func WithTokenAlgorithm(algorithm string) TokenOption { return jwtimpl.WithTokenAlgorithm(algorithm) }
 

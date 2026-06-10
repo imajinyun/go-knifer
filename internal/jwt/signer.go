@@ -26,6 +26,10 @@ const (
 	AlgHS256 = "HS256"
 	AlgHS384 = "HS384"
 	AlgHS512 = "HS512"
+
+	MinHMACKeyBytesHS256 = 32
+	MinHMACKeyBytesHS384 = 48
+	MinHMACKeyBytesHS512 = 64
 )
 
 // b64URLEncode encodes base64url without padding as used by standard JWT.
@@ -66,6 +70,31 @@ func NewHMACSigner(algorithm string, key []byte) (JWTSigner, error) {
 	return nil, unsupportedJWTErrorf("unsupported HMAC algorithm: %s", algorithm)
 }
 
+// NewHMACSignerStrict creates an HMAC signer and enforces the RFC-recommended minimum key length.
+func NewHMACSignerStrict(algorithm string, key []byte) (JWTSigner, error) {
+	minBytes, err := MinHMACKeyBytes(algorithm)
+	if err != nil {
+		return nil, err
+	}
+	if len(key) < minBytes {
+		return nil, JWTErrorf("hmac key for %s must be at least %d bytes", normalizeAlgorithm(algorithm), minBytes)
+	}
+	return NewHMACSigner(algorithm, key)
+}
+
+// MinHMACKeyBytes returns the minimum recommended HMAC key length for an HS* JWT algorithm.
+func MinHMACKeyBytes(algorithm string) (int, error) {
+	switch normalizeAlgorithm(algorithm) {
+	case AlgHS256:
+		return MinHMACKeyBytesHS256, nil
+	case AlgHS384:
+		return MinHMACKeyBytesHS384, nil
+	case AlgHS512:
+		return MinHMACKeyBytesHS512, nil
+	}
+	return 0, unsupportedJWTErrorf("unsupported HMAC algorithm: %s", strings.ToUpper(strings.TrimSpace(algorithm)))
+}
+
 // MustHMACSigner creates an HMAC signer and panics on failure.
 func MustHMACSigner(algorithm string, key []byte) JWTSigner {
 	s, err := NewHMACSigner(algorithm, key)
@@ -100,6 +129,14 @@ func CreateSigner(algorithmID string, key []byte) (JWTSigner, error) {
 		return nil, unsupportedJWTErrorf("jwt alg=none is not supported")
 	}
 	return NewHMACSigner(algorithmID, key)
+}
+
+// CreateSignerStrict selects an HMAC signer and enforces the recommended minimum key length.
+func CreateSignerStrict(algorithmID string, key []byte) (JWTSigner, error) {
+	if isNoneAlg(algorithmID) {
+		return nil, unsupportedJWTErrorf("jwt alg=none is not supported")
+	}
+	return NewHMACSignerStrict(algorithmID, key)
 }
 
 // AlgorithmName returns the standard algorithm name for a JWT algorithm ID, matching the utility toolkit AlgorithmUtil.getAlgorithm.

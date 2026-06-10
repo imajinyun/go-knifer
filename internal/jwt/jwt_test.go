@@ -102,6 +102,25 @@ func TestSetKeyEReturnsSignerCreationError(t *testing.T) {
 	}
 }
 
+func TestSetKeyStrictWithMinLength(t *testing.T) {
+	weak := []byte("weak")
+	j := New().SetHeader(HeaderAlgorithm, AlgHS256)
+	if err := j.SetKeyStrictWithMinLength(weak); err == nil {
+		t.Fatal("SetKeyStrictWithMinLength should reject weak HMAC key")
+	}
+
+	strong := []byte(strings.Repeat("k", MinHMACKeyBytesHS256))
+	if err := j.SetKeyStrictWithMinLength(strong); err != nil {
+		t.Fatalf("SetKeyStrictWithMinLength strong key: %v", err)
+	}
+	if j.Signer() == nil {
+		t.Fatal("SetKeyStrictWithMinLength should set signer")
+	}
+	if j.Algorithm() != AlgHS256 {
+		t.Fatalf("algorithm = %q, want HS256", j.Algorithm())
+	}
+}
+
 func TestSetSignerNilIsSafe(t *testing.T) {
 	j := New()
 	j.SetSigner(nil)
@@ -182,6 +201,29 @@ func TestCreateTokenWithOptions(t *testing.T) {
 	}
 	if customToken == "" || strings.HasSuffix(customToken, ".") {
 		t.Fatalf("custom signer token should be signed: %q", customToken)
+	}
+}
+
+func TestCreateTokenWithOptionsStrictKey(t *testing.T) {
+	if token, err := CreateTokenWithOptions(
+		WithTokenPayload(map[string]any{PayloadSubject: "alice"}),
+		WithTokenKey([]byte("weak")),
+		WithTokenStrictKey(),
+	); err == nil || token != "" {
+		t.Fatalf("CreateTokenWithOptions strict weak key token=%q err=%v, want error", token, err)
+	}
+
+	strong := []byte(strings.Repeat("k", MinHMACKeyBytesHS256))
+	token, err := CreateTokenWithOptions(
+		WithTokenPayload(map[string]any{PayloadSubject: "alice"}),
+		WithTokenKey(strong),
+		WithTokenStrictKey(),
+	)
+	if err != nil {
+		t.Fatalf("CreateTokenWithOptions strict strong key: %v", err)
+	}
+	if token == "" {
+		t.Fatal("CreateTokenWithOptions strict strong key returned empty token")
 	}
 }
 

@@ -28,9 +28,10 @@ func (e *sentinel) Is(target error) bool {
 }
 
 var (
-	ErrInvalidWeight  error = &sentinel{code: knifer.ErrCodeInvalidInput, msg: "semaphore: invalid weight"}
-	ErrReleaseTooMany error = &sentinel{code: knifer.ErrCodeInvalidInput, msg: "semaphore: release more than acquired"}
-	ErrClosed         error = &sentinel{code: knifer.ErrCodeUnsupported, msg: "semaphore: closed"}
+	ErrInvalidCapacity error = &sentinel{code: knifer.ErrCodeInvalidInput, msg: "semaphore: invalid capacity"}
+	ErrInvalidWeight   error = &sentinel{code: knifer.ErrCodeInvalidInput, msg: "semaphore: invalid weight"}
+	ErrReleaseTooMany  error = &sentinel{code: knifer.ErrCodeInvalidInput, msg: "semaphore: release more than acquired"}
+	ErrClosed          error = &sentinel{code: knifer.ErrCodeUnsupported, msg: "semaphore: closed"}
 )
 
 // Semaphore is a weighted, cancellable, and closeable counting semaphore.
@@ -52,10 +53,19 @@ type waiter struct {
 
 // New creates a semaphore with capacity permits. Capacity must be greater than 0.
 func New(cap int) *Semaphore {
-	if cap <= 0 {
-		panic(fmt.Sprintf("semaphore: cap must be > 0, got %d", cap))
+	sem, err := NewE(cap)
+	if err != nil {
+		panic(err)
 	}
-	return &Semaphore{cap: int64(cap)}
+	return sem
+}
+
+// NewE creates a semaphore with capacity permits and returns an error for invalid capacity.
+func NewE(cap int) (*Semaphore, error) {
+	if cap <= 0 {
+		return nil, fmt.Errorf("%w: got %d", ErrInvalidCapacity, cap)
+	}
+	return &Semaphore{cap: int64(cap)}, nil
 }
 
 // Acquire obtains n permits, blocking until success, context cancellation, or semaphore close.
@@ -137,8 +147,15 @@ func (s *Semaphore) TryAcquire(n int) bool {
 
 // Release releases n permits and wakes waiters in FIFO order.
 func (s *Semaphore) Release(n int) {
+	if err := s.ReleaseE(n); err != nil {
+		panic(err)
+	}
+}
+
+// ReleaseE releases n permits and wakes waiters in FIFO order.
+func (s *Semaphore) ReleaseE(n int) error {
 	if n <= 0 {
-		panic(ErrInvalidWeight)
+		return ErrInvalidWeight
 	}
 	weight := int64(n)
 
@@ -146,10 +163,11 @@ func (s *Semaphore) Release(n int) {
 	defer s.mux.Unlock()
 
 	if s.cur.Load() < weight {
-		panic(ErrReleaseTooMany)
+		return ErrReleaseTooMany
 	}
 	s.cur.Add(-weight)
 	s.notifyLocked()
+	return nil
 }
 
 // Use returns the number of currently acquired permits.

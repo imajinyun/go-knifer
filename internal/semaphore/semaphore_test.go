@@ -119,6 +119,13 @@ func TestCloseWakesWaitersAndRejectsAcquire(t *testing.T) {
 
 func TestInvalidInputsAndPanics(t *testing.T) {
 	assertPanic(t, func() { New(0) })
+	if sem, err := NewE(0); err == nil || sem != nil {
+		t.Fatalf("NewE(0) = %v, %v, want nil + error", sem, err)
+	} else if !errors.Is(err, ErrInvalidCapacity) {
+		t.Fatalf("NewE(0) error = %v, want ErrInvalidCapacity", err)
+	} else if !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("NewE(0) error = %v, want ErrCodeInvalidInput", err)
+	}
 
 	sem := New(1)
 	var nilCtx context.Context
@@ -139,8 +146,33 @@ func TestInvalidInputsAndPanics(t *testing.T) {
 	if sem.TryAcquire(0) || sem.TryAcquire(2) {
 		t.Fatal("TryAcquire() should reject invalid weights")
 	}
+	if err := sem.ReleaseE(0); !errors.Is(err, ErrInvalidWeight) {
+		t.Fatalf("ReleaseE(0) = %v, want ErrInvalidWeight", err)
+	}
 	assertPanic(t, func() { sem.Release(0) })
+	if err := sem.ReleaseE(1); !errors.Is(err, ErrReleaseTooMany) {
+		t.Fatalf("ReleaseE(1) = %v, want ErrReleaseTooMany", err)
+	}
 	assertPanic(t, func() { sem.Release(1) })
+}
+
+func TestReleaseEReturnsErrorAndReleasesPermits(t *testing.T) {
+	sem := New(2)
+	if err := sem.Acquire(context.Background(), 2); err != nil {
+		t.Fatal(err)
+	}
+	if err := sem.ReleaseE(1); err != nil {
+		t.Fatalf("ReleaseE(1) error = %v", err)
+	}
+	if sem.Use() != 1 {
+		t.Fatalf("Use() after ReleaseE(1) = %d, want 1", sem.Use())
+	}
+	if err := sem.ReleaseE(1); err != nil {
+		t.Fatalf("ReleaseE(1) final error = %v", err)
+	}
+	if sem.Use() != 0 {
+		t.Fatalf("Use() after final ReleaseE(1) = %d, want 0", sem.Use())
+	}
 }
 
 func assertNoAcquire(t *testing.T, ch <-chan error) {

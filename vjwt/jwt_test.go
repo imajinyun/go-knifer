@@ -23,6 +23,18 @@ func TestVerifyRejectsNoneToken(t *testing.T) {
 	}
 }
 
+func TestStrictHMACSignerRejectsWeakKey(t *testing.T) {
+	if _, err := vjwt.NewHMACSignerStrict(vjwt.JWTAlgHS256, []byte("weak")); err == nil {
+		t.Fatal("NewHMACSignerStrict should reject weak key")
+	}
+	if _, err := vjwt.CreateSignerStrict(vjwt.JWTAlgHS256, []byte("weak")); err == nil {
+		t.Fatal("CreateSignerStrict should reject weak key")
+	}
+	if minBytes, err := vjwt.MinHMACKeyBytes(vjwt.JWTAlgHS256); err != nil || minBytes != vjwt.MinHMACKeyBytesHS256 {
+		t.Fatalf("MinHMACKeyBytes = %d, %v", minBytes, err)
+	}
+}
+
 func TestVerifyWithSignerRejectsAlgorithmMismatch(t *testing.T) {
 	key := []byte("secret")
 	token, err := vjwt.CreateTokenWithOptions(
@@ -74,5 +86,15 @@ func TestSignVerifyWithJSONProviders(t *testing.T) {
 	}
 	if !marshalCalled || !unmarshalCalled {
 		t.Fatalf("JSON providers called marshal=%v unmarshal=%v", marshalCalled, unmarshalCalled)
+	}
+}
+
+func TestCreateTokenWithOptionsStrictKey(t *testing.T) {
+	if token, err := vjwt.CreateTokenWithOptions(
+		vjwt.WithTokenPayload(map[string]any{vjwt.JWTPayloadSubject: "alice"}),
+		vjwt.WithTokenKey([]byte("weak")),
+		vjwt.WithTokenStrictKey(),
+	); err == nil || token != "" {
+		t.Fatalf("strict weak key token=%q err=%v, want error", token, err)
 	}
 }

@@ -27,6 +27,12 @@ type JSONOption = jwtimpl.JSONOption
 type JWTError = jwtimpl.JWTError
 
 const (
+	// MinHMACKeyBytesHS256 is the minimum recommended HS256 HMAC key length.
+	MinHMACKeyBytesHS256 = jwtimpl.MinHMACKeyBytesHS256
+	// MinHMACKeyBytesHS384 is the minimum recommended HS384 HMAC key length.
+	MinHMACKeyBytesHS384 = jwtimpl.MinHMACKeyBytesHS384
+	// MinHMACKeyBytesHS512 is the minimum recommended HS512 HMAC key length.
+	MinHMACKeyBytesHS512 = jwtimpl.MinHMACKeyBytesHS512
 	// JWTAlgHS256 is the HS256 algorithm identifier.
 	JWTAlgHS256 = jwtimpl.AlgHS256
 	// JWTAlgHS384 is the HS384 algorithm identifier.

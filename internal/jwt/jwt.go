@@ -213,6 +213,24 @@ func (j *JWT) SetKeyStrict(key []byte) error {
 	return j.SetKeyWithAlgorithm(key, j.Algorithm())
 }
 
+// SetKeyStrictWithMinLength sets an HMAC signer and enforces the recommended minimum key length.
+func (j *JWT) SetKeyStrictWithMinLength(key []byte) error {
+	algorithm := normalizeAlgorithm(j.Algorithm())
+	if algorithm == "" {
+		algorithm = AlgHS256
+	}
+	if isNoneAlg(algorithm) {
+		return unsupportedJWTErrorf("jwt alg=none is not supported")
+	}
+	signer, err := CreateSignerStrict(algorithm, key)
+	if err != nil {
+		return err
+	}
+	j.SetHeader(HeaderAlgorithm, algorithm)
+	j.SetSigner(signer)
+	return nil
+}
+
 func normalizeAlgorithm(algorithm string) string {
 	algorithm = strings.TrimSpace(algorithm)
 	if isNoneAlg(algorithm) {

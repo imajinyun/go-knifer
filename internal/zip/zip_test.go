@@ -147,6 +147,40 @@ func TestGzipWithOptions(t *testing.T) {
 	}
 }
 
+func TestCompressionHelpersEnforceInputLimit(t *testing.T) {
+	data := []byte("abcd")
+	if _, err := GzipReaderWithOptions(bytes.NewReader(data), len(data), WithMaxBytes(3)); err == nil {
+		t.Fatal("GzipReaderWithOptions should reject compression input over max bytes")
+	}
+	if _, err := ZlibReaderWithOptions(bytes.NewReader(data), flate.DefaultCompression, len(data), WithMaxBytes(3)); err == nil {
+		t.Fatal("ZlibReaderWithOptions should reject compression input over max bytes")
+	}
+	if out, err := GzipReaderWithOptions(bytes.NewReader(data), len(data), WithMaxBytes(4)); err != nil || len(out) == 0 {
+		t.Fatalf("GzipReaderWithOptions exact limit = %d bytes, %v", len(out), err)
+	}
+	if out, err := ZlibLevelWithOptions(data, flate.DefaultCompression, WithMaxBytes(4)); err != nil || len(out) == 0 {
+		t.Fatalf("ZlibLevelWithOptions exact limit = %d bytes, %v", len(out), err)
+	}
+}
+
+func TestZipStreamsEnforcesInputLimit(t *testing.T) {
+	var buf bytes.Buffer
+	err := ZipStreamsToWriterWithOptions(&buf, []StreamEntry{{Name: "a.txt", Reader: bytes.NewReader([]byte("abcd"))}}, WithMaxBytes(3))
+	if err == nil {
+		t.Fatal("ZipStreamsToWriterWithOptions should reject stream input over max bytes")
+	}
+}
+
+func TestZlibFileWithOptionsPassesInputLimit(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "input.txt")
+	if err := os.WriteFile(path, []byte("abcd"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ZlibFileWithOptions(path, flate.DefaultCompression, WithMaxBytes(3)); err == nil {
+		t.Fatal("ZlibFileWithOptions should pass WithMaxBytes to ZlibReaderWithOptions")
+	}
+}
+
 func TestDecompressHelpersEnforceConfiguredLimit(t *testing.T) {
 	data := bytes.Repeat([]byte("x"), 16)
 	gz, err := Gzip(data)

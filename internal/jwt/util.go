@@ -3,12 +3,13 @@ package jwt
 // Package-level convenience functions matching the utility toolkit-jwt JWTUtil.
 
 type tokenConfig struct {
-	headers map[string]any
-	payload map[string]any
-	key     []byte
-	alg     string
-	signer  JWTSigner
-	json    []JSONOption
+	headers   map[string]any
+	payload   map[string]any
+	key       []byte
+	alg       string
+	signer    JWTSigner
+	strictKey bool
+	json      []JSONOption
 }
 
 // TokenOption customizes CreateTokenWithOptions.
@@ -27,6 +28,11 @@ func WithTokenPayload(payload map[string]any) TokenOption {
 // WithTokenKey sets the HMAC key used by CreateTokenWithOptions.
 func WithTokenKey(key []byte) TokenOption {
 	return func(c *tokenConfig) { c.key = append([]byte(nil), key...) }
+}
+
+// WithTokenStrictKey makes CreateTokenWithOptions enforce the recommended HMAC key length.
+func WithTokenStrictKey() TokenOption {
+	return func(c *tokenConfig) { c.strictKey = true }
 }
 
 // WithTokenAlgorithm sets the HMAC algorithm used by CreateTokenWithOptions.
@@ -96,7 +102,20 @@ func CreateTokenWithOptions(opts ...TokenOption) (string, error) {
 		return j.SetSigner(cfg.signer).SignOptsWithOptions(true, cfg.json...)
 	}
 	if cfg.alg != "" {
-		if err := j.SetKeyWithAlgorithm(cfg.key, cfg.alg); err != nil {
+		if cfg.strictKey {
+			j.SetHeader(HeaderAlgorithm, cfg.alg)
+			if err := j.SetKeyStrictWithMinLength(cfg.key); err != nil {
+				return "", err
+			}
+		} else {
+			if err := j.SetKeyWithAlgorithm(cfg.key, cfg.alg); err != nil {
+				return "", err
+			}
+		}
+		return j.SignOptsWithOptions(true, cfg.json...)
+	}
+	if cfg.strictKey {
+		if err := j.SetKeyStrictWithMinLength(cfg.key); err != nil {
 			return "", err
 		}
 		return j.SignOptsWithOptions(true, cfg.json...)
