@@ -28,6 +28,8 @@ var (
 	ErrNilJob error = &sentinel{code: knifer.ErrCodeInvalidInput, msg: "job is nil"}
 	// ErrInvalidRange indicates that a Run call received an invalid half-open range.
 	ErrInvalidRange error = &sentinel{code: knifer.ErrCodeInvalidInput, msg: "job: invalid range"}
+	// ErrInvalidMapJob indicates that NewMapE received an invalid function or map input.
+	ErrInvalidMapJob error = &sentinel{code: knifer.ErrCodeInvalidInput, msg: "job: invalid map job"}
 )
 
 const singleConcurrency = 32

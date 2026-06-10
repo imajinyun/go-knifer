@@ -11,6 +11,8 @@ var (
 	ErrNilJob = jobimpl.ErrNilJob
 	// ErrInvalidRange indicates that a Run call received an invalid half-open range.
 	ErrInvalidRange = jobimpl.ErrInvalidRange
+	// ErrInvalidMapJob indicates that NewMapE received an invalid function or map input.
+	ErrInvalidMapJob = jobimpl.ErrInvalidMapJob
 )
 
 // Merge is called serially by the scheduler after a shard succeeds.
@@ -66,7 +68,11 @@ func NewBatchSingle[T any](run func(context.Context, T) (Merge, error), vals []T
 }
 
 // NewMap creates a single-item job over map keys.
+// It panics on invalid input for backward compatibility; prefer NewMapE for untrusted or dynamic inputs.
 func NewMap(run any, m any) *Slice { return jobimpl.NewMap(run, m) }
+
+// NewMapE creates a single-item job over map keys and returns validation errors instead of panicking.
+func NewMapE(run any, m any) (*Slice, error) { return jobimpl.NewMapE(run, m) }
 
 // NewMapKeys creates a single-item job over typed map keys.
 func NewMapKeys[K comparable, V any](run func(context.Context, K) (Merge, error), m map[K]V) *Batch[K] {

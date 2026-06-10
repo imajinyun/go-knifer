@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
+	"io"
 	"io/fs"
 	"net"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -805,12 +807,8 @@ func TestLoadRemoteSafeRejectsPrivateHostsAndUnsafeRedirects(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	c, err := LoadRemoteSafeWithOptions(server.URL+"/app.yaml", LoadOptions{RemoteAllowedHosts: []string{remoteURL.Hostname()}})
-	if err != nil {
-		t.Fatalf("LoadRemoteSafeWithOptions allowed host: %v", err)
-	}
-	if got := c.GetByGroup("app", "name"); got != "remote" {
-		t.Fatalf("remote app.name = %q", got)
+	if _, err := LoadRemoteSafeWithOptions(server.URL+"/app.yaml", LoadOptions{RemoteAllowedHosts: []string{remoteURL.Hostname()}}); err == nil {
+		t.Fatal("LoadRemoteSafeWithOptions should reject allowlisted private hosts")
 	}
 
 	redirect := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -823,6 +821,51 @@ func TestLoadRemoteSafeRejectsPrivateHostsAndUnsafeRedirects(t *testing.T) {
 	}
 	if _, err := LoadRemoteSafeWithOptions(redirect.URL+"/app.yaml", LoadOptions{RemoteAllowedHosts: []string{redirectURL.Hostname()}}); err == nil {
 		t.Fatal("LoadRemoteSafeWithOptions should reject unsafe redirect target")
+	}
+}
+
+func TestLoadRemoteSafeAllowedHostsDoesNotBypassPrivateRejection(t *testing.T) {
+	if _, err := LoadRemoteSafeWithOptions("http://127.0.0.1/app.yaml", LoadOptions{RemoteAllowedHosts: []string{"127.0.0.1"}}); err == nil {
+		t.Fatal("LoadRemoteSafeWithOptions should reject allowlisted loopback host")
+	}
+
+	lookupCount := 0
+	_, err := LoadRemoteSafeWithOptions("http://config.example/app.yaml", LoadOptions{
+		RemoteAllowedHosts: []string{"config.example"},
+		LookupIP: func(context.Context, string) ([]net.IP, error) {
+			lookupCount++
+			return []net.IP{net.ParseIP("10.0.0.1")}, nil
+		},
+	})
+	if err == nil {
+		t.Fatal("LoadRemoteSafeWithOptions should reject allowlisted host resolving to private address")
+	}
+	if lookupCount == 0 {
+		t.Fatal("LoadRemoteSafeWithOptions did not resolve allowlisted host for private-address validation")
+	}
+}
+
+func TestLoadRemoteSafeAllowsAllowedPublicHost(t *testing.T) {
+	client := &http.Client{Transport: confRoundTripperFunc(func(r *http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Header:     make(http.Header),
+			Body:       io.NopCloser(strings.NewReader("app:\n  name: remote")),
+			Request:    r,
+		}, nil
+	})}
+	c, err := LoadRemoteSafeWithOptions("http://config.example/app.yaml", LoadOptions{
+		RemoteClient:       client,
+		RemoteAllowedHosts: []string{"config.example"},
+		LookupIP: func(context.Context, string) ([]net.IP, error) {
+			return []net.IP{net.ParseIP("93.184.216.34")}, nil
+		},
+	})
+	if err != nil {
+		t.Fatalf("LoadRemoteSafeWithOptions allowed public host: %v", err)
+	}
+	if got := c.GetByGroup("app", "name"); got != "remote" {
+		t.Fatalf("remote app.name = %q", got)
 	}
 }
 

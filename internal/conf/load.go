@@ -40,9 +40,9 @@ type LoadOptions struct {
 	RequestFactory func(ctx context.Context, rawURL string) (*http.Request, error)
 	// LookupIP resolves remote hosts for SSRF-oriented validation and safe dialing.
 	LookupIP func(context.Context, string) ([]net.IP, error)
-	// RemoteAllowedHosts restricts remote config HTTP(S) hosts when non-empty.
+	// RemoteAllowedHosts restricts remote config HTTP(S) hosts when non-empty. It does not bypass RejectPrivateRemoteHosts.
 	RemoteAllowedHosts []string
-	// RejectPrivateRemoteHosts rejects localhost, loopback, private, and link-local HTTP(S) hosts unless allowed explicitly.
+	// RejectPrivateRemoteHosts rejects localhost, loopback, private, and link-local HTTP(S) hosts.
 	RejectPrivateRemoteHosts bool
 	// CheckRemoteRedirect validates redirect targets with the same remote URL policy.
 	CheckRemoteRedirect bool
@@ -359,7 +359,7 @@ func validateRemoteConfigURL(rawURL string, opts LoadOptions) error {
 	if len(opts.RemoteAllowedHosts) > 0 && !containsFold(opts.RemoteAllowedHosts, host) {
 		return invalidInputf("remote config host %q is not allowed", host)
 	}
-	if opts.RejectPrivateRemoteHosts && !containsFold(opts.RemoteAllowedHosts, host) {
+	if opts.RejectPrivateRemoteHosts {
 		private, err := isPrivateHost(context.Background(), opts.LookupIP, host)
 		if err != nil {
 			return invalidInputf("resolve remote config host %q: %s", host, err.Error())
@@ -440,9 +440,6 @@ func safeDialContext(opts LoadOptions) func(context.Context, string, string) (ne
 		if host == "" {
 			return nil, invalidInputf("remote config dial host is blank")
 		}
-		if containsFold(opts.RemoteAllowedHosts, host) {
-			return dialer.DialContext(ctx, network, address)
-		}
 		ips, err := publicHostIPs(ctx, opts, host)
 		if err != nil {
 			return nil, err
@@ -498,14 +495,12 @@ func (t safeRemoteTransport) RoundTrip(req *http.Request) (*http.Response, error
 		return nil, err
 	}
 	host := strings.ToLower(req.URL.Hostname())
-	if !containsFold(t.opts.RemoteAllowedHosts, host) {
-		private, err := isPrivateHost(req.Context(), t.opts.LookupIP, host)
-		if err != nil {
-			return nil, invalidInputf("resolve remote config host %q: %s", host, err.Error())
-		}
-		if private {
-			return nil, invalidInputf("remote config host %q resolves to a private address", host)
-		}
+	private, err := isPrivateHost(req.Context(), t.opts.LookupIP, host)
+	if err != nil {
+		return nil, invalidInputf("resolve remote config host %q: %s", host, err.Error())
+	}
+	if private {
+		return nil, invalidInputf("remote config host %q resolves to a private address", host)
 	}
 	return t.base.RoundTrip(req)
 }

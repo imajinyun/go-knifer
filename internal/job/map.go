@@ -19,26 +19,37 @@ func NewMapKeys[K comparable, V any](run func(context.Context, K) (Merge, error)
 
 // NewMap creates a single-item job over map keys.
 // The run function must accept context.Context and one key, and return (Merge, error).
+// It panics on invalid input for backward compatibility; prefer NewMapE for untrusted or dynamic inputs.
 func NewMap(run any, m any) *Slice {
+	j, err := NewMapE(run, m)
+	if err != nil {
+		panic(err)
+	}
+	return j
+}
+
+// NewMapE creates a single-item job over map keys and returns validation errors instead of panicking.
+// The run function must accept context.Context and one key, and return (Merge, error).
+func NewMapE(run any, m any) (*Slice, error) {
 	f := reflect.ValueOf(run)
 	if f.Kind() != reflect.Func {
-		panic(fmt.Errorf("job run must be a func, got %T", run))
+		return nil, invalidMapJobf("job run must be a func, got %T", run)
 	}
 	if f.Type().NumIn() != 2 || !f.Type().In(0).Implements(contextType) || f.Type().NumOut() != 2 {
-		panic(fmt.Errorf("job run must use func(context.Context, key) (job.Merge, error), got %s", f.Type()))
+		return nil, invalidMapJobf("job run must use func(context.Context, key) (job.Merge, error), got %s", f.Type())
 	}
 	errorType := reflect.TypeOf((*error)(nil)).Elem()
 	mergeType := reflect.TypeOf(Merge(nil))
 	if !f.Type().Out(0).AssignableTo(mergeType) || !f.Type().Out(1).Implements(errorType) {
-		panic(fmt.Errorf("job run must return (job.Merge, error), got %s", f.Type()))
+		return nil, invalidMapJobf("job run must return (job.Merge, error), got %s", f.Type())
 	}
 
 	val := reflect.ValueOf(m)
 	if !val.IsValid() || val.Kind() != reflect.Map {
-		panic(fmt.Errorf("job data must be a map, got %T", m))
+		return nil, invalidMapJobf("job data must be a map, got %T", m)
 	}
 	if !val.Type().Key().AssignableTo(f.Type().In(1)) {
-		panic(fmt.Errorf("job map key %s is not assignable to run arg %s", val.Type().Key(), f.Type().In(1)))
+		return nil, invalidMapJobf("job map key %s is not assignable to run arg %s", val.Type().Key(), f.Type().In(1))
 	}
 
 	keys := val.MapKeys()
@@ -51,5 +62,9 @@ func NewMap(run any, m any) *Slice {
 			err = i.(error)
 		}
 		return
-	}, len(keys))
+	}, len(keys)), nil
+}
+
+func invalidMapJobf(format string, args ...any) error {
+	return fmt.Errorf("%w: "+format, append([]any{ErrInvalidMapJob}, args...)...)
 }

@@ -249,12 +249,15 @@ func TestBatchSliceAndMapAdapters_BitsUT(t *testing.T) {
 	t.Run("reflect map", func(t *testing.T) {
 		data := map[int]string{2: "b", 1: "a"}
 		var keys []int
-		j := NewMap(func(ctx context.Context, key int) (Merge, error) {
+		j, err := NewMapE(func(ctx context.Context, key int) (Merge, error) {
 			return func() error {
 				keys = append(keys, key)
 				return nil
 			}, nil
 		}, data)
+		if err != nil {
+			t.Fatalf("NewMapE() error = %v", err)
+		}
 
 		if err := RunWith(context.Background(), j, j.Options); err != nil {
 			t.Fatalf("RunWith() error = %v", err)
@@ -285,13 +288,25 @@ func TestAdaptersValidateRangesAndInputs_BitsUT(t *testing.T) {
 	})
 
 	t.Run("invalid reflect map input", func(t *testing.T) {
-		expectPanic(t, func() { NewMap(123, map[string]int{"a": 1}) })
-		expectPanic(t, func() { NewMap(func(context.Context, string) error { return nil }, map[string]int{"a": 1}) })
-		expectPanic(t, func() {
-			NewMap(func(context.Context, string) (error, error) { return nil, nil }, map[string]int{"a": 1})
-		})
-		expectPanic(t, func() { NewMap(func(context.Context, string) (Merge, error) { return nil, nil }, []string{"a"}) })
-		expectPanic(t, func() { NewMap(func(context.Context, int) (Merge, error) { return nil, nil }, map[string]int{"a": 1}) })
+		tests := []struct {
+			name string
+			run  any
+			data any
+		}{
+			{name: "run is not func", run: 123, data: map[string]int{"a": 1}},
+			{name: "invalid signature", run: func(context.Context, string) error { return nil }, data: map[string]int{"a": 1}},
+			{name: "invalid return", run: func(context.Context, string) (error, error) { return nil, nil }, data: map[string]int{"a": 1}},
+			{name: "data is not map", run: func(context.Context, string) (Merge, error) { return nil, nil }, data: []string{"a"}},
+			{name: "key type mismatch", run: func(context.Context, int) (Merge, error) { return nil, nil }, data: map[string]int{"a": 1}},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				if _, err := NewMapE(tt.run, tt.data); !errors.Is(err, ErrInvalidMapJob) {
+					t.Fatalf("NewMapE() error = %v, want ErrInvalidMapJob", err)
+				}
+				expectPanic(t, func() { NewMap(tt.run, tt.data) })
+			})
+		}
 	})
 }
 
