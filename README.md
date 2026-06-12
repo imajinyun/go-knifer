@@ -6,6 +6,8 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/imajinyun/go-knifer.svg)](https://pkg.go.dev/github.com/imajinyun/go-knifer)
 [![Go Version](https://img.shields.io/badge/go-%3E%3D1.25-00ADD8?logo=go)](https://go.dev/)
+[![CI](https://github.com/imajinyun/go-knifer/actions/workflows/go.yml/badge.svg)](https://github.com/imajinyun/go-knifer/actions/workflows/go.yml)
+[![License](https://img.shields.io/github/license/imajinyun/go-knifer)](./LICENSE)
 
 ## 📚 Introduction
 
@@ -1300,7 +1302,8 @@ go test ./...
 Run the same local safety checks used by CI before opening a PR:
 
 ```bash
-go test -race -shuffle=on ./...
+go test -race -shuffle=on -coverprofile=coverage.out ./...
+bash bin/check_coverage.sh coverage.out
 bash bin/check_arch.sh
 golangci-lint run ./...
 go run golang.org/x/vuln/cmd/govulncheck@latest ./...
@@ -1315,6 +1318,16 @@ Format code:
 ```bash
 gofmt -w .
 ```
+
+## 🛡️ Governance
+
+- Security reports: see [SECURITY.md](./SECURITY.md). Please do not disclose
+  suspected vulnerabilities in public issues.
+- Release notes: see [CHANGELOG.md](./CHANGELOG.md). User-visible changes should
+  be recorded before tagging a release.
+- Coverage gate: CI enforces the repository baseline with
+  `bash bin/check_coverage.sh coverage.out`. Raise `COVERAGE_THRESHOLD` as
+  public facade and security-sensitive package coverage improves.
 
 ## 🤝 Provide feedback or suggestions on bugs
 

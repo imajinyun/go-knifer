@@ -6,6 +6,7 @@ name: go-knifer-ci
 env:
   GOLANGCI_LINT_VERSION: v2.12.2
   GO_1_25_PATCH_VERSION: "1.25.11"
+  COVERAGE_THRESHOLD: "69.5"
 
 on:
   push:
@@ -50,6 +51,9 @@ jobs:
 
       - name: Test
         run: go test -race -shuffle=on -coverprofile=coverage.out ./...
+
+      - name: Check coverage threshold
+        run: bash bin/check_coverage.sh coverage.out
 
       - name: Upload coverage
         uses: actions/upload-artifact@v7

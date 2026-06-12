@@ -1,0 +1,51 @@
+# Security Policy
+
+## Supported versions
+
+`go-knifer` follows semantic versioning. Security fixes are provided for the
+latest minor release on the current major version.
+
+| Version | Supported |
+| --- | --- |
+| `v0.x` latest | Yes |
+| Older `v0.x` releases | Best effort |
+
+## Reporting a vulnerability
+
+Please do not open a public issue for suspected vulnerabilities.
+
+Report security issues by sending a private advisory through GitHub Security
+Advisories, or by contacting a maintainer through a private channel listed on
+the repository profile.
+
+Include:
+
+- Affected package and version.
+- Minimal reproduction code or input.
+- Expected behavior and observed behavior.
+- Impact assessment, especially for SSRF, path traversal, cryptography, JWT,
+  archive extraction, configuration loading, file IO, or network helpers.
+
+## Response process
+
+The maintainers aim to:
+
+- Acknowledge the report within 3 business days.
+- Confirm affected versions and impact before publishing details.
+- Prepare a fix, regression test, and release notes entry.
+- Publish a GitHub Security Advisory when the issue is confirmed.
+
+## Security-sensitive areas
+
+Changes touching these packages require extra review:
+
+- `vhttp`, `vresty`, `vurl`, `vconf`: SSRF, redirects, remote reads, TLS, and
+  request construction.
+- `vzip`, `vfile`: path traversal, symlink escape, file permissions, and
+  decompression limits.
+- `vcrypto`, `vjwt`, `vrand`, `vid`: cryptography, token verification,
+  randomness, signatures, and key handling.
+- `vdb`: SQL construction, named arguments, transactions, and resource cleanup.
+
+Security linter suppressions in `.golangci.yml` must stay narrow and documented.
+Prefer adding a regression test over broadening a suppression.

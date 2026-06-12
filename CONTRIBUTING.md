@@ -139,6 +139,10 @@ not add a second logging abstraction.
   packages. Use deterministic `// Output:` assertions where possible; for
   random/IO/time-based results, assert on a stable property (length, boolean).
 - Run the full suite before pushing: `go test ./...`.
+- Public facade and security-sensitive packages should include tests for common
+  usage, invalid input, and error classification.
+- Coverage is checked from `coverage.out`; keep the repository baseline passing
+  and raise `COVERAGE_THRESHOLD` only after adding tests that support it.
 
 ## Before you push
 
@@ -146,7 +150,8 @@ not add a second logging abstraction.
 go build ./...
 go vet ./...
 gofmt -l .                 # must be empty
-go test ./...
+go test -race -shuffle=on -coverprofile=coverage.out ./...
+bash bin/check_coverage.sh coverage.out
 golangci-lint run ./...    # must report 0 issues
 bash bin/check_arch.sh
 ```
@@ -157,6 +162,15 @@ bash bin/check_arch.sh
   stability.
 - Removing or renaming an exported symbol is a breaking change (major bump).
 - `v2+` must change the module path (`.../go-knifer/v2`).
+- Add user-visible changes to `CHANGELOG.md` before tagging a release.
+
+## Security
+
+- Read `SECURITY.md` before touching SSRF, archive extraction, cryptography,
+  JWT, randomness, file IO, network, or database helpers.
+- Do not report suspected vulnerabilities in public issues.
+- Keep `.golangci.yml` security exclusions narrow and documented; prefer a
+  regression test over a broader `gosec` suppression.
 
 ## Linter exceptions
 

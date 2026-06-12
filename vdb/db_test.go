@@ -1,10 +1,12 @@
 package vdb
 
 import (
+	"context"
 	"database/sql"
 	"database/sql/driver"
 	"errors"
 	"io"
+	"reflect"
 	"testing"
 	"time"
 
@@ -144,5 +146,110 @@ func TestFacadePoolOptionsApplyWhenOpeningDB(t *testing.T) {
 	}
 	if db.Dialect() != DialectQuestion {
 		t.Fatalf("Dialect = %q", db.Dialect())
+	}
+}
+
+func TestFacadeTopLevelBuildersAndConditions(t *testing.T) {
+	rawSQL, rawArgs, err := Raw("SELECT ? AS id", 7).SQL()
+	if err != nil || rawSQL != "SELECT ? AS id" || !reflect.DeepEqual(rawArgs, []any{7}) {
+		t.Fatalf("Raw SQL=%q args=%#v err=%v", rawSQL, rawArgs, err)
+	}
+
+	insertSQL, insertArgs, err := Insert(EntityFromMap("users", map[string]any{"name": "alice", "age": 18})).SQL()
+	if err != nil {
+		t.Fatalf("Insert SQL: %v", err)
+	}
+	if insertSQL != "INSERT INTO users (age, name) VALUES (?, ?)" || !reflect.DeepEqual(insertArgs, []any{18, "alice"}) {
+		t.Fatalf("Insert SQL=%q args=%#v", insertSQL, insertArgs)
+	}
+
+	updateSQL, updateArgs, err := Update(NewEntity("users").Set("name", "bob")).
+		Where(AndGroup(Gt("id", 10), Lte("id", 20)), OrWith(IsNull("deleted_at"))).
+		SQL()
+	if err != nil {
+		t.Fatalf("Update SQL: %v", err)
+	}
+	if updateSQL != "UPDATE users SET name = ? WHERE (id > ? AND id <= ?) OR deleted_at IS NULL" {
+		t.Fatalf("Update SQL = %q", updateSQL)
+	}
+	if !reflect.DeepEqual(updateArgs, []any{"bob", 10, 20}) {
+		t.Fatalf("Update args = %#v", updateArgs)
+	}
+
+	deleteSQL, deleteArgs, err := Delete("users").
+		Where(OrGroup(Ne("status", "active"), Between("created_at", 1, 9), IsNotNull("blocked_at"))).
+		SQL()
+	if err != nil {
+		t.Fatalf("Delete SQL: %v", err)
+	}
+	if deleteSQL != "DELETE FROM users WHERE (status <> ? AND created_at BETWEEN ? AND ? AND blocked_at IS NOT NULL)" {
+		t.Fatalf("Delete SQL = %q", deleteSQL)
+	}
+	if !reflect.DeepEqual(deleteArgs, []any{"active", 1, 9}) {
+		t.Fatalf("Delete args = %#v", deleteArgs)
+	}
+
+	conditionSQL, conditionArgs, err := BuildConditions(Like("name", BuildLikeValue("go", "prefix")), In("role", "admin", "owner"))
+	if err != nil {
+		t.Fatalf("BuildConditions: %v", err)
+	}
+	if conditionSQL != "name LIKE ? AND role IN (?, ?)" || !reflect.DeepEqual(conditionArgs, []any{"go%", "admin", "owner"}) {
+		t.Fatalf("BuildConditions SQL=%q args=%#v", conditionSQL, conditionArgs)
+	}
+
+	conds := ConditionsFromEntity(NewEntity("users").Set("id", 1).Set("name", "alice"))
+	if len(conds) != 2 || conds[0].Field != "id" || conds[1].Field != "name" {
+		t.Fatalf("ConditionsFromEntity = %#v", conds)
+	}
+}
+
+func TestFacadeDialectPageOptionsAndExec(t *testing.T) {
+	if NormalizeDialect("postgresql") != DialectPostgres {
+		t.Fatalf("NormalizeDialect(postgresql) = %q", NormalizeDialect("postgresql"))
+	}
+	if got := NewWrapper("[", "]").Wrap("users.name"); got != "[users].[name]" {
+		t.Fatalf("NewWrapper.Wrap = %q", got)
+	}
+	if !IsInClause("select * from t where id in (?, ?)") || IsInClause("select * from t") {
+		t.Fatal("IsInClause result mismatch")
+	}
+	if got := RemoveOuterOrderBy("select * from users order by id desc"); got != "select * from users" {
+		t.Fatalf("RemoveOuterOrderBy = %q", got)
+	}
+
+	page := NewPage(2, 5, Desc("id"), Asc("name"))
+	if page.Number != 2 || page.Size != 5 || page.Offset() != 5 || len(page.Orders) != 2 {
+		t.Fatalf("NewPage = %#v", page)
+	}
+	result := NewPageResult(page, 12, []string{"a", "b"})
+	if result.TotalPage != 3 || result.IsFirst() || result.IsLast() || len(result.Items) != 2 {
+		t.Fatalf("NewPageResult = %#v", result)
+	}
+
+	opts := NewOptions()
+	if opts.Dialect != DialectQuestion {
+		t.Fatalf("NewOptions = %#v", opts)
+	}
+	opened := false
+	customDB, err := Open("ignored", "ignored", WithSQLOpenFunc(func(driverName, dsn string) (*sql.DB, error) {
+		opened = true
+		return sql.Open("vdb_pool_test", "")
+	}))
+	if err != nil {
+		t.Fatalf("Open with custom SQLOpen: %v", err)
+	}
+	defer func() { _ = customDB.Close() }()
+	if !opened {
+		t.Fatal("WithSQLOpenFunc provider was not called")
+	}
+
+	sqlDB, err := sql.Open("vdb_pool_test", "")
+	if err != nil {
+		t.Fatalf("sql.Open: %v", err)
+	}
+	defer func() { _ = sqlDB.Close() }()
+	db := Use(sqlDB)
+	if _, err := Exec(context.Background(), db, "UPDATE users SET name=?", "alice"); err != nil {
+		t.Fatalf("Exec: %v", err)
 	}
 }
