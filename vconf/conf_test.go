@@ -478,8 +478,15 @@ func TestWatchWithOptionsFacade(t *testing.T) {
 	if err := os.WriteFile(path, []byte("name=one"), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	ticks := make(chan time.Time, 1)
 	changes := make(chan string, 1)
-	stop, err := vconf.WatchWithOptions(path, vconf.WatchOptions{Interval: 10 * time.Millisecond, CompareContent: true}, func(c *vconf.Conf, err error) {
+	stop, err := vconf.WatchWithOptions(path, vconf.WatchOptions{
+		Interval:       time.Hour,
+		CompareContent: true,
+		TickerFactory: func(time.Duration) (<-chan time.Time, vconf.WatchTicker) {
+			return ticks, facadeWatchTicker{}
+		},
+	}, func(c *vconf.Conf, err error) {
 		if err != nil {
 			changes <- "err"
 			return
@@ -490,10 +497,10 @@ func TestWatchWithOptionsFacade(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer stop()
-	time.Sleep(20 * time.Millisecond)
 	if err := os.WriteFile(path, []byte("name=two"), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	ticks <- time.Now()
 	select {
 	case got := <-changes:
 		if got != "two" {
