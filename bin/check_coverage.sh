@@ -6,7 +6,7 @@
 set -euo pipefail
 
 coverage_file="${1:-coverage.out}"
-threshold="${COVERAGE_THRESHOLD:-69.5}"
+threshold="${COVERAGE_THRESHOLD:-71.1}"
 
 if [ ! -f "${coverage_file}" ]; then
 	echo "COVERAGE CHECK ERROR: ${coverage_file} does not exist" >&2
