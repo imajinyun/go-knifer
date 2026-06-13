@@ -1,26 +1,28 @@
 package obj
 
 import (
+	"cmp"
 	"fmt"
 	"math"
 	"math/big"
 	"reflect"
 	"strings"
+	"time"
 
 	refimpl "github.com/imajinyun/go-knifer/internal/ref"
 )
 
 // Ordered is the set of built-in ordered value types.
-type Ordered interface {
-	~int | ~int8 | ~int16 | ~int32 | ~int64 |
-		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr |
-		~float32 | ~float64 | ~string
-}
+type Ordered = cmp.Ordered
 
 // Equal reports whether a and b are equal. Numeric values are compared by value.
 func Equal(a, b any) bool {
 	if IsNil(a) || IsNil(b) {
 		return IsNil(a) && IsNil(b)
+	}
+	if at, ok := a.(time.Time); ok {
+		bt, ok := b.(time.Time)
+		return ok && at.Equal(bt)
 	}
 	if ar, ok := numberAsRat(a); ok {
 		if br, ok := numberAsRat(b); ok {

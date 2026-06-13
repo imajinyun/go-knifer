@@ -2,6 +2,7 @@
 package num
 
 import (
+	"cmp"
 	cryptorand "crypto/rand"
 	"encoding/binary"
 	"errors"
@@ -1292,11 +1293,7 @@ type Number interface {
 }
 
 // Ordered is the set of supported ordered types.
-type Ordered interface {
-	~int | ~int8 | ~int16 | ~int32 | ~int64 |
-		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 |
-		~float32 | ~float64 | ~string
-}
+type Ordered = cmp.Ordered
 
 func foldRat(op func(*big.Rat, *big.Rat, *big.Rat) *big.Rat, values ...string) *big.Rat {
 	if len(values) == 0 {

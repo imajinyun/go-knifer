@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/imajinyun/go-knifer/vobj"
 )
@@ -87,6 +88,11 @@ func TestFacadeNilDefaultAndCollectionHelpers(t *testing.T) {
 	}
 	if !vobj.Equals(1, uint(1)) || !vobj.NotEqual("a", "b") {
 		t.Fatal("Equals/NotEqual returned unexpected result")
+	}
+	utc := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	sameInstant := time.Date(2024, 1, 1, 8, 0, 0, 0, time.FixedZone("UTC+8", 8*60*60))
+	if !vobj.Equals(utc, sameInstant) || vobj.Equals(utc, "2024-01-01T00:00:00Z") {
+		t.Fatal("time Equals returned unexpected result")
 	}
 
 	name := "go"

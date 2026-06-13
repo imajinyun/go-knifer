@@ -6,6 +6,7 @@ import (
 	"math"
 	"reflect"
 	"testing"
+	"time"
 )
 
 type recordingEncoder struct {
@@ -36,6 +37,14 @@ type sample struct {
 func TestEqualLengthContainsAndEmpty(t *testing.T) {
 	if !Equal(1, int64(1)) || NotEqual("a", "a") {
 		t.Fatal("numeric or string equality failed")
+	}
+	utc := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	sameInstant := time.Date(2024, 1, 1, 8, 0, 0, 0, time.FixedZone("UTC+8", 8*60*60))
+	if !Equals(utc, sameInstant) {
+		t.Fatal("time equality should compare instants")
+	}
+	if Equals(utc, "2024-01-01T00:00:00Z") {
+		t.Fatal("time equality should reject non-time values")
 	}
 	if Length([]int{1, 2, 3}) != 3 || Length(10) != -1 {
 		t.Fatal("length failed")
