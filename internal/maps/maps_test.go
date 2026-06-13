@@ -266,6 +266,28 @@ func TestMapKeysAndMapValues(t *testing.T) {
 	assert.Equal(t, map[string]int{"a": 10, "b": 20}, mv)
 }
 
+func TestToSlice(t *testing.T) {
+	in := map[string]int{"a": 1, "b": 2}
+
+	got := ToSlice(in, func(k string, v int) string {
+		return k + strconv.Itoa(v)
+	})
+	sort.Strings(got)
+	assert.Equal(t, []string{"a1", "b2"}, got)
+
+	empty := ToSlice(map[string]int{}, func(k string, v int) string {
+		return k + strconv.Itoa(v)
+	})
+	assert.NotNil(t, empty)
+	assert.Empty(t, empty)
+
+	nilMap := ToSlice(map[string]int(nil), func(k string, v int) string {
+		return k + strconv.Itoa(v)
+	})
+	assert.NotNil(t, nilMap)
+	assert.Empty(t, nilMap)
+}
+
 func TestFilterAndReject(t *testing.T) {
 	in := map[string]int{"a": 1, "b": 2, "c": 3, "d": 4}
 	keep := Filter(in, func(_ string, v int) bool { return v%2 == 0 })
@@ -419,6 +441,57 @@ func TestMergeFunc(t *testing.T) {
 		assert.Equal(t, []int{1, 2, 3, 4}, got["k"])
 		assert.Equal(t, []int{9}, got["x"])
 	})
+}
+
+func TestMergeWithOverwrite(t *testing.T) {
+	dst := map[string]int{"a": 1, "shared": 1}
+	src1 := map[string]int{"b": 2, "shared": 2}
+	src2 := map[string]int{"c": 3, "shared": 3}
+
+	MergeWithOverwrite(dst, src1, nil, src2)
+
+	assert.Equal(t, map[string]int{"a": 1, "b": 2, "c": 3, "shared": 3}, dst)
+	assert.Equal(t, map[string]int{"b": 2, "shared": 2}, src1, "source maps must not be mutated")
+}
+
+func TestMergeWithoutOverwrite(t *testing.T) {
+	dst := map[string]int{"a": 1, "shared": 1}
+	src1 := map[string]int{"b": 2, "shared": 2}
+	src2 := map[string]int{"b": 20, "c": 3, "shared": 3}
+
+	MergeWithoutOverwrite(dst, src1, nil, src2)
+
+	assert.Equal(t, map[string]int{"a": 1, "b": 2, "c": 3, "shared": 1}, dst)
+}
+
+func TestMergeCopyWithOverwrite(t *testing.T) {
+	assert.Nil(t, MergeCopyWithOverwrite[string, int]())
+
+	src1 := map[string]int{"a": 1, "shared": 1}
+	src2 := map[string]int{"b": 2, "shared": 2}
+	snap1 := snapshot(src1)
+	snap2 := snapshot(src2)
+
+	got := MergeCopyWithOverwrite(src1, nil, src2)
+
+	assert.Equal(t, map[string]int{"a": 1, "b": 2, "shared": 2}, got)
+	assert.Equal(t, snap1, src1)
+	assert.Equal(t, snap2, src2)
+	got["a"] = 99
+	assert.Equal(t, 1, src1["a"], "copy result must not alias input maps")
+}
+
+func TestMergeCopyWithoutOverwrite(t *testing.T) {
+	assert.Nil(t, MergeCopyWithoutOverwrite[string, int]())
+
+	src1 := map[string]int{"a": 1, "shared": 1}
+	src2 := map[string]int{"a": 10, "b": 2, "shared": 2}
+
+	got := MergeCopyWithoutOverwrite(nil, src1, src2)
+
+	assert.Equal(t, map[string]int{"a": 1, "b": 2, "shared": 1}, got)
+	got["shared"] = 99
+	assert.Equal(t, 1, src1["shared"], "copy result must not alias input maps")
 }
 
 func TestIntersect(t *testing.T) {

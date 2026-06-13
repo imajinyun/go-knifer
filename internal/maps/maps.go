@@ -279,6 +279,16 @@ func MapValues[K comparable, V1, V2 any](m map[K]V1, transform func(K, V1) V2) m
 	return out
 }
 
+// ToSlice transforms each map entry into a slice element.
+// Order follows Go map iteration and is not stable.
+func ToSlice[K comparable, V, R any](m map[K]V, transform func(K, V) R) []R {
+	out := make([]R, 0, len(m))
+	for k, v := range m {
+		out = append(out, transform(k, v))
+	}
+	return out
+}
+
 // Filter returns entries satisfying the predicate.
 func Filter[K comparable, V any](m map[K]V, pred func(K, V) bool) map[K]V {
 	out := make(map[K]V)

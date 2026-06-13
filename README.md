@@ -847,7 +847,8 @@ func main() {
 `vmap` provides generic helpers for common map operations. It returns non-nil
 maps for constructors and pure helpers, keeps input maps unmodified unless the
 function is explicitly in-place (`Clear`, `Update`), and supports both
-last-write-wins merging and custom conflict resolution.
+last-write-wins merging, custom conflict resolution, in-place merge variants,
+and map-to-slice transformations.
 
 ```go
 package main
@@ -862,10 +863,12 @@ func main() {
   base := vmap.Of[string, int]("a", 1, "b", 2)
   merged := vmap.Merge(base, map[string]int{"b": 20, "c": 3})
   evens := vmap.FilterValues(merged, func(v int) bool { return v%2 == 0 })
+  pairs := vmap.ToSlice(merged, func(k string, v int) string { return fmt.Sprintf("%s=%d", k, v) })
   grouped := vmap.GroupBy([]string{"go", "git", "java"}, func(s string) byte { return s[0] })
 
   fmt.Println(vmap.SortedKeys(merged))
   fmt.Println(evens)
+  fmt.Println(pairs)
   fmt.Println(grouped['g'])
 }
 ```

@@ -131,6 +131,14 @@ func TestMapTransformFilterAggregateFacades(t *testing.T) {
 	if got := MapValues(m, func(_ string, v int) string { return string(rune('A' + v)) }); !reflect.DeepEqual(got, map[string]string{"a": "B", "b": "C", "c": "D"}) {
 		t.Fatalf("MapValues = %#v", got)
 	}
+	toSlice := ToSlice(m, func(k string, v int) string { return k + string(rune('0'+v)) })
+	sort.Strings(toSlice)
+	if !reflect.DeepEqual(toSlice, []string{"a1", "b2", "c3"}) {
+		t.Fatalf("ToSlice = %#v", toSlice)
+	}
+	if got := ToSlice(map[string]int(nil), func(k string, v int) string { return k + string(rune('0'+v)) }); got == nil || len(got) != 0 {
+		t.Fatalf("ToSlice nil = %#v", got)
+	}
 	if got := Filter(m, func(_ string, v int) bool { return v%2 == 1 }); !reflect.DeepEqual(got, map[string]int{"a": 1, "c": 3}) {
 		t.Fatalf("Filter = %#v", got)
 	}
@@ -168,6 +176,22 @@ func TestMapSetAlgebraSelectionMutationComparisonFacades(t *testing.T) {
 	a := map[string]int{"a": 1, "b": 2}
 	b := map[string]int{"b": 20, "c": 3}
 	c := map[string]int{"b": 200, "d": 4}
+
+	dst := map[string]int{"a": 1, "shared": 1}
+	MergeWithOverwrite(dst, map[string]int{"shared": 2}, map[string]int{"x": 3})
+	if !reflect.DeepEqual(dst, map[string]int{"a": 1, "shared": 2, "x": 3}) {
+		t.Fatalf("MergeWithOverwrite dst = %#v", dst)
+	}
+	MergeWithoutOverwrite(dst, map[string]int{"a": 9, "y": 4})
+	if !reflect.DeepEqual(dst, map[string]int{"a": 1, "shared": 2, "x": 3, "y": 4}) {
+		t.Fatalf("MergeWithoutOverwrite dst = %#v", dst)
+	}
+	if got := MergeCopyWithOverwrite(map[string]int{"k": 1}, map[string]int{"k": 2}); !reflect.DeepEqual(got, map[string]int{"k": 2}) {
+		t.Fatalf("MergeCopyWithOverwrite = %#v", got)
+	}
+	if got := MergeCopyWithoutOverwrite(map[string]int{"k": 1}, map[string]int{"k": 2, "x": 3}); !reflect.DeepEqual(got, map[string]int{"k": 1, "x": 3}) {
+		t.Fatalf("MergeCopyWithoutOverwrite = %#v", got)
+	}
 
 	if got := MergeFunc(func(old, new int) int { return old + new }, a, b, c); !reflect.DeepEqual(got, map[string]int{"a": 1, "b": 222, "c": 3, "d": 4}) {
 		t.Fatalf("MergeFunc = %#v", got)

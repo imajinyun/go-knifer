@@ -65,6 +65,10 @@ func MapValues[K comparable, V1, V2 any](m map[K]V1, transform func(K, V1) V2) m
 	return mapsimpl.MapValues(m, transform)
 }
 
+func ToSlice[K comparable, V, R any](m map[K]V, transform func(K, V) R) []R {
+	return mapsimpl.ToSlice(m, transform)
+}
+
 func Filter[K comparable, V any](m map[K]V, pred func(K, V) bool) map[K]V {
 	return mapsimpl.Filter(m, pred)
 }
@@ -98,6 +102,22 @@ func CountBy[T any, K comparable](items []T, keyFn func(T) K) map[K]int {
 }
 func Inverse[K, V comparable](m map[K]V) map[V]K         { return mapsimpl.Inverse(m) }
 func Merge[K comparable, V any](maps ...map[K]V) map[K]V { return mapsimpl.Merge(maps...) }
+func MergeWithOverwrite[K comparable, V any](dstMap map[K]V, srcMaps ...map[K]V) {
+	mapsimpl.MergeWithOverwrite(dstMap, srcMaps...)
+}
+
+func MergeWithoutOverwrite[K comparable, V any](dstMap map[K]V, srcMaps ...map[K]V) {
+	mapsimpl.MergeWithoutOverwrite(dstMap, srcMaps...)
+}
+
+func MergeCopyWithOverwrite[K comparable, V any](srcMaps ...map[K]V) map[K]V {
+	return mapsimpl.MergeCopyWithOverwrite(srcMaps...)
+}
+
+func MergeCopyWithoutOverwrite[K comparable, V any](srcMaps ...map[K]V) map[K]V {
+	return mapsimpl.MergeCopyWithoutOverwrite(srcMaps...)
+}
+
 func MergeFunc[K comparable, V any](resolve func(old, new V) V, maps ...map[K]V) map[K]V {
 	return mapsimpl.MergeFunc(resolve, maps...)
 }
