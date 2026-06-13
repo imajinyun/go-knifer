@@ -1,0 +1,90 @@
+package net
+
+import (
+	"errors"
+	stdnet "net"
+	"strconv"
+	"testing"
+)
+
+type stubListener struct{}
+
+func (stubListener) Accept() (stdnet.Conn, error) { return nil, errors.New("stub listener") }
+func (stubListener) Close() error                 { return nil }
+func (stubListener) Addr() stdnet.Addr {
+	return &stdnet.TCPAddr{IP: stdnet.ParseIP("127.0.0.1"), Port: 12345}
+}
+
+func TestPortAndMiscHelpers(t *testing.T) {
+	if !IsValidPort(65535) || IsValidPort(70000) {
+		t.Fatal("IsValidPort failed")
+	}
+	ln, err := stdnet.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen local port: %v", err)
+	}
+	defer func() { _ = ln.Close() }()
+	_, portStr, err := stdnet.SplitHostPort(ln.Addr().String())
+	if err != nil {
+		t.Fatalf("split listener address: %v", err)
+	}
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		t.Fatalf("parse listener port: %v", err)
+	}
+	if IsUsableLocalPortWithOptions(port, WithPortHost("127.0.0.1")) {
+		t.Fatal("IsUsableLocalPortWithOptions should reject an occupied port")
+	}
+	g := NewLocalPortGeneratorWithOptions(port, WithPortHost("127.0.0.1"))
+	generated, err := g.Generate()
+	if err != nil {
+		t.Fatalf("LocalPortGenerator.Generate with options: %v", err)
+	}
+	if generated <= port || generated > PortRangeMax {
+		t.Fatalf("LocalPortGenerator generated %d, want > %d", generated, port)
+	}
+	next, err := g.GenerateWithOptions(WithPortHost("127.0.0.1"))
+	if err != nil {
+		t.Fatalf("LocalPortGenerator.GenerateWithOptions: %v", err)
+	}
+	if next <= generated || next > PortRangeMax {
+		t.Fatalf("LocalPortGenerator next generated %d, want > %d", next, generated)
+	}
+	if HideIPPart("192.168.1.2") != "192.168.1.*" {
+		t.Fatal("HideIPPart failed")
+	}
+	if got := GetMultistageReverseProxyIP("unknown, 10.0.0.1, 8.8.8.8"); got != "10.0.0.1" {
+		t.Fatalf("GetMultistageReverseProxyIP = %q", got)
+	}
+	if IsUnknown("10.0.0.1") || !IsUnknown("unknown") {
+		t.Fatal("IsUnknown failed")
+	}
+	if ascii, err := IDNToASCII("中国.cn"); err != nil || ascii == "" {
+		t.Fatalf("IDNToASCII = %q %v", ascii, err)
+	}
+	if len(ParseCookies("a=1; b=2")) != 2 {
+		t.Fatal("ParseCookies failed")
+	}
+}
+
+func TestPortOptionsUseListenerFactory(t *testing.T) {
+	var network, address string
+	factory := func(n, a string) (stdnet.Listener, error) {
+		network, address = n, a
+		return stubListener{}, nil
+	}
+	if !IsUsableLocalPortWithOptions(12345, WithPortNetwork("tcp4"), WithPortHost("127.0.0.2"), WithPortListenerFactory(factory)) {
+		t.Fatal("IsUsableLocalPortWithOptions should use successful listener factory")
+	}
+	if network != "tcp4" || address != "127.0.0.2:12345" {
+		t.Fatalf("listener target = %s %s", network, address)
+	}
+
+	factory = func(n, a string) (stdnet.Listener, error) {
+		network, address = n, a
+		return nil, errors.New("bind failed")
+	}
+	if IsUsableLocalPortWithOptions(12345, WithPortListenerFactory(factory)) {
+		t.Fatal("IsUsableLocalPortWithOptions should reject listener factory errors")
+	}
+}
