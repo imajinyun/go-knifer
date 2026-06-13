@@ -105,11 +105,16 @@ func FilenameFromContentDisposition(cd string) string {
 	}
 	if i := strings.Index(strings.ToLower(cd), "filename="); i >= 0 {
 		name := strings.TrimSpace(cd[i+len("filename="):])
-		name = strings.Trim(name, `"`)
+		if strings.HasPrefix(name, `"`) {
+			name = strings.TrimPrefix(name, `"`)
+			if idx := strings.Index(name, `"`); idx >= 0 {
+				return strings.TrimSpace(name[:idx])
+			}
+		}
 		if idx := strings.Index(name, ";"); idx >= 0 {
 			name = name[:idx]
 		}
-		return strings.TrimSpace(name)
+		return strings.Trim(strings.TrimSpace(name), `"`)
 	}
 	return ""
 }

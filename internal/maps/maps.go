@@ -382,60 +382,6 @@ func Inverse[K, V comparable](m map[K]V) map[V]K {
 	return out
 }
 
-// Merge returns the union of the given maps. When the same key appears in
-// multiple maps, the value from a later map overrides earlier ones.
-//
-// Guarantees:
-//   - Never returns nil; an empty input yields an empty (non-nil) map.
-//   - Input maps are not modified.
-func Merge[K comparable, V any](ms ...map[K]V) map[K]V {
-	switch len(ms) {
-	case 0:
-		return make(map[K]V)
-	case 1:
-		if ms[0] == nil {
-			return make(map[K]V)
-		}
-		return stdmaps.Clone(ms[0])
-	}
-
-	total := 0
-	for _, m := range ms {
-		total += len(m)
-	}
-	out := make(map[K]V, total)
-	for _, m := range ms {
-		for k, v := range m {
-			out[k] = v
-		}
-	}
-	return out
-}
-
-// MergeFunc is like Merge but resolves conflicts via the supplied function.
-// resolve(old, new) is invoked only when both old and new exist for a key.
-// A nil resolve falls back to "last-write-wins" semantics.
-func MergeFunc[K comparable, V any](resolve func(old, new V) V, ms ...map[K]V) map[K]V {
-	if resolve == nil {
-		return Merge(ms...)
-	}
-	total := 0
-	for _, m := range ms {
-		total += len(m)
-	}
-	out := make(map[K]V, total)
-	for _, m := range ms {
-		for k, v := range m {
-			if old, ok := out[k]; ok {
-				out[k] = resolve(old, v)
-			} else {
-				out[k] = v
-			}
-		}
-	}
-	return out
-}
-
 // Intersect returns entries whose keys appear in every input map.
 // For duplicate keys, the value comes from the last map (consistent with Merge).
 func Intersect[K comparable, V any](ms ...map[K]V) map[K]V {

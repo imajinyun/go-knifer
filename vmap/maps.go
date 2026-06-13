@@ -110,14 +110,6 @@ func MergeWithoutOverwrite[K comparable, V any](dstMap map[K]V, srcMaps ...map[K
 	mapsimpl.MergeWithoutOverwrite(dstMap, srcMaps...)
 }
 
-func MergeCopyWithOverwrite[K comparable, V any](srcMaps ...map[K]V) map[K]V {
-	return mapsimpl.MergeCopyWithOverwrite(srcMaps...)
-}
-
-func MergeCopyWithoutOverwrite[K comparable, V any](srcMaps ...map[K]V) map[K]V {
-	return mapsimpl.MergeCopyWithoutOverwrite(srcMaps...)
-}
-
 func MergeFunc[K comparable, V any](resolve func(old, new V) V, maps ...map[K]V) map[K]V {
 	return mapsimpl.MergeFunc(resolve, maps...)
 }

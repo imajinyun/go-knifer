@@ -186,12 +186,6 @@ func TestMapSetAlgebraSelectionMutationComparisonFacades(t *testing.T) {
 	if !reflect.DeepEqual(dst, map[string]int{"a": 1, "shared": 2, "x": 3, "y": 4}) {
 		t.Fatalf("MergeWithoutOverwrite dst = %#v", dst)
 	}
-	if got := MergeCopyWithOverwrite(map[string]int{"k": 1}, map[string]int{"k": 2}); !reflect.DeepEqual(got, map[string]int{"k": 2}) {
-		t.Fatalf("MergeCopyWithOverwrite = %#v", got)
-	}
-	if got := MergeCopyWithoutOverwrite(map[string]int{"k": 1}, map[string]int{"k": 2, "x": 3}); !reflect.DeepEqual(got, map[string]int{"k": 1, "x": 3}) {
-		t.Fatalf("MergeCopyWithoutOverwrite = %#v", got)
-	}
 
 	if got := MergeFunc(func(old, new int) int { return old + new }, a, b, c); !reflect.DeepEqual(got, map[string]int{"a": 1, "b": 222, "c": 3, "d": 4}) {
 		t.Fatalf("MergeFunc = %#v", got)

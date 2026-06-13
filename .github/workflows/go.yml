@@ -6,7 +6,7 @@ name: go-knifer-ci
 env:
   GOLANGCI_LINT_VERSION: v2.12.2
   GO_1_25_PATCH_VERSION: "1.25.11"
-  COVERAGE_THRESHOLD: "73.5"
+  COVERAGE_THRESHOLD: "74.2"
 
 on:
   push:
