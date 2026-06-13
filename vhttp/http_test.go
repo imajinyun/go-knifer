@@ -4,15 +4,19 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"crypto/tls"
 	"errors"
 	"io"
 	"io/fs"
 	"log"
+	"mime/multipart"
 	"net"
 	"net/http"
+	"net/http/cookiejar"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -181,6 +185,110 @@ func TestFacadeRequestOptions(t *testing.T) {
 	}
 	if got := postResp.Body(); got != "POST:post" {
 		t.Fatalf("Post body = %q, want POST:post", got)
+	}
+}
+
+func TestFacadeAdditionalHTTPMethodsAndGlobalAccessors(t *testing.T) {
+	var lastMethod string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		lastMethod = r.Method
+		w.Header().Set("X-Method", r.Method)
+		if r.Method != http.MethodHead {
+			_, _ = w.Write([]byte(r.Method))
+		}
+	}))
+	defer server.Close()
+
+	tests := []struct {
+		name   string
+		method string
+		req    *vhttp.Request
+	}{
+		{name: "put", method: http.MethodPut, req: vhttp.Put(server.URL)},
+		{name: "delete", method: http.MethodDelete, req: vhttp.Delete(server.URL)},
+		{name: "patch", method: http.MethodPatch, req: vhttp.Patch(server.URL)},
+		{name: "head", method: http.MethodHead, req: vhttp.Head(server.URL)},
+		{name: "options", method: http.MethodOptions, req: vhttp.Options(server.URL)},
+		{name: "new request", method: http.MethodTrace, req: vhttp.NewRequest(vhttp.MethodTrace, server.URL)},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			resp := tt.req.Execute()
+			if resp.Err() != nil {
+				t.Fatalf("Execute: %v", resp.Err())
+			}
+			if lastMethod != tt.method {
+				t.Fatalf("server method = %q, want %q", lastMethod, tt.method)
+			}
+			if got := resp.Header("X-Method"); got != tt.method {
+				t.Fatalf("response method header = %q, want %q", got, tt.method)
+			}
+		})
+	}
+
+	previous := vhttp.SnapshotGlobalConfig()
+	defer vhttp.ConfigureGlobalConfig(previous)
+	vhttp.SetGlobalMaxRedirects(3)
+	vhttp.SetGlobalMaxResponseBytes(99)
+	vhttp.SetGlobalFollowRedirects(false)
+	vhttp.SetGlobalUserAgent("vhttp-extra/1.0")
+	vhttp.SetIgnoreEOFError(true)
+	vhttp.SetGlobalBoundary("boundary-extra")
+	vhttp.SetGlobalDecodeURL(true)
+	if vhttp.GetGlobalMaxRedirects() != 3 || vhttp.GetGlobalMaxResponseBytes() != 99 || vhttp.GetGlobalFollowRedirects() || vhttp.GetGlobalUserAgent() != "vhttp-extra/1.0" || !vhttp.IsIgnoreEOFError() || vhttp.GetGlobalBoundary() != "boundary-extra" || !vhttp.IsGlobalDecodeURL() {
+		t.Fatalf("global accessors snapshot = %#v", vhttp.SnapshotGlobalConfig())
+	}
+}
+
+func TestFacadeContentHTMLAndUserAgentHelpers(t *testing.T) {
+	if got := vhttp.BuildContentType("text/plain", "utf-8"); got != "text/plain;charset=utf-8" {
+		t.Fatalf("BuildContentType = %q", got)
+	}
+	if !vhttp.IsDefaultContentType("") || !vhttp.IsFormURLEncoded("application/x-www-form-urlencoded; charset=utf-8") {
+		t.Fatal("content type predicates returned unexpected result")
+	}
+	if got := vhttp.GuessContentType(`{"ok":true}`); got != vhttp.ContentTypeJSON {
+		t.Fatalf("GuessContentType json = %q", got)
+	}
+	if got := vhttp.GetCharsetFromContentType("text/plain; charset=gbk"); got != "gbk" {
+		t.Fatalf("GetCharsetFromContentType = %q", got)
+	}
+	if got := vhttp.GetCharsetFromContentTypeWithOptions("text/plain; enc=big5", vhttp.WithCharsetRegexp(regexp.MustCompile(`enc=([a-z0-9-]+)`))); got != "big5" {
+		t.Fatalf("GetCharsetFromContentTypeWithOptions = %q", got)
+	}
+	if got := vhttp.GetCharsetFromHTML(`<meta charset="utf-8"><p>x</p>`); got != "utf-8" {
+		t.Fatalf("GetCharsetFromHTML = %q", got)
+	}
+	if got := vhttp.GetCharsetFromHTMLWithOptions(`<meta data-charset="gb2312">`, vhttp.WithMetaCharsetRegexp(regexp.MustCompile(`data-charset="([^"]+)"`))); got != "gb2312" {
+		t.Fatalf("GetCharsetFromHTMLWithOptions = %q", got)
+	}
+	if got := vhttp.GetMimeType("payload.JSON"); got != "application/json" {
+		t.Fatalf("GetMimeType = %q", got)
+	}
+
+	if got := vhttp.HTMLEscape(`<b>"go"</b>`); got != `&lt;b&gt;&#34;go&#34;&lt;/b&gt;` {
+		t.Fatalf("HTMLEscape = %q", got)
+	}
+	if got := vhttp.HTMLUnescape("&lt;b&gt;go&lt;/b&gt;"); got != "<b>go</b>" {
+		t.Fatalf("HTMLUnescape = %q", got)
+	}
+	if got := vhttp.CleanHTML("<p>Hello</p><!--drop-->"); got != "Hello" {
+		t.Fatalf("CleanHTML = %q", got)
+	}
+	if got := vhttp.CleanHTMLWithOptions("a[drop]b", vhttp.WithHTMLTagRegexp(regexp.MustCompile(`\[.*?\]`)), vhttp.WithHTMLCommentRegexp(regexp.MustCompile(`$^`))); got != "ab" {
+		t.Fatalf("CleanHTMLWithOptions = %q", got)
+	}
+	if got := vhttp.FilterHTMLTag("<div>ok</div><script>x</script>", "script"); got != "<div>ok</div>" {
+		t.Fatalf("FilterHTMLTag = %q", got)
+	}
+	if got := vhttp.FilterHTMLTagWithOptions("<custom>drop</custom><p>keep</p>", []string{"custom"}, vhttp.WithHTMLFilterCompileFunc(regexp.Compile)); got != "<p>keep</p>" {
+		t.Fatalf("FilterHTMLTagWithOptions = %q", got)
+	}
+	if ua := vhttp.ParseUserAgent("Mozilla/5.0 Chrome/120.0"); ua == nil {
+		t.Fatal("ParseUserAgent returned nil")
+	}
+	if !vhttp.IsRedirected(http.StatusTemporaryRedirect) || vhttp.IsRedirected(http.StatusOK) {
+		t.Fatal("IsRedirected returned unexpected result")
 	}
 }
 
@@ -558,6 +666,207 @@ func TestFacadeClientAndAdditionalServerOptions(t *testing.T) {
 	}
 	if created := vhttp.CreateServerWithOptions(0, vhttp.WithHTTPServer(&http.Server{Addr: ":0"})); created == nil {
 		t.Fatal("CreateServerWithOptions returned nil")
+	}
+}
+
+func TestFacadeSafeRequestsAndDownloadWrappers(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Method", r.Method)
+		if r.Method != http.MethodHead {
+			_, _ = w.Write([]byte("download-text"))
+		}
+	}))
+	defer server.Close()
+
+	allowLocal := vhttp.WithURLPolicy(vhttp.URLPolicy{AllowedSchemes: []string{"http", "https"}, RejectPrivate: false})
+	tests := []struct {
+		name   string
+		method string
+		req    *vhttp.Request
+	}{
+		{name: "get safe", method: http.MethodGet, req: vhttp.GetSafe(server.URL, allowLocal)},
+		{name: "post safe", method: http.MethodPost, req: vhttp.PostSafe(server.URL, allowLocal)},
+		{name: "put safe", method: http.MethodPut, req: vhttp.PutSafe(server.URL, allowLocal)},
+		{name: "delete safe", method: http.MethodDelete, req: vhttp.DeleteSafe(server.URL, allowLocal)},
+		{name: "patch safe", method: http.MethodPatch, req: vhttp.PatchSafe(server.URL, allowLocal)},
+		{name: "head safe", method: http.MethodHead, req: vhttp.HeadSafe(server.URL, allowLocal)},
+		{name: "options safe", method: http.MethodOptions, req: vhttp.OptionsSafe(server.URL, allowLocal)},
+		{name: "new safe", method: http.MethodTrace, req: vhttp.NewSafeRequest(vhttp.MethodTrace, server.URL, allowLocal)},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			resp := tt.req.Execute()
+			if resp.Err() != nil {
+				t.Fatalf("Execute: %v", resp.Err())
+			}
+			if got := resp.Header("X-Method"); got != tt.method {
+				t.Fatalf("method header = %q, want %q", got, tt.method)
+			}
+		})
+	}
+
+	var buf bytes.Buffer
+	if n, err := vhttp.Download(server.URL, &buf); err != nil || n != int64(len("download-text")) || buf.String() != "download-text" {
+		t.Fatalf("Download n=%d body=%q err=%v", n, buf.String(), err)
+	}
+	buf.Reset()
+	if n, err := vhttp.DownloadWithOptions(server.URL, &buf, vhttp.WithMaxResponseBytes(64)); err != nil || n != int64(len("download-text")) || buf.String() != "download-text" {
+		t.Fatalf("DownloadWithOptions n=%d body=%q err=%v", n, buf.String(), err)
+	}
+	buf.Reset()
+	if n, err := vhttp.DownloadSafe(server.URL, &buf, allowLocal); err != nil || n != int64(len("download-text")) || buf.String() != "download-text" {
+		t.Fatalf("DownloadSafe n=%d body=%q err=%v", n, buf.String(), err)
+	}
+	if b, err := vhttp.DownloadBytesE(server.URL); err != nil || string(b) != "download-text" {
+		t.Fatalf("DownloadBytesE = %q, %v", b, err)
+	}
+	if b, err := vhttp.DownloadBytesEWithOptions(server.URL, vhttp.WithMaxResponseBytes(64)); err != nil || string(b) != "download-text" {
+		t.Fatalf("DownloadBytesEWithOptions = %q, %v", b, err)
+	}
+	if b, err := vhttp.DownloadBytesSafeE(server.URL, allowLocal); err != nil || string(b) != "download-text" {
+		t.Fatalf("DownloadBytesSafeE = %q, %v", b, err)
+	}
+	if got, err := vhttp.DownloadStringE(server.URL, ""); err != nil || got != "download-text" {
+		t.Fatalf("DownloadStringE = %q, %v", got, err)
+	}
+	if got, err := vhttp.DownloadStringEWithOptions(server.URL, "", vhttp.WithMaxResponseBytes(64)); err != nil || got != "download-text" {
+		t.Fatalf("DownloadStringEWithOptions = %q, %v", got, err)
+	}
+	if got, err := vhttp.DownloadStringSafeE(server.URL, "", allowLocal); err != nil || got != "download-text" {
+		t.Fatalf("DownloadStringSafeE = %q, %v", got, err)
+	}
+
+	dir := t.TempDir()
+	file := filepath.Join(dir, "plain.txt")
+	if n, err := vhttp.DownloadFile(server.URL, file); err != nil || n != int64(len("download-text")) {
+		t.Fatalf("DownloadFile n=%d err=%v", n, err)
+	}
+	fileWithOpts := filepath.Join(dir, "with-options.txt")
+	if n, err := vhttp.DownloadFileWithOptions(server.URL, fileWithOpts, []vhttp.RequestOption{vhttp.WithMaxResponseBytes(64)}, vhttp.WithSaveOverwrite(true)); err != nil || n != int64(len("download-text")) {
+		t.Fatalf("DownloadFileWithOptions n=%d err=%v", n, err)
+	}
+	if n, err := vhttp.DownloadFileSafe(server.URL, filepath.Join(dir, "blocked.txt")); err == nil || n != 0 {
+		t.Fatalf("DownloadFileSafe default policy n=%d err=%v, want private host rejection", n, err)
+	}
+}
+
+func TestFacadeAdditionalOptionWrappers(t *testing.T) {
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	previous := vhttp.SnapshotGlobalConfig()
+	defer vhttp.ConfigureGlobalConfig(previous)
+	vhttp.SetCookieJar(jar)
+	if vhttp.GetCookieJar() == nil {
+		t.Fatal("GetCookieJar returned nil after SetCookieJar")
+	}
+	vhttp.CloseCookie()
+	if vhttp.GetCookieJar() != nil {
+		t.Fatal("CloseCookie did not clear global jar")
+	}
+
+	requestFactoryCalled := false
+	readAllCalled := false
+	transport := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Header:     http.Header{"Content-Type": []string{"text/plain"}},
+			Body:       io.NopCloser(strings.NewReader(req.Method + ":" + req.Header.Get("X-A"))),
+			Request:    req,
+		}, nil
+	})
+	client := &http.Client{Transport: transport}
+	cfg := vhttp.SnapshotGlobalConfig()
+	cfg.Headers.Set("X-A", "from-config")
+	resp := vhttp.NewIsolatedRequest(vhttp.MethodPost, "https://example.com",
+		vhttp.WithGlobalConfig(cfg),
+		vhttp.WithTimeout(time.Second),
+		vhttp.WithHeaders(map[string]string{"X-A": "one"}),
+		vhttp.WithTLSConfig(&tls.Config{MinVersion: tls.VersionTLS12}),
+		vhttp.WithTransport(transport),
+		vhttp.WithClient(client),
+		vhttp.WithCookieJar(jar),
+		vhttp.WithContentType(string(vhttp.ContentTypeTextPlain)),
+		vhttp.WithCharset("utf-8"),
+		vhttp.WithMaxResponseBytes(64),
+		vhttp.WithResponseReadAllFunc(func(r io.Reader) ([]byte, error) {
+			readAllCalled = true
+			return io.ReadAll(r)
+		}),
+		vhttp.WithRequestFactory(func(method, rawURL string, body io.Reader) (*http.Request, error) {
+			requestFactoryCalled = true
+			return http.NewRequest(method, rawURL, body)
+		}),
+		vhttp.WithMultipartWriterFactory(func(w io.Writer) vhttp.MultipartWriter {
+			return multipart.NewWriter(w)
+		}),
+	).BodyString("payload").Execute()
+	if resp.Err() != nil {
+		t.Fatalf("NewIsolatedRequest Execute: %v", resp.Err())
+	}
+	if got := resp.Body(); got != "POST:one" {
+		t.Fatalf("option response = %q", got)
+	}
+	if !requestFactoryCalled || !readAllCalled {
+		t.Fatalf("providers called request=%v readAll=%v", requestFactoryCalled, readAllCalled)
+	}
+
+	cfg.Headers.Set("X-A", "configured")
+	if got := vhttp.NewRequestWithConfig(vhttp.MethodGet, "https://example.com", cfg, vhttp.WithTransport(transport)).Execute().Body(); got != "GET:configured" {
+		t.Fatalf("NewRequestWithConfig body = %q", got)
+	}
+	if resp := vhttp.Get("http://public.example",
+		vhttp.WithAllowedHosts("public.example"),
+		vhttp.WithLookupIP(func(context.Context, string) ([]net.IP, error) {
+			return []net.IP{net.ParseIP("8.8.8.8")}, nil
+		}),
+		vhttp.WithTransport(transport),
+	).Execute(); resp.Err() != nil {
+		t.Fatalf("allowed host request error = %v", resp.Err())
+	}
+}
+
+func TestFacadeErrorCodesAndSimpleServerWrappers(t *testing.T) {
+	cause := errors.New("bad request")
+	err := vhttp.NewErrorWithCode(knifer.ErrCodeInvalidInput, "invalid request", cause)
+	if !errors.Is(err, cause) || !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("NewErrorWithCode does not unwrap cause or code: %v", err)
+	}
+	if got := vhttp.ErrorfWithCode(knifer.ErrCodeInvalidInput, "status %d", http.StatusBadRequest).Error(); got != "status 400" {
+		t.Fatalf("ErrorfWithCode = %q", got)
+	}
+	if vhttp.NewSimpleServer(0) == nil {
+		t.Fatal("NewSimpleServer returned nil")
+	}
+	if vhttp.NewSimpleServerAddr("127.0.0.1:0") == nil {
+		t.Fatal("NewSimpleServerAddr returned nil")
+	}
+
+	static := vhttp.NewSimpleServerAddrWithOptions("127.0.0.1:0")
+	static.SetRootWithOptions(".",
+		vhttp.WithStaticFileSystem(http.Dir(".")),
+		vhttp.WithStaticFS(os.DirFS(".")),
+		vhttp.WithFileServerFactory(func(http.FileSystem) http.Handler {
+			return http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+			})
+		}),
+		vhttp.WithStaticHandler(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+		})),
+	)
+
+	listener, listenErr := net.Listen("tcp", "127.0.0.1:0")
+	if listenErr != nil {
+		t.Fatal(listenErr)
+	}
+	defer listener.Close()
+	if server := vhttp.NewSimpleServerAddrWithOptions("127.0.0.1:0",
+		vhttp.WithListener(listener),
+		vhttp.WithListenAndServeFunc(func(*http.Server) error {
+			return http.ErrServerClosed
+		}),
+	); server == nil {
+		t.Fatal("WithListener server returned nil")
 	}
 }
 

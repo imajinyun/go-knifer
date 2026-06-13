@@ -1,13 +1,17 @@
 package vconf_test
 
 import (
+	"context"
 	"encoding/base64"
 	"errors"
+	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -148,6 +152,112 @@ port = 9090
 	prod := s.ApplyProfile("prod")
 	if got := prod.GetByGroup("server", "port"); got != "9090" {
 		t.Fatalf("ApplyProfile(prod).server.port = %q", got)
+	}
+}
+
+func TestFacadeTypedGettersMutationAndSchemaMethods(t *testing.T) {
+	s, err := vconf.Parse(`
+name=demo
+custom_int=custom
+custom_bool=yes
+[server]
+port=8080
+enabled=true
+`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, ok := s.Lookup("", "name"); !ok || got != "demo" {
+		t.Fatalf("Lookup default = %q, %v", got, ok)
+	}
+	if got := s.GetIntWithOptions("custom_int", 0, vconf.WithIntParser(func(value string) (int, error) {
+		if value == "custom" {
+			return 77, nil
+		}
+		return 0, errors.New("unexpected")
+	})); got != 77 {
+		t.Fatalf("GetIntWithOptions = %d", got)
+	}
+	if got := s.GetBoolByGroupWithOptions("", "custom_bool", false, vconf.WithBoolParser(func(value string) (bool, error) {
+		return value == "yes", nil
+	})); !got {
+		t.Fatal("GetBoolByGroupWithOptions = false")
+	}
+	if got := s.GetIntByGroupWithOptions("server", "port", 0); got != 8080 {
+		t.Fatalf("GetIntByGroupWithOptions = %d", got)
+	}
+	if got := s.GetBoolByGroupWithOptions("server", "enabled", false); !got {
+		t.Fatal("GetBoolByGroupWithOptions server.enabled = false")
+	}
+
+	clone := s.Clone()
+	clone.Set("name", "clone")
+	if s.Get("name") != "demo" || clone.Get("name") != "clone" {
+		t.Fatalf("Clone should not alias source: source=%q clone=%q", s.Get("name"), clone.Get("name"))
+	}
+	clone.Delete("name")
+	if _, ok := clone.Lookup("", "name"); ok {
+		t.Fatal("Delete did not remove default key")
+	}
+	clone.DeleteByGroup("server", "enabled")
+	if _, ok := clone.Lookup("server", "enabled"); ok {
+		t.Fatal("DeleteByGroup did not remove grouped key")
+	}
+	merged := clone.Merge(vconf.Merge(s))
+	if got := merged.Get("name"); got != "demo" {
+		t.Fatalf("Merge method name = %q", got)
+	}
+
+	schema := vconf.Schema{Fields: []vconf.FieldRule{
+		{Group: "server", Key: "host", Default: "127.0.0.1"},
+		{Group: "server", Key: "port", Required: true, Type: vconf.TypeInt},
+	}}
+	withDefaults := s.ApplyDefaults(schema)
+	if got := withDefaults.GetByGroup("server", "host"); got != "127.0.0.1" {
+		t.Fatalf("ApplyDefaults host = %q", got)
+	}
+	if err := withDefaults.ValidateSchema(schema); err != nil {
+		t.Fatalf("ValidateSchema: %v", err)
+	}
+	type defaultConfig struct {
+		CustomInt int `conf:"custom_int,required,int"`
+	}
+	if err := withDefaults.ValidateStructWithOptions(defaultConfig{}, vconf.WithSchemaIntParser(func(value string, base int, bitSize int) (int64, error) {
+		if value == "custom" {
+			return 77, nil
+		}
+		return 0, errors.New("unexpected")
+	})); err != nil {
+		t.Fatalf("ValidateStructWithOptions: %v", err)
+	}
+}
+
+func TestFacadeParserProviderOptions(t *testing.T) {
+	parsed, err := vconf.ParseByExtWithOptions("app.custom", []byte("ignored"), vconf.WithParserForExt(".custom", func(data []byte) (*vconf.Conf, error) {
+		c := vconf.New()
+		c.Set("from", string(data))
+		return c, nil
+	}))
+	if err != nil || parsed.Get("from") != "ignored" {
+		t.Fatalf("ParseByExtWithOptions = %#v, %v", parsed, err)
+	}
+
+	yamlCalled := false
+	_, err = vconf.ParseYAMLFullWithOptions("ignored", vconf.WithYAMLUnmarshalFunc(func(data []byte, out any) error {
+		yamlCalled = true
+		return errors.New("yaml provider failed")
+	}))
+	if err == nil || !yamlCalled {
+		t.Fatalf("ParseYAMLFullWithOptions err=%v called=%v", err, yamlCalled)
+	}
+
+	tomlCalled := false
+	_, err = vconf.ParseTOMLWithOptions("ignored", vconf.WithTOMLUnmarshalFunc(func(data []byte, out any) error {
+		tomlCalled = true
+		return errors.New("toml provider failed")
+	}))
+	if err == nil || !tomlCalled {
+		t.Fatalf("ParseTOMLWithOptions err=%v called=%v", err, tomlCalled)
 	}
 }
 
@@ -386,3 +496,147 @@ func TestWatchWithOptionsFacade(t *testing.T) {
 		t.Fatal("watch did not report change")
 	}
 }
+
+func TestFacadeRemoteSafeAndParseWrappers(t *testing.T) {
+	trustedServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("trusted=ok\n"))
+	}))
+	defer trustedServer.Close()
+	trusted, err := vconf.LoadRemote(trustedServer.URL + "/app.setting")
+	if err != nil {
+		t.Fatalf("LoadRemote() error = %v", err)
+	}
+	if got := trusted.Get("trusted"); got != "ok" {
+		t.Fatalf("LoadRemote trusted = %q", got)
+	}
+
+	client := &http.Client{Transport: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+		if got := req.Header.Get("X-Remote-Token"); got != "token" {
+			t.Fatalf("remote header = %q, want token", got)
+		}
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Header:     http.Header{"Content-Type": []string{"text/plain"}},
+			Body:       io.NopCloser(strings.NewReader("remote=ok\n")),
+			Request:    req,
+		}, nil
+	})}
+	lookupPublic := func(context.Context, string) ([]net.IP, error) {
+		return []net.IP{net.ParseIP("8.8.8.8")}, nil
+	}
+	opts := vconf.LoadOptions{
+		RemoteClient:       client,
+		Headers:            http.Header{"X-Remote-Token": []string{"token"}},
+		RemoteAllowedHosts: []string{"config.example"},
+		LookupIP:           lookupPublic,
+		Timeout:            time.Second,
+		MaxBytes:           64,
+	}
+
+	remote, err := vconf.LoadRemoteWithOptions("http://config.example/app.setting", opts)
+	if err != nil {
+		t.Fatalf("LoadRemoteWithOptions() error = %v", err)
+	}
+	if got := remote.Get("remote"); got != "ok" {
+		t.Fatalf("LoadRemoteWithOptions remote = %q", got)
+	}
+	safe, err := vconf.LoadRemoteSafeWithOptions("http://config.example/app.setting", opts)
+	if err != nil {
+		t.Fatalf("LoadRemoteSafeWithOptions() error = %v", err)
+	}
+	if got := safe.Get("remote"); got != "ok" {
+		t.Fatalf("LoadRemoteSafeWithOptions remote = %q", got)
+	}
+	if _, err := vconf.LoadRemoteSafe("http://127.0.0.1/app.setting"); err == nil {
+		t.Fatal("LoadRemoteSafe private host error = nil")
+	}
+
+	parsed, err := vconf.ParseByExt("app.setting", []byte("name=parse"))
+	if err != nil || parsed.Get("name") != "parse" {
+		t.Fatalf("ParseByExt = %#v, %v", parsed, err)
+	}
+	yaml, err := vconf.ParseYAMLFull("server:\n  port: 8080\n")
+	if err != nil || yaml.GetByGroup("server", "port") != "8080" {
+		t.Fatalf("ParseYAMLFull = %#v, %v", yaml, err)
+	}
+	decoded, err := vconf.Base64Decrypt(base64.StdEncoding.EncodeToString([]byte("secret")))
+	if err != nil || decoded != "secret" {
+		t.Fatalf("Base64Decrypt = %q, %v", decoded, err)
+	}
+}
+
+func TestFacadeBindAndSchemaParserOptions(t *testing.T) {
+	s, err := vconf.Parse(`
+flag=yes
+count=custom-int
+amount=custom-uint
+ratio=custom-float
+items=1,2,3
+schema_bool=yes
+schema_float=custom-float
+choice=blue
+`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	type bindConfig struct {
+		Flag   bool    `conf:"flag"`
+		Count  int     `conf:"count"`
+		Amount uint    `conf:"amount"`
+		Ratio  float64 `conf:"ratio"`
+		Items  []int   `conf:"items"`
+	}
+	var cfg bindConfig
+	if err := s.BindWithOptions(&cfg,
+		vconf.WithBindBoolParser(func(value string) (bool, error) {
+			return value == "yes", nil
+		}),
+		vconf.WithBindIntParser(func(value string, base int, bitSize int) (int64, error) {
+			if value == "custom-int" {
+				return 42, nil
+			}
+			return 7, nil
+		}),
+		vconf.WithBindUintParser(func(value string, base int, bitSize int) (uint64, error) {
+			if value == "custom-uint" {
+				return 9, nil
+			}
+			return 3, nil
+		}),
+		vconf.WithBindFloatParser(func(value string, bitSize int) (float64, error) {
+			if value == "custom-float" {
+				return 1.5, nil
+			}
+			return 0, errors.New("unexpected float")
+		}),
+	); err != nil {
+		t.Fatalf("BindWithOptions() error = %v", err)
+	}
+	if !cfg.Flag || cfg.Count != 42 || cfg.Amount != 9 || cfg.Ratio != 1.5 || !reflect.DeepEqual(cfg.Items, []int{7, 7, 7}) {
+		t.Fatalf("BindWithOptions cfg = %#v", cfg)
+	}
+
+	err = s.ValidateSchemaWithOptions(vconf.Schema{Fields: []vconf.FieldRule{
+		{Key: "schema_bool", Required: true, Type: vconf.TypeBool},
+		{Key: "schema_float", Required: true, Type: vconf.TypeFloat},
+		{Key: "choice", Required: true, Choices: []string{"red", "blue"}},
+	}},
+		vconf.WithSchemaBoolParser(func(value string) (bool, error) {
+			return value == "yes", nil
+		}),
+		vconf.WithSchemaFloatParser(func(value string, bitSize int) (float64, error) {
+			if value == "custom-float" {
+				return 2.5, nil
+			}
+			return 0, errors.New("unexpected schema float")
+		}),
+	)
+	if err != nil {
+		t.Fatalf("ValidateSchemaWithOptions() error = %v", err)
+	}
+}
+
+type roundTripperFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripperFunc) RoundTrip(req *http.Request) (*http.Response, error) { return f(req) }

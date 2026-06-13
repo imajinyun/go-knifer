@@ -199,6 +199,123 @@ func TestFacadeZipCreationUsingOptions(t *testing.T) {
 	}
 }
 
+func TestFacadeZipDefaultFileAndWriterHelpers(t *testing.T) {
+	tmp := t.TempDir()
+	src := filepath.Join(tmp, "src")
+	if err := os.MkdirAll(src, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(src, "keep.txt"), []byte("keep"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(src, "skip.log"), []byte("skip"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	autoArchive, err := vzip.Zip(filepath.Join(src, "keep.txt"))
+	if err != nil {
+		t.Fatalf("Zip: %v", err)
+	}
+	if got, err := vzip.GetBytes(autoArchive, "keep.txt"); err != nil || string(got) != "keep" {
+		t.Fatalf("Zip content = %q, %v", got, err)
+	}
+
+	toArchive := filepath.Join(tmp, "to.zip")
+	if err := vzip.ZipTo(src, toArchive, true); err != nil {
+		t.Fatalf("ZipTo: %v", err)
+	}
+	if got, err := vzip.GetBytes(toArchive, "src/keep.txt"); err != nil || string(got) != "keep" {
+		t.Fatalf("ZipTo content = %q, %v", got, err)
+	}
+
+	filesArchive := filepath.Join(tmp, "files.zip")
+	if err := vzip.ZipFiles(filesArchive, false, filepath.Join(src, "keep.txt")); err != nil {
+		t.Fatalf("ZipFiles: %v", err)
+	}
+	if got, err := vzip.GetBytes(filesArchive, "keep.txt"); err != nil || string(got) != "keep" {
+		t.Fatalf("ZipFiles content = %q, %v", got, err)
+	}
+
+	filterArchive := filepath.Join(tmp, "filter.zip")
+	filter := func(path string, info os.FileInfo) bool {
+		return info.IsDir() || filepath.Ext(path) == ".txt"
+	}
+	if err := vzip.ZipFilesFilter(filterArchive, false, filter, src); err != nil {
+		t.Fatalf("ZipFilesFilter: %v", err)
+	}
+	if _, err := vzip.GetBytes(filterArchive, "skip.log"); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("ZipFilesFilter skip err = %v, want not exist", err)
+	}
+
+	var buf bytes.Buffer
+	if err := vzip.ZipToWriter(&buf, false, filter, src); err != nil {
+		t.Fatalf("ZipToWriter: %v", err)
+	}
+	zr, err := archivezip.NewReader(bytes.NewReader(buf.Bytes()), int64(buf.Len()))
+	if err != nil || len(zr.File) != 1 || zr.File[0].Name != "keep.txt" {
+		t.Fatalf("ZipToWriter archive = %#v, %v", zr, err)
+	}
+}
+
+func TestFacadeZipAppendUnzipAndCompressionOptions(t *testing.T) {
+	tmp := t.TempDir()
+	archive := filepath.Join(tmp, "append-default.zip")
+	if err := vzip.ZipEntries(archive, vzip.EntryData{Name: "base.txt", Data: []byte("base")}); err != nil {
+		t.Fatalf("ZipEntries: %v", err)
+	}
+	extra := filepath.Join(tmp, "extra.txt")
+	if err := os.WriteFile(extra, []byte("extra"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := vzip.Append(archive, extra); err != nil {
+		t.Fatalf("Append: %v", err)
+	}
+	if got, err := vzip.GetBytes(archive, "extra.txt"); err != nil || string(got) != "extra" {
+		t.Fatalf("Append content = %q, %v", got, err)
+	}
+
+	defaultDest, err := vzip.Unzip(archive)
+	if err != nil {
+		t.Fatalf("Unzip: %v", err)
+	}
+	if got, err := os.ReadFile(filepath.Join(defaultDest, "base.txt")); err != nil || string(got) != "base" {
+		t.Fatalf("Unzip default output = %q, %v", got, err)
+	}
+	if err := vzip.UnzipToLimit(archive, filepath.Join(tmp, "limit"), 1); err == nil {
+		t.Fatal("UnzipToLimit should reject content larger than limit")
+	}
+
+	payload := []byte("compression option payload")
+	source := filepath.Join(tmp, "payload.txt")
+	if err := os.WriteFile(source, payload, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	gz, err := vzip.GzipFileWithOptions(source, vzip.WithMaxBytes(int64(len(payload))))
+	if err != nil {
+		t.Fatalf("GzipFileWithOptions: %v", err)
+	}
+	if out, err := vzip.UnGzipReaderWithOptions(bytes.NewReader(gz), len(payload), vzip.WithMaxBytes(int64(len(payload)))); err != nil || !bytes.Equal(out, payload) {
+		t.Fatalf("UnGzipReaderWithOptions = %q, %v", out, err)
+	}
+	if _, err := vzip.GzipFileWithOptions(source, vzip.WithMaxBytes(1)); err == nil {
+		t.Fatal("GzipFileWithOptions max bytes error = nil")
+	}
+
+	zlibBytes, err := vzip.ZlibFileWithOptions(source, flate.BestSpeed, vzip.WithMaxBytes(int64(len(payload))))
+	if err != nil {
+		t.Fatalf("ZlibFileWithOptions: %v", err)
+	}
+	if out, err := vzip.UnZlibReaderWithOptions(bytes.NewReader(zlibBytes), len(payload), vzip.WithMaxBytes(int64(len(payload)))); err != nil || !bytes.Equal(out, payload) {
+		t.Fatalf("UnZlibReaderWithOptions = %q, %v", out, err)
+	}
+	if got, err := vzip.ZlibLevelWithOptions(payload, flate.NoCompression, vzip.WithMaxBytes(int64(len(payload)))); err != nil || len(got) == 0 {
+		t.Fatalf("ZlibLevelWithOptions len=%d err=%v", len(got), err)
+	}
+	if got, err := vzip.ZlibReaderWithOptions(bytes.NewReader(payload), flate.BestSpeed, len(payload), vzip.WithMaxBytes(int64(len(payload)))); err != nil || len(got) == 0 {
+		t.Fatalf("ZlibReaderWithOptions len=%d err=%v", len(got), err)
+	}
+}
+
 func TestFacadeZipErrorContract(t *testing.T) {
 	_, err := vzip.GetStream(nil)
 	if err == nil {
