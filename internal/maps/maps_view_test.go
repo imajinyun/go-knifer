@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func sortedStrings(s []string) []string {
@@ -30,6 +31,17 @@ func TestSortedKeysAndValues(t *testing.T) {
 
 	descending := SortedKeysFunc(m, func(a, b string) bool { return a > b })
 	assert.Equal(t, []string{"c", "b", "a"}, descending)
+}
+
+func TestKeysValuesShape(t *testing.T) {
+	m := map[int]int{1: 10, 2: 20, 3: 30}
+	keys := SortedKeys(m)
+	values := SortedValues(m)
+	require.Len(t, keys, len(m))
+	require.Len(t, values, len(m))
+	for i, k := range keys {
+		assert.Equal(t, m[k], values[i])
+	}
 }
 
 func TestKeysOf(t *testing.T) {

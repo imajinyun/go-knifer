@@ -56,6 +56,9 @@ func WithMaxBytes(n int64) ReadOption { return fileimpl.WithMaxBytes(n) }
 // WithUnlimitedRead disables the default read-size guard for callers that explicitly need it.
 func WithUnlimitedRead() ReadOption { return fileimpl.WithUnlimitedRead() }
 
+// WithBufferSize sets the buffer size used by chunk reads and limited copies.
+func WithBufferSize(n int) ReadOption { return fileimpl.WithBufferSize(n) }
+
 // WithInitialLineBuffer sets the initial scanner buffer for line reads.
 func WithInitialLineBuffer(n int) ReadOption { return fileimpl.WithInitialLineBuffer(n) }
 
@@ -77,17 +80,26 @@ func WithMkdirAll(mkdirAll MkdirAllFunc) DirOption { return fileimpl.WithMkdirAl
 // WithRemoveAll sets the function used to remove file trees.
 func WithRemoveAll(removeAll RemoveAllFunc) DeleteOption { return fileimpl.WithRemoveAll(removeAll) }
 
-func ReadAll(r io.Reader) ([]byte, error)              { return ReadAllWithOptions(r) }
-func ReadString(r io.Reader) (string, error)           { return ReadStringWithOptions(r) }
-func ReadLines(r io.Reader) ([]string, error)          { return ReadLinesWithOptions(r) }
+func ReadAll(r io.Reader) ([]byte, error)     { return ReadAllWithOptions(r) }
+func ReadString(r io.Reader) (string, error)  { return ReadStringWithOptions(r) }
+func ReadLines(r io.Reader) ([]string, error) { return ReadLinesWithOptions(r) }
+func ReadChunks(r io.Reader, handle func([]byte) error) error {
+	return ReadChunksWithOptions(r, handle)
+}
 func Copy(dst io.Writer, src io.Reader) (int64, error) { return fileimpl.IoCopy(dst, src) }
-func CloseQuietly(c io.Closer)                         { fileimpl.CloseQuietly(c) }
-func Exists(path string) bool                          { return ExistsWithOptions(path) }
-func IsFile(path string) bool                          { return IsFileWithOptions(path) }
-func IsDirectory(path string) bool                     { return IsDirectoryWithOptions(path) }
-func ReadFileString(path string) (string, error)       { return ReadFileStringWithOptions(path) }
-func ReadFileBytes(path string) ([]byte, error)        { return ReadFileBytesWithOptions(path) }
-func ReadFileLines(path string) ([]string, error)      { return ReadFileLinesWithOptions(path) }
+func CopyWithOptions(dst io.Writer, src io.Reader, opts ...ReadOption) (int64, error) {
+	return fileimpl.IoCopyWithOptions(dst, src, opts...)
+}
+func CloseQuietly(c io.Closer)                    { fileimpl.CloseQuietly(c) }
+func Exists(path string) bool                     { return ExistsWithOptions(path) }
+func IsFile(path string) bool                     { return IsFileWithOptions(path) }
+func IsDirectory(path string) bool                { return IsDirectoryWithOptions(path) }
+func ReadFileString(path string) (string, error)  { return ReadFileStringWithOptions(path) }
+func ReadFileBytes(path string) ([]byte, error)   { return ReadFileBytesWithOptions(path) }
+func ReadFileLines(path string) ([]string, error) { return ReadFileLinesWithOptions(path) }
+func ReadFileChunks(path string, handle func([]byte) error) error {
+	return ReadFileChunksWithOptions(path, handle)
+}
 
 // ExistsWithOptions reports whether a file or directory exists using per-call stat options.
 func ExistsWithOptions(path string, opts ...StatOption) bool {
@@ -119,6 +131,11 @@ func ReadLinesWithOptions(r io.Reader, opts ...ReadOption) ([]string, error) {
 	return fileimpl.ReadLinesWithOptions(r, opts...)
 }
 
+// ReadChunksWithOptions reads r in chunks with per-call read options.
+func ReadChunksWithOptions(r io.Reader, handle func([]byte) error, opts ...ReadOption) error {
+	return fileimpl.ReadChunksWithOptions(r, handle, opts...)
+}
+
 // ReadFileStringWithOptions reads a file as a string with per-call read options.
 func ReadFileStringWithOptions(path string, opts ...ReadOption) (string, error) {
 	return fileimpl.FileReadStringWithOptions(path, opts...)
@@ -132,6 +149,11 @@ func ReadFileBytesWithOptions(path string, opts ...ReadOption) ([]byte, error) {
 // ReadFileLinesWithOptions reads all lines from a file with per-call read options.
 func ReadFileLinesWithOptions(path string, opts ...ReadOption) ([]string, error) {
 	return fileimpl.FileReadLinesWithOptions(path, opts...)
+}
+
+// ReadFileChunksWithOptions reads a file in chunks with per-call read options.
+func ReadFileChunksWithOptions(path string, handle func([]byte) error, opts ...ReadOption) error {
+	return fileimpl.FileReadChunksWithOptions(path, handle, opts...)
 }
 
 // WriteFileString writes content to path, creating parent directories by default.

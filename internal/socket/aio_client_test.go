@@ -65,3 +65,14 @@ func TestAioClient(t *testing.T) {
 		t.Errorf("AioClient 收到错误数据: %q", got)
 	}
 }
+
+func TestNewAioClientWithOptionsUsesDialer(t *testing.T) {
+	dialer := &fakeDialer{}
+	addr := &net.TCPAddr{IP: net.ParseIP("127.0.0.1"), Port: 1234}
+	client, err := NewAioClientWithOptions(addr, &echoIoAction{}, WithConnectDialer(dialer))
+	if err != nil {
+		t.Fatalf("NewAioClientWithOptions failed: %v", err)
+	}
+	closeAndReport(t, client.Close)
+	closeAndReport(t, dialer.server.Close)
+}

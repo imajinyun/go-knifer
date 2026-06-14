@@ -2,9 +2,13 @@ package str
 
 import (
 	"fmt"
+	"hash/fnv"
+	"math/bits"
 	"regexp"
+	"strconv"
 	"strings"
 	"unicode"
+	"unicode/utf16"
 )
 
 // This file provides string helpers aligned with the utility toolkit-core StrUtil and CharSequenceUtil.
@@ -371,3 +375,337 @@ func Length(s string) int { return len([]rune(s)) }
 
 // RuneLen returns the number of runes in s.
 func RuneLen(s string) int { return Length(s) }
+
+// EscapeUnicode escapes non-ASCII runes as Java-style \uXXXX sequences.
+func EscapeUnicode(s string) string {
+	var b strings.Builder
+	b.Grow(len(s))
+	for _, r := range s {
+		if r < 128 {
+			b.WriteRune(r)
+			continue
+		}
+		if r <= 0xFFFF {
+			writeUnicodeEscape(&b, r)
+			continue
+		}
+		for _, surrogate := range utf16.Encode([]rune{r}) {
+			writeUnicodeEscape(&b, rune(surrogate))
+		}
+	}
+	return b.String()
+}
+
+// UnescapeUnicode decodes Java-style \uXXXX sequences.
+//
+// Malformed escapes are preserved verbatim. Surrogate pairs are combined when
+// both halves are present; lone surrogates are emitted as their rune value.
+func UnescapeUnicode(s string) string {
+	var b strings.Builder
+	b.Grow(len(s))
+	for i := 0; i < len(s); {
+		if i+6 > len(s) || s[i] != '\\' || s[i+1] != 'u' {
+			b.WriteByte(s[i])
+			i++
+			continue
+		}
+		hi, ok := parseUnicodeHex(s[i+2 : i+6])
+		if !ok {
+			b.WriteByte(s[i])
+			i++
+			continue
+		}
+		i += 6
+		if utf16.IsSurrogate(hi) && i+6 <= len(s) && s[i] == '\\' && s[i+1] == 'u' {
+			lo, ok := parseUnicodeHex(s[i+2 : i+6])
+			if ok {
+				if decoded := utf16.DecodeRune(hi, lo); decoded != unicode.ReplacementChar {
+					b.WriteRune(decoded)
+					i += 6
+					continue
+				}
+			}
+		}
+		b.WriteRune(hi)
+	}
+	return b.String()
+}
+
+// AntPathMatch reports whether path matches an Ant-style pattern using "/" as separator.
+//
+// Within a path segment, "*" matches any characters and "?" matches one rune.
+// A segment that is exactly "**" matches zero or more path segments.
+func AntPathMatch(pattern, path string) bool {
+	return AntPathMatchWithSeparator(pattern, path, "/")
+}
+
+// AntPathMatchWithSeparator reports whether path matches an Ant-style pattern.
+func AntPathMatchWithSeparator(pattern, path, separator string) bool {
+	if separator == "" {
+		separator = "/"
+	}
+	if pattern == path {
+		return true
+	}
+	patternSegments := splitPathSegments(pattern, separator)
+	pathSegments := splitPathSegments(path, separator)
+	return matchAntSegments(patternSegments, pathSegments, 0, 0)
+}
+
+// JaccardSimilarity returns the Jaccard similarity of two strings by rune set.
+//
+// Unicode whitespace is ignored. Two empty effective inputs are considered
+// identical and return 1.0.
+func JaccardSimilarity(a, b string) float64 {
+	left := runeSet(a)
+	right := runeSet(b)
+	return jaccard(left, right)
+}
+
+// NGramSimilarity returns the Jaccard similarity of rune n-gram sets.
+//
+// Whitespace is ignored before n-grams are built. If n is not positive the
+// function returns 0. Two empty effective inputs are considered identical.
+func NGramSimilarity(a, b string, n int) float64 {
+	if n <= 0 {
+		return 0
+	}
+	left := ngramSet(a, n)
+	right := ngramSet(b, n)
+	return jaccard(left, right)
+}
+
+// LevenshteinDistance returns the Unicode-aware edit distance between a and b.
+func LevenshteinDistance(a, b string) int {
+	left := []rune(a)
+	right := []rune(b)
+	if len(left) == 0 {
+		return len(right)
+	}
+	if len(right) == 0 {
+		return len(left)
+	}
+
+	prev := make([]int, len(right)+1)
+	curr := make([]int, len(right)+1)
+	for j := range prev {
+		prev[j] = j
+	}
+	for i, lr := range left {
+		curr[0] = i + 1
+		for j, rr := range right {
+			cost := 0
+			if lr != rr {
+				cost = 1
+			}
+			curr[j+1] = min3(curr[j]+1, prev[j+1]+1, prev[j]+cost)
+		}
+		prev, curr = curr, prev
+	}
+	return prev[len(right)]
+}
+
+// LevenshteinSimilarity returns a normalized similarity score in [0, 1].
+func LevenshteinSimilarity(a, b string) float64 {
+	leftLen := len([]rune(a))
+	rightLen := len([]rune(b))
+	maxLen := max(leftLen, rightLen)
+	if maxLen == 0 {
+		return 1
+	}
+	distance := LevenshteinDistance(a, b)
+	return 1 - float64(distance)/float64(maxLen)
+}
+
+// SimHash returns a deterministic 64-bit SimHash for text.
+//
+// Whitespace-separated lower-cased fields are used as tokens. If the text has no
+// fields, non-space runes are used as fallback tokens. Empty input returns 0.
+func SimHash(text string) uint64 {
+	tokens := simHashTokens(text)
+	if len(tokens) == 0 {
+		return 0
+	}
+
+	var vector [64]int
+	for _, token := range tokens {
+		hash := hashString64(token)
+		for i := range vector {
+			if hash&(uint64(1)<<i) != 0 {
+				vector[i]++
+			} else {
+				vector[i]--
+			}
+		}
+	}
+
+	var result uint64
+	for i, weight := range vector {
+		if weight > 0 {
+			result |= uint64(1) << i
+		}
+	}
+	return result
+}
+
+// HammingDistance64 returns the number of different bits between a and b.
+func HammingDistance64(a, b uint64) int {
+	return bits.OnesCount64(a ^ b)
+}
+
+func writeUnicodeEscape(b *strings.Builder, r rune) {
+	fmt.Fprintf(b, `\u%04X`, r)
+}
+
+func parseUnicodeHex(s string) (rune, bool) {
+	v, err := strconv.ParseInt(s, 16, 32)
+	if err != nil {
+		return 0, false
+	}
+	return rune(v), true
+}
+
+func splitPathSegments(s, separator string) []string {
+	if s == "" {
+		return []string{}
+	}
+	trimmed := strings.Trim(s, separator)
+	if trimmed == "" {
+		return []string{}
+	}
+	return strings.Split(trimmed, separator)
+}
+
+func matchAntSegments(pattern, path []string, pi, si int) bool {
+	if pi == len(pattern) {
+		return si == len(path)
+	}
+	if pattern[pi] == "**" {
+		for next := si; next <= len(path); next++ {
+			if matchAntSegments(pattern, path, pi+1, next) {
+				return true
+			}
+		}
+		return false
+	}
+	if si == len(path) {
+		return false
+	}
+	return matchAntSegment(pattern[pi], path[si]) && matchAntSegments(pattern, path, pi+1, si+1)
+}
+
+func matchAntSegment(pattern, text string) bool {
+	pr := []rune(pattern)
+	tr := []rune(text)
+	dp := make([][]bool, len(pr)+1)
+	for i := range dp {
+		dp[i] = make([]bool, len(tr)+1)
+	}
+	dp[0][0] = true
+	for i := 1; i <= len(pr); i++ {
+		if pr[i-1] == '*' {
+			dp[i][0] = dp[i-1][0]
+		}
+	}
+	for i := 1; i <= len(pr); i++ {
+		for j := 1; j <= len(tr); j++ {
+			switch pr[i-1] {
+			case '*':
+				dp[i][j] = dp[i-1][j] || dp[i][j-1]
+			case '?':
+				dp[i][j] = dp[i-1][j-1]
+			default:
+				dp[i][j] = pr[i-1] == tr[j-1] && dp[i-1][j-1]
+			}
+		}
+	}
+	return dp[len(pr)][len(tr)]
+}
+
+func runeSet(s string) map[string]struct{} {
+	set := map[string]struct{}{}
+	for _, r := range s {
+		if unicode.IsSpace(r) {
+			continue
+		}
+		set[string(r)] = struct{}{}
+	}
+	return set
+}
+
+func ngramSet(s string, n int) map[string]struct{} {
+	runes := effectiveRunes(s)
+	set := map[string]struct{}{}
+	if len(runes) == 0 {
+		return set
+	}
+	if len(runes) < n {
+		set[string(runes)] = struct{}{}
+		return set
+	}
+	for i := 0; i+n <= len(runes); i++ {
+		set[string(runes[i:i+n])] = struct{}{}
+	}
+	return set
+}
+
+func effectiveRunes(s string) []rune {
+	out := []rune{}
+	for _, r := range s {
+		if unicode.IsSpace(r) {
+			continue
+		}
+		out = append(out, r)
+	}
+	return out
+}
+
+func jaccard(left, right map[string]struct{}) float64 {
+	if len(left) == 0 && len(right) == 0 {
+		return 1
+	}
+	if len(left) == 0 || len(right) == 0 {
+		return 0
+	}
+
+	intersection := 0
+	for item := range left {
+		if _, ok := right[item]; ok {
+			intersection++
+		}
+	}
+	union := len(left) + len(right) - intersection
+	return float64(intersection) / float64(union)
+}
+
+func simHashTokens(text string) []string {
+	fields := strings.Fields(strings.ToLower(text))
+	if len(fields) > 0 {
+		return fields
+	}
+
+	tokens := []string{}
+	for _, r := range strings.ToLower(text) {
+		if unicode.IsSpace(r) {
+			continue
+		}
+		tokens = append(tokens, string(r))
+	}
+	return tokens
+}
+
+func hashString64(s string) uint64 {
+	h := fnv.New64a()
+	_, _ = h.Write([]byte(s))
+	return h.Sum64()
+}
+
+func min3(a, b, c int) int {
+	if a > b {
+		a = b
+	}
+	if a > c {
+		a = c
+	}
+	return a
+}

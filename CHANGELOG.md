@@ -32,6 +32,17 @@ subpackage APIs are treated as the compatibility boundary.
   collections, slices, arrays, and maps.
 - Updated object equality helpers so `time.Time` values compare by instant while
   preserving cross-numeric value comparison.
+- Added `vcsv` CSV helpers for configurable record reading/writing, map
+  conversion, struct tag export, and per-record callbacks.
+- Added `vimg` image helpers: proportional thumbnails, lossless format
+  conversion between PNG/JPEG/GIF, metadata introspection (width/height/format),
+  and image captcha generation through the unified `internal/imgx` implementation
+  package.
+- Added `vpass` password strength helpers for deterministic local password
+  scoring, strength classification, and rule-level analysis.
+- Added `vstr` text helpers for Unicode escaping/unescaping and Ant-style path
+  matching, plus rune-set Jaccard similarity, rune n-gram similarity, SimHash,
+  and 64-bit Hamming distance without introducing a separate text package.
 - Added internal generic numeric constraints for shared implementation helpers
   and exposed generic `vnum` sum, average, min, max, and absolute-value APIs.
 - Added direct coverage for `internal/httpx/internal/shared` so HTTP protocol
@@ -43,7 +54,7 @@ subpackage APIs are treated as the compatibility boundary.
 
 ### Quality targets
 
-- Current coverage gate baseline: 74.2%.
+- Current coverage gate baseline: 75.2%.
 - Current security-sensitive package gates: `vhttp` >= 75%, `vresty` >= 65%,
   `vconf` >= 75%, `vzip` >= 80%, `vcrypto` >= 70%, `vurl` >= 80%,
   `vfile` >= 85%, `internal/httpx/http` >= 75%, and

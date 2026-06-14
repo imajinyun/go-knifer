@@ -144,3 +144,116 @@ func TestEmojiHelpers(t *testing.T) {
 		t.Fatalf("RemoveEmoji() = %q", got)
 	}
 }
+
+func TestUnicodeEscapeHelpers(t *testing.T) {
+	escaped := EscapeUnicode("Go 中国 😀")
+	if escaped != `Go \u4E2D\u56FD \uD83D\uDE00` {
+		t.Fatalf("EscapeUnicode() = %q", escaped)
+	}
+	if got := UnescapeUnicode(escaped); got != "Go 中国 😀" {
+		t.Fatalf("UnescapeUnicode() = %q", got)
+	}
+	if got := UnescapeUnicode(`bad \u12GZ keep`); got != `bad \u12GZ keep` {
+		t.Fatalf("UnescapeUnicode malformed = %q", got)
+	}
+	if got := UnescapeUnicode(`\uD83Dbroken`); got != string(rune(0xD83D))+"broken" {
+		t.Fatalf("UnescapeUnicode lone surrogate = %q", got)
+	}
+}
+
+func TestAntPathMatch(t *testing.T) {
+	tests := []struct {
+		name    string
+		pattern string
+		path    string
+		want    bool
+	}{
+		{name: "double star crosses segments", pattern: "/api/**/users/?", path: "/api/v1/admin/users/a", want: true},
+		{name: "single star stays in segment", pattern: "/api/*/users", path: "/api/v1/admin/users", want: false},
+		{name: "single char wildcard", pattern: "/file-?.txt", path: "/file-a.txt", want: true},
+		{name: "literal mismatch", pattern: "/file-?.txt", path: "/file-ab.txt", want: false},
+		{name: "double star zero segment", pattern: "/api/**", path: "/api", want: true},
+		{name: "empty pattern", pattern: "", path: "", want: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := AntPathMatch(tt.pattern, tt.path); got != tt.want {
+				t.Fatalf("AntPathMatch(%q, %q) = %v, want %v", tt.pattern, tt.path, got, tt.want)
+			}
+		})
+	}
+	if !AntPathMatchWithSeparator("foo.**.bar", "foo.a.b.bar", ".") {
+		t.Fatal("AntPathMatchWithSeparator custom separator failed")
+	}
+	if AntPathMatchWithSeparator("foo.*.bar", "foo.a.b.bar", ".") {
+		t.Fatal("single star should not cross custom separator segments")
+	}
+}
+
+func TestTextSimilarity(t *testing.T) {
+	tests := []struct {
+		name string
+		a    string
+		b    string
+		want float64
+	}{
+		{name: "both empty", a: "", b: " \t", want: 1},
+		{name: "one empty", a: "abc", b: " ", want: 0},
+		{name: "same runes", a: "go go", b: "og", want: 1},
+		{name: "partial overlap", a: "abc", b: "bcd", want: 0.5},
+		{name: "unicode", a: "你好世界", b: "你好", want: 0.5},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := JaccardSimilarity(tt.a, tt.b); got != tt.want {
+				t.Fatalf("JaccardSimilarity() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNGramSimilarity(t *testing.T) {
+	tests := []struct {
+		name string
+		a    string
+		b    string
+		n    int
+		want float64
+	}{
+		{name: "invalid n", a: "abc", b: "abc", n: 0, want: 0},
+		{name: "both empty", a: "", b: " ", n: 2, want: 1},
+		{name: "same short text", a: "go", b: "go", n: 3, want: 1},
+		{name: "partial bigram", a: "abcd", b: "abef", n: 2, want: 0.2},
+		{name: "unicode bigram", a: "你好世界", b: "你好呀", n: 2, want: 0.25},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NGramSimilarity(tt.a, tt.b, tt.n); got != tt.want {
+				t.Fatalf("NGramSimilarity() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSimHashAndHammingDistance64(t *testing.T) {
+	if SimHash("") != 0 {
+		t.Fatal("SimHash(empty) != 0")
+	}
+	a := SimHash("go knifer toolkit")
+	b := SimHash("go knifer toolkit")
+	c := SimHash("database security password")
+	if a != b {
+		t.Fatal("SimHash() should be deterministic")
+	}
+	if HammingDistance64(a, b) != 0 {
+		t.Fatal("HammingDistance64(same, same) != 0")
+	}
+	if HammingDistance64(0, ^uint64(0)) != 64 {
+		t.Fatal("HammingDistance64(0, all bits) != 64")
+	}
+	if HammingDistance64(a, c) == 0 {
+		t.Fatal("different text should not produce identical SimHash in this fixture")
+	}
+}

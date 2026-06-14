@@ -9,20 +9,8 @@ import (
 	"github.com/imajinyun/go-knifer/vconf"
 )
 
-func TestLoadProfileAndWatchFacade(t *testing.T) {
+func TestWatchFacade(t *testing.T) {
 	dir := t.TempDir()
-	path := filepath.Join(dir, "app.yaml")
-	if err := os.WriteFile(path, []byte("app:\n  name: base\nprofile:\n  dev:\n    app:\n      name: dev"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	c, err := vconf.LoadProfile(path, "dev")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got := c.GetByGroup("app", "name"); got != "dev" {
-		t.Fatalf("LoadProfile yaml app.name = %q", got)
-	}
-
 	watchPath := filepath.Join(dir, "watch.setting")
 	if err := os.WriteFile(watchPath, []byte("name=one"), 0o644); err != nil {
 		t.Fatal(err)

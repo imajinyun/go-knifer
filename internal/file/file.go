@@ -29,6 +29,7 @@ type fileConfig struct {
 	overwrite        bool
 	createParents    bool
 	maxBytes         int64
+	bufferSize       int
 	initialLineBytes int
 	maxLineBytes     int
 	open             OpenFunc
@@ -63,6 +64,7 @@ func defaultConfig() fileConfig {
 		overwrite:        true,
 		createParents:    true,
 		maxBytes:         DefaultMaxBytes,
+		bufferSize:       32 * 1024,
 		initialLineBytes: 64 * 1024,
 		maxLineBytes:     1024 * 1024,
 		open:             defaultOpen,
@@ -115,6 +117,9 @@ func WithMaxBytes(n int64) ReadOption {
 
 // WithUnlimitedRead disables the default read-size guard for callers that explicitly need it.
 func WithUnlimitedRead() ReadOption { return func(c *fileConfig) { c.maxBytes = 0 } }
+
+// WithBufferSize sets the buffer size used by chunk reads and limited copies.
+func WithBufferSize(n int) ReadOption { return func(c *fileConfig) { c.bufferSize = n } }
 
 // WithInitialLineBuffer sets the initial scanner buffer for line reads.
 func WithInitialLineBuffer(n int) ReadOption { return func(c *fileConfig) { c.initialLineBytes = n } }
@@ -177,6 +182,9 @@ func applyOptions(opts []Option) fileConfig {
 	if cfg.initialLineBytes <= 0 {
 		cfg.initialLineBytes = 64 * 1024
 	}
+	if cfg.bufferSize <= 0 {
+		cfg.bufferSize = 32 * 1024
+	}
 	if cfg.maxLineBytes <= 0 {
 		cfg.maxLineBytes = 1024 * 1024
 	}
@@ -237,8 +245,35 @@ func ReadLinesWithOptions(r io.Reader, opts ...ReadOption) ([]string, error) {
 	return readLinesWithConfig(r, applyReadOptions(opts))
 }
 
+// ReadChunks reads r in chunks and invokes handle for each chunk.
+func ReadChunks(r io.Reader, handle func([]byte) error) error {
+	return ReadChunksWithOptions(r, handle)
+}
+
+// ReadChunksWithOptions reads r in chunks with per-call read options.
+func ReadChunksWithOptions(r io.Reader, handle func([]byte) error, opts ...ReadOption) error {
+	if r == nil {
+		return invalidInputf("reader is nil")
+	}
+	if handle == nil {
+		return invalidInputf("chunk handler is nil")
+	}
+	return readChunksWithConfig(r, handle, applyReadOptions(opts))
+}
+
 // IoCopy copies from src to dst and returns the number of bytes written.
 func IoCopy(dst io.Writer, src io.Reader) (int64, error) { return io.Copy(dst, src) }
+
+// IoCopyWithOptions copies from src to dst using per-call read options.
+func IoCopyWithOptions(dst io.Writer, src io.Reader, opts ...ReadOption) (int64, error) {
+	if dst == nil {
+		return 0, invalidInputf("writer is nil")
+	}
+	if src == nil {
+		return 0, invalidInputf("reader is nil")
+	}
+	return copyWithConfig(dst, src, applyReadOptions(opts))
+}
 
 // CloseQuietly closes c and ignores the returned error.
 func CloseQuietly(c io.Closer) {
@@ -323,6 +358,25 @@ func FileReadLinesWithOptions(path string, opts ...ReadOption) ([]string, error)
 	defer CloseQuietly(f)
 	lines, err := readLinesWithConfig(f, cfg)
 	return lines, wrapFileIO("read lines from file "+path, err)
+}
+
+// FileReadChunks reads a file in chunks and invokes handle for each chunk.
+func FileReadChunks(path string, handle func([]byte) error) error {
+	return FileReadChunksWithOptions(path, handle)
+}
+
+// FileReadChunksWithOptions reads file chunks with per-call read options.
+func FileReadChunksWithOptions(path string, handle func([]byte) error, opts ...ReadOption) error {
+	if handle == nil {
+		return invalidInputf("chunk handler is nil")
+	}
+	cfg := applyReadOptions(opts)
+	f, err := cfg.open(path)
+	if err != nil {
+		return wrapFileIO("open file "+path, err)
+	}
+	defer CloseQuietly(f)
+	return wrapFileIO("read chunks from file "+path, readChunksWithConfig(f, handle, cfg))
 }
 
 // FileWriteString writes content to a file, overwriting existing data and creating parent directories.
@@ -521,6 +575,69 @@ func readLinesWithConfig(r io.Reader, cfg fileConfig) ([]string, error) {
 		return nil, invalidInputf("read exceeds max bytes: %d", cfg.maxBytes)
 	}
 	return lines, nil
+}
+
+func readChunksWithConfig(r io.Reader, handle func([]byte) error, cfg fileConfig) error {
+	buf := make([]byte, cfg.bufferSize)
+	var total int64
+	for {
+		n, err := r.Read(buf)
+		if n > 0 {
+			total += int64(n)
+			if cfg.maxBytes > 0 && total > cfg.maxBytes {
+				return invalidInputf("read exceeds max bytes: %d", cfg.maxBytes)
+			}
+			chunk := append([]byte(nil), buf[:n]...)
+			if err := handle(chunk); err != nil {
+				return err
+			}
+		}
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+	}
+}
+
+func copyWithConfig(dst io.Writer, src io.Reader, cfg fileConfig) (int64, error) {
+	buf := make([]byte, cfg.bufferSize)
+	var written int64
+	for {
+		n, readErr := src.Read(buf)
+		if n > 0 {
+			chunk := buf[:n]
+			if cfg.maxBytes > 0 && written+int64(n) > cfg.maxBytes {
+				allowed := int(cfg.maxBytes - written)
+				if allowed > 0 {
+					m, writeErr := dst.Write(chunk[:allowed])
+					written += int64(m)
+					if writeErr != nil {
+						return written, writeErr
+					}
+					if m != allowed {
+						return written, io.ErrShortWrite
+					}
+				}
+				return written, invalidInputf("copy exceeds max bytes: %d", cfg.maxBytes)
+			}
+			m, writeErr := dst.Write(chunk)
+			written += int64(m)
+			if writeErr != nil {
+				return written, writeErr
+			}
+			if m != n {
+				return written, io.ErrShortWrite
+			}
+		}
+		if readErr == io.EOF {
+			return written, nil
+		}
+		if readErr != nil {
+			return written, readErr
+		}
+	}
 }
 
 // MainName returns the file name without its extension; parent directories are ignored.

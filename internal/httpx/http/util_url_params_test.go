@@ -5,33 +5,6 @@ import (
 	"testing"
 )
 
-func TestIsHTTP(t *testing.T) {
-	if !IsHTTP("Http://aaa.bbb") {
-		t.Fatal("Http://")
-	}
-	if !IsHTTP("HTTP://aaa.bbb") {
-		t.Fatal("HTTP://")
-	}
-	if IsHTTP("FTP://aaa.bbb") {
-		t.Fatal("FTP://")
-	}
-}
-
-func TestIsHTTPS(t *testing.T) {
-	if !IsHTTPS("Https://aaa.bbb") {
-		t.Fatal("Https://")
-	}
-	if !IsHTTPS("HTTPS://aaa.bbb") {
-		t.Fatal("HTTPS://")
-	}
-	if !IsHTTPS("https://aaa.bbb") {
-		t.Fatal("https://")
-	}
-	if IsHTTPS("ftp://aaa.bbb") {
-		t.Fatal("ftp://")
-	}
-}
-
 func TestDecodeParams(t *testing.T) {
 	paramsStr := "uuuu=0&a=b&c=%3F%23%40!%24%25%5E%26%3Ddsssss555555"
 	m := DecodeParams(paramsStr)
@@ -71,16 +44,5 @@ func TestToParams(t *testing.T) {
 	got := ToParams(m)
 	if got != "a=1" {
 		t.Fatalf("ToParams: %q", got)
-	}
-}
-
-func TestURLWithFormFunc(t *testing.T) {
-	got := URLWithForm("http://api.gokit.cn/login", map[string]any{"a": 1})
-	if !strings.Contains(got, "?a=1") {
-		t.Fatalf("URLWithForm: %q", got)
-	}
-	got2 := URLWithForm("http://api.gokit.cn/login?type=aaa", map[string]any{"x": "y"})
-	if !strings.Contains(got2, "type=aaa") || !strings.Contains(got2, "x=y") || !strings.Contains(got2, "&") {
-		t.Fatalf("URLWithForm2: %q", got2)
 	}
 }

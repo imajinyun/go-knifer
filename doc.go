@@ -1,11 +1,11 @@
 // Package knifer is the root package of the go-knifer utility toolkit.
 //
-// This module is split into 45 public subpackages by domain. Import only the
+// This module is split into 47 public subpackages by domain. Import only the
 // packages you need. The subpackages are grouped below for navigation:
 //
 // String & text:
 //
-//	vstr    strings (blank checks, case, substring, naming, runes)
+//	vstr    strings and text similarity helpers
 //	vregex  regular expressions
 //	vtpl    html/template rendering (TemPLate)
 //	vurl    URL/URI parsing, escaping, query building
@@ -31,6 +31,8 @@
 // Encoding & serialization:
 //
 //	vcodec  Base64/Hex
+//	vcsv    CSV reading/writing
+//	vimg    raster images and graphical captchas
 //	vjson   JSON
 //	vxml    XML
 //	vhash   non-cryptographic hashes
@@ -47,7 +49,7 @@
 //	vcrypto cryptography and digests
 //	vjwt    JWT sign/verify
 //	vmask   data masking (desensitization)
-//	vcaptcha image captchas
+//	vpass   password strength analysis
 //	vdfa    DFA word-tree text matching
 //
 // Tasks & concurrency:

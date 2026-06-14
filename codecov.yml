@@ -1,0 +1,161 @@
+# Codecov configuration for go-knifer.
+#
+# Values are kept in sync with bin/check_coverage.sh.
+
+codecov:
+  require_ci_to_pass: false
+  notify:
+    wait_for_ci: false
+
+coverage:
+  precision: 1
+  round: down
+  range: "60...90"
+  status:
+    project:
+      default:
+        target: 75.2%
+        threshold: 0.5%
+        base: auto
+        branches:
+          - main
+    patch:
+      default:
+        target: 60%
+        base: auto
+        informational: true
+    changes: false
+
+flag_management:
+  default_rules:
+    carryforward: true
+
+flags:
+  root:
+    paths:
+      - "*.go"
+  vhttp:
+    paths:
+      - vhttp/
+      - internal/httpx/http/
+  vresty:
+    paths:
+      - vresty/
+      - internal/httpx/resty/
+  vconf:
+    paths:
+      - vconf/
+      - internal/conf/
+  vcrypto:
+    paths:
+      - vcrypto/
+      - internal/crypto/
+  vurl:
+    paths:
+      - vurl/
+      - internal/url/
+  vfile:
+    paths:
+      - vfile/
+      - internal/file/
+  vzip:
+    paths:
+      - vzip/
+  vcsv:
+    paths:
+      - vcsv/
+      - internal/csvx/
+  vimg:
+    paths:
+      - vimg/
+      - internal/imgx/
+  vpass:
+    paths:
+      - vpass/
+      - internal/pass/
+  other_v:
+    paths:
+      - vstr/
+      - vregex/
+      - vtpl/
+      - vslice/
+      - vmap/
+      - vset/
+      - vobj/
+      - vblf/
+      - vcache/
+      - vbean/
+      - vbool/
+      - vnum/
+      - vconv/
+      - vdate/
+      - vref/
+      - vcodec/
+      - vjson/
+      - vxml/
+      - vhash/
+      - vskt/
+      - vnet/
+      - vjwt/
+      - vmask/
+      - vdfa/
+      - vjob/
+      - vcron/
+      - vsem/
+      - vrand/
+      - vpoi/
+      - vsys/
+      - vlog/
+      - verr/
+      - vid/
+      - vident/
+      - vvalid/
+      - vver/
+      - vdb/
+  other_internal:
+    paths:
+      - internal/httpx/internal/shared/
+      - internal/bean/
+      - internal/bloomfilter/
+      - internal/boolean/
+      - internal/cache/
+      - internal/codec/
+      - internal/constraint/
+      - internal/conv/
+      - internal/cron/
+      - internal/date/
+      - internal/db/
+      - internal/dfa/
+      - internal/errx/
+      - internal/hash/
+      - internal/id/
+      - internal/identity/
+      - internal/job/
+      - internal/json/
+      - internal/jwt/
+      - internal/log/
+      - internal/maps/
+      - internal/mask/
+      - internal/net/
+      - internal/num/
+      - internal/obj/
+      - internal/poi/
+      - internal/rand/
+      - internal/ref/
+      - internal/regex/
+      - internal/semaphore/
+      - internal/sets/
+      - internal/slice/
+      - internal/socket/
+      - internal/str/
+      - internal/system/
+      - internal/template/
+      - internal/validator/
+      - internal/version/
+
+ignore:
+  - "**/*_test.go"
+  - "**/vendor/**"
+  - "**/testdata/**"
+  - "**/example/**"
+  - "**/examples/**"

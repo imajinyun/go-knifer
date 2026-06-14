@@ -57,6 +57,27 @@ func TestStringFacade(t *testing.T) {
 	if ToCamelCase("hello_world") != "helloWorld" || ToPascalCase("hello_world") != "HelloWorld" || ToUnderlineCase("HelloWorld") != "hello_world" || ToKebabCase("HelloWorld") != "hello-world" {
 		t.Fatal("naming helpers failed")
 	}
+	if EscapeUnicode("中国") != `\u4E2D\u56FD` || UnescapeUnicode(`\u4E2D\u56FD`) != "中国" {
+		t.Fatal("unicode helpers failed")
+	}
+	if !AntPathMatch("/api/**/users/?", "/api/v1/admin/users/a") || AntPathMatch("/api/*/users", "/api/v1/admin/users") {
+		t.Fatal("ant path match helpers failed")
+	}
+	if !AntPathMatchWithSeparator("foo.**.bar", "foo.a.b.bar", ".") {
+		t.Fatal("ant path match custom separator failed")
+	}
+	if JaccardSimilarity("abc", "bcd") != 0.5 {
+		t.Fatal("JaccardSimilarity facade failed")
+	}
+	if NGramSimilarity("abcd", "abef", 2) != 0.2 {
+		t.Fatal("NGramSimilarity facade failed")
+	}
+	if SimHash("go knifer") == 0 {
+		t.Fatal("SimHash facade failed")
+	}
+	if HammingDistance64(0, ^uint64(0)) != 64 {
+		t.Fatal("HammingDistance64 facade failed")
+	}
 }
 
 func TestCharFacade(t *testing.T) {

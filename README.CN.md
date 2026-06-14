@@ -40,7 +40,7 @@ text := vcrypto.SHA256Hex("hello")
 
 | 我想…… | 使用 |
 | --- | --- |
-| 裁剪、切分、命名转换、判空字符串 | `vstr` |
+| 裁剪、切分、命名转换、Unicode 转义、Ant 路径匹配、文本相似度或判空字符串 | `vstr` |
 | 对切片做过滤 / 映射 / 去重 / 分页 | `vslice` |
 | 创建、查询、转换、合并、差集或排序 map | `vmap` |
 | 把 `any` 宽松转成 int/float/bool/string | `vconv` |
@@ -49,6 +49,8 @@ text := vcrypto.SHA256Hex("hello")
 | 非加密哈希（FNV、BKDR 等） | `vhash` |
 | URL 编解码、query 构建/解析，或安全打开不可信 HTTP(S) 资源 | `vurl` |
 | Base64 / Hex 编解码 | `vcodec` |
+| 读写 CSV records、map 或 struct | `vcsv` |
+| 生成缩略图、PNG/JPEG/GIF 格式转换、读取图像元信息或生成图形验证码 | `vimg` |
 | 构建/解析 JSON、路径读写、JSON↔XML | `vjson` |
 | 加载本地或远程配置，包括带 SSRF 防护的远程配置 | `vconf` |
 | 解析、构建、遍历 XML | `vxml` |
@@ -60,6 +62,7 @@ text := vcrypto.SHA256Hex("hello")
 | 发起 HTTP 请求（基于 Resty） | `vresty` |
 | 校验邮箱/手机号/IP 等 | `vvalid` |
 | 敏感数据脱敏 | `vmask` |
+| 本地评估密码强度并分级 | `vpass` |
 | JWT 签发/校验 | `vjwt` |
 | 定时任务调度 | `vcron` |
 | FIFO/LRU/LFU/TTL 缓存 | `vcache` |
@@ -72,13 +75,15 @@ text := vcrypto.SHA256Hex("hello")
 
 | 模块 | 导入路径 | 功能说明 |
 | --- | --- | --- |
-| `vstr` | `github.com/imajinyun/go-knifer/vstr` | 字符串工具：空白判断、裁剪、切分、截取、格式化、provider-backed emoji、命名转换、默认值、HTML 转义，以及字符判断（空白、字母、数字、ASCII、字母或数字）。 |
+| `vstr` | `github.com/imajinyun/go-knifer/vstr` | 字符串与文本工具：空白判断、裁剪、切分、截取、格式化、provider-backed emoji、命名转换、默认值、Unicode 转义/反转义、Ant-style 路径匹配、rune 集 Jaccard 相似度、rune n-gram 相似度、SimHash、64-bit Hamming distance、HTML 转义，以及字符判断（空白、字母、数字、ASCII、字母或数字）。 |
 | `vslice` | `github.com/imajinyun/go-knifer/vslice` | Slice 工具：包含/索引、反转、去重、拼接、过滤/映射、截取、合并、集合操作和分页。 |
 | `vmap` | `github.com/imajinyun/go-knifer/vmap` | Map 工具：构造、空判断、contains/get/find、keys/values 与排序视图、map/filter/reject/partition、reduce/group/count、反转、合并/自定义冲突合并、交集/差集/对称差集、pick/omit、update/clone 和相等性判断。 |
 | `vconv` | `github.com/imajinyun/go-knifer/vconv` | 宽松类型转换：string、int、int64、float64、bool、bytes 及默认值版本。 |
 | `vdate` | `github.com/imajinyun/go-knifer/vdate` | 日期时间工具：常用布局、解析/格式化、日/月/年起止、偏移和比较。 |
 | `vfile` | `github.com/imajinyun/go-knifer/vfile` | 文件与 IO 工具：读写复制、按行读取、mkdir/touch/delete、文件名处理、静默关闭和 provider-backed 文件系统操作。 |
 | `vcodec` | `github.com/imajinyun/go-knifer/vcodec` | 编解码工具：Base64、URL-safe Base64、raw URL-safe Base64、自定义 Base64 encoding provider 和 Hex。 |
+| `vcsv` | `github.com/imajinyun/go-knifer/vcsv` | CSV 工具：读写分隔符、注释、字段数量、宽松引号、Trim、CRLF 等 options，支持 records/map 转换、map 写出、struct tag 导出和逐行回调。 |
+| `vimg` | `github.com/imajinyun/go-knifer/vimg` | 图像工具：按长边等比缩放缩略图、PNG/JPEG/GIF 格式互转、基础元信息（宽/高/格式），以及线条/圆圈/扭曲/GIF 图形验证码。 |
 | `vurl` | `github.com/imajinyun/go-knifer/vurl` | URL 与 URI 工具：解析、标准化、相对 URL 补全、query 编解码、支持注入 query/path escape provider 的 URL/路径/fragment 百分号编码、URL 构造、Data URI 构造、协议判断、文件 URL 转换、资源打开/大小查询，以及带 SSRF 防护的 `OpenSafe` / `ContentLengthSafe` 变体。 |
 | `vnet` | `github.com/imajinyun/go-knifer/vnet` | 网络工具：支持注入 IP/CIDR/int parser 的 IPv4/IPv6 转换、CIDR/范围/掩码、本地端口、主机/网卡/MAC 查询、TLS 配置、address/dial/ping provider options 和 multipart 表单辅助。 |
 | `vobj` | `github.com/imajinyun/go-knifer/vobj` | 对象工具：nil/空值判断、相等性、默认值、克隆/序列化、比较、类型检查和容器辅助。 |
@@ -88,6 +93,7 @@ text := vcrypto.SHA256Hex("hello")
 | `vzip` | `github.com/imajinyun/go-knifer/vzip` | ZIP、gzip、zlib 工具：压缩包创建/解压、条目读取、遍历、追加、内存条目、流式压缩、provider-backed 归档文件操作、默认有边界的解压/解压缩行为、路径穿越检查，以及解压时的符号链接逃逸检查。 |
 | `vpoi` | `github.com/imajinyun/go-knifer/vpoi` | Office 文档工具：轻量 Excel XLSX 工作表列表、行读写、多工作表写入、内存工作簿创建，以及可注入的 workbook/文件系统 provider。 |
 | `vmask` | `github.com/imajinyun/go-knifer/vmask` | 脱敏工具：姓名、证件号、电话、地址、邮箱、密码、车牌、银行卡、IP、护照号和信用代码遮罩。 |
+| `vpass` | `github.com/imajinyun/go-knifer/vpass` | 密码工具：确定性的本地评分、强度分级、强/弱谓词、字符类别信号、重复/连续字符检测，以及小型常见弱密码列表。 |
 | `vnum` | `github.com/imajinyun/go-knifer/vnum` | 数字工具：精确加减乘除、舍入模式、provider-backed 解析/格式化、数字判断、不重复随机数、range、阶乘/组合数、最大公约数/最小公倍数、二进制转换、比较、字节转换、表达式计算和奇偶判断。 |
 | `vrand` | `github.com/imajinyun/go-knifer/vrand` | 随机工具：整数、浮点、布尔、字节、字符串、数字字符串、随机元素、确定性 seed，以及可重置的包级伪随机源 provider。 |
 | `vid` | `github.com/imajinyun/go-knifer/vid` | ID 工具：random/simple/fast UUID、MongoDB 风格 ObjectId、Snowflake 生成器与单例 next-id、worker/datacenter id 推导、NanoId、fallback random source、isolated Snowflake 创建，以及可重置 fallback PRNG provider/seed。 |
@@ -99,7 +105,6 @@ text := vcrypto.SHA256Hex("hello")
 | `vbool` | `github.com/imajinyun/go-knifer/vbool` | 布尔工具：取反、转 int、全真/任一为真判断。 |
 | `vblf` | `github.com/imajinyun/go-knifer/vblf` | 布隆过滤器：bitmap/bitset/filter 抽象、多种字符串哈希算法、option-based 构造器、返回校验错误而不是 panic 的 `E` 构造器，以及 provider-backed 文件初始化。 |
 | `vcache` | `github.com/imajinyun/go-knifer/vcache` | 泛型缓存：FIFO、LFU、LRU、Timed、Weak、NoCache，支持 TTL、clock、淘汰监听、懒加载、ticker/runner provider 和 weak-cache finalizer provider。 |
-| `vcaptcha` | `github.com/imajinyun/go-knifer/vcaptcha` | 图片验证码：线条、圆圈、扭曲、GIF 验证码，支持随机/数学表达式生成器。 |
 | `vcron` | `github.com/imajinyun/go-knifer/vcron` | Cron 表达式解析与任务调度，支持默认/自定义调度器、可配置 cron options、ID random-reader/clock/sleeper/runner provider，以及单次调用隔离的默认调度器覆盖。 |
 | `vcrypto` | `github.com/imajinyun/go-knifer/vcrypto` | 加密与摘要：SHA-2、provider-backed digest、HMAC、PBKDF2-SHA256、参数签名、随机字节、支持 nonce/tag/block-factory options 的 AES-GCM、RSA OAEP/PSS 与可配置数据签名、PEM 与 X.509 证书工具。 |
 | `vdb` | `github.com/imajinyun/go-knifer/vdb` | 基于 database/sql 的数据库工具：SQL 执行、命名参数、Entity、条件、查询构造器、事务、分页、轻量元信息查询和可注入的 `sql.Open` provider。 |
@@ -155,8 +160,8 @@ Provider 覆盖重点：
 | HTTP / Resty | `vhttp.NewIsolatedRequest`、`vhttp.NewRequestWithConfig`、`vhttp.Get`、`vhttp.Post`、`vhttp.GetSafe`、`vhttp.PostSafe`、`vhttp.GetStringE`、`vhttp.GetStringSafeE`、`vhttp.GetWithTimeoutE`、`vhttp.PostJSONE`、`vhttp.PostJSONSafeE`、`vhttp.DownloadBytesE`、`vhttp.DownloadBytesSafeE`、`vhttp.DownloadFile`、`vhttp.DownloadFileSafe`、`vhttp.DownloadFileSafeWithOptions`、`vhttp.NewErrorWithCode`、`vhttp.WithTransportProvider`、`vhttp.WithRequestFactory`、`vhttp.WithMultipartWriterFactory`、`vhttp.ResetDefaultTransport`、`vhttp.WithListenAndServeFunc`、`vhttp.WithAsyncRunner`、`vhttp.CreateServerWithOptions`、`vhttp.CleanHTMLWithOptions`、`vhttp.FilterHTMLTagWithOptions`、`vhttp.WithHTMLFilterCompileFunc`、`vresty.NewIsolatedRequest`、`vresty.WithGlobalConfig`、`vresty.WithRestyClientFactory`、`vresty.ConfigureDefaultRestyClientProvider`、`vresty.ResetDefaultRestyClientProvider`、`vresty.Get`、`vresty.Post`、`vresty.GetSafe`、`vresty.PostSafe`、`vresty.GetStringE`、`vresty.GetStringSafeE`、`vresty.GetWithTimeoutE`、`vresty.PostJSONE`、`vresty.PostJSONSafeE`、`vresty.DownloadBytesE`、`vresty.DownloadBytesSafeE`、`vresty.DownloadFile`、`vresty.DownloadFileSafe`、`vresty.DownloadFileSafeWithOptions` |
 | 文件 / 配置 / 压缩 / POI | `vfile` provider options、`vconf.LoadWithOptions`、`vconf.LoadRemoteSafeWithOptions`、`vconf.WatchWithOptions`、`vconf.WatchOptions.Runner`、`vzip.WithMaxBytes`、`vzip` provider options、`vpoi.WithOpenFileFunc`、`vpoi.WithNewFileFunc`、`vpoi.WithSaveAsFunc` |
 | Cron / DFA / ID / 身份 / 随机数 | `vcron.WithDefaultSchedulerOptions`、`vcron.NewConfigWithOptions`、`vcron.WithIDRandomReader`、`vcron.WithRunner`、`vcron.CronScheduleWithOptions`、`vdfa.WithMatcherWords`、`vdfa.WithJSONMarshal`、`vdfa.WithJSONUnmarshal`、`vdfa.ContainsWithOptions`、`vdfa.ConfigureAsyncRunner`、`vdfa.ResetAsyncRunner`、`vid.NewIsolatedSnowflake`、`vid.CreateSnowflakeWithOptions`、`vid.WithSnowflakeCache`、`vid.WithFallbackRandomSource`、`vid.ConfigureDefaultFallbackRandomSourceProvider`、`vid.ResetDefaultFallbackRandomSource`、`vid.SetFallbackRandomSeed`、`vrand.ConfigureDefaultRandomSourceProvider`、`vrand.ResetDefaultRandomSource`、`vrand.SetSeed`、`vident.BirthDateWithOptions` |
-| 编解码 / JSON / XML / JWT / hash | `vcodec.Base64EncodeWithEncoding`、`vcodec.Base64DecodeWithEncoding`、`vcodec.Base64RawURLEncode`、`vcodec.Base64RawURLDecode`、`vhash.Hash32`、`vjson.WithMarshalFunc`、`vjson.WithUnmarshalFunc`、`vjson.WithParseUnmarshalFunc`、`vjson.WithBeanUnmarshalFunc`、`vjson.WithSprintFunc`、`vjson.WithParseIntFunc`、`vjson.WithParseFloatFunc`、`vjson.WithParseBoolFunc`、`vjson.WithFormatIntFunc`、`vjson.WithFormatFloatFunc`、`vjson.ParseObjWithOptions`、`vjson.ParseArrayWithOptions`、`vjson.ToBeanWithOptions`、`vjson.ToListWithOptions`、`vjson.XMLToJSONWithOptions`、`vjson.ToXMLWithOptions`、`vxml.WithScalarIntParser`、`vxml.WithScalarFloatParser`、`vxml.XMLToMapWithOptions`、`vxml.XMLNodeToMapWithOptions`、`vxml.XMLToMapIntoWithOptions`、`vxml.XMLNodeToMapIntoWithOptions`、`vxml.XMLToBeanWithOptions`、`vxml.XMLNodeToBeanWithOptions`、`vxml.TransformWithOptions`、`vxml.FormatWithOptions`、`vjwt.WithJSONMarshalFunc`、`vjwt.WithJSONUnmarshalFunc`、`vjwt.ParseTokenWithOptions`、`vjwt.WithTokenJSONOptions` |
-| 加密 / 模板 / 正则 / 校验 / 字符串 | `vcrypto.Digest`、`vcrypto.DigestHex`、`vcrypto.WithGCMBlockFactory`、`vcrypto.AESSealGCMWithOptions`、`vcrypto.AESEncryptGCMWithOptions`、`vcrypto.SignWithRSAOptions`、`vcrypto.VerifyWithRSAOptions`、`vtpl.RenderWithOptions`、`vtpl.WithFuncMap`、`vtpl.WithTemplateFactory`、`vregex.WithCompileFunc`、`vregex.WithDotAll`、`vregex.MatchWithOptions`、`vregex.ReplaceAllFuncWithOptions`、`vvalid.IsEmailWithOptions`、`vvalid.WithMobileMatcher`、`vstr.ContainsEmojiWithOptions`、`vstr.RemoveEmojiWithOptions` |
+| 编解码 / 图像 / JSON / XML / JWT / hash | `vcodec.Base64EncodeWithEncoding`、`vcodec.Base64DecodeWithEncoding`、`vcodec.Base64RawURLEncode`、`vcodec.Base64RawURLDecode`、`vimg.Thumbnail`、`vimg.ConvertFormat`、`vimg.Info`、`vimg.NewLineCaptcha`、`vimg.NewCircleCaptcha`、`vimg.NewShearCaptcha`、`vimg.NewGifCaptcha`、`vhash.Hash32`、`vjson.WithMarshalFunc`、`vjson.WithUnmarshalFunc`、`vjson.WithParseUnmarshalFunc`、`vjson.WithBeanUnmarshalFunc`、`vjson.WithSprintFunc`、`vjson.WithParseIntFunc`、`vjson.WithParseFloatFunc`、`vjson.WithParseBoolFunc`、`vjson.WithFormatIntFunc`、`vjson.WithFormatFloatFunc`、`vjson.ParseObjWithOptions`、`vjson.ParseArrayWithOptions`、`vjson.ToBeanWithOptions`、`vjson.ToListWithOptions`、`vjson.XMLToJSONWithOptions`、`vjson.ToXMLWithOptions`、`vxml.WithScalarIntParser`、`vxml.WithScalarFloatParser`、`vxml.XMLToMapWithOptions`、`vxml.XMLNodeToMapWithOptions`、`vxml.XMLToMapIntoWithOptions`、`vxml.XMLNodeToMapIntoWithOptions`、`vxml.XMLToBeanWithOptions`、`vxml.XMLNodeToBeanWithOptions`、`vxml.TransformWithOptions`、`vxml.FormatWithOptions`、`vjwt.WithJSONMarshalFunc`、`vjwt.WithJSONUnmarshalFunc`、`vjwt.ParseTokenWithOptions`、`vjwt.WithTokenJSONOptions` |
+| 加密 / 密码 / 模板 / 正则 / 校验 / 字符串 | `vcrypto.Digest`、`vcrypto.DigestHex`、`vcrypto.WithGCMBlockFactory`、`vcrypto.AESSealGCMWithOptions`、`vcrypto.AESEncryptGCMWithOptions`、`vcrypto.SignWithRSAOptions`、`vcrypto.VerifyWithRSAOptions`、`vpass.Analyze`、`vpass.Score`、`vpass.StrengthOf`、`vpass.IsStrong`、`vpass.IsWeak`、`vtpl.RenderWithOptions`、`vtpl.WithFuncMap`、`vtpl.WithTemplateFactory`、`vregex.WithCompileFunc`、`vregex.WithDotAll`、`vregex.MatchWithOptions`、`vregex.ReplaceAllFuncWithOptions`、`vvalid.IsEmailWithOptions`、`vvalid.WithMobileMatcher`、`vstr.ContainsEmojiWithOptions`、`vstr.RemoveEmojiWithOptions`、`vstr.JaccardSimilarity`、`vstr.NGramSimilarity`、`vstr.SimHash`、`vstr.HammingDistance64` |
 | DB / 网络 / 数字 / URL / 系统 / 反射 / socket | `vdb.WithSQLOpenFunc`、`vnet.WithConnectDialer`、`vnet.WithPingDialer`、`vnet.WithAddressNetwork`、`vnet.WithTCPAddrResolver`、`vnet.WithUploadOpenSource`、`vnet.WithIPParser`、`vnet.WithCIDRParser`、`vnet.WithIPIntParser`、`vnet.WithWildcardIPParser`、`vnet.WithWildcardIntParser`、`vnet.IPv4ToLongWithOptions`、`vnet.IsInRangeWithOptions`、`vnum.WithParseFloatFunc`、`vnum.WithDoubleParseFloatFunc`、`vnum.WithDoubleFormatFloatFunc`、`vnum.CalculateWithOptions`、`vnum.ToDoubleWithOptions`、`vurl.WithQueryEscapeFunc`、`vurl.WithPathEscapeFunc`、`vurl.EncodeQueryWithOptions`、`vurl.EncodePathSegmentWithOptions`、`vurl.FormURLEncodeWithOptions`、`vurl.OpenSafeWithOptions`、`vurl.WithAllowedSchemes`、`vurl.WithAllowedHosts`、`vurl.WithRejectPrivateHosts`、`vurl.WithAllowLocalFiles`、`vsys.WithGoEnvOutputFunc`、`vsys.WithGoRootEnvLookupFunc`、`vsys.WithOSEnvLookupFunc`、`vsys.WithEnvLookupFunc`、`vsys.ResetInfoCache`、`vref.WithUnsafeAccess`、`vskt.WithThreadPoolSizeFunc`、`vskt.WithRunner`、`vskt.WithSocketIPParser` |
 | 错误 / 缓存 / 日志 / 运行时 | `verr.NewCollectorWithOptions`、`verr.WithCollectorLogFunc`、`verr.WithCollectorRunner`、`verr.WithCollectorContext`、`verr.WithCollectorLevel`、`verr.WithCollectorTimerFactory`、`verr.WithCollectorStackCaptureOptions`、`verr.WithLogFunc`、`verr.WithCollectorStackOptions`、`verr.WithDebugStackFunc`、`verr.WithCallersFunc`、`verr.WithFuncForPCFunc`、`verr.WithStackFrameCache`、`verr.ResetStackFrameCache`、`verr.ResetDefaultLogFunc`、`verr.NewIsolatedLogrusWithOptions`、`verr.MustExitWithOptions`、`vcache.WithClock`、`vcache.WithTickerFactory`、`vcache.WithRunner`、`vcache.WithWeakFinalizerFunc`、`vcache.WithWeakFinalizerEnabled`、`vlog.WithLogColorFactory`、`vlog.NewIsolatedLogger`、`vlog.LoggerWithOptions`、`vlog.InfoWithOptions` |
 

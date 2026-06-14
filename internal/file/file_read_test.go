@@ -55,3 +55,9 @@ func TestFileReadProviderOptions(t *testing.T) {
 		t.Fatalf("FileReadStringWithOptions() missing code = %v, want not found", err)
 	}
 }
+
+func TestReadAll(t *testing.T) {
+	if got, err := ReadAll(strings.NewReader("all")); err != nil || string(got) != "all" {
+		t.Fatalf("ReadAll = %q, %v", got, err)
+	}
+}

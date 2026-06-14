@@ -1,6 +1,8 @@
 package vconf_test
 
 import (
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -55,5 +57,20 @@ port = 9090
 	prod := s.ApplyProfile("prod")
 	if got := prod.GetByGroup("server", "port"); got != "9090" {
 		t.Fatalf("ApplyProfile(prod).server.port = %q", got)
+	}
+}
+
+func TestLoadProfileFacade(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "app.yaml")
+	if err := os.WriteFile(path, []byte("app:\n  name: base\nprofile:\n  dev:\n    app:\n      name: dev"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	c, err := vconf.LoadProfile(path, "dev")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := c.GetByGroup("app", "name"); got != "dev" {
+		t.Fatalf("LoadProfile yaml app.name = %q", got)
 	}
 }

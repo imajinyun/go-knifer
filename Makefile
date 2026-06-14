@@ -1,4 +1,4 @@
-.PHONY: help test test-race coverage-check mod-verify tidy-check diff-check vet arch lint govulncheck check ci-test
+.PHONY: help test test-race coverage-check api-check mod-verify tidy-check diff-check vet arch lint govulncheck check ci-test
 
 GO ?= go
 GOLANGCI_LINT ?= golangci-lint
@@ -10,6 +10,7 @@ help:
 	@echo "  test            Run unit tests"
 	@echo "  test-race       Run race/shuffle tests and write coverage"
 	@echo "  coverage-check  Enforce repository and package coverage gates"
+	@echo "  api-check       Verify exported API snapshot is current"
 	@echo "  check           Run local stability gates"
 	@echo "  ci-test         Run CI test-job gates"
 
@@ -21,6 +22,9 @@ test-race:
 
 coverage-check:
 	bash bin/check_coverage.sh $(COVERAGE_FILE)
+
+api-check:
+	bash bin/check_api_compat.sh
 
 mod-verify:
 	$(GO) mod verify
@@ -45,6 +49,6 @@ lint:
 govulncheck:
 	$(GO) tool govulncheck $(PKGS)
 
-check: mod-verify vet arch test-race coverage-check lint govulncheck
+check: mod-verify vet arch test-race coverage-check api-check lint govulncheck
 
-ci-test: mod-verify vet tidy-check diff-check arch test-race coverage-check
+ci-test: mod-verify vet tidy-check diff-check arch test-race coverage-check api-check

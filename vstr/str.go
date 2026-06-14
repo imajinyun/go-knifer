@@ -71,8 +71,24 @@ func ToPascalCase(s string) string               { return strimpl.ToPascalCase(s
 func ToUnderlineCase(s string) string            { return strimpl.ToUnderlineCase(s) }
 func ToKebabCase(s string) string                { return strimpl.ToKebabCase(s) }
 func RuneLen(s string) int                       { return strimpl.RuneLen(s) }
-func IsBlankChar(r rune) bool                    { return strimpl.IsBlankChar(r) }
-func IsLetter(r rune) bool                       { return strimpl.IsLetter(r) }
-func IsDigit(r rune) bool                        { return strimpl.IsDigit(r) }
-func IsAscii(r rune) bool                        { return strimpl.IsAscii(r) }
-func IsLetterOrDigit(r rune) bool                { return strimpl.IsLetterOrDigit(r) }
+func EscapeUnicode(s string) string              { return strimpl.EscapeUnicode(s) }
+func UnescapeUnicode(s string) string            { return strimpl.UnescapeUnicode(s) }
+func AntPathMatch(pattern, path string) bool     { return strimpl.AntPathMatch(pattern, path) }
+func AntPathMatchWithSeparator(pattern, path, separator string) bool {
+	return strimpl.AntPathMatchWithSeparator(pattern, path, separator)
+}
+func JaccardSimilarity(a, b string) float64 { return strimpl.JaccardSimilarity(a, b) }
+func NGramSimilarity(a, b string, n int) float64 {
+	return strimpl.NGramSimilarity(a, b, n)
+}
+func LevenshteinDistance(a, b string) int { return strimpl.LevenshteinDistance(a, b) }
+func LevenshteinSimilarity(a, b string) float64 {
+	return strimpl.LevenshteinSimilarity(a, b)
+}
+func SimHash(text string) uint64        { return strimpl.SimHash(text) }
+func HammingDistance64(a, b uint64) int { return strimpl.HammingDistance64(a, b) }
+func IsBlankChar(r rune) bool           { return strimpl.IsBlankChar(r) }
+func IsLetter(r rune) bool              { return strimpl.IsLetter(r) }
+func IsDigit(r rune) bool               { return strimpl.IsDigit(r) }
+func IsAscii(r rune) bool               { return strimpl.IsAscii(r) }
+func IsLetterOrDigit(r rune) bool       { return strimpl.IsLetterOrDigit(r) }

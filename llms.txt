@@ -1,0 +1,23 @@
+# go-knifer
+
+> Go utility library organized as public `v*` facade packages backed by implementation packages under `internal/`.
+
+## Project layout
+
+- `v*/`: importable facade packages for users.
+- `internal/`: implementation packages shared by facades.
+- `bin/`: repository validation scripts.
+- `docs/`: project documentation and API stability artifacts.
+- `.github/workflows/`: CI and release automation.
+
+## Validation commands
+
+- `make ci-test`: module verification, vet, tidy/diff checks, architecture checks, race/shuffle tests, coverage gate, and exported API snapshot check.
+- `make check`: local full gate, including lint and vulnerability scan.
+- `UPDATE_API=1 make api-check`: refresh the exported API snapshot after intentional API changes.
+
+## Governance notes
+
+- Keep package tests split by source-file responsibility.
+- Keep production code free of forbidden panic patterns checked by `bin/check_arch.sh`.
+- Keep total coverage above the threshold enforced by `bin/check_coverage.sh`.
