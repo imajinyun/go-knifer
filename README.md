@@ -142,6 +142,17 @@ Facade rules:
   `vblf`, and `vver`; their meaning is documented in the module table above
   instead of changing established import paths.
 
+API compatibility:
+
+- Public subpackages are the compatibility boundary. The current exported API
+  surface is recorded in `docs/api/exports.txt`.
+- `make api-check` regenerates a temporary snapshot and compares it with the
+  checked-in file. When a public API change is intentional, run
+  `UPDATE_API=1 make api-check` and review the snapshot diff together with the
+  implementation change.
+- API additions, removals, and renames should also be reflected in package
+  `doc.go` comments, examples, and the changelog before tagging a release.
+
 Configurable APIs and provider injection:
 
 - Many packages expose functional options through `WithXxx` helpers and
@@ -1290,6 +1301,8 @@ func main() {
 - Root package documentation: `doc.go`
 - Public APIs: `doc.go` and facade files in each `v*` subpackage
 - Test examples: `*_test.go` files under each module
+- Exported API snapshot: `docs/api/exports.txt`
+- AI-oriented project map: `llms.txt`
 - Online documentation: [pkg.go.dev/github.com/imajinyun/go-knifer](https://pkg.go.dev/github.com/imajinyun/go-knifer)
 
 ## 📦 Download & Build
@@ -1307,16 +1320,33 @@ Run tests:
 make test
 ```
 
+Run the CI test-job gates locally. This verifies modules, vet, tidy/diff
+cleanliness, architecture rules, race/shuffle tests, coverage gates, and the
+exported API snapshot:
+
+```bash
+make ci-test
+```
+
 Run the same local safety checks used by CI before opening a PR:
 
 ```bash
 make check
 ```
 
+`make check` includes the `ci-test` class of checks plus `golangci-lint` and
+`govulncheck`.
+
+Refresh the API snapshot after an intentional exported API change:
+
+```bash
+UPDATE_API=1 make api-check
+```
+
 GitHub Actions reuses the Makefile targets for module verification, vet, tidy
-checks, architecture checks, race/shuffle tests, and coverage gates. It also
-runs golangci-lint, govulncheck, and CodeQL. Dependabot is configured for Go
-modules and GitHub Actions updates.
+checks, diff cleanliness, architecture checks, race/shuffle tests, coverage
+gates, and API compatibility checks. It also runs golangci-lint, govulncheck,
+and CodeQL. Dependabot is configured for Go modules and GitHub Actions updates.
 
 Format code:
 
@@ -1331,11 +1361,18 @@ gofmt -w .
 - Release notes: see [CHANGELOG.md](./CHANGELOG.md). User-visible changes should
   be recorded before tagging a release.
 - Coverage gate: CI enforces the repository baseline with
-  `bash bin/check_coverage.sh coverage.out`. Raise `COVERAGE_THRESHOLD` as
-  public facade and security-sensitive package coverage improves.
+  `bash bin/check_coverage.sh coverage.out`. The current repository threshold is
+  75.2%, with package gates for security-sensitive facades such as `vhttp`,
+  `vresty`, `vconf`, `vzip`, `vcrypto`, `vurl`, and `vfile`, plus the core HTTP
+  implementation packages. Raise `COVERAGE_THRESHOLD` or
+  `PACKAGE_COVERAGE_THRESHOLDS` only after adding tests that support the new
+  gate.
+- API gate: `make api-check` compares exported symbols against
+  `docs/api/exports.txt`. Commit the refreshed snapshot only for intentional API
+  changes.
 - Stability gate: use `make check` locally before pushing so vet, architecture,
-  race/shuffle tests, coverage, lint, and vulnerability checks stay aligned with
-  CI.
+  race/shuffle tests, coverage, API compatibility, lint, and vulnerability
+  checks stay aligned with CI.
 
 ## 🤝 Provide feedback or suggestions on bugs
 
