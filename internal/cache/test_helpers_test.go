@@ -27,3 +27,9 @@ func itoa(i int) string {
 	}
 	return string(buf[:n])
 }
+
+type testTicker struct {
+	stopped chan struct{}
+}
+
+func (t *testTicker) Stop() { close(t.stopped) }

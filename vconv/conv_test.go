@@ -19,3 +19,30 @@ func TestConvFacade(t *testing.T) {
 		t.Fatal("bytes conversion failed")
 	}
 }
+
+func TestConvFacadeWithOptions(t *testing.T) {
+	if ToStringWithOptions(true, WithFormatBoolFunc(func(bool) string { return "BOOL" })) != "BOOL" {
+		t.Fatal("ToStringWithOptions bool formatter failed")
+	}
+	if ToStringDefaultWithOptions(nil, "fallback", WithFormatBoolFunc(func(bool) string { return "BOOL" })) != "fallback" {
+		t.Fatal("ToStringDefaultWithOptions fallback failed")
+	}
+	parseInt := WithParseIntFunc(func(string, int, int) (int64, error) { return 41, nil })
+	if ToIntWithOptions("ignored", parseInt) != 41 || ToIntDefaultWithOptions("ignored", 7, parseInt) != 41 {
+		t.Fatal("int option conversion failed")
+	}
+	if ToInt64WithOptions("ignored", parseInt) != 41 || ToInt64DefaultWithOptions("ignored", 7, parseInt) != 41 {
+		t.Fatal("int64 option conversion failed")
+	}
+	parseFloat := WithParseFloatFunc(func(string, int) (float64, error) { return 6.25, nil })
+	if ToFloat64WithOptions("ignored", parseFloat) != 6.25 || ToFloat64DefaultWithOptions("ignored", 7, parseFloat) != 6.25 {
+		t.Fatal("float option conversion failed")
+	}
+	parseBool := WithBoolParser(func(string) (bool, error) { return true, nil })
+	if !ToBoolWithOptions("ignored", parseBool) || !ToBoolDefaultWithOptions("ignored", false, parseBool) {
+		t.Fatal("bool option conversion failed")
+	}
+	if got := string(ToBytesWithOptions(3.5, WithFormatFloatFunc(func(float64, byte, int, int) string { return "FLOAT" }))); got != "FLOAT" {
+		t.Fatalf("ToBytesWithOptions = %q", got)
+	}
+}
