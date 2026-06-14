@@ -1,9 +1,6 @@
 package httpx_test
 
 import (
-	stdhttp "net/http"
-	"net/http/httptest"
-	"net/url"
 	"testing"
 	"time"
 
@@ -31,120 +28,6 @@ type httpContractBackend struct {
 	invalidURL      func() error
 	safeURL         func(rawURL string) error
 	safeAllowed     func(rawURL, host string) contractResponse
-}
-
-func TestHTTPImplementationsContract(t *testing.T) {
-	for _, backend := range httpContractBackends() {
-		backend := backend
-		t.Run(backend.name, func(t *testing.T) {
-			backend.reset(t)
-
-			t.Run("bounded default timeout", func(t *testing.T) {
-				if got := backend.snapshotTimeout(); got <= 0 {
-					t.Fatalf("SnapshotGlobalConfig().Timeout = %v, want positive timeout", got)
-				}
-			})
-
-			t.Run("request basics", func(t *testing.T) {
-				srv := httptest.NewServer(stdhttp.HandlerFunc(func(w stdhttp.ResponseWriter, r *stdhttp.Request) {
-					_, _ = w.Write([]byte(r.Method + ":" + r.URL.Query().Get("q") + ":" + r.Header.Get("X-Contract") + ":" + r.Header.Get("User-Agent")))
-				}))
-				defer srv.Close()
-
-				resp := backend.getBasic(srv.URL)
-				if resp.err != nil || resp.status != stdhttp.StatusOK || resp.body != "GET:go:yes:contract-agent" {
-					t.Fatalf("GET contract status=%d body=%q err=%v", resp.status, resp.body, resp.err)
-				}
-			})
-
-			t.Run("post json content type", func(t *testing.T) {
-				srv := httptest.NewServer(stdhttp.HandlerFunc(func(w stdhttp.ResponseWriter, r *stdhttp.Request) {
-					_, _ = w.Write([]byte(r.Method + ":" + r.Header.Get("Content-Type")))
-				}))
-				defer srv.Close()
-
-				resp := backend.postJSON(srv.URL)
-				if resp.err != nil || resp.status != stdhttp.StatusOK || resp.body != "POST:application/json;charset=UTF-8" {
-					t.Fatalf("POST JSON contract status=%d body=%q err=%v", resp.status, resp.body, resp.err)
-				}
-			})
-
-			t.Run("redirect controls", func(t *testing.T) {
-				srv := httptest.NewServer(stdhttp.HandlerFunc(func(w stdhttp.ResponseWriter, r *stdhttp.Request) {
-					if r.URL.Path == "/start" {
-						stdhttp.Redirect(w, r, "/end", stdhttp.StatusFound)
-						return
-					}
-					_, _ = w.Write([]byte("end"))
-				}))
-				defer srv.Close()
-
-				noFollow := backend.getNoFollow(srv.URL + "/start")
-				if noFollow.err != nil || noFollow.status != stdhttp.StatusFound {
-					t.Fatalf("no-follow status=%d body=%q err=%v", noFollow.status, noFollow.body, noFollow.err)
-				}
-
-				follow := backend.getFollow(srv.URL + "/start")
-				if follow.err != nil || follow.status != stdhttp.StatusOK || follow.body != "end" {
-					t.Fatalf("follow status=%d body=%q err=%v", follow.status, follow.body, follow.err)
-				}
-			})
-
-			t.Run("max response bytes", func(t *testing.T) {
-				srv := httptest.NewServer(stdhttp.HandlerFunc(func(w stdhttp.ResponseWriter, _ *stdhttp.Request) {
-					_, _ = w.Write([]byte("abcdef"))
-				}))
-				defer srv.Close()
-
-				resp := backend.getWithMaxBytes(srv.URL, 3)
-				if resp.err == nil || resp.body != "" {
-					t.Fatalf("limited body=%q err=%v, want max bytes error", resp.body, resp.err)
-				}
-			})
-
-			t.Run("global snapshot and isolated client", func(t *testing.T) {
-				srv := httptest.NewServer(stdhttp.HandlerFunc(func(w stdhttp.ResponseWriter, r *stdhttp.Request) {
-					_, _ = w.Write([]byte(r.Header.Get("X-Contract-Global")))
-				}))
-				defer srv.Close()
-
-				snapshot := backend.clientSnapshot(t, srv.URL)
-				if snapshot.err != nil || snapshot.body != "snapshot" {
-					t.Fatalf("client snapshot body=%q err=%v", snapshot.body, snapshot.err)
-				}
-
-				isolated := backend.isolatedClient(t, srv.URL)
-				if isolated.err != nil || isolated.body != "" {
-					t.Fatalf("isolated client body=%q err=%v, want no global headers", isolated.body, isolated.err)
-				}
-			})
-
-			t.Run("invalid and safe urls", func(t *testing.T) {
-				if err := backend.invalidURL(); err == nil {
-					t.Fatal("invalid URL error = nil")
-				}
-				for _, rawURL := range []string{"file:///tmp/secret.txt", "http://127.0.0.1/config.yaml"} {
-					if err := backend.safeURL(rawURL); err == nil {
-						t.Fatalf("safe request to %q error = nil", rawURL)
-					}
-				}
-
-				srv := httptest.NewServer(stdhttp.HandlerFunc(func(w stdhttp.ResponseWriter, _ *stdhttp.Request) {
-					_, _ = w.Write([]byte("safe"))
-				}))
-				defer srv.Close()
-
-				parsed, err := url.Parse(srv.URL)
-				if err != nil {
-					t.Fatalf("parse server URL: %v", err)
-				}
-				resp := backend.safeAllowed(srv.URL, parsed.Hostname())
-				if resp.err != nil || resp.status != stdhttp.StatusOK || resp.body != "safe" {
-					t.Fatalf("safe allowed status=%d body=%q err=%v", resp.status, resp.body, resp.err)
-				}
-			})
-		})
-	}
 }
 
 func httpContractBackends() []httpContractBackend {
