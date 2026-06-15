@@ -19,53 +19,40 @@
 
 ## ✨ go-knifer 如何改变编码方式
 
-以前，计算一个 SHA-256 往往需要在业务代码里重复写样板逻辑：
-
-```go
-sum := sha256.Sum256([]byte("hello"))
-text := hex.EncodeToString(sum[:])
-```
-
-现在，使用 `go-knifer` 可以直接调用工具方法：
-
-```go
-text := vcrypto.SHA256Hex("hello")
-```
-
-这类封装能减少重复代码、降低复制粘贴带来的隐患，也让团队内相同场景使用一致的 API。
+`go-knifer` 把项目里高频、重复、容易复制粘贴出错的工具逻辑收束到明确的 `v*` 子包中。业务代码按领域导入需要的 facade，并通过统一 API 表达相同场景。
 
 ## 🧭 按场景查找
 
 不确定该引入哪个包？从你要做的事出发：
 
-| 我想…… | 使用 |
+| 我想使用 | 实际导入 |
 | --- | --- |
-| 裁剪、切分、命名转换、Unicode 转义、Ant 路径匹配、文本相似度或判空字符串 | `vstr` |
-| 对切片做过滤 / 映射 / 去重 / 分页 | `vslice` |
-| 创建、查询、转换、合并、差集或排序 map | `vmap` |
-| 把 `any` 宽松转成 int/float/bool/string | `vconv` |
-| 精确运算、舍入、表达式计算 | `vnum` |
-| SHA/HMAC、AES-GCM/RSA-PSS、参数签名 | `vcrypto` |
-| 非加密哈希（FNV、BKDR 等） | `vhash` |
-| URL 编解码、query 构建/解析，或安全打开不可信 HTTP(S) 资源 | `vurl` |
-| Base64 / Hex 编解码 | `vcodec` |
-| 读写 CSV records、map 或 struct | `vcsv` |
-| 生成缩略图、PNG/JPEG/GIF 格式转换、读取图像元信息或生成图形验证码 | `vimg` |
-| 构建/解析 JSON、路径读写、JSON↔XML | `vjson` |
-| 加载本地或远程配置，包括带 SSRF 防护的远程配置 | `vconf` |
-| 解析、构建、遍历 XML | `vxml` |
-| 生成 UUID / Snowflake / NanoId | `vid` |
-| 校验或解析身份证号 | `vident` |
-| 读写文件、路径、复制、建目录 | `vfile` |
-| 日期格式化/解析、偏移、天数区间 | `vdate` |
-| 发起 HTTP 请求（标准库） | `vhttp` |
-| 发起 HTTP 请求（基于 Resty） | `vresty` |
-| 校验表单/输入数据，如邮箱、手机号、IP 等 | `vform` |
-| 敏感数据脱敏 | `vmask` |
-| 本地评估密码强度并分级 | `vpass` |
-| JWT 签发/校验 | `vjwt` |
-| 定时任务调度 | `vcron` |
-| FIFO/LRU/LFU/TTL 缓存 | `vcache` |
+| 裁剪、切分、命名转换、Unicode 转义、Ant 路径匹配、文本相似度或判空字符串 | [`vstr`](docs/doc/41-vstr.md) |
+| 对切片做过滤 / 映射 / 去重 / 分页 | [`vslice`](docs/doc/40-vslice.md) |
+| 创建、查询、转换、合并、差集或排序 map | [`vmap`](docs/doc/26-vmap.md) |
+| 把 `any` 宽松转成 int/float/bool/string | [`vconv`](docs/doc/07-vconv.md) |
+| 精确运算、舍入、表达式计算 | [`vnum`](docs/doc/29-vnum.md) |
+| SHA/HMAC、AES-GCM/RSA-PSS、参数签名 | [`vcrypto`](docs/doc/09-vcrypto.md) |
+| 非加密哈希（FNV、BKDR 等） | [`vhash`](docs/doc/17-vhash.md) |
+| URL 编解码、query 构建/解析，或安全打开不可信 HTTP(S) 资源 | [`vurl`](docs/doc/44-vurl.md) |
+| Base64 / Hex 编解码 | [`vcodec`](docs/doc/05-vcodec.md) |
+| 读写 CSV records、map 或 struct | [`vcsv`](docs/doc/10-vcsv.md) |
+| 生成缩略图、PNG/JPEG/GIF 格式转换、读取图像元信息或生成图形验证码 | [`vimg`](docs/doc/21-vimg.md) |
+| 构建/解析 JSON、路径读写、JSON↔XML | [`vjson`](docs/doc/23-vjson.md) |
+| 加载本地或远程配置，包括带 SSRF 防护的远程配置 | [`vconf`](docs/doc/06-vconf.md) |
+| 解析、构建、遍历 XML | [`vxml`](docs/doc/46-vxml.md) |
+| 生成 UUID / Snowflake / NanoId | [`vid`](docs/doc/19-vid.md) |
+| 校验或解析身份证号 | [`vident`](docs/doc/20-vident.md) |
+| 读写文件、路径、复制、建目录 | [`vfile`](docs/doc/15-vfile.md) |
+| 日期格式化/解析、偏移、天数区间 | [`vdate`](docs/doc/11-vdate.md) |
+| 发起 HTTP 请求（标准库） | [`vhttp`](docs/doc/18-vhttp.md) |
+| 发起 HTTP 请求（基于 Resty） | [`vresty`](docs/doc/36-vresty.md) |
+| 校验表单/输入数据，如邮箱、手机号、IP 等 | [`vform`](docs/doc/16-vform.md) |
+| 敏感数据脱敏 | [`vmask`](docs/doc/27-vmask.md) |
+| 本地评估密码强度并分级 | [`vpass`](docs/doc/31-vpass.md) |
+| JWT 签发/校验 | [`vjwt`](docs/doc/24-vjwt.md) |
+| 定时任务调度 | [`vcron`](docs/doc/08-vcron.md) |
+| FIFO/LRU/LFU/TTL 缓存 | [`vcache`](docs/doc/04-vcache.md) |
 
 完整清单见下方模块矩阵。
 
@@ -75,53 +62,53 @@ text := vcrypto.SHA256Hex("hello")
 
 | 模块 | 导入路径 | 功能说明 |
 | --- | --- | --- |
-| `vstr` | `github.com/imajinyun/go-knifer/vstr` | 字符串与文本工具：空白判断、裁剪、切分、截取、格式化、provider-backed emoji、命名转换、默认值、Unicode 转义/反转义、Ant-style 路径匹配、rune 集 Jaccard 相似度、rune n-gram 相似度、SimHash、64-bit Hamming distance、HTML 转义，以及字符判断（空白、字母、数字、ASCII、字母或数字）。 |
-| `vslice` | `github.com/imajinyun/go-knifer/vslice` | Slice 工具：包含/索引、反转、去重、拼接、过滤/映射、截取、合并、集合操作和分页。 |
-| `vmap` | `github.com/imajinyun/go-knifer/vmap` | Map 工具：构造、空判断、contains/get/find、keys/values 与排序视图、map/filter/reject/partition、reduce/group/count、反转、合并/自定义冲突合并、交集/差集/对称差集、pick/omit、update/clone 和相等性判断。 |
-| `vconv` | `github.com/imajinyun/go-knifer/vconv` | 宽松类型转换：string、int、int64、float64、bool、bytes 及默认值版本。 |
-| `vdate` | `github.com/imajinyun/go-knifer/vdate` | 日期时间工具：常用布局、解析/格式化、日/月/年起止、偏移和比较。 |
-| `vfile` | `github.com/imajinyun/go-knifer/vfile` | 文件与 IO 工具：读写复制、按行读取、mkdir/touch/delete、文件名处理、静默关闭和 provider-backed 文件系统操作。 |
-| `vcodec` | `github.com/imajinyun/go-knifer/vcodec` | 编解码工具：Base64、URL-safe Base64、raw URL-safe Base64、自定义 Base64 encoding provider 和 Hex。 |
-| `vcsv` | `github.com/imajinyun/go-knifer/vcsv` | CSV 工具：读写分隔符、注释、字段数量、宽松引号、Trim、CRLF 等 options，支持 records/map 转换、map 写出、struct tag 导出和逐行回调。 |
-| `vimg` | `github.com/imajinyun/go-knifer/vimg` | 图像工具：按长边等比缩放缩略图、PNG/JPEG/GIF 格式互转、基础元信息（宽/高/格式），以及线条/圆圈/扭曲/GIF 图形验证码。 |
-| `vurl` | `github.com/imajinyun/go-knifer/vurl` | URL 与 URI 工具：解析、标准化、相对 URL 补全、query 编解码、支持注入 query/path escape provider 的 URL/路径/fragment 百分号编码、URL 构造、Data URI 构造、协议判断、文件 URL 转换、资源打开/大小查询，以及带 SSRF 防护的 `OpenSafe` / `ContentLengthSafe` 变体。 |
-| `vnet` | `github.com/imajinyun/go-knifer/vnet` | 网络工具：支持注入 IP/CIDR/int parser 的 IPv4/IPv6 转换、CIDR/范围/掩码、本地端口、主机/网卡/MAC 查询、TLS 配置、address/dial/ping provider options 和 multipart 表单辅助。 |
-| `vobj` | `github.com/imajinyun/go-knifer/vobj` | 对象工具：nil/空值判断、相等性、默认值、克隆/序列化、比较、类型检查和容器辅助。 |
-| `vver` | `github.com/imajinyun/go-knifer/vver` | 版本工具：版本号比较、大小关系判断、表达式匹配、闭区间范围和自定义多表达式分隔符。 |
-| `vref` | `github.com/imajinyun/go-knifer/vref` | 反射工具：字段查找与赋值、方法发现与调用、构造函数风格调用、类型/值工具、方法分类判断，以及显式 unsafe/unexported 字段访问选项。 |
-| `vbean` | `github.com/imajinyun/go-knifer/vbean` | Bean/结构体映射工具：struct/map 互转、copy properties、tag/alias 匹配、忽略空值/零值选项和弱类型转换。 |
-| `vzip` | `github.com/imajinyun/go-knifer/vzip` | ZIP、gzip、zlib 工具：压缩包创建/解压、条目读取、遍历、追加、内存条目、流式压缩、provider-backed 归档文件操作、默认有边界的解压/解压缩行为、路径穿越检查，以及解压时的符号链接逃逸检查。 |
-| `vpoi` | `github.com/imajinyun/go-knifer/vpoi` | Office 文档工具：轻量 Excel XLSX 工作表列表、行读写、多工作表写入、内存工作簿创建，以及可注入的 workbook/文件系统 provider。 |
-| `vmask` | `github.com/imajinyun/go-knifer/vmask` | 脱敏工具：姓名、证件号、电话、地址、邮箱、密码、车牌、银行卡、IP、护照号和信用代码遮罩。 |
-| `vpass` | `github.com/imajinyun/go-knifer/vpass` | 密码工具：确定性的本地评分、强度分级、强/弱谓词、字符类别信号、重复/连续字符检测，以及小型常见弱密码列表。 |
-| `vnum` | `github.com/imajinyun/go-knifer/vnum` | 数字工具：精确加减乘除、舍入模式、provider-backed 解析/格式化、数字判断、不重复随机数、range、阶乘/组合数、最大公约数/最小公倍数、二进制转换、比较、字节转换、表达式计算和奇偶判断。 |
-| `vrand` | `github.com/imajinyun/go-knifer/vrand` | 随机工具：整数、浮点、布尔、字节、字符串、数字字符串、随机元素、确定性 seed，以及可重置的包级伪随机源 provider。 |
-| `vid` | `github.com/imajinyun/go-knifer/vid` | ID 工具：random/simple/fast UUID、MongoDB 风格 ObjectId、Snowflake 生成器与单例 next-id、worker/datacenter id 推导、NanoId、fallback random source、isolated Snowflake 创建，以及可重置 fallback PRNG provider/seed。 |
-| `vident` | `github.com/imajinyun/go-knifer/vident` | 身份标识工具：中国大陆身份证 15/18 位转换、合法性校验、校验码、可配置解析选项的生日/年龄/性别提取、省市区编码解析、遮罩，以及港澳台证件校验。 |
-| `vhash` | `github.com/imajinyun/go-knifer/vhash` | 非加密 Hash 工具：Additive、FNV、可注入 32-bit hash provider，以及一组经典字符串哈希（RS、JS、PJW、ELF、BKDR、SDBM、DJB、AP、HF、HFIP、TianL、Java 默认）。 |
-| `vform` | `github.com/imajinyun/go-knifer/vform` | 表单与输入校验工具：邮箱、手机号、URL、IPv4/IPv6、身份证、中文和数字字符串，并支持规则敏感校验的 per-call matcher provider。 |
-| `vtpl` | `github.com/imajinyun/go-knifer/vtpl` | Go html/template 渲染工具，支持单次调用配置模板名、FuncMap、分隔符、template factory 和 executor。 |
-| `vregex` | `github.com/imajinyun/go-knifer/vregex` | 正则工具：匹配、分组提取、命名分组、删除、计数、索引定位、模板/函数替换、元字符转义，以及单次调用 compiler / DOTALL options。 |
-| `vbool` | `github.com/imajinyun/go-knifer/vbool` | 布尔工具：取反、转 int、全真/任一为真判断。 |
-| `vblf` | `github.com/imajinyun/go-knifer/vblf` | 布隆过滤器：bitmap/bitset/filter 抽象、多种字符串哈希算法、option-based 构造器、返回校验错误而不是 panic 的 `E` 构造器，以及 provider-backed 文件初始化。 |
-| `vcache` | `github.com/imajinyun/go-knifer/vcache` | 泛型缓存：FIFO、LFU、LRU、Timed、Weak、NoCache，支持 TTL、clock、淘汰监听、懒加载、ticker/runner provider 和 weak-cache finalizer provider。 |
-| `vcron` | `github.com/imajinyun/go-knifer/vcron` | Cron 表达式解析与任务调度，支持默认/自定义调度器、可配置 cron options、ID random-reader/clock/sleeper/runner provider，以及单次调用隔离的默认调度器覆盖。 |
-| `vcrypto` | `github.com/imajinyun/go-knifer/vcrypto` | 加密与摘要：SHA-2、provider-backed digest、HMAC、PBKDF2-SHA256、参数签名、随机字节、支持 nonce/tag/block-factory options 的 AES-GCM、RSA OAEP/PSS 与可配置数据签名、PEM 与 X.509 证书工具。 |
-| `vdb` | `github.com/imajinyun/go-knifer/vdb` | 基于 database/sql 的数据库工具：SQL 执行、命名参数、Entity、条件、查询构造器、事务、分页、轻量元信息查询和可注入的 `sql.Open` provider。 |
-| `vdfa` | `github.com/imajinyun/go-knifer/vdfa` | DFA 词树匹配：停顿字符过滤、首个/全部匹配、密集/贪婪匹配、命中词位置元信息、包级匹配器、隔离 matcher options、`Any` 辅助函数的 JSON marshal/unmarshal provider、文本替换，以及用于包级异步初始化的可重置 async runner provider。 |
-| `vhttp` | `github.com/imajinyun/go-knifer/vhttp` | 链式 HTTP 客户端、隔离/global-config 请求构建、create/get/post `WithOptions` 辅助函数、显式错误 `E` 快捷函数、带错误码分类的 HTTP 错误、provider-backed transport/request factory/multipart writer/download save、安全文件下载、BasicAuth、User-Agent 解析、provider-backed HTML 清理/标签过滤、可重置 transport/server starters、异步服务端 runner option 和简易服务端辅助函数。 |
-| `vresty` | `github.com/imajinyun/go-knifer/vresty` | 基于 Resty v3 的 HTTP facade：链式请求、JSON/form/multipart 请求体、隔离/global-config 请求构建、create/get/post `WithOptions` 辅助函数、单次请求 client factory、可重置默认 Resty client provider、下载与安全文件下载，以及轻量响应工具。 |
-| `vjson` | `github.com/imajinyun/go-knifer/vjson` | 有序 JSON 对象/数组、JSON 解析与格式化、路径表达式读写、provider-backed marshal/unmarshal、可注入 scalar parse/format 函数、可配置 Object/Array/Bean/List 转换，以及带 parser/writer options 的 XML/JSON 转换。 |
-| `vxml` | `github.com/imajinyun/go-knifer/vxml` | XML 工具：解析/读取/写出/格式化、树节点访问、简单 XPath 风格查询、转义、支持 parser/codec/scalar parser options 的 Map/Bean 转换、transform options 和命名空间辅助。 |
-| `vjwt` | `github.com/imajinyun/go-knifer/vjwt` | JWT 创建、解析、签名、验签与时间字段校验，支持 HMAC、RSA-PSS、ECDSA，拒绝未签名的 `alg=none` token，并提供 JSON marshal/unmarshal options。 |
-| `vlog` | `github.com/imajinyun/go-knifer/vlog` | 日志 facade：console/color console logger、可注入颜色工厂、日志级别、全局 logger、静态日志函数、单次调用 logger options 和 isolated logger 创建。 |
-| `verr` | `github.com/imajinyun/go-knifer/verr` | 错误工具：panic recover、错误聚合、multierror 匹配、collector 构造 options、堆栈捕获/格式化、可重置 log/stack cache、可注入的 logging/stack/exit/timer/runner provider、隔离 logrus 创建，以及可选 logrus/Sentry 集成。 |
-| `vconf` | `github.com/imajinyun/go-knifer/vconf` | 分组配置读取：setting/properties 风格文本、简单 YAML 子集和 TOML 解析，支持类型化读取、schema 校验、profile/remote/file 加载 options、带 SSRF 防护的 `LoadRemoteSafe`、环境变量展开 provider、watch ticker/runner provider、读取大小限制、只读快照使用方式和深拷贝 `Clone`。 |
-| `vset` | `github.com/imajinyun/go-knifer/vset` | 泛型与常用类型集合工具：支持添加、删除、包含判断、集合运算，以及 JSON/YAML 编解码辅助。 |
-| `vjob` | `github.com/imajinyun/go-knifer/vjob` | 可切分任务执行：职责分离任务数据与调度配置，支持泛型 Slice/Map 适配、context 取消和串行合并回调；无需开启 generic type alias 实验。 |
-| `vsem` | `github.com/imajinyun/go-knifer/vsem` | 加权计数信号量：支持 context 取消、FIFO 公平等待、非阻塞获取、关闭通知与占用数查询。 |
-| `vskt` | `github.com/imajinyun/go-knifer/vskt` | TCP socket 工具：普通连接、NIO/AIO server/client、协议编解码接口，以及可配置 thread-pool/listener/connection/runner/IP-parser provider。 |
-| `vsys` | `github.com/imajinyun/go-knifer/vsys` | 系统与运行时信息：主机、OS、用户、Go runtime、进程内存、goroutine、环境变量、可重置信息缓存，以及可注入的 env/command/runtime provider。 |
+| [`vstr`](docs/doc/41-vstr.md) | `github.com/imajinyun/go-knifer/vstr` | 字符串与文本工具：空白判断、裁剪、切分、截取、格式化、provider-backed emoji、命名转换、默认值、Unicode 转义/反转义、Ant-style 路径匹配、rune 集 Jaccard 相似度、rune n-gram 相似度、SimHash、64-bit Hamming distance、HTML 转义，以及字符判断（空白、字母、数字、ASCII、字母或数字）。 |
+| [`vslice`](docs/doc/40-vslice.md) | `github.com/imajinyun/go-knifer/vslice` | Slice 工具：包含/索引、反转、去重、拼接、过滤/映射、截取、合并、集合操作和分页。 |
+| [`vmap`](docs/doc/26-vmap.md) | `github.com/imajinyun/go-knifer/vmap` | Map 工具：构造、空判断、contains/get/find、keys/values 与排序视图、map/filter/reject/partition、reduce/group/count、反转、合并/自定义冲突合并、交集/差集/对称差集、pick/omit、update/clone 和相等性判断。 |
+| [`vconv`](docs/doc/07-vconv.md) | `github.com/imajinyun/go-knifer/vconv` | 宽松类型转换：string、int、int64、float64、bool、bytes 及默认值版本。 |
+| [`vdate`](docs/doc/11-vdate.md) | `github.com/imajinyun/go-knifer/vdate` | 日期时间工具：常用布局、解析/格式化、日/月/年起止、偏移和比较。 |
+| [`vfile`](docs/doc/15-vfile.md) | `github.com/imajinyun/go-knifer/vfile` | 文件与 IO 工具：读写复制、按行读取、mkdir/touch/delete、文件名处理、静默关闭和 provider-backed 文件系统操作。 |
+| [`vcodec`](docs/doc/05-vcodec.md) | `github.com/imajinyun/go-knifer/vcodec` | 编解码工具：Base64、URL-safe Base64、raw URL-safe Base64、自定义 Base64 encoding provider 和 Hex。 |
+| [`vcsv`](docs/doc/10-vcsv.md) | `github.com/imajinyun/go-knifer/vcsv` | CSV 工具：读写分隔符、注释、字段数量、宽松引号、Trim、CRLF 等 options，支持 records/map 转换、map 写出、struct tag 导出和逐行回调。 |
+| [`vimg`](docs/doc/21-vimg.md) | `github.com/imajinyun/go-knifer/vimg` | 图像工具：按长边等比缩放缩略图、PNG/JPEG/GIF 格式互转、基础元信息（宽/高/格式），以及线条/圆圈/扭曲/GIF 图形验证码。 |
+| [`vurl`](docs/doc/44-vurl.md) | `github.com/imajinyun/go-knifer/vurl` | URL 与 URI 工具：解析、标准化、相对 URL 补全、query 编解码、支持注入 query/path escape provider 的 URL/路径/fragment 百分号编码、URL 构造、Data URI 构造、协议判断、文件 URL 转换、资源打开/大小查询，以及带 SSRF 防护的 `OpenSafe` / `ContentLengthSafe` 变体。 |
+| [`vnet`](docs/doc/28-vnet.md) | `github.com/imajinyun/go-knifer/vnet` | 网络工具：支持注入 IP/CIDR/int parser 的 IPv4/IPv6 转换、CIDR/范围/掩码、本地端口、主机/网卡/MAC 查询、TLS 配置、address/dial/ping provider options 和 multipart 表单辅助。 |
+| [`vobj`](docs/doc/30-vobj.md) | `github.com/imajinyun/go-knifer/vobj` | 对象工具：nil/空值判断、相等性、默认值、克隆/序列化、比较、类型检查和容器辅助。 |
+| [`vver`](docs/doc/45-vver.md) | `github.com/imajinyun/go-knifer/vver` | 版本工具：版本号比较、大小关系判断、表达式匹配、闭区间范围和自定义多表达式分隔符。 |
+| [`vref`](docs/doc/34-vref.md) | `github.com/imajinyun/go-knifer/vref` | 反射工具：字段查找与赋值、方法发现与调用、构造函数风格调用、类型/值工具、方法分类判断，以及显式 unsafe/unexported 字段访问选项。 |
+| [`vbean`](docs/doc/01-vbean.md) | `github.com/imajinyun/go-knifer/vbean` | Bean/结构体映射工具：struct/map 互转、copy properties、tag/alias 匹配、忽略空值/零值选项和弱类型转换。 |
+| [`vzip`](docs/doc/47-vzip.md) | `github.com/imajinyun/go-knifer/vzip` | ZIP、gzip、zlib 工具：压缩包创建/解压、条目读取、遍历、追加、内存条目、流式压缩、provider-backed 归档文件操作、默认有边界的解压/解压缩行为、路径穿越检查，以及解压时的符号链接逃逸检查。 |
+| [`vpoi`](docs/doc/32-vpoi.md) | `github.com/imajinyun/go-knifer/vpoi` | Office 文档工具：轻量 Excel XLSX 工作表列表、行读写、多工作表写入、内存工作簿创建，以及可注入的 workbook/文件系统 provider。 |
+| [`vmask`](docs/doc/27-vmask.md) | `github.com/imajinyun/go-knifer/vmask` | 脱敏工具：姓名、证件号、电话、地址、邮箱、密码、车牌、银行卡、IP、护照号和信用代码遮罩。 |
+| [`vpass`](docs/doc/31-vpass.md) | `github.com/imajinyun/go-knifer/vpass` | 密码工具：确定性的本地评分、强度分级、强/弱谓词、字符类别信号、重复/连续字符检测，以及小型常见弱密码列表。 |
+| [`vnum`](docs/doc/29-vnum.md) | `github.com/imajinyun/go-knifer/vnum` | 数字工具：精确加减乘除、舍入模式、provider-backed 解析/格式化、数字判断、不重复随机数、range、阶乘/组合数、最大公约数/最小公倍数、二进制转换、比较、字节转换、表达式计算和奇偶判断。 |
+| [`vrand`](docs/doc/33-vrand.md) | `github.com/imajinyun/go-knifer/vrand` | 随机工具：整数、浮点、布尔、字节、字符串、数字字符串、随机元素、确定性 seed，以及可重置的包级伪随机源 provider。 |
+| [`vid`](docs/doc/19-vid.md) | `github.com/imajinyun/go-knifer/vid` | ID 工具：random/simple/fast UUID、MongoDB 风格 ObjectId、Snowflake 生成器与单例 next-id、worker/datacenter id 推导、NanoId、fallback random source、isolated Snowflake 创建，以及可重置 fallback PRNG provider/seed。 |
+| [`vident`](docs/doc/20-vident.md) | `github.com/imajinyun/go-knifer/vident` | 身份标识工具：中国大陆身份证 15/18 位转换、合法性校验、校验码、可配置解析选项的生日/年龄/性别提取、省市区编码解析、遮罩，以及港澳台证件校验。 |
+| [`vhash`](docs/doc/17-vhash.md) | `github.com/imajinyun/go-knifer/vhash` | 非加密 Hash 工具：Additive、FNV、可注入 32-bit hash provider，以及一组经典字符串哈希（RS、JS、PJW、ELF、BKDR、SDBM、DJB、AP、HF、HFIP、TianL、Java 默认）。 |
+| [`vform`](docs/doc/16-vform.md) | `github.com/imajinyun/go-knifer/vform` | 表单与输入校验工具：邮箱、手机号、URL、IPv4/IPv6、身份证、中文和数字字符串，并支持规则敏感校验的 per-call matcher provider。 |
+| [`vtpl`](docs/doc/43-vtpl.md) | `github.com/imajinyun/go-knifer/vtpl` | Go html/template 渲染工具，支持单次调用配置模板名、FuncMap、分隔符、template factory 和 executor。 |
+| [`vregex`](docs/doc/35-vregex.md) | `github.com/imajinyun/go-knifer/vregex` | 正则工具：匹配、分组提取、命名分组、删除、计数、索引定位、模板/函数替换、元字符转义，以及单次调用 compiler / DOTALL options。 |
+| [`vbool`](docs/doc/03-vbool.md) | `github.com/imajinyun/go-knifer/vbool` | 布尔工具：取反、转 int、全真/任一为真判断。 |
+| [`vblf`](docs/doc/02-vblf.md) | `github.com/imajinyun/go-knifer/vblf` | 布隆过滤器：bitmap/bitset/filter 抽象、多种字符串哈希算法、option-based 构造器、返回校验错误而不是 panic 的 `E` 构造器，以及 provider-backed 文件初始化。 |
+| [`vcache`](docs/doc/04-vcache.md) | `github.com/imajinyun/go-knifer/vcache` | 泛型缓存：FIFO、LFU、LRU、Timed、Weak、NoCache，支持 TTL、clock、淘汰监听、懒加载、ticker/runner provider 和 weak-cache finalizer provider。 |
+| [`vcron`](docs/doc/08-vcron.md) | `github.com/imajinyun/go-knifer/vcron` | Cron 表达式解析与任务调度，支持默认/自定义调度器、可配置 cron options、ID random-reader/clock/sleeper/runner provider，以及单次调用隔离的默认调度器覆盖。 |
+| [`vcrypto`](docs/doc/09-vcrypto.md) | `github.com/imajinyun/go-knifer/vcrypto` | 加密与摘要：SHA-2、provider-backed digest、HMAC、PBKDF2-SHA256、参数签名、随机字节、支持 nonce/tag/block-factory options 的 AES-GCM、RSA OAEP/PSS 与可配置数据签名、PEM 与 X.509 证书工具。 |
+| [`vdb`](docs/doc/12-vdb.md) | `github.com/imajinyun/go-knifer/vdb` | 基于 database/sql 的数据库工具：SQL 执行、命名参数、Entity、条件、查询构造器、事务、分页、轻量元信息查询和可注入的 `sql.Open` provider。 |
+| [`vdfa`](docs/doc/13-vdfa.md) | `github.com/imajinyun/go-knifer/vdfa` | DFA 词树匹配：停顿字符过滤、首个/全部匹配、密集/贪婪匹配、命中词位置元信息、包级匹配器、隔离 matcher options、`Any` 辅助函数的 JSON marshal/unmarshal provider、文本替换，以及用于包级异步初始化的可重置 async runner provider。 |
+| [`vhttp`](docs/doc/18-vhttp.md) | `github.com/imajinyun/go-knifer/vhttp` | 链式 HTTP 客户端、隔离/global-config 请求构建、create/get/post `WithOptions` 辅助函数、显式错误 `E` 快捷函数、带错误码分类的 HTTP 错误、provider-backed transport/request factory/multipart writer/download save、安全文件下载、BasicAuth、User-Agent 解析、provider-backed HTML 清理/标签过滤、可重置 transport/server starters、异步服务端 runner option 和简易服务端辅助函数。 |
+| [`vresty`](docs/doc/36-vresty.md) | `github.com/imajinyun/go-knifer/vresty` | 基于 Resty v3 的 HTTP facade：链式请求、JSON/form/multipart 请求体、隔离/global-config 请求构建、create/get/post `WithOptions` 辅助函数、单次请求 client factory、可重置默认 Resty client provider、下载与安全文件下载，以及轻量响应工具。 |
+| [`vjson`](docs/doc/23-vjson.md) | `github.com/imajinyun/go-knifer/vjson` | 有序 JSON 对象/数组、JSON 解析与格式化、路径表达式读写、provider-backed marshal/unmarshal、可注入 scalar parse/format 函数、可配置 Object/Array/Bean/List 转换，以及带 parser/writer options 的 XML/JSON 转换。 |
+| [`vxml`](docs/doc/46-vxml.md) | `github.com/imajinyun/go-knifer/vxml` | XML 工具：解析/读取/写出/格式化、树节点访问、简单 XPath 风格查询、转义、支持 parser/codec/scalar parser options 的 Map/Bean 转换、transform options 和命名空间辅助。 |
+| [`vjwt`](docs/doc/24-vjwt.md) | `github.com/imajinyun/go-knifer/vjwt` | JWT 创建、解析、签名、验签与时间字段校验，支持 HMAC、RSA-PSS、ECDSA，拒绝未签名的 `alg=none` token，并提供 JSON marshal/unmarshal options。 |
+| [`vlog`](docs/doc/25-vlog.md) | `github.com/imajinyun/go-knifer/vlog` | 日志 facade：console/color console logger、可注入颜色工厂、日志级别、全局 logger、静态日志函数、单次调用 logger options 和 isolated logger 创建。 |
+| [`verr`](docs/doc/14-verr.md) | `github.com/imajinyun/go-knifer/verr` | 错误工具：panic recover、错误聚合、multierror 匹配、collector 构造 options、堆栈捕获/格式化、可重置 log/stack cache、可注入的 logging/stack/exit/timer/runner provider、隔离 logrus 创建，以及可选 logrus/Sentry 集成。 |
+| [`vconf`](docs/doc/06-vconf.md) | `github.com/imajinyun/go-knifer/vconf` | 分组配置读取：setting/properties 风格文本、简单 YAML 子集和 TOML 解析，支持类型化读取、schema 校验、profile/remote/file 加载 options、带 SSRF 防护的 `LoadRemoteSafe`、环境变量展开 provider、watch ticker/runner provider、读取大小限制、只读快照使用方式和深拷贝 `Clone`。 |
+| [`vset`](docs/doc/38-vset.md) | `github.com/imajinyun/go-knifer/vset` | 泛型与常用类型集合工具：支持添加、删除、包含判断、集合运算，以及 JSON/YAML 编解码辅助。 |
+| [`vjob`](docs/doc/22-vjob.md) | `github.com/imajinyun/go-knifer/vjob` | 可切分任务执行：职责分离任务数据与调度配置，支持泛型 Slice/Map 适配、context 取消和串行合并回调；无需开启 generic type alias 实验。 |
+| [`vsem`](docs/doc/37-vsem.md) | `github.com/imajinyun/go-knifer/vsem` | 加权计数信号量：支持 context 取消、FIFO 公平等待、非阻塞获取、关闭通知与占用数查询。 |
+| [`vskt`](docs/doc/39-vskt.md) | `github.com/imajinyun/go-knifer/vskt` | TCP socket 工具：普通连接、NIO/AIO server/client、协议编解码接口，以及可配置 thread-pool/listener/connection/runner/IP-parser provider。 |
+| [`vsys`](docs/doc/42-vsys.md) | `github.com/imajinyun/go-knifer/vsys` | 系统与运行时信息：主机、OS、用户、Go runtime、进程内存、goroutine、环境变量、可重置信息缓存，以及可注入的 env/command/runtime provider。 |
 
 ## 🧭 架构与包边界
 
@@ -261,14 +248,6 @@ PBKDF2-SHA-256、AES-GCM、RSA-OAEP 加密和 RSA-PSS 签名。JWT RSA
 go get github.com/imajinyun/go-knifer
 ```
 
-Go 会按实际导入的子包拉取模块，例如：
-
-```go
-import (
-  "github.com/imajinyun/go-knifer/vstr"
-  "github.com/imajinyun/go-knifer/vhttp"
-)
-```
 
 ## ✅ 推荐 API 入口
 
@@ -287,890 +266,15 @@ import (
 | 解析 cron 表达式 | `vcron.NewPattern` 或 `vcron.MustNewPattern` |
 | 从信任边界加载远程配置 | `vconf.LoadRemoteSafe` 或 `vconf.LoadRemoteSafeWithOptions` |
 
-## 📝 快速开始
+## 📝 Quickstart 文档
 
-### 基础工具与 JSON
-
-```go
-package main
-
-import (
-  "fmt"
-
-  "github.com/imajinyun/go-knifer/vid"
-  "github.com/imajinyun/go-knifer/vjson"
-  "github.com/imajinyun/go-knifer/vstr"
-)
-
-func main() {
-  name := vstr.DefaultIfBlank("", "go-knifer")
-
-  obj := vjson.NewObject().
-    Set("id", vid.FastUUID()).
-    Set("name", name).
-    Set("tags", []string{"go", "tool"})
-
-  fmt.Println(obj.GetString("name"))
-  fmt.Println(obj.ToStringPretty())
-}
-```
-
-### 单次调用 Provider 与 `WithOptions` 变体
-
-运行时敏感工具会保留简单 API，同时为需要确定性测试、别名解析、更严格转义或受控依赖的调用方提供
-`WithOptions` 变体。provider 为 nil 时会回退到普通 API 使用的标准库实现。
-
-```go
-package main
-
-import (
-  "fmt"
-  "net"
-  "net/url"
-  "strconv"
-  "strings"
-
-  "github.com/imajinyun/go-knifer/vjson"
-  "github.com/imajinyun/go-knifer/vnet"
-  "github.com/imajinyun/go-knifer/vnum"
-  "github.com/imajinyun/go-knifer/vurl"
-  "github.com/imajinyun/go-knifer/vxml"
-)
-
-func main() {
-  parseIP := func(s string) net.IP {
-    if s == "loopback" {
-      return net.ParseIP("127.0.0.1")
-    }
-    return net.ParseIP(s)
-  }
-  ipLong, _ := vnet.IPv4ToLongWithOptions("loopback", vnet.WithIPParser(parseIP))
-  inRange := vnet.IsInRangeWithOptions("loopback", "127.0.0.0/8", vnet.WithIPParser(parseIP))
-
-  strictQuery := vurl.EncodeQueryWithOptions("a b+c", vurl.WithQueryEscapeFunc(func(s string) string {
-    return strings.ReplaceAll(url.QueryEscape(s), "+", "%20")
-  }))
-
-  total, _ := vnum.CalculateWithOptions("5 + 2", vnum.WithParseFloatFunc(func(s string, bitSize int) (float64, error) {
-    if s == "5" {
-      return 5, nil
-    }
-    return strconv.ParseFloat(s, bitSize)
-  }))
-
-  cfg := vjson.NewConfig()
-  cfg.ParseIntFunc = func(s string, base, bitSize int) (int64, error) {
-    if s == "answer" {
-      return 42, nil
-    }
-    return strconv.ParseInt(s, base, bitSize)
-  }
-  obj := vjson.NewObjectWithConfig(cfg).Set("count", "answer")
-
-  xmlMap, _ := vxml.XMLToMapWithOptions(`<root><count>answer</count></root>`,
-    vxml.WithScalarIntParser(cfg.ParseIntFunc))
-
-  fmt.Println(ipLong, inRange, strictQuery, total)
-  fmt.Println(obj.GetInt64("count"), xmlMap["root"])
-}
-```
-
-socket 工具也使用同样的配置方式，例如
-`vskt.NewSocketConfigWithOptions(vskt.WithSocketIPParser(parseIP))` 或
-`vskt.NewNioClientWithOptions(host, port, vskt.WithSocketIPParser(parseIP))`。
-
-### 表单与输入校验工具
-
-`vform` 提供常用表单与输入校验的短 public 入口，把高频布尔校验集中到一个包中，具体领域能力仍委托给对应的内部实现。
-
-```go
-package main
-
-import (
-  "fmt"
-
-  "github.com/imajinyun/go-knifer/vform"
-)
-
-func main() {
-  fmt.Println(vform.IsEmail("a@b.com"))
-  fmt.Println(vform.IsMobile("13812345678"))
-  fmt.Println(vform.IsURL("https://example.com"))
-  fmt.Println(vform.IsIPv4("127.0.0.1"))
-  fmt.Println(vform.IsIPv6("2001:db8::1"))
-  fmt.Println(vform.IsIDCard("11010519491231002X"))
-  fmt.Println(vform.IsChinese("你好"))
-  fmt.Println(vform.IsNumberStr("-3.14"))
-}
-```
-
-### LRU 缓存与懒加载
-
-```go
-package main
-
-import (
-  "fmt"
-  "time"
-
-  "github.com/imajinyun/go-knifer/vcache"
-)
-
-func main() {
-  c := vcache.NewLRUWithTimeout[string, int](3, 5*time.Minute)
-  c.Put("answer", 42)
-
-  value, ok := c.Get("answer")
-  fmt.Println(value, ok)
-
-  loaded, err := c.GetOrLoad("miss", func() (int, error) {
-    return 100, nil
-  })
-  fmt.Println(loaded, err)
-}
-```
-
-淘汰监听器会在缓存内部锁释放后执行，因此回调中可以安全地再次访问同一个 cache，用于清理、指标记录、重新加载或后续写入。
-
-### 配置快照
-
-`vconf` 对象在构建或加载过程中是简单的可变 map。配置发布给业务代码后，应把它当作只读快照使用。
-运行时更新时，先 clone 或重新加载得到新对象，在新对象上修改，再原子地发布新指针。本地和远程配置加载默认受
-`vconf.DefaultMaxBytes` 限制；使用 `LoadOptions{MaxBytes: n}` 可以设置更严格限制，只有输入已由其他层面限制时才使用负数关闭限制。
-
-```go
-package main
-
-import (
-  "fmt"
-  "sync/atomic"
-
-  "github.com/imajinyun/go-knifer/vconf"
-)
-
-func main() {
-  cfg, _ := vconf.Parse("app.name=go-knifer\n")
-
-  loaded, _ := vconf.LoadRemoteSafeWithOptions("https://example.com/app.yaml", vconf.LoadOptions{
-    MaxBytes:            1 << 20,
-    RemoteAllowedHosts: []string{"example.com"},
-  })
-
-  var current atomic.Pointer[vconf.Conf]
-  current.Store(cfg)
-
-  next := current.Load().Clone()
-  next.Set("app.name", "go-knifer-next")
-  current.Store(next)
-
-  _ = loaded
-  fmt.Println(current.Load().Get("app.name"))
-}
-```
-
-`vconf` 也支持 schema 校验与结构体绑定，用于在配置发布前建立明确的类型契约。除非 URL 是可信常量，
-且其他层已经约束 host 与重定向策略，否则远程配置优先使用 `LoadRemoteSafe`。
-
-```go
-schema := vconf.Schema{Fields: []vconf.FieldRule{
-  {Group: "server", Key: "port", Type: vconf.TypeInt, Required: true},
-}}
-if err := cfg.ValidateSchema(schema); err != nil {
-  panic(err)
-}
-```
-
-### 链式 HTTP 请求
-
-当错误需要被调用方处理时，新代码优先使用 `E` 后缀快捷函数：`GetStringE`、`GetWithTimeoutE`、
-`GetWithParamsE`、`PostFormE`、`PostJSONE`、`PostStringE`、`DownloadStringE` 和
-`DownloadBytesE` 会返回 `(value, error)`，而不是把失败静默转为空值。
-
-```go
-package main
-
-import (
-  "errors"
-  "fmt"
-  "time"
-
-  knifer "github.com/imajinyun/go-knifer"
-  "github.com/imajinyun/go-knifer/vhttp"
-)
-
-func main() {
-  resp := vhttp.Get("https://example.com",
-    vhttp.WithTimeout(3*time.Second),
-    vhttp.WithHeader("X-Client", "go-knifer"),
-    vhttp.WithFollowRedirects(true),
-  ).
-    Query("lang", "go").
-    Execute()
-
-  if resp.Err() != nil {
-    panic(resp.Err())
-  }
-
-  fmt.Println(resp.Status())
-  fmt.Println(resp.ContentType())
-  fmt.Println(resp.Body())
-
-  body, err := vhttp.GetStringEWithOptions("https://example.com/ping",
-    vhttp.WithTimeout(500*time.Millisecond),
-  )
-  if errors.Is(err, knifer.ErrCodeTimeout) {
-    fmt.Println("request timed out")
-    return
-  }
-  if err != nil {
-    panic(err)
-  }
-  fmt.Println(body)
-}
-```
-
-如果确实需要统一默认值，仍然可以使用全局配置；但新代码更推荐使用单次请求
-options，让每个请求的超时、Header、重定向、TLS 配置、Cookie、User-Agent 等行为在调用点
-显式声明，避免全局状态影响其他请求。可用 options 包括 `WithTimeout`、`WithHeader`、
-`WithHeaders`、`WithFollowRedirects`、`WithMaxRedirects`、`WithTLSConfig`、`WithTransport`、
-`WithClient`、`WithCookieJar` 和 `WithUserAgent`。
-TLS 行为通过 `WithTLSConfig` 传入显式 `*tls.Config` 配置；facade 不提供跳过证书校验的 helper。
-
-HTTP 错误会带错误码分类，便于路由与重试判断：URL 或请求构造问题匹配 `knifer.ErrCodeInvalidInput`，
-超时匹配 `knifer.ErrCodeTimeout`，重定向/响应体限制匹配 `knifer.ErrCodeUnsupported`，其余传输或读取失败匹配
-`knifer.ErrCodeInternal`。自定义 HTTP 层错误可使用 `vhttp.NewErrorWithCode` 或 `vhttp.ErrorfWithCode` 包装。
-
-### Resty v3 HTTP facade
-
-`vresty` 是基于 `resty.dev/v3` 的轻量链式 facade，适合直接发起常见 HTTP
-请求。它支持 query 参数、Header、Cookie、Basic/Bearer Auth、JSON/form 请求体、
-multipart 文件上传、单次请求 options、TLS 配置、重定向控制以及下载等能力；响应侧
-提供状态码、Header、Cookie、Content-Type、字符串/字节正文、保存到文件等便捷方法。
-
-```go
-package main
-
-import (
-  "fmt"
-  "time"
-
-  "github.com/imajinyun/go-knifer/vresty"
-)
-
-func main() {
-  resp := vresty.Post("https://api.example.com/users",
-    vresty.WithTimeout(3*time.Second),
-    vresty.WithHeader("X-App", "go-knifer"),
-    vresty.WithUserAgent("go-knifer-demo/1.0"),
-  ).
-    Query("source", "demo").
-    BearerAuth("token").
-    BodyJSON(`{"name":"go-knifer"}`).
-    Execute()
-
-  if resp.Err() != nil {
-    panic(resp.Err())
-  }
-  if !resp.IsOK() {
-    panic(fmt.Sprintf("unexpected status: %d", resp.Status()))
-  }
-
-  fmt.Println(resp.ContentType())
-  fmt.Println(resp.Body())
-}
-```
-
-`vresty` 同样支持构造请求时传入 options，从而让每次调用独立覆盖默认行为：
-`WithTimeout`、`WithHeader`、`WithHeaders`、`WithFollowRedirects`、`WithMaxRedirects`、
-`WithTLSConfig`、`WithRestyClient`、`WithUserAgent` 和 `WithCookieDisabled`。
-
-简单请求和下载也可以使用快捷函数：
-
-```go
-body, err := vresty.GetStringE("https://example.com")
-if err != nil {
-  panic(err)
-}
-jsonBody, err := vresty.PostJSONE("https://api.example.com/events", `{"event":"created"}`)
-if err != nil {
-  panic(err)
-}
-n, err := vresty.DownloadFileSafe("https://example.com/report.csv", "./downloads")
-_, _, _ = body, jsonBody, n
-_ = err
-```
-
-下载目标是目录时，响应中推导出的文件名会先经过校验，再拼接到目标目录下。需要固定输出文件名时，请直接传入明确的文件路径。
-
-### Cron 调度与关闭
-
-`vcron` 同时支持包级辅助函数和显式调度器实例。长期运行的服务建议使用显式调度器，让生命周期更清晰：
-`RunningCount` 可查看正在执行的任务数，`Wait` 会等待任务结束，`Shutdown(ctx)` 会停止定时循环，并在给定 context 内等待任务完成。
-
-```go
-package main
-
-import (
-  "context"
-  "fmt"
-  "time"
-
-  "github.com/imajinyun/go-knifer/vcron"
-)
-
-func main() {
-  s := vcron.NewSchedulerWithOptions(vcron.WithMatchSecond(true))
-  _, _ = s.ScheduleFunc("* * * * * *", func() {
-    time.Sleep(100 * time.Millisecond)
-    fmt.Println("tick")
-  })
-
-  if err := s.Start(); err != nil {
-    panic(err)
-  }
-
-  time.Sleep(1500 * time.Millisecond)
-  fmt.Println("running:", s.RunningCount())
-
-  ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-  defer cancel()
-  if err := s.Shutdown(ctx, true); err != nil {
-    panic(err)
-  }
-}
-```
-
-### URL 与 URI 工具
-
-`vurl` 集中提供 URL 解析、标准化、query 字符串处理、百分号编码、URL 构造、
-协议判断、Data URI 构造和文件 URL 转换等能力。对于用户传入的资源地址，优先使用安全资源 helper，
-而不是直接使用 `Open`：默认会拒绝本地文件、非 HTTP 协议、私有网络目标和不安全重定向。
-
-```go
-package main
-
-import (
-  "fmt"
-  "io"
-
-  "github.com/imajinyun/go-knifer/vurl"
-)
-
-func main() {
-  normalized := vurl.Normalize(`example.com\docs/a b`, true, true)
-  completed, _ := vurl.Complete("https://example.com/base/", "next?id=1")
-  query := vurl.BuildQuery(map[string]any{"lang": "go", "page": 1})
-  dataURI := vurl.DataURIBase64("text/plain", "aGVsbG8=")
-  built := vurl.NewHTTPURLBuilder("example.com").AddPathSegment("a b").AddQuery("q", "go").Build()
-  reader, err := vurl.OpenSafeWithOptions("https://example.com/config.yaml",
-    vurl.WithAllowedHosts("example.com"),
-  )
-  if err != nil {
-    panic(err)
-  }
-  defer reader.Close()
-  _, _ = io.Copy(io.Discard, reader)
-
-  fmt.Println(normalized)
-  fmt.Println(completed)
-  fmt.Println(query)
-  fmt.Println(vurl.IsWebURL(completed))
-  fmt.Println(dataURI)
-  fmt.Println(built)
-}
-```
-
-`OpenWithOptions` 和 `ContentLengthWithOptions` 仍可用于可信本地文件或受控资源。资源地址跨越信任边界时，
-使用 `OpenSafeWithOptions` 和 `ContentLengthSafeWithOptions`。
-
-### 网络与 IP 工具
-
-`vnet` 提供网络辅助能力，覆盖 IPv4/IPv6 转换、CIDR 与掩码计算、IP 范围展开、
-本地端口探测、主机/网卡/MAC 查询、TLS client config 创建，
-以及 multipart 表单辅助。
-
-```go
-package main
-
-import (
-  "fmt"
-
-  "github.com/imajinyun/go-knifer/vnet"
-)
-
-func main() {
-  ipLong, _ := vnet.IPv4ToLong("127.0.0.1")
-  begin, _ := vnet.BeginIP("192.168.1.9", 24)
-  end, _ := vnet.EndIP("192.168.1.9", 24)
-  tlsConfig := vnet.CreateTLSConfig()
-
-  fmt.Println(ipLong, vnet.LongToIPv4(ipLong))
-  fmt.Println(begin, end, vnet.IsInRange("192.168.1.8", "192.168.1.0/24"))
-  fmt.Println(vnet.HideIPPart("192.168.1.8"))
-  fmt.Println(tlsConfig.MinVersion)
-}
-```
-
-`CreateTLSConfig` 创建最低版本为 TLS 1.2 的 client TLS 配置。需要自定义信任根时，使用
-`NewTLSConfigBuilder`，并从 bytes、reader 或文件添加 root CA PEM 数据。
-
-### 对象工具
-
-`vobj` 提供 nil 安全的对象辅助能力，覆盖相等性判断、空值判断、默认值、
-克隆/序列化、比较和类型检查等常见数据处理场景。
-
-```go
-package main
-
-import (
-  "fmt"
-
-  "github.com/imajinyun/go-knifer/vobj"
-)
-
-type Profile struct {
-  Name string
-  Tags []string
-}
-
-func main() {
-  name := "go-knifer"
-  profile := Profile{Name: name, Tags: []string{"go", "tool"}}
-
-  cloned := vobj.CloneIfPossible(profile)
-  fmt.Println(vobj.Equal(1, int64(1)))
-  fmt.Println(vobj.IsEmpty([]string{}))
-  fmt.Println(vobj.DefaultIfNil(&name, "default"))
-  fmt.Println(vobj.Contains(cloned.Tags, "go"))
-  fmt.Println(vobj.TypeName(profile))
-}
-```
-
-### Map 工具
-
-`vmap` 提供泛型 map 常用操作。构造函数和纯函数会返回非 nil map，且不会修改输入 map；只有
-`Clear`、`Update` 这类显式原地操作会修改调用方传入的 map。合并场景同时支持后者覆盖前者的
-`Merge`，以及自定义冲突处理的 `MergeFunc`。
-
-```go
-package main
-
-import (
-  "fmt"
-
-  "github.com/imajinyun/go-knifer/vmap"
-)
-
-func main() {
-  base := vmap.Of[string, int]("a", 1, "b", 2)
-  merged := vmap.Merge(base, map[string]int{"b": 20, "c": 3})
-  evens := vmap.FilterValues(merged, func(v int) bool { return v%2 == 0 })
-  grouped := vmap.GroupBy([]string{"go", "git", "java"}, func(s string) byte { return s[0] })
-
-  fmt.Println(vmap.SortedKeys(merged))
-  fmt.Println(evens)
-  fmt.Println(grouped['g'])
-}
-```
-
-### 数据库工具
-
-`vdb` 提供基于 `database/sql` 的 SQL 辅助能力：命名参数、条件构造、
-Entity 写入/更新/删除、分页、事务和轻量元信息查询。驱动选择和连接池仍由调用方控制。
-条件构造器会对操作符做固定白名单校验，优先使用 `Eq`、`Ne`、`Gt`、`Gte`、`Lt`、`Lte`、
-`Like`、`In`、`Between`、`IsNull`、`IsNotNull`、`AndGroup`、`OrGroup` 这类类型化 helper，
-避免拼接临时 operator 字符串。
-
-```go
-package main
-
-import (
-  "context"
-  "database/sql"
-  "fmt"
-
-  "github.com/imajinyun/go-knifer/vdb"
-)
-
-func main() {
-  var raw *sql.DB // 通常由你选择的 SQL driver 打开
-  db := vdb.Use(raw, vdb.WithDialect(vdb.DialectPostgres))
-
-  sqlText, args, _ := vdb.NewBuilder(vdb.WithDialect(vdb.DialectPostgres)).
-    Select("id", "name").
-    From("users").
-    Where(vdb.Eq("status", "active")).
-    OrderBy(vdb.Desc("id")).
-    Page(vdb.NewPage(1, 20)).
-    SQL()
-
-  named, _ := vdb.ParseNamed(
-    "select * from users where id = :id",
-    map[string]any{"id": 1},
-    vdb.DialectPostgres,
-  )
-
-  _ = db
-  _ = context.Background()
-  fmt.Println(sqlText, args, named.SQL, named.Params)
-}
-```
-
-### Bean 与结构体映射
-
-`vbean` 用于在 struct 与 map 之间直接复制属性，不通过 JSON 序列化绕路。
-它支持 tag/alias 匹配、弱类型转换，以及忽略空值/零值等单次调用 options。
-
-```go
-package main
-
-import (
-  "fmt"
-
-  "github.com/imajinyun/go-knifer/vbean"
-)
-
-type UserDTO struct {
-  Name  string `bean:"name,alias=full_name|displayName"`
-  Age   string `bean:"age"`
-  Admin string `bean:"admin"`
-}
-
-type User struct {
-  Name  string `json:"full_name"`
-  Age   int    `json:"age"`
-  Admin bool   `json:"admin"`
-}
-
-func main() {
-  src := UserDTO{Name: "alice", Age: "42", Admin: "yes"}
-
-  var dst User
-  _ = vbean.CopyProperties(src, &dst, vbean.WithIgnoreEmpty(true))
-
-  m, _ := vbean.ToMap(dst)
-  fmt.Println(dst.Age, dst.Admin)
-  fmt.Println(m["full_name"])
-}
-```
-
-### 序列化工具
-
-`vobj` 提供基于 gob 的序列化辅助能力，覆盖字节编码、泛型反序列化、
-深拷贝、接口类型注册，以及可选的解码对象图类型校验。
-
-```go
-package main
-
-import (
-  "fmt"
-
-  "github.com/imajinyun/go-knifer/vobj"
-)
-
-type Profile struct {
-  Name string
-  Tags []string
-}
-
-func main() {
-  profile := Profile{Name: "go-knifer", Tags: []string{"go", "tool"}}
-
-  data, _ := vobj.Serialize(profile)
-  decoded, _ := vobj.DeserializeTo[Profile](data, Profile{})
-  cloned := vobj.CloneIfPossible(profile)
-
-  fmt.Println(decoded.Name)
-  fmt.Println(cloned.Tags)
-}
-```
-
-### 版本工具
-
-`vver` 提供版本号比较与表达式匹配能力。表达式支持比较符（`>`、`>=`、
-`<`、`<=`、`≥`、`≤`）、`1.0.0-1.5.0` 这样的闭区间、`1.0.0-` 这样的
-开放区间，以及使用自定义分隔符的多表达式匹配。
-
-```go
-package main
-
-import (
-  "fmt"
-
-  "github.com/imajinyun/go-knifer/vver"
-)
-
-func main() {
-  fmt.Println(vver.CompareVersion("1.0.0", "1.0.2"))
-  fmt.Println(vver.IsGreaterThan("1.13.0", "1.12.1c"))
-  fmt.Println(vver.MatchEl("1.0.2", ">=1.0.0;1.2.0"))
-  fmt.Println(vver.MatchElWithDelimiter("1.0.2", "<1.0.1,1.0.2-1.1.1", ","))
-}
-```
-
-### ZIP、gzip 与 zlib 工具
-
-`vzip` 提供压缩包创建/解压、条目读取、遍历、追加、内存条目写入，
-以及 byte/string 级别的 gzip 和 zlib 压缩解压能力。解压和解压缩默认有大小边界；
-使用 `WithMaxBytes` 或 `Limit` 辅助函数为预期归档设置明确预算。
-
-```go
-package main
-
-import (
-  "fmt"
-
-  "github.com/imajinyun/go-knifer/vzip"
-)
-
-func main() {
-  _ = vzip.ZipEntries("demo.zip", vzip.EntryData{Name: "hello.txt", Data: []byte("hello")})
-  _ = vzip.UnzipToWithOptions("demo.zip", "./out", vzip.WithMaxBytes(64<<20))
-  data, _ := vzip.GetBytes("demo.zip", "hello.txt")
-  gz, _ := vzip.GzipString(string(data))
-  text, _ := vzip.UnGzipString(gz)
-
-  fmt.Println(text)
-}
-```
-
-### 脱敏工具
-
-`vmask` 提供常见敏感字段的内置遮罩规则，例如姓名、证件号、电话、地址、
-邮箱、密码、车牌、银行卡、IP 地址、护照号和信用代码。
-
-```go
-package main
-
-import (
-  "fmt"
-
-  "github.com/imajinyun/go-knifer/vmask"
-)
-
-func main() {
-  fmt.Println(vmask.MobilePhone("18049531999"))
-  fmt.Println(vmask.Email("duandazhi-jack@gmail.com.cn"))
-  fmt.Println(vmask.BankCard("11011111222233333256"))
-  fmt.Println(vmask.Masked("PJ1234567", vmask.PassportType))
-}
-```
-
-### 正则工具
-
-`vregex` 提供安全的正则辅助能力，覆盖全量匹配、子串查找、捕获分组、
-命名分组、删除、计数、索引定位、模板/函数替换，以及正则元字符转义。
-
-```go
-package main
-
-import (
-  "fmt"
-
-  "github.com/imajinyun/go-knifer/vregex"
-)
-
-func main() {
-  text := "date=2026-05-31; score=100"
-
-  fmt.Println(vregex.GetByName(`(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})`, text, "year"))
-  fmt.Println(vregex.ExtractMulti(`score=(\d+)`, text, "score:$1"))
-  fmt.Println(vregex.DelFirst(`\d+`, text))
-  fmt.Println(vregex.ReplaceAllFunc(text, `\d+`, func(m vregex.MatchResult) string {
-    return "[" + m.Text + "]"
-  }))
-  fmt.Println(vregex.Escape("a+b(c)"))
-}
-```
-
-### 摘要与 JWT
-
-`vcrypto` 只暴露推荐的加密辅助能力：SHA-2 摘要、HMAC-SHA-256/384/512、PBKDF2-SHA-256、
-AES-GCM、RSA-OAEP 和 RSA-PSS。下面示例使用 AES-GCM 做认证加密，并使用 HMAC JWT 签发对称服务 token。
-
-```go
-package main
-
-import (
-  "fmt"
-  "time"
-
-  "github.com/imajinyun/go-knifer/vcrypto"
-  "github.com/imajinyun/go-knifer/vjwt"
-)
-
-func main() {
-  fmt.Println(vcrypto.SHA256Hex("hello"))
-  fmt.Println(vcrypto.HMACSHA256Hex([]byte("key"), []byte("hello")))
-
-  aesKey := []byte("1234567890123456")
-  iv := []byte("abcdefghijklmnop")
-  cipherText, err := vcrypto.AESEncryptGCM([]byte("secret message"), aesKey, iv[:12], nil)
-  if err != nil {
-    panic(err)
-  }
-  plain, err := vcrypto.AESDecryptGCM(cipherText, aesKey, iv[:12], nil)
-  if err != nil {
-    panic(err)
-  }
-  fmt.Println(string(plain))
-
-  key := []byte("secret")
-  token, err := vjwt.NewJWT().
-    SetSubject("user-1").
-    SetPayload("role", "admin").
-    SetExpiresAt(time.Now().Add(time.Hour)).
-    SetKey(key).
-    Sign()
-  if err != nil {
-    panic(err)
-  }
-
-  jwt, err := vjwt.ParseJWT(token)
-  if err != nil {
-    panic(err)
-  }
-
-  fmt.Println(jwt.SetKey(key).Verify())
-}
-```
-
-### 泛型集合
-
-`vset` 提供泛型 `Set[T]` 和常用类型构造函数。对外的泛型 facade 使用普通泛型
-类型实现，而不是 generic type alias，因此默认 Go 工具链和 `go vet` 下无需开启
-`GOEXPERIMENT=aliastypeparams`。
-
-```go
-package main
-
-import (
-  "encoding/json"
-  "fmt"
-
-  "github.com/imajinyun/go-knifer/vset"
-)
-
-func main() {
-  tags := vset.New("go", "tool")
-  tags.Add("sdk")
-
-  other := vset.New("tool", "cli")
-  fmt.Println(tags.Contains("go"))
-  fmt.Println(tags.Union(other).Members())
-  fmt.Println(tags.Intersect(other).Members())
-
-  data, _ := json.Marshal(tags)
-  var decoded vset.Set[string]
-  _ = json.Unmarshal(data, &decoded)
-  fmt.Println(decoded.Equal(tags))
-
-  ids := vset.NewInt(1, 2, 3)
-  ids.Remove(2)
-  fmt.Println(ids.Members())
-}
-```
-
-### 可切分任务执行
-
-`vjob` 将任务接口和调度配置拆开：任务只需要实现 `Len` 和按区间执行的
-`Run`，`Options` 负责控制分片大小和最大并发数。`Options` 零值合法：
-`Run` 默认把整个任务作为一个分片串行执行；需要指定批大小或并发度时使用
-`RunWith`。每个分片返回的 `Merge` 会在分片执行成功后按顺序串行回放，适合
-worker 并发构造局部结果，再安全地合并到共享结果中。`Batch[T]` 是对内部实现的
-facade 包装类型，不是 generic type alias，因此 `go vet` 不需要额外实验开关。
-
-```go
-package main
-
-import (
-  "context"
-  "fmt"
-  "sync"
-
-  "github.com/imajinyun/go-knifer/vjob"
-)
-
-func main() {
-  values := []int{1, 2, 3, 4}
-  var (
-    mu  sync.Mutex
-    sum int
-  )
-
-  job := vjob.NewBatch(func(ctx context.Context, batch []int) (vjob.Merge, error) {
-    local := 0
-    for _, v := range batch {
-      local += v
-    }
-    return func() error {
-      mu.Lock()
-      defer mu.Unlock()
-      sum += local
-      return nil
-    }, nil
-  }, values)
-
-  if err := vjob.RunWith(context.Background(), job, vjob.Options{BatchSize: 2, MaxConcurrency: 2}); err != nil {
-    panic(err)
-  }
-  fmt.Println(sum)
-}
-```
-
-长期复用的业务任务也可以直接内嵌 `vjob.Options`，由任务自身携带默认调度配置：
-
-```go
-type UserImportJob struct {
-  vjob.Options
-  users []User
-}
-
-func (j *UserImportJob) Len() int { return len(j.users) }
-
-func (j *UserImportJob) Run(ctx context.Context, start, end int) (vjob.Merge, error) {
-  batch := j.users[start:end]
-  return func() error {
-    return saveUsers(batch)
-  }, nil
-}
-
-err := vjob.RunWith(ctx, job, job.Options)
-```
-
-### 错误恢复与堆栈工具
-
-```go
-package main
-
-import (
-  "fmt"
-
-  "github.com/imajinyun/go-knifer/verr"
-)
-
-func main() {
-  err := verr.Recover(func() error {
-    panic("boom")
-  }, "run risky job")
-  if err != nil {
-    fmt.Println(err)
-    fmt.Println(verr.GetStack(err))
-  }
-
-  collector := verr.NewCollector()
-  collector.GoRun(func() error { return fmt.Errorf("task failed") }, "async task")
-  if err := collector.Error(); err != nil {
-    fmt.Println(err)
-  }
-}
-```
+README 只保留模块导航。每个 `v*` 子包的 Quickstart 示例已经拆分到上方模块矩阵中的对应链接，便于按领域查看和维护。
 
 ## 📖 文档
 
 - 根包说明：`doc.go`
 - 对外 API：各 `v*` 子包的 `doc.go` 与 facade 文件
-- 测试示例：各模块下的 `*_test.go`
+- Quickstart 示例：上方模块矩阵中的 `docs/doc/*.md` 链接
 - 在线文档：[pkg.go.dev/github.com/imajinyun/go-knifer](https://pkg.go.dev/github.com/imajinyun/go-knifer)
 
 ## 📦 下载与构建
