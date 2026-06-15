@@ -1,9 +1,6 @@
 package mail
 
-import (
-	"fmt"
-	"strings"
-)
+import "strings"
 
 // Header stores message headers in insertion order.
 type Header struct {
@@ -76,5 +73,3 @@ func writeHeaderLine(b *strings.Builder, name string, values ...string) {
 	}
 	b.WriteString("\r\n")
 }
-
-func errHeader(name string) error { return fmt.Errorf("%w: %s", ErrInvalidHeader, name) }

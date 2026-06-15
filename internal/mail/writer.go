@@ -238,7 +238,7 @@ func writeFilePart(mw *multipart.Writer, file Attachment, inline bool, charset C
 	if err != nil {
 		return fmt.Errorf("open file part: %w", err)
 	}
-	defer r.Close()
+	defer func() { _ = r.Close() }()
 	encoder := base64.NewEncoder(base64.StdEncoding, newBase64LineWriter(part))
 	if _, err := io.Copy(encoder, r); err != nil {
 		return fmt.Errorf("encode file part: %w", err)

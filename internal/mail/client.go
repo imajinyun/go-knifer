@@ -114,8 +114,8 @@ func Send(ctx context.Context, host string, port int, message *Message, opts ...
 
 // SendText creates and sends a plain text message.
 func SendText(ctx context.Context, host string, port int, from string, to []string, subject, text string, opts ...ClientOption) error {
-	msgOpts := []MessageOption{WithFrom(from), WithSubject(subject), WithText(text)}
-	msgOpts = append(msgOpts, WithTo(to...))
+	msgOpts := make([]MessageOption, 0, 4)
+	msgOpts = append(msgOpts, WithFrom(from), WithSubject(subject), WithText(text), WithTo(to...))
 	message, err := NewMessage(msgOpts...)
 	if err != nil {
 		return err
@@ -125,8 +125,8 @@ func SendText(ctx context.Context, host string, port int, from string, to []stri
 
 // SendHTML creates and sends an HTML message.
 func SendHTML(ctx context.Context, host string, port int, from string, to []string, subject, html string, opts ...ClientOption) error {
-	msgOpts := []MessageOption{WithFrom(from), WithSubject(subject), WithHTML(html)}
-	msgOpts = append(msgOpts, WithTo(to...))
+	msgOpts := make([]MessageOption, 0, 4)
+	msgOpts = append(msgOpts, WithFrom(from), WithSubject(subject), WithHTML(html), WithTo(to...))
 	message, err := NewMessage(msgOpts...)
 	if err != nil {
 		return err
@@ -241,7 +241,7 @@ func (s smtpSender) Send(ctx context.Context, message *Message) error {
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 	if deadline, ok := ctx.Deadline(); ok {
 		_ = conn.SetDeadline(deadline)
 	}
@@ -249,7 +249,7 @@ func (s smtpSender) Send(ctx context.Context, message *Message) error {
 	if err != nil {
 		return fmt.Errorf("create smtp client: %w", err)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 	if s.config.LocalName != "" {
 		if err := client.Hello(s.config.LocalName); err != nil {
 			return fmt.Errorf("smtp hello: %w", err)
