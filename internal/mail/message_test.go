@@ -3,6 +3,8 @@ package mail
 import (
 	"bytes"
 	"errors"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -111,6 +113,251 @@ func TestParseAddressListRejectsCRLF(t *testing.T) {
 	_, err := ParseAddressList("to@example.com\nBcc: attacker@example.com")
 	if !errors.Is(err, ErrInvalidAddress) {
 		t.Fatalf("ParseAddressList() error = %v, want %v", err, ErrInvalidAddress)
+	}
+}
+
+func TestAddressAndHeaderHelpers(t *testing.T) {
+	addr, err := NewAddress("Alice", "alice@example.com")
+	if err != nil {
+		t.Fatalf("NewAddress() error = %v", err)
+	}
+	if addr.String() != `"Alice" <alice@example.com>` {
+		t.Fatalf("Address.String() = %q", addr.String())
+	}
+	if empty := (*Address)(nil).String(); empty != "" {
+		t.Fatalf("nil Address.String() = %q, want empty", empty)
+	}
+	if _, err := NewAddress("bad\nname", "alice@example.com"); !errors.Is(err, ErrInvalidAddress) {
+		t.Fatalf("NewAddress(CRLF) error = %v, want %v", err, ErrInvalidAddress)
+	}
+	if _, err := NewAddress("Alice", "Alice <alice@example.com>"); !errors.Is(err, ErrInvalidAddress) {
+		t.Fatalf("NewAddress(display email) error = %v, want %v", err, ErrInvalidAddress)
+	}
+
+	var header Header
+	if err := header.Add("X-Test", "one"); err != nil {
+		t.Fatalf("Header.Add() error = %v", err)
+	}
+	if err := header.Set("X-Test", "two", "three"); err != nil {
+		t.Fatalf("Header.Set(existing) error = %v", err)
+	}
+	if err := header.Set("X-Other", "value"); err != nil {
+		t.Fatalf("Header.Set(new) error = %v", err)
+	}
+	values := header.Values("x-test")
+	if strings.Join(values, ",") != "two,three" {
+		t.Fatalf("Header.Values() = %v", values)
+	}
+	values[0] = "mutated"
+	if got := header.Values("X-Test")[0]; got != "two" {
+		t.Fatalf("Header.Values() returned mutable slice, got %q", got)
+	}
+	if got := header.Values("missing"); got != nil {
+		t.Fatalf("Header.Values(missing) = %v, want nil", got)
+	}
+	if err := header.Add("Bad:Name", "value"); !errors.Is(err, ErrInvalidHeader) {
+		t.Fatalf("Header.Add(bad name) error = %v, want %v", err, ErrInvalidHeader)
+	}
+	if err := header.Add("X-Bad", "value\r\nInjected: true"); !errors.Is(err, ErrInvalidHeader) {
+		t.Fatalf("Header.Add(bad value) error = %v, want %v", err, ErrInvalidHeader)
+	}
+}
+
+func TestMessageOptionsAndRenderingPaths(t *testing.T) {
+	from := &Address{Name: "Sender", Email: "sender@example.com"}
+	msg, err := NewMessage(
+		WithFromAddress(from),
+		WithTo("to@example.com"),
+		WithReplyTo("reply@example.com"),
+		WithSubject("html"),
+		WithHTML("<strong>Hello</strong>"),
+		WithHeader("X-Custom", "a", "b"),
+		WithCharset(CharsetASCII),
+		WithEncoding(EncodingBase64),
+	)
+	if err != nil {
+		t.Fatalf("NewMessage() error = %v", err)
+	}
+	from.Email = "changed@example.com"
+	raw, err := msg.Bytes()
+	if err != nil {
+		t.Fatalf("Bytes() error = %v", err)
+	}
+	text := string(raw)
+	assertContains(t, text, `From: "Sender" <sender@example.com>`)
+	assertContains(t, text, "Reply-To: <reply@example.com>\r\n")
+	assertContains(t, text, "X-Custom: a, b\r\n")
+	assertContains(t, text, "Content-Type: text/html; charset=US-ASCII\r\n")
+	assertContains(t, text, "PHN0cm9uZz5IZWxsbzwvc3Ryb25nPg==")
+}
+
+func TestMessageAttachmentFileAndInlineOnlyRendering(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "report.txt")
+	if err := os.WriteFile(path, []byte("file-body"), 0o600); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	msg, err := NewMessage(
+		WithFrom("from@example.com"),
+		WithTo("to@example.com"),
+		WithText("plain"),
+		WithAttachmentFile(path),
+		WithBoundaryGenerator(sequenceBoundary("mixed-file")),
+	)
+	if err != nil {
+		t.Fatalf("NewMessage() error = %v", err)
+	}
+	raw, err := msg.Bytes()
+	if err != nil {
+		t.Fatalf("Bytes() error = %v", err)
+	}
+	text := string(raw)
+	assertContains(t, text, `Content-Type: multipart/mixed; boundary="mixed-file"`)
+	assertContains(t, text, `Content-Type: text/plain; name="report.txt"`)
+	assertContains(t, text, "ZmlsZS1ib2R5")
+
+	inline, err := NewMessage(
+		WithFrom("from@example.com"),
+		WithTo("to@example.com"),
+		WithHTML(`<img src="cid:logo.png">`),
+		WithInline("logo.png", "", []byte("inline"), ""),
+		WithBoundaryGenerator(sequenceBoundary("related-only")),
+	)
+	if err != nil {
+		t.Fatalf("NewMessage(inline) error = %v", err)
+	}
+	raw, err = inline.Bytes()
+	if err != nil {
+		t.Fatalf("Bytes(inline) error = %v", err)
+	}
+	text = string(raw)
+	assertContains(t, text, `Content-Type: multipart/related; boundary="related-only"`)
+	assertContains(t, text, "Content-Id: <logo.png>")
+	assertContains(t, text, `Content-Type: image/png; name="logo.png"`)
+}
+
+func TestMessageOptionValidationErrors(t *testing.T) {
+	if _, err := NewMessage(WithFromAddress(nil)); !errors.Is(err, ErrInvalidAddress) {
+		t.Fatalf("WithFromAddress(nil) error = %v, want %v", err, ErrInvalidAddress)
+	}
+	if _, err := NewMessage(
+		WithFrom("from@example.com"),
+		WithTo("to@example.com"),
+		WithText("body"),
+		WithHeader("X-Bad", "bad\nvalue"),
+	); !errors.Is(err, ErrInvalidHeader) {
+		t.Fatalf("WithHeader(CRLF) error = %v, want %v", err, ErrInvalidHeader)
+	}
+	if _, err := NewMessage(
+		WithFrom("from@example.com"),
+		WithTo("to@example.com"),
+		WithText("body"),
+		WithMessageID("id\nnext"),
+	); !errors.Is(err, ErrInvalidHeader) {
+		t.Fatalf("WithMessageID(CRLF) error = %v, want %v", err, ErrInvalidHeader)
+	}
+	if _, err := NewMessage(
+		WithFrom("from@example.com"),
+		WithTo("to@example.com"),
+		WithText("body"),
+		WithCharset(Charset("bad\ncharset")),
+	); !errors.Is(err, ErrInvalidHeader) {
+		t.Fatalf("WithCharset(CRLF) error = %v, want %v", err, ErrInvalidHeader)
+	}
+	if _, err := NewMessage(
+		WithFrom("from@example.com"),
+		WithTo("to@example.com"),
+		WithText("body"),
+		WithEncoding(Encoding("bad\nencoding")),
+	); !errors.Is(err, ErrInvalidHeader) {
+		t.Fatalf("WithEncoding(CRLF) error = %v, want %v", err, ErrInvalidHeader)
+	}
+	if _, err := NewMessage(
+		WithFrom("from@example.com"),
+		WithTo("to@example.com"),
+		WithText("body"),
+		WithBoundaryGenerator(nil),
+	); err == nil {
+		t.Fatal("WithBoundaryGenerator(nil) error = nil, want error")
+	}
+	if _, err := NewMessage(
+		WithFrom("from@example.com"),
+		WithTo("to@example.com"),
+		WithText("body"),
+		WithAttachmentFile(filepath.Join(t.TempDir(), "missing.txt")),
+	); err == nil {
+		t.Fatal("WithAttachmentFile(missing) error = nil, want error")
+	}
+	if _, err := NewMessage(
+		WithFrom("from@example.com"),
+		WithTo("to@example.com"),
+		WithText("body"),
+		WithAttachment("bad\nname.txt", []byte("x"), TypeTextPlain),
+	); !errors.Is(err, ErrInvalidHeader) {
+		t.Fatalf("WithAttachment(CRLF) error = %v, want %v", err, ErrInvalidHeader)
+	}
+}
+
+func TestMessageEncodingAndBoundaryErrors(t *testing.T) {
+	for _, tt := range []struct {
+		name     string
+		encoding Encoding
+		body     string
+	}{
+		{name: "seven bit", encoding: Encoding7Bit, body: "plain"},
+		{name: "eight bit", encoding: Encoding8Bit, body: "héllo"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			msg, err := NewMessage(
+				WithFrom("from@example.com"),
+				WithTo("to@example.com"),
+				WithText(tt.body),
+				WithEncoding(tt.encoding),
+			)
+			if err != nil {
+				t.Fatalf("NewMessage() error = %v", err)
+			}
+			raw, err := msg.Bytes()
+			if err != nil {
+				t.Fatalf("Bytes() error = %v", err)
+			}
+			assertContains(t, string(raw), tt.body)
+		})
+	}
+
+	msg, err := NewMessage(
+		WithFrom("from@example.com"),
+		WithTo("to@example.com"),
+		WithText("plain"),
+		WithHTML("<p>html</p>"),
+	)
+	if err != nil {
+		t.Fatalf("NewMessage(alternative) error = %v", err)
+	}
+	raw, err := msg.Bytes()
+	if err != nil {
+		t.Fatalf("Bytes(alternative) error = %v", err)
+	}
+	assertContains(t, string(raw), "Content-Type: multipart/alternative;")
+
+	msg.Encoding = Encoding("x-bad")
+	if _, err := msg.Bytes(); !errors.Is(err, ErrInvalidHeader) {
+		t.Fatalf("Bytes(unsupported encoding) error = %v, want %v", err, ErrInvalidHeader)
+	}
+
+	badBoundary, err := NewMessage(
+		WithFrom("from@example.com"),
+		WithTo("to@example.com"),
+		WithText("plain"),
+		WithHTML("<p>html</p>"),
+		WithBoundaryGenerator(func() (string, error) { return "bad\r\nboundary", nil }),
+	)
+	if err != nil {
+		t.Fatalf("NewMessage(bad boundary) error = %v", err)
+	}
+	if _, err := badBoundary.Bytes(); err == nil {
+		t.Fatal("Bytes(bad boundary) error = nil, want error")
 	}
 }
 
