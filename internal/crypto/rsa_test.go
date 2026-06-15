@@ -9,7 +9,7 @@ import (
 )
 
 func TestRSAOAEP(t *testing.T) {
-	priv, err := GenerateRSAKey(1024)
+	priv, err := GenRSAKey(1024)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -28,7 +28,7 @@ func TestRSAOAEP(t *testing.T) {
 }
 
 func TestRSAPKCS1PSS(t *testing.T) {
-	priv, err := GenerateRSAKey(1024)
+	priv, err := GenRSAKey(1024)
 	if err != nil {
 		t.Fatal(err)
 	}

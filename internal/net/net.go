@@ -464,13 +464,13 @@ func NewLocalPortGeneratorWithOptions(beginPort int, opts ...PortOption) *LocalP
 	return &LocalPortGenerator{next: beginPort, opts: append([]PortOption(nil), opts...)}
 }
 
-// Generate returns the next available local port.
-func (g *LocalPortGenerator) Generate() (int, error) {
-	return g.GenerateWithOptions()
+// Gen returns the next available local port.
+func (g *LocalPortGenerator) Gen() (int, error) {
+	return g.GenWithOptions()
 }
 
-// GenerateWithOptions returns the next available local port with per-call probe options.
-func (g *LocalPortGenerator) GenerateWithOptions(opts ...PortOption) (int, error) {
+// GenWithOptions returns the next available local port with per-call probe options.
+func (g *LocalPortGenerator) GenWithOptions(opts ...PortOption) (int, error) {
 	if g == nil {
 		return 0, fmt.Errorf("nil local port generator")
 	}

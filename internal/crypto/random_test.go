@@ -15,14 +15,14 @@ func TestRandomBytesWithOptions(t *testing.T) {
 	if !bytes.Equal(b, []byte{1, 2, 3, 4}) {
 		t.Fatalf("RandomBytesWithOptions() = %v", b)
 	}
-	key, err := GenerateAESKeyWithOptions(16, WithRandomReader(bytes.NewReader(bytes.Repeat([]byte{0x7f}, 16))))
+	key, err := GenAESKeyWithOptions(16, WithRandomReader(bytes.NewReader(bytes.Repeat([]byte{0x7f}, 16))))
 	if err != nil {
-		t.Fatalf("GenerateAESKeyWithOptions() error = %v", err)
+		t.Fatalf("GenAESKeyWithOptions() error = %v", err)
 	}
 	if !bytes.Equal(key, bytes.Repeat([]byte{0x7f}, 16)) {
-		t.Fatalf("GenerateAESKeyWithOptions() = %x", key)
+		t.Fatalf("GenAESKeyWithOptions() = %x", key)
 	}
-	if _, err := GenerateAESKeyWithOptions(15, WithRandomReader(bytes.NewReader(nil))); !errors.Is(err, ErrInvalidKey) {
-		t.Fatalf("GenerateAESKeyWithOptions invalid error = %v", err)
+	if _, err := GenAESKeyWithOptions(15, WithRandomReader(bytes.NewReader(nil))); !errors.Is(err, ErrInvalidKey) {
+		t.Fatalf("GenAESKeyWithOptions invalid error = %v", err)
 	}
 }

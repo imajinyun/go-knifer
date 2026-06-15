@@ -10,12 +10,12 @@ import (
 
 // CodeGenerator mirrors the CodeGenerator interface from captcha.
 //
-//	Generate returns the raw captcha text that is rendered into the image.
+//	Gen returns the raw captcha text that is rendered into the image.
 //	Verify   checks whether user input matches the raw text. Implementations may
 //	         use different semantics; RandomGenerator compares directly, while
 //	         MathGenerator evaluates the expression.
 type CodeGenerator interface {
-	Generate() string
+	Gen() string
 	Verify(code, userInput string) bool
 }
 
@@ -41,8 +41,8 @@ func NewRandomGeneratorWithBase(base string, length int) *RandomGenerator {
 	return &RandomGenerator{BaseStr: base, Length: length}
 }
 
-// Generate returns a random string.
-func (g *RandomGenerator) Generate() string {
+// Gen returns a random string.
+func (g *RandomGenerator) Gen() string {
 	return g.GenWithOptions()
 }
 
@@ -145,8 +145,8 @@ func NewMathGeneratorWith(numberLength int, resultHasNegativeNumber bool) *MathG
 // Length returns the rendered captcha length: numberLength*2 + 2.
 func (g *MathGenerator) Length() int { return g.NumberLength*2 + 2 }
 
-// Generate returns an "a op b=" expression padded with spaces on the right.
-func (g *MathGenerator) Generate() string {
+// Gen returns an "a op b=" expression padded with spaces on the right.
+func (g *MathGenerator) Gen() string {
 	return g.GenWithOptions()
 }
 

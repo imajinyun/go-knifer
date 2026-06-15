@@ -20,10 +20,10 @@ func RandomBytesWithOptions(n int, opts ...RandomOption) ([]byte, error) {
 	return cryptoimpl.RandomBytesWithOptions(n, opts...)
 }
 
-// GenerateAESKey returns a random AES key. Valid sizes are 16, 24, or 32 bytes.
-func GenerateAESKey(size int) ([]byte, error) { return cryptoimpl.GenerateAESKey(size) }
+// GenAESKey returns a random AES key. Valid sizes are 16, 24, or 32 bytes.
+func GenAESKey(size int) ([]byte, error) { return cryptoimpl.GenAESKey(size) }
 
-// GenerateAESKeyWithOptions returns a random AES key using custom random options.
-func GenerateAESKeyWithOptions(size int, opts ...RandomOption) ([]byte, error) {
-	return cryptoimpl.GenerateAESKeyWithOptions(size, opts...)
+// GenAESKeyWithOptions returns a random AES key using custom random options.
+func GenAESKeyWithOptions(size int, opts ...RandomOption) ([]byte, error) {
+	return cryptoimpl.GenAESKeyWithOptions(size, opts...)
 }

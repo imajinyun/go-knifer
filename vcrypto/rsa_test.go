@@ -11,7 +11,7 @@ import (
 )
 
 func TestRSAEncryptDecryptAndSignVerify(t *testing.T) {
-	priv, err := vcrypto.GenerateRSAKey(1024)
+	priv, err := vcrypto.GenRSAKey(1024)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -48,7 +48,7 @@ func TestRSAEncryptDecryptAndSignVerify(t *testing.T) {
 }
 
 func TestRSAOptionsAndErrorPaths(t *testing.T) {
-	priv, err := vcrypto.GenerateRSAKey(1024)
+	priv, err := vcrypto.GenRSAKey(1024)
 	if err != nil {
 		t.Fatal(err)
 	}

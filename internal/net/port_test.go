@@ -36,16 +36,16 @@ func TestPortAndMiscHelpers(t *testing.T) {
 		t.Fatal("IsUsableLocalPortWithOptions should reject an occupied port")
 	}
 	g := NewLocalPortGeneratorWithOptions(port, WithPortHost("127.0.0.1"))
-	generated, err := g.Generate()
+	generated, err := g.Gen()
 	if err != nil {
-		t.Fatalf("LocalPortGenerator.Generate with options: %v", err)
+		t.Fatalf("LocalPortGenerator.Gen with options: %v", err)
 	}
 	if generated <= port || generated > PortRangeMax {
 		t.Fatalf("LocalPortGenerator generated %d, want > %d", generated, port)
 	}
-	next, err := g.GenerateWithOptions(WithPortHost("127.0.0.1"))
+	next, err := g.GenWithOptions(WithPortHost("127.0.0.1"))
 	if err != nil {
-		t.Fatalf("LocalPortGenerator.GenerateWithOptions: %v", err)
+		t.Fatalf("LocalPortGenerator.GenWithOptions: %v", err)
 	}
 	if next <= generated || next > PortRangeMax {
 		t.Fatalf("LocalPortGenerator next generated %d, want > %d", next, generated)

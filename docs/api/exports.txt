@@ -369,10 +369,10 @@ github.com/imajinyun/go-knifer/internal/crypto
   func ConstantTimeEqual
   func Digest
   func DigestHex
-  func GenerateAESKey
-  func GenerateAESKeyWithOptions
-  func GenerateRSAKey
-  func GenerateRSAKeyWithOptions
+  func GenAESKey
+  func GenAESKeyWithOptions
+  func GenRSAKey
+  func GenRSAKeyWithOptions
   func HMACBytes
   func HMACEqual
   func HMACHex
@@ -2121,12 +2121,12 @@ github.com/imajinyun/go-knifer/internal/num
   func FormatPercentWithOptions
   func FromUnsignedByteArray
   func FromUnsignedByteArrayRange
+  func GenBySet
   func GenBySetWithOptions
+  func GenRandomNumber
   func GenRandomNumberWithOptions
+  func GenRandomNumberWithSeed
   func GenRandomNumberWithSeedWithOptions
-  func GenerateBySet
-  func GenerateRandomNumber
-  func GenerateRandomNumberWithSeed
   func GetBinaryStr
   func GetBinaryStrWithOptions
   func IsBeside
@@ -3551,10 +3551,10 @@ github.com/imajinyun/go-knifer/vcrypto
   func ConstantTimeEqual
   func Digest
   func DigestHex
-  func GenerateAESKey
-  func GenerateAESKeyWithOptions
-  func GenerateRSAKey
-  func GenerateRSAKeyWithOptions
+  func GenAESKey
+  func GenAESKeyWithOptions
+  func GenRSAKey
+  func GenRSAKeyWithOptions
   func HMACBytes
   func HMACEqual
   func HMACHex
@@ -5029,12 +5029,12 @@ github.com/imajinyun/go-knifer/vnum
   func FormatPercentWithOptions
   func FromUnsignedByteArray
   func FromUnsignedByteArrayRange
+  func GenBySet
   func GenBySetWithOptions
+  func GenRandomNumber
   func GenRandomNumberWithOptions
+  func GenRandomNumberWithSeed
   func GenRandomNumberWithSeedWithOptions
-  func GenerateBySet
-  func GenerateRandomNumber
-  func GenerateRandomNumberWithSeed
   func GetBinaryStr
   func GetBinaryStrWithOptions
   func IsBeside

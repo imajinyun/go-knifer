@@ -11,22 +11,22 @@ import (
 )
 
 func TestAESRoundTripAndErrors(t *testing.T) {
-	key, err := vcrypto.GenerateAESKey(16)
+	key, err := vcrypto.GenAESKey(16)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(key) != 16 {
-		t.Fatalf("GenerateAESKey len = %d", len(key))
+		t.Fatalf("GenAESKey len = %d", len(key))
 	}
-	if _, err := vcrypto.GenerateAESKey(15); !errors.Is(err, vcrypto.ErrInvalidKey) {
-		t.Fatalf("GenerateAESKey invalid error = %v", err)
+	if _, err := vcrypto.GenAESKey(15); !errors.Is(err, vcrypto.ErrInvalidKey) {
+		t.Fatalf("GenAESKey invalid error = %v", err)
 	}
-	optionKey, err := vcrypto.GenerateAESKeyWithOptions(16, vcrypto.WithRandomReader(bytes.NewReader(bytes.Repeat([]byte{0x42}, 16))))
+	optionKey, err := vcrypto.GenAESKeyWithOptions(16, vcrypto.WithRandomReader(bytes.NewReader(bytes.Repeat([]byte{0x42}, 16))))
 	if err != nil {
-		t.Fatalf("GenerateAESKeyWithOptions error = %v", err)
+		t.Fatalf("GenAESKeyWithOptions error = %v", err)
 	}
 	if !bytes.Equal(optionKey, bytes.Repeat([]byte{0x42}, 16)) {
-		t.Fatalf("GenerateAESKeyWithOptions = %x", optionKey)
+		t.Fatalf("GenAESKeyWithOptions = %x", optionKey)
 	}
 	randomBytes, err := vcrypto.RandomBytesWithOptions(3, vcrypto.WithRandomReader(bytes.NewReader([]byte{1, 2, 3})))
 	if err != nil || !bytes.Equal(randomBytes, []byte{1, 2, 3}) {

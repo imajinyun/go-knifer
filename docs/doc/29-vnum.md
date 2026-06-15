@@ -82,6 +82,6 @@ func main() {
 	fmt.Println(result)
 	fmt.Println(vnum.SumNumber(1, 2, 3), vnum.AvgNumber(2, 4, 6))
 	fmt.Println(vnum.MinIntegers(3, 1, 2), vnum.MaxIntegers(3, 1, 2))
-	fmt.Println(vnum.GenerateRandomNumber(1, 10, 3))
+	fmt.Println(vnum.GenRandomNumber(1, 10, 3))
 }
 ```

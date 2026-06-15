@@ -53,13 +53,13 @@ func RandomBytesWithOptions(n int, opts ...RandomOption) ([]byte, error) {
 	return b, nil
 }
 
-// GenerateAESKey returns a random AES key. Valid sizes are 16, 24, or 32 bytes.
-func GenerateAESKey(size int) ([]byte, error) {
-	return GenerateAESKeyWithOptions(size)
+// GenAESKey returns a random AES key. Valid sizes are 16, 24, or 32 bytes.
+func GenAESKey(size int) ([]byte, error) {
+	return GenAESKeyWithOptions(size)
 }
 
-// GenerateAESKeyWithOptions returns a random AES key using custom random options.
-func GenerateAESKeyWithOptions(size int, opts ...RandomOption) ([]byte, error) {
+// GenAESKeyWithOptions returns a random AES key using custom random options.
+func GenAESKeyWithOptions(size int, opts ...RandomOption) ([]byte, error) {
 	if size != 16 && size != 24 && size != 32 {
 		return nil, ErrInvalidKey
 	}

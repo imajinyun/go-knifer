@@ -14,7 +14,7 @@ import (
 )
 
 func TestPEMEncodeParseRSAKeys(t *testing.T) {
-	priv, err := vcrypto.GenerateRSAKey(1024)
+	priv, err := vcrypto.GenRSAKey(1024)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,7 +59,7 @@ func TestPEMParseInvalidKeys(t *testing.T) {
 }
 
 func TestPEMCertificateParseAndPublicKey(t *testing.T) {
-	priv, err := vcrypto.GenerateRSAKey(1024)
+	priv, err := vcrypto.GenRSAKey(1024)
 	if err != nil {
 		t.Fatal(err)
 	}

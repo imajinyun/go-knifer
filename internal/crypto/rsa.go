@@ -97,13 +97,13 @@ func WithRSADigestPSS(opts *rsa.PSSOptions) RSADigestOption {
 	}
 }
 
-// GenerateRSAKey generates an RSA private key.
-func GenerateRSAKey(bits int) (*rsa.PrivateKey, error) {
-	return GenerateRSAKeyWithOptions(bits)
+// GenRSAKey generates an RSA private key.
+func GenRSAKey(bits int) (*rsa.PrivateKey, error) {
+	return GenRSAKeyWithOptions(bits)
 }
 
-// GenerateRSAKeyWithOptions generates an RSA private key with options.
-func GenerateRSAKeyWithOptions(bits int, opts ...RSAOption) (*rsa.PrivateKey, error) {
+// GenRSAKeyWithOptions generates an RSA private key with options.
+func GenRSAKeyWithOptions(bits int, opts ...RSAOption) (*rsa.PrivateKey, error) {
 	cfg := applyRSAOptions(opts...)
 	return rsa.GenerateKey(cfg.random, bits)
 }

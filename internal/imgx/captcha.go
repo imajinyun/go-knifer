@@ -202,7 +202,7 @@ func defaultOpenWriteFile(path string, flag int, perm fs.FileMode) (io.WriteClos
 // Code returns the current captcha text.
 func (a *AbstractCaptcha) Code() string {
 	if a.code == "" {
-		a.code = a.ensureGenerator().Generate()
+		a.code = a.ensureGenerator().Gen()
 	}
 	return a.code
 }
@@ -291,7 +291,7 @@ func (a *AbstractCaptcha) ensureGenerator() CodeGenerator {
 }
 
 func (a *AbstractCaptcha) generateCode() {
-	a.code = a.ensureGenerator().Generate()
+	a.code = a.ensureGenerator().Gen()
 }
 
 func (a *AbstractCaptcha) setImageBytes(b []byte) {

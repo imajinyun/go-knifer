@@ -12,7 +12,7 @@ import (
 )
 
 func TestPEMKeys(t *testing.T) {
-	priv, err := GenerateRSAKey(1024)
+	priv, err := GenRSAKey(1024)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -45,7 +45,7 @@ func TestPEMKeys(t *testing.T) {
 }
 
 func TestPEMCertificate(t *testing.T) {
-	priv, err := GenerateRSAKey(1024)
+	priv, err := GenRSAKey(1024)
 	if err != nil {
 		t.Fatal(err)
 	}

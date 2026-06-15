@@ -6,46 +6,46 @@ import (
 )
 
 func TestRandomGeneration(t *testing.T) {
-	randoms := GenerateRandomNumber(1, 10, 5)
+	randoms := GenRandomNumber(1, 10, 5)
 	if len(randoms) != 5 {
-		t.Fatalf("GenerateRandomNumber length: %v", randoms)
+		t.Fatalf("GenRandomNumber length: %v", randoms)
 	}
 	seen := map[int]struct{}{}
 	for _, v := range randoms {
 		if v < 1 || v >= 10 {
-			t.Fatalf("GenerateRandomNumber value out of range: %v", randoms)
+			t.Fatalf("GenRandomNumber value out of range: %v", randoms)
 		}
 		if _, ok := seen[v]; ok {
-			t.Fatalf("GenerateRandomNumber duplicated value: %v", randoms)
+			t.Fatalf("GenRandomNumber duplicated value: %v", randoms)
 		}
 		seen[v] = struct{}{}
 	}
-	bySet := GenerateBySet(1, 10, 5)
+	bySet := GenBySet(1, 10, 5)
 	if len(bySet) != 5 {
-		t.Fatalf("GenerateBySet length: %v", bySet)
+		t.Fatalf("GenBySet length: %v", bySet)
 	}
 }
 
 func TestRandomGenerationEdges(t *testing.T) {
-	if got := GenerateRandomNumber(10, 1, 3); len(got) != 0 {
-		t.Fatalf("GenerateRandomNumber reversed bounds should be empty because default seed is empty: %v", got)
+	if got := GenRandomNumber(10, 1, 3); len(got) != 0 {
+		t.Fatalf("GenRandomNumber reversed bounds should be empty because default seed is empty: %v", got)
 	}
-	if got := GenerateRandomNumber(1, 3, 5); len(got) != 0 {
-		t.Fatalf("GenerateRandomNumber oversize should be empty: %v", got)
+	if got := GenRandomNumber(1, 3, 5); len(got) != 0 {
+		t.Fatalf("GenRandomNumber oversize should be empty: %v", got)
 	}
-	if got := GenerateRandomNumberWithSeed(1, 10, 2, []int{7}); len(got) != 0 {
-		t.Fatalf("GenerateRandomNumberWithSeed short seed should be empty: %v", got)
+	if got := GenRandomNumberWithSeed(1, 10, 2, []int{7}); len(got) != 0 {
+		t.Fatalf("GenRandomNumberWithSeed short seed should be empty: %v", got)
 	}
 	seed := []int{1, 2, 3, 4}
-	got := GenerateRandomNumberWithSeed(1, 5, 2, seed)
+	got := GenRandomNumberWithSeed(1, 5, 2, seed)
 	if len(got) != 2 || !reflect.DeepEqual(seed, []int{1, 2, 3, 4}) {
-		t.Fatalf("GenerateRandomNumberWithSeed should not mutate seed: got=%v seed=%v", got, seed)
+		t.Fatalf("GenRandomNumberWithSeed should not mutate seed: got=%v seed=%v", got, seed)
 	}
-	if got := GenerateBySet(5, 1, 0); len(got) != 0 {
-		t.Fatalf("GenerateBySet zero size should be empty: %v", got)
+	if got := GenBySet(5, 1, 0); len(got) != 0 {
+		t.Fatalf("GenBySet zero size should be empty: %v", got)
 	}
-	if got := GenerateBySet(1, 2, 3); len(got) != 0 {
-		t.Fatalf("GenerateBySet oversize should be empty: %v", got)
+	if got := GenBySet(1, 2, 3); len(got) != 0 {
+		t.Fatalf("GenBySet oversize should be empty: %v", got)
 	}
 }
 

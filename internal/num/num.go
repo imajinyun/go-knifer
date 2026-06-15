@@ -488,8 +488,8 @@ func IsPrimes(n int) bool {
 	return true
 }
 
-// GenerateRandomNumber returns size unique random integers in [begin, end).
-func GenerateRandomNumber(begin, end, size int) []int {
+// GenRandomNumber returns size unique random integers in [begin, end).
+func GenRandomNumber(begin, end, size int) []int {
 	return GenRandomNumberWithOptions(begin, end, size)
 }
 
@@ -498,8 +498,8 @@ func GenRandomNumberWithOptions(begin, end, size int, opts ...RandomNumberOption
 	return GenRandomNumberWithSeedWithOptions(begin, end, size, Range(begin, end, 1), opts...)
 }
 
-// GenerateRandomNumberWithSeed picks size unique values from seed.
-func GenerateRandomNumberWithSeed(begin, end, size int, seed []int) []int {
+// GenRandomNumberWithSeed picks size unique values from seed.
+func GenRandomNumberWithSeed(begin, end, size int, seed []int) []int {
 	return GenRandomNumberWithSeedWithOptions(begin, end, size, seed)
 }
 
@@ -522,8 +522,8 @@ func GenRandomNumberWithSeedWithOptions(begin, end, size int, seed []int, opts .
 	return out
 }
 
-// GenerateBySet returns size unique random integers in [begin, end).
-func GenerateBySet(begin, end, size int) []int {
+// GenBySet returns size unique random integers in [begin, end).
+func GenBySet(begin, end, size int) []int {
 	return GenBySetWithOptions(begin, end, size)
 }
 

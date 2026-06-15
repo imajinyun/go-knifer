@@ -13,7 +13,7 @@ import (
 
 type fixedGenerator struct{ code string }
 
-func (g fixedGenerator) Generate() string { return g.code }
+func (g fixedGenerator) Gen() string { return g.code }
 
 func (g fixedGenerator) Verify(code, userInput string) bool { return code == userInput }
 

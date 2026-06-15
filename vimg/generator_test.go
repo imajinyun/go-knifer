@@ -8,7 +8,7 @@ import (
 
 func TestFacadeRandomGenerator(t *testing.T) {
 	g := vimg.NewRandomGenerator(4)
-	code := g.Generate()
+	code := g.Gen()
 	if len(code) != 4 {
 		t.Fatalf("expected code length 4, got %d", len(code))
 	}
@@ -35,7 +35,7 @@ func TestFacadeRandomGeneratorOptions(t *testing.T) {
 
 func TestFacadeMathGenerator(t *testing.T) {
 	g := vimg.NewMathGenerator()
-	code := g.Generate()
+	code := g.Gen()
 	if len(code) == 0 {
 		t.Fatal("expected non-empty math code")
 	}

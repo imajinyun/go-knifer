@@ -15,13 +15,13 @@ func TestNumRangeFacades(t *testing.T) {
 }
 
 func TestNumRandomGenerationFacades(t *testing.T) {
-	if got := GenerateRandomNumberWithSeed(0, 4, 2, []int{1, 2, 3}); len(got) != 2 {
-		t.Fatalf("GenerateRandomNumberWithSeed = %v", got)
+	if got := GenRandomNumberWithSeed(0, 4, 2, []int{1, 2, 3}); len(got) != 2 {
+		t.Fatalf("GenRandomNumberWithSeed = %v", got)
 	}
-	if got := GenerateRandomNumber(0, 3, 2); len(got) != 2 {
-		t.Fatalf("GenerateRandomNumber = %v", got)
+	if got := GenRandomNumber(0, 3, 2); len(got) != 2 {
+		t.Fatalf("GenRandomNumber = %v", got)
 	}
-	if got := GenerateBySet(0, 3, 2); len(got) != 2 {
-		t.Fatalf("GenerateBySet = %v", got)
+	if got := GenBySet(0, 3, 2); len(got) != 2 {
+		t.Fatalf("GenBySet = %v", got)
 	}
 }

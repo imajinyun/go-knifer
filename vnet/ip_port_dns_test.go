@@ -58,9 +58,9 @@ func TestVNetFacadeOptions(t *testing.T) {
 		t.Fatal("IsUsableLocalPortWithOptions should reject occupied port")
 	}
 	g := vnet.NewLocalPortGeneratorWithOptions(port, vnet.WithPortHost("127.0.0.1"))
-	generated, err := g.Generate()
+	generated, err := g.Gen()
 	if err != nil {
-		t.Fatalf("LocalPortGenerator.Generate with options: %v", err)
+		t.Fatalf("LocalPortGenerator.Gen with options: %v", err)
 	}
 	if generated <= port || generated > vnet.PortRangeMax {
 		t.Fatalf("LocalPortGenerator generated %d, want > %d", generated, port)

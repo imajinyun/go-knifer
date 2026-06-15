@@ -34,7 +34,7 @@ import (
 )
 
 func main() {
-	key, err := vcrypto.GenerateAESKey(32)
+	key, err := vcrypto.GenAESKey(32)
 	if err != nil {
 		panic(err)
 	}
@@ -85,7 +85,7 @@ import (
 )
 
 func main() {
-	priv, err := vcrypto.GenerateRSAKey(2048)
+	priv, err := vcrypto.GenRSAKey(2048)
 	if err != nil {
 		panic(err)
 	}

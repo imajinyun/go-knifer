@@ -39,12 +39,12 @@ func WithRSADigestPSS(opts *rsa.PSSOptions) RSADigestOption {
 	return cryptoimpl.WithRSADigestPSS(opts)
 }
 
-// GenerateRSAKey generates an RSA private key.
-func GenerateRSAKey(bits int) (*rsa.PrivateKey, error) { return cryptoimpl.GenerateRSAKey(bits) }
+// GenRSAKey generates an RSA private key.
+func GenRSAKey(bits int) (*rsa.PrivateKey, error) { return cryptoimpl.GenRSAKey(bits) }
 
-// GenerateRSAKeyWithOptions generates an RSA private key with options.
-func GenerateRSAKeyWithOptions(bits int, opts ...RSAOption) (*rsa.PrivateKey, error) {
-	return cryptoimpl.GenerateRSAKeyWithOptions(bits, opts...)
+// GenRSAKeyWithOptions generates an RSA private key with options.
+func GenRSAKeyWithOptions(bits int, opts ...RSAOption) (*rsa.PrivateKey, error) {
+	return cryptoimpl.GenRSAKeyWithOptions(bits, opts...)
 }
 
 // RSAEncryptOAEP encrypts data using RSA-OAEP with SHA-256.

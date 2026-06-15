@@ -9,7 +9,7 @@ import (
 func TestRandomGenerator_GenerateLength(t *testing.T) {
 	g := NewRandomGenerator(6)
 	for i := 0; i < 50; i++ {
-		s := g.Generate()
+		s := g.Gen()
 		if len(s) != 6 {
 			t.Fatalf("len=%d, want 6, got %q", len(s), s)
 		}
@@ -28,7 +28,7 @@ func TestRandomGenerator_VerifyIgnoreCase(t *testing.T) {
 
 func TestRandomGenerator_CustomBase(t *testing.T) {
 	g := NewRandomGeneratorWithBase("01", 8)
-	s := g.Generate()
+	s := g.Gen()
 	for _, c := range s {
 		if c != '0' && c != '1' {
 			t.Fatalf("unexpected char %q in %q", c, s)
@@ -52,7 +52,7 @@ func TestRandomGenerator_GenWithOptions(t *testing.T) {
 func TestMathGenerator_GenerateAndVerify(t *testing.T) {
 	g := NewMathGenerator()
 	for i := 0; i < 50; i++ {
-		code := g.Generate()
+		code := g.Gen()
 		if !strings.HasSuffix(code, "=") {
 			t.Fatalf("code should end with '=': %q", code)
 		}
@@ -109,7 +109,7 @@ func TestMathGenerator_VerifyWithOptionsUsesParser(t *testing.T) {
 func TestMathGenerator_NoNegative(t *testing.T) {
 	g := NewMathGeneratorWith(2, false)
 	for i := 0; i < 100; i++ {
-		code := g.Generate()
+		code := g.Gen()
 		v, ok := evalMathExpr(code)
 		if !ok {
 			t.Fatalf("eval fail: %q", code)
