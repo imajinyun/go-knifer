@@ -1833,6 +1833,7 @@ github.com/imajinyun/go-knifer/internal/mail
   func WithMaxAttachmentBytes
   func WithMessageID
   func WithReplyTo
+  func WithSMTPAuth
   func WithSenderProvider
   func WithSubject
   func WithTLSConfig
@@ -4817,6 +4818,7 @@ github.com/imajinyun/go-knifer/vmail
   func WithMaxAttachmentBytes
   func WithMessageID
   func WithReplyTo
+  func WithSMTPAuth
   func WithSenderProvider
   func WithSubject
   func WithTLSConfig

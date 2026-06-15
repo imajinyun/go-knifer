@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"net"
+	"net/smtp"
 	"time"
 
 	"github.com/imajinyun/go-knifer/internal/mail"
@@ -200,6 +201,9 @@ func WithBoundaryGenerator(generator BoundaryGenerator) MessageOption {
 
 // WithAuth sets SMTP username and password.
 func WithAuth(username, password string) ClientOption { return mail.WithAuth(username, password) }
+
+// WithSMTPAuth sets a custom SMTP authentication mechanism.
+func WithSMTPAuth(auth smtp.Auth) ClientOption { return mail.WithSMTPAuth(auth) }
 
 // WithTLSConfig sets the TLS configuration. The value is cloned.
 func WithTLSConfig(config *tls.Config) ClientOption { return mail.WithTLSConfig(config) }

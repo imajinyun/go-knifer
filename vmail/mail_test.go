@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"net"
+	"net/smtp"
 	"os"
 	"path/filepath"
 	"strings"
@@ -134,9 +135,13 @@ func TestFacadeSendAndClientOptions(t *testing.T) {
 		t.Fatalf("NewMessage() error = %v", err)
 	}
 	var got *Message
+	auth := facadeSMTPAuth{mechanism: "CUSTOM"}
 	provider := func(config Config) (Sender, error) {
 		if config.Username != "user" || config.Password != "pass" || !config.AllowPlainAuth {
 			t.Fatalf("Config auth = %#v", config)
+		}
+		if config.Auth == nil {
+			t.Fatal("Config Auth is nil")
 		}
 		if config.TLSPolicy != TLSNone || config.LocalName != "mail.local" || config.Timeout != time.Second {
 			t.Fatalf("Config transport = %#v", config)
@@ -151,6 +156,7 @@ func TestFacadeSendAndClientOptions(t *testing.T) {
 	}
 	if err := Send(context.Background(), "smtp.example.com", 587, message,
 		WithAuth("user", "pass"),
+		WithSMTPAuth(auth),
 		WithTLSConfig(&tls.Config{ServerName: "smtp.example.com", MinVersion: tls.VersionTLS12}),
 		WithTLSPolicy(TLSNone),
 		WithAllowPlainAuth(true),
@@ -195,6 +201,12 @@ func sequenceBoundary(values ...string) BoundaryGenerator {
 		return value, nil
 	}
 }
+
+type facadeSMTPAuth struct{ mechanism string }
+
+func (a facadeSMTPAuth) Start(*smtp.ServerInfo) (string, []byte, error) { return a.mechanism, nil, nil }
+
+func (a facadeSMTPAuth) Next([]byte, bool) ([]byte, error) { return nil, nil }
 
 func assertContains(t *testing.T, got, expected string) {
 	t.Helper()

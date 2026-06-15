@@ -3,11 +3,20 @@ package mail
 import (
 	"bufio"
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/base64"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
+	"math/big"
 	"net"
+	"net/smtp"
 	"strings"
 	"sync"
 	"testing"
@@ -126,9 +135,11 @@ func TestSendTextAndHTMLConvenienceFunctions(t *testing.T) {
 }
 
 func TestClientOptionsAndProviderErrors(t *testing.T) {
+	auth := testSMTPAuth{mechanism: "CUSTOM"}
 	tlsConfig := &tls.Config{ServerName: "custom.example.com", MinVersion: tls.VersionTLS13}
 	client, err := NewClient("smtp.example.com", 587,
 		WithAuth("user", "pass"),
+		WithSMTPAuth(auth),
 		WithTLSConfig(tlsConfig),
 		WithTLSPolicy(TLSPolicyUnknown),
 		WithAllowPlainAuth(true),
@@ -142,6 +153,9 @@ func TestClientOptionsAndProviderErrors(t *testing.T) {
 	tlsConfig.ServerName = "mutated.example.com"
 	if client.config.Username != "user" || client.config.Password != "pass" || !client.config.AllowPlainAuth {
 		t.Fatalf("auth/plain config = %#v", client.config)
+	}
+	if client.config.Auth == nil {
+		t.Fatal("custom auth was not configured")
 	}
 	if client.config.TLSPolicy != TLSMandatoryStartTLS {
 		t.Fatalf("TLSPolicy = %v, want %v", client.config.TLSPolicy, TLSMandatoryStartTLS)
@@ -249,6 +263,159 @@ func TestSMTPClientRejectsPlainAuthWithoutTLS(t *testing.T) {
 	}
 }
 
+func TestSMTPClientUsesCustomAuth(t *testing.T) {
+	server, err := newFakeSMTPServer(t, withFakeSMTPAuth("CUSTOM", "token", true))
+	if err != nil {
+		t.Fatalf("newFakeSMTPServer() error = %v", err)
+	}
+	defer server.Close()
+
+	msg, err := NewMessage(WithFrom("from@example.com"), WithTo("to@example.com"), WithText("body"))
+	if err != nil {
+		t.Fatalf("NewMessage() error = %v", err)
+	}
+	client, err := NewClient(server.Host(), server.Port(),
+		WithTLSPolicy(TLSNone),
+		WithAllowPlainAuth(true),
+		WithSMTPAuth(testSMTPAuth{mechanism: "CUSTOM", initial: []byte("token")}),
+		WithTimeout(time.Second),
+	)
+	if err != nil {
+		t.Fatalf("NewClient() error = %v", err)
+	}
+	if err := client.Send(context.Background(), msg); err != nil {
+		t.Fatalf("Send() error = %v", err)
+	}
+	if err := server.Wait(); err != nil {
+		t.Fatalf("fake SMTP server error = %v", err)
+	}
+	if !server.Authenticated() {
+		t.Fatal("server did not receive successful custom AUTH")
+	}
+}
+
+func TestSMTPClientReturnsAuthFailure(t *testing.T) {
+	server, err := newFakeSMTPServer(t, withFakeSMTPAuth("CUSTOM", "token", false))
+	if err != nil {
+		t.Fatalf("newFakeSMTPServer() error = %v", err)
+	}
+	defer server.Close()
+
+	msg, err := NewMessage(WithFrom("from@example.com"), WithTo("to@example.com"), WithText("body"))
+	if err != nil {
+		t.Fatalf("NewMessage() error = %v", err)
+	}
+	client, err := NewClient(server.Host(), server.Port(),
+		WithTLSPolicy(TLSNone),
+		WithAllowPlainAuth(true),
+		WithSMTPAuth(testSMTPAuth{mechanism: "CUSTOM", initial: []byte("token")}),
+		WithTimeout(time.Second),
+	)
+	if err != nil {
+		t.Fatalf("NewClient() error = %v", err)
+	}
+	if err := client.Send(context.Background(), msg); err == nil || !strings.Contains(err.Error(), "smtp auth") {
+		t.Fatalf("Send() error = %v, want smtp auth error", err)
+	}
+	if err := server.Wait(); err != nil {
+		t.Fatalf("fake SMTP server error = %v", err)
+	}
+}
+
+func TestSMTPClientStartTLS(t *testing.T) {
+	cert := newTestCertificate(t)
+	server, err := newFakeSMTPServer(t, withFakeSMTPStartTLS(cert))
+	if err != nil {
+		t.Fatalf("newFakeSMTPServer() error = %v", err)
+	}
+	defer server.Close()
+
+	msg, err := NewMessage(WithFrom("from@example.com"), WithTo("to@example.com"), WithText("secure body"))
+	if err != nil {
+		t.Fatalf("NewMessage() error = %v", err)
+	}
+	client, err := NewClient(server.Host(), server.Port(),
+		WithTLSConfig(&tls.Config{RootCAs: cert.pool, ServerName: "localhost", MinVersion: tls.VersionTLS12}),
+		WithTimeout(time.Second),
+	)
+	if err != nil {
+		t.Fatalf("NewClient() error = %v", err)
+	}
+	if err := client.Send(context.Background(), msg); err != nil {
+		t.Fatalf("Send() error = %v", err)
+	}
+	if err := server.Wait(); err != nil {
+		t.Fatalf("fake SMTP server error = %v", err)
+	}
+	if !server.TLSActive() || !strings.Contains(server.Data(), "secure body") {
+		t.Fatalf("TLSActive=%v DATA=%q", server.TLSActive(), server.Data())
+	}
+}
+
+func TestSMTPClientImplicitTLS(t *testing.T) {
+	cert := newTestCertificate(t)
+	server, err := newFakeSMTPServer(t, withFakeSMTPImplicitTLS(cert))
+	if err != nil {
+		t.Fatalf("newFakeSMTPServer() error = %v", err)
+	}
+	defer server.Close()
+
+	msg, err := NewMessage(WithFrom("from@example.com"), WithTo("to@example.com"), WithText("implicit body"))
+	if err != nil {
+		t.Fatalf("NewMessage() error = %v", err)
+	}
+	client, err := NewClient(server.Host(), server.Port(),
+		WithTLSPolicy(TLSImplicit),
+		WithTLSConfig(&tls.Config{RootCAs: cert.pool, ServerName: "localhost", MinVersion: tls.VersionTLS12}),
+		WithTimeout(time.Second),
+	)
+	if err != nil {
+		t.Fatalf("NewClient() error = %v", err)
+	}
+	if err := client.Send(context.Background(), msg); err != nil {
+		t.Fatalf("Send() error = %v", err)
+	}
+	if err := server.Wait(); err != nil {
+		t.Fatalf("fake SMTP server error = %v", err)
+	}
+	if !server.TLSActive() || !strings.Contains(server.Data(), "implicit body") {
+		t.Fatalf("TLSActive=%v DATA=%q", server.TLSActive(), server.Data())
+	}
+}
+
+func TestSMTPClientContextCancelClosesConnection(t *testing.T) {
+	server, err := newFakeSMTPServer(t, withFakeSMTPHangOnData())
+	if err != nil {
+		t.Fatalf("newFakeSMTPServer() error = %v", err)
+	}
+	defer server.Close()
+
+	msg, err := NewMessage(WithFrom("from@example.com"), WithTo("to@example.com"), WithText("body"))
+	if err != nil {
+		t.Fatalf("NewMessage() error = %v", err)
+	}
+	client, err := NewClient(server.Host(), server.Port(), WithTLSPolicy(TLSNone), WithTimeout(0))
+	if err != nil {
+		t.Fatalf("NewClient() error = %v", err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	canceled := make(chan error, 1)
+	go func() { canceled <- client.Send(ctx, msg) }()
+	server.WaitForDataCommand(t)
+	cancel()
+	select {
+	case err := <-canceled:
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("Send() error = %v, want %v", err, context.Canceled)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("Send() did not return after context cancellation")
+	}
+	if err := server.Wait(); err != nil {
+		t.Fatalf("fake SMTP server error = %v", err)
+	}
+}
+
 func TestSMTPHelpers(t *testing.T) {
 	ctx, cancel := withClientTimeout(context.Background(), 0)
 	if _, ok := ctx.Deadline(); ok {
@@ -294,24 +461,68 @@ func TestSMTPHelpers(t *testing.T) {
 }
 
 type fakeSMTPServer struct {
-	listener net.Listener
-	done     chan error
-	mu       sync.Mutex
-	data     string
+	listener      net.Listener
+	done          chan error
+	dataStarted   chan struct{}
+	mu            sync.Mutex
+	data          string
+	cert          *testCertificate
+	startTLS      bool
+	implicitTLS   bool
+	tlsActive     bool
+	authMechanism string
+	authInitial   string
+	authOK        bool
+	authenticated bool
+	hangOnData    bool
+	once          sync.Once
 }
 
-func newFakeSMTPServer(t *testing.T) (*fakeSMTPServer, error) {
+type fakeSMTPOption func(*fakeSMTPServer)
+
+func newFakeSMTPServer(t *testing.T, opts ...fakeSMTPOption) (*fakeSMTPServer, error) {
 	t.Helper()
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		return nil, err
 	}
 	server := &fakeSMTPServer{
-		listener: listener,
-		done:     make(chan error, 1),
+		listener:    listener,
+		done:        make(chan error, 1),
+		dataStarted: make(chan struct{}),
+		authOK:      true,
+	}
+	for _, opt := range opts {
+		opt(server)
 	}
 	go server.serve()
 	return server, nil
+}
+
+func withFakeSMTPStartTLS(cert *testCertificate) fakeSMTPOption {
+	return func(s *fakeSMTPServer) {
+		s.cert = cert
+		s.startTLS = true
+	}
+}
+
+func withFakeSMTPImplicitTLS(cert *testCertificate) fakeSMTPOption {
+	return func(s *fakeSMTPServer) {
+		s.cert = cert
+		s.implicitTLS = true
+	}
+}
+
+func withFakeSMTPAuth(mechanism, initial string, ok bool) fakeSMTPOption {
+	return func(s *fakeSMTPServer) {
+		s.authMechanism = mechanism
+		s.authInitial = initial
+		s.authOK = ok
+	}
+}
+
+func withFakeSMTPHangOnData() fakeSMTPOption {
+	return func(s *fakeSMTPServer) { s.hangOnData = true }
 }
 
 func (s *fakeSMTPServer) Host() string {
@@ -335,6 +546,27 @@ func (s *fakeSMTPServer) Data() string {
 	return s.data
 }
 
+func (s *fakeSMTPServer) TLSActive() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.tlsActive
+}
+
+func (s *fakeSMTPServer) Authenticated() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.authenticated
+}
+
+func (s *fakeSMTPServer) WaitForDataCommand(t *testing.T) {
+	t.Helper()
+	select {
+	case <-s.dataStarted:
+	case <-time.After(time.Second):
+		t.Fatal("fake smtp server did not receive DATA command")
+	}
+}
+
 func (s *fakeSMTPServer) Wait() error {
 	select {
 	case err := <-s.done:
@@ -351,6 +583,14 @@ func (s *fakeSMTPServer) serve() {
 		return
 	}
 	defer func() { _ = conn.Close() }()
+	if s.implicitTLS {
+		conn = tls.Server(conn, s.cert.serverConfig())
+		if err := conn.(*tls.Conn).Handshake(); err != nil {
+			s.done <- err
+			return
+		}
+		s.setTLSActive()
+	}
 	reader := bufio.NewReader(conn)
 	if _, err := io.WriteString(conn, "220 fake.smtp ESMTP\r\n"); err != nil {
 		s.done <- err
@@ -369,10 +609,30 @@ func (s *fakeSMTPServer) serve() {
 		line = strings.TrimRight(line, "\r\n")
 		switch {
 		case strings.HasPrefix(line, "EHLO") || strings.HasPrefix(line, "HELO"):
-			if _, err := io.WriteString(conn, "250-fake.smtp\r\n250 OK\r\n"); err != nil {
+			if _, err := io.WriteString(conn, s.ehloResponse()); err != nil {
 				s.done <- err
 				return
 			}
+		case line == "STARTTLS" && s.startTLS:
+			if _, err := io.WriteString(conn, "220 Ready to start TLS\r\n"); err != nil {
+				s.done <- err
+				return
+			}
+			conn = tls.Server(conn, s.cert.serverConfig())
+			if err := conn.(*tls.Conn).Handshake(); err != nil {
+				s.done <- err
+				return
+			}
+			s.setTLSActive()
+			reader = bufio.NewReader(conn)
+		case strings.HasPrefix(line, "AUTH "):
+			if err := s.handleAuth(conn, line); err != nil {
+				s.done <- err
+				return
+			}
+		case line == "*":
+			s.done <- nil
+			return
 		case strings.HasPrefix(line, "MAIL FROM:"):
 			if _, err := io.WriteString(conn, "250 OK\r\n"); err != nil {
 				s.done <- err
@@ -384,6 +644,16 @@ func (s *fakeSMTPServer) serve() {
 				return
 			}
 		case line == "DATA":
+			s.once.Do(func() { close(s.dataStarted) })
+			if s.hangOnData {
+				_, err := reader.ReadString('\n')
+				if errors.Is(err, io.EOF) || errors.Is(err, net.ErrClosed) {
+					s.done <- nil
+					return
+				}
+				s.done <- err
+				return
+			}
 			if _, err := io.WriteString(conn, "354 End data with <CR><LF>.<CR><LF>\r\n"); err != nil {
 				s.done <- err
 				return
@@ -416,6 +686,112 @@ func (s *fakeSMTPServer) serve() {
 			return
 		}
 	}
+}
+
+func (s *fakeSMTPServer) ehloResponse() string {
+	var builder strings.Builder
+	builder.WriteString("250-fake.smtp\r\n")
+	if s.startTLS && !s.TLSActive() {
+		builder.WriteString("250-STARTTLS\r\n")
+	}
+	if s.authMechanism != "" {
+		builder.WriteString("250-AUTH " + s.authMechanism + "\r\n")
+	}
+	builder.WriteString("250 OK\r\n")
+	return builder.String()
+}
+
+func (s *fakeSMTPServer) handleAuth(conn net.Conn, line string) error {
+	fields := strings.Fields(line)
+	if len(fields) < 2 || fields[1] != s.authMechanism {
+		_, err := io.WriteString(conn, "504 unsupported auth\r\n")
+		return err
+	}
+	if !s.authOK {
+		_, err := io.WriteString(conn, "535 auth failed\r\n")
+		return err
+	}
+	initial := ""
+	if len(fields) > 2 {
+		decoded, err := base64.StdEncoding.DecodeString(fields[2])
+		if err != nil {
+			return err
+		}
+		initial = string(decoded)
+	}
+	if initial != s.authInitial {
+		_, err := io.WriteString(conn, "535 auth failed\r\n")
+		return err
+	}
+	s.mu.Lock()
+	s.authenticated = true
+	s.mu.Unlock()
+	_, err := io.WriteString(conn, "235 authenticated\r\n")
+	return err
+}
+
+func (s *fakeSMTPServer) setTLSActive() {
+	s.mu.Lock()
+	s.tlsActive = true
+	s.mu.Unlock()
+}
+
+type testSMTPAuth struct {
+	mechanism string
+	initial   []byte
+}
+
+func (a testSMTPAuth) Start(*smtp.ServerInfo) (string, []byte, error) {
+	return a.mechanism, a.initial, nil
+}
+
+func (a testSMTPAuth) Next([]byte, bool) ([]byte, error) { return nil, nil }
+
+type testCertificate struct {
+	cert tls.Certificate
+	pool *x509.CertPool
+}
+
+func (c *testCertificate) serverConfig() *tls.Config {
+	return &tls.Config{Certificates: []tls.Certificate{c.cert}, MinVersion: tls.VersionTLS12}
+}
+
+func newTestCertificate(t *testing.T) *testCertificate {
+	t.Helper()
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatalf("GenerateKey() error = %v", err)
+	}
+	tmpl := &x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		Subject:      pkix.Name{CommonName: "localhost"},
+		NotBefore:    time.Now().Add(-time.Hour),
+		NotAfter:     time.Now().Add(time.Hour),
+		KeyUsage:     x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		DNSNames:     []string{"localhost"},
+	}
+	der, err := x509.CreateCertificate(rand.Reader, tmpl, tmpl, &key.PublicKey, key)
+	if err != nil {
+		t.Fatalf("CreateCertificate() error = %v", err)
+	}
+	certPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der})
+	keyBytes, err := x509.MarshalECPrivateKey(key)
+	if err != nil {
+		t.Fatalf("MarshalECPrivateKey() error = %v", err)
+	}
+	keyPEM := pem.EncodeToMemory(&pem.Block{Type: "EC PRIVATE KEY", Bytes: keyBytes})
+	cert, err := tls.X509KeyPair(certPEM, keyPEM)
+	if err != nil {
+		t.Fatalf("X509KeyPair() error = %v", err)
+	}
+	parsed, err := x509.ParseCertificate(der)
+	if err != nil {
+		t.Fatalf("ParseCertificate() error = %v", err)
+	}
+	pool := x509.NewCertPool()
+	pool.AddCert(parsed)
+	return &testCertificate{cert: cert, pool: pool}
 }
 
 func strconvAtoi(value string) (int, error) {

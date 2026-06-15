@@ -11,7 +11,9 @@ When the user asks to implement, rename, refactor, document, or otherwise modify
    - `go test -v -gcflags="all=-l -N" ./<changed-package>` for affected Go packages.
    - `go test -v -gcflags="all=-l -N" ./...` for repository-wide regressions.
    - `go vet ./...` after code or public API changes.
-   - `bash bin/check_api_compat.sh`; if the public API change is intentional, run `UPDATE_API=1 bash bin/check_api_compat.sh` and re-run the check.
+   - `bash bin/check_api_compat.sh`; if the public API change is intentional, run `UPDATE_API=1 bash bin/check_api_compat.sh` and re-run the check. Public facade additions must update `docs/api/exports.txt` in the same logical change.
+   - `golangci-lint run ./...` after non-trivial Go code or test changes when the tool is available.
+   - For coverage gates, first generate a fresh profile, then pass that exact file to the checker, e.g. `go test -race -shuffle=on -coverprofile=/tmp/go-knifer-coverage.out ./...` followed by `bash bin/check_coverage.sh /tmp/go-knifer-coverage.out`. Do not rely on an implicit or stale `coverage.out`.
    - `git diff --check` before committing.
 5. If validation fails, fix the cause and re-run the failing command before reporting completion.
 6. Generate a conventional commit message from the actual diff, preferring concise messages such as `feat: ...`, `fix: ...`, `docs: ...`, `refactor: ...`, or `test: ...`.
@@ -68,7 +70,10 @@ Run validation in this order:
    - `go test -v -gcflags="all=-l -N" ./...`
    - `go vet ./...`
    - `bash bin/check_arch.sh`
-   - `bash bin/check_coverage.sh`
+   - `go test -race -shuffle=on -coverprofile=/tmp/go-knifer-coverage.out ./...`
+   - `bash bin/check_coverage.sh /tmp/go-knifer-coverage.out`
+   - `bash bin/check_api_compat.sh` when public exports may have changed.
+   - `golangci-lint run ./...` when production code or non-trivial tests changed and the tool is available.
 5. Run `utree flush` before the final report.
 
 The clean-worktree validation is mandatory because this repository may contain unrelated local modifications or untracked experimental packages.
