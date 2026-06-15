@@ -1,6 +1,6 @@
 // Package knifer is the root package of the go-knifer utility toolkit.
 //
-// This module is split into 47 public subpackages by domain. Import only the
+// This module is split into 48 public subpackages by domain. Import only the
 // packages you need. The subpackages are grouped below for navigation:
 //
 // String & text:
@@ -41,6 +41,7 @@
 //
 //	vhttp   standard-library HTTP client/server
 //	vresty  Resty-based HTTP client
+//	vmail   email message construction and SMTP sending
 //	vskt    sockets (SocKeT)
 //	vnet    IP/port/interface utilities
 //

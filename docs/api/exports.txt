@@ -1788,6 +1788,84 @@ github.com/imajinyun/go-knifer/internal/log
   type LogFactoryFunc
   type LoggerOption
 
+github.com/imajinyun/go-knifer/internal/mail
+  const CharsetASCII
+  const CharsetUTF8
+  const Encoding7Bit
+  const Encoding8Bit
+  const EncodingBase64
+  const EncodingQuotedPrintable
+  const TLSImplicit
+  const TLSMandatoryStartTLS
+  const TLSNone
+  const TLSOpportunisticStartTLS
+  const TLSPolicyUnknown
+  const TypeApplicationOctetStream
+  const TypeTextHTML
+  const TypeTextPlain
+  func NewAddress
+  func NewAttachment
+  func NewClient
+  func NewInline
+  func NewMessage
+  func ParseAddress
+  func ParseAddressList
+  func Send
+  func SendHTML
+  func SendText
+  func WithAllowPlainAuth
+  func WithAttachment
+  func WithAttachmentFile
+  func WithAuth
+  func WithBcc
+  func WithBoundaryGenerator
+  func WithCc
+  func WithCharset
+  func WithDate
+  func WithDialContext
+  func WithEncoding
+  func WithFrom
+  func WithFromAddress
+  func WithHTML
+  func WithHeader
+  func WithInline
+  func WithLocalName
+  func WithMaxAttachmentBytes
+  func WithMessageID
+  func WithReplyTo
+  func WithSenderProvider
+  func WithSubject
+  func WithTLSConfig
+  func WithTLSPolicy
+  func WithText
+  func WithTimeout
+  func WithTo
+  type Address
+  type Attachment
+  type BoundaryGenerator
+  type Charset
+  type Client
+  type ClientOption
+  type Config
+  type ContentType
+  type DialContextFunc
+  type Encoding
+  type Header
+  type Message
+  type MessageOption
+  type Sender
+  type SenderFunc
+  type SenderProvider
+  type TLSPolicy
+  var ErrAttachmentTooLarge
+  var ErrInvalidAddress
+  var ErrInvalidHeader
+  var ErrMissingBody
+  var ErrMissingFrom
+  var ErrMissingRecipient
+  var ErrPlainAuth
+  var ErrTLSRequired
+
 github.com/imajinyun/go-knifer/internal/maps
   func Clear
   func Clone
@@ -4693,6 +4771,84 @@ github.com/imajinyun/go-knifer/vlog
   type LogFactoryFunc
   type LogLevel
   type LoggerOption
+
+github.com/imajinyun/go-knifer/vmail
+  const CharsetASCII
+  const CharsetUTF8
+  const Encoding7Bit
+  const Encoding8Bit
+  const EncodingBase64
+  const EncodingQuotedPrintable
+  const TLSImplicit
+  const TLSMandatoryStartTLS
+  const TLSNone
+  const TLSOpportunisticStartTLS
+  const TLSPolicyUnknown
+  const TypeApplicationOctetStream
+  const TypeTextHTML
+  const TypeTextPlain
+  func NewAddress
+  func NewAttachment
+  func NewClient
+  func NewInline
+  func NewMessage
+  func ParseAddress
+  func ParseAddressList
+  func Send
+  func SendHTML
+  func SendText
+  func WithAllowPlainAuth
+  func WithAttachment
+  func WithAttachmentFile
+  func WithAuth
+  func WithBcc
+  func WithBoundaryGenerator
+  func WithCc
+  func WithCharset
+  func WithDate
+  func WithDialContext
+  func WithEncoding
+  func WithFrom
+  func WithFromAddress
+  func WithHTML
+  func WithHeader
+  func WithInline
+  func WithLocalName
+  func WithMaxAttachmentBytes
+  func WithMessageID
+  func WithReplyTo
+  func WithSenderProvider
+  func WithSubject
+  func WithTLSConfig
+  func WithTLSPolicy
+  func WithText
+  func WithTimeout
+  func WithTo
+  type Address
+  type Attachment
+  type BoundaryGenerator
+  type Charset
+  type Client
+  type ClientOption
+  type Config
+  type ContentType
+  type DialContextFunc
+  type Encoding
+  type Header
+  type Message
+  type MessageOption
+  type Sender
+  type SenderFunc
+  type SenderProvider
+  type TLSPolicy
+  var ErrAttachmentTooLarge
+  var ErrInvalidAddress
+  var ErrInvalidHeader
+  var ErrMissingBody
+  var ErrMissingFrom
+  var ErrMissingRecipient
+  var ErrPlainAuth
+  var ErrTLSRequired
 
 github.com/imajinyun/go-knifer/vmap
   func Clear

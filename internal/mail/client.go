@@ -1,0 +1,345 @@
+package mail
+
+import (
+	"bytes"
+	"context"
+	"crypto/tls"
+	"errors"
+	"fmt"
+	"net"
+	"net/smtp"
+	"strconv"
+	"time"
+)
+
+// TLSPolicy controls SMTP transport security.
+type TLSPolicy int
+
+const (
+	// TLSPolicyUnknown uses the package default, currently mandatory STARTTLS.
+	TLSPolicyUnknown TLSPolicy = iota
+	// TLSMandatoryStartTLS requires STARTTLS before SMTP AUTH or DATA.
+	TLSMandatoryStartTLS
+	// TLSImplicit uses implicit TLS from the initial connection.
+	TLSImplicit
+	// TLSOpportunisticStartTLS upgrades when STARTTLS is advertised.
+	TLSOpportunisticStartTLS
+	// TLSNone disables TLS. AUTH remains disabled unless AllowPlainAuth is set.
+	TLSNone
+)
+
+// DialContextFunc dials an SMTP server.
+type DialContextFunc func(context.Context, string, string) (net.Conn, error)
+
+// ClientOption customizes Client construction.
+type ClientOption func(*Client) error
+
+// Sender is implemented by SMTP send backends.
+type Sender interface {
+	Send(ctx context.Context, message *Message) error
+}
+
+// SenderFunc adapts a function into Sender.
+type SenderFunc func(context.Context, *Message) error
+
+// Send sends message.
+func (f SenderFunc) Send(ctx context.Context, message *Message) error { return f(ctx, message) }
+
+// SenderProvider creates a sender for a client configuration.
+type SenderProvider func(Config) (Sender, error)
+
+// Config configures SMTP delivery.
+type Config struct {
+	Host           string
+	Port           int
+	Username       string
+	Password       string
+	LocalName      string
+	TLSConfig      *tls.Config
+	TLSPolicy      TLSPolicy
+	AllowPlainAuth bool
+	Timeout        time.Duration
+	DialContext    DialContextFunc
+}
+
+// Client sends messages through SMTP.
+type Client struct {
+	config         Config
+	senderProvider SenderProvider
+}
+
+// NewClient creates an SMTP client.
+func NewClient(host string, port int, opts ...ClientOption) (*Client, error) {
+	c := &Client{
+		config: Config{
+			Host:        host,
+			Port:        port,
+			LocalName:   "localhost",
+			TLSPolicy:   TLSMandatoryStartTLS,
+			Timeout:     10 * time.Second,
+			DialContext: (&net.Dialer{}).DialContext,
+		},
+	}
+	for _, opt := range opts {
+		if opt == nil {
+			continue
+		}
+		if err := opt(c); err != nil {
+			return nil, err
+		}
+	}
+	if c.config.Host == "" || c.config.Port <= 0 {
+		return nil, fmt.Errorf("%w: invalid smtp address", ErrInvalidAddress)
+	}
+	if c.config.TLSPolicy == TLSPolicyUnknown {
+		c.config.TLSPolicy = TLSMandatoryStartTLS
+	}
+	if c.config.DialContext == nil {
+		c.config.DialContext = (&net.Dialer{}).DialContext
+	}
+	if c.senderProvider == nil {
+		c.senderProvider = func(config Config) (Sender, error) { return smtpSender{config: config}, nil }
+	}
+	return c, nil
+}
+
+// Send sends message through an SMTP server created from host, port, and options.
+func Send(ctx context.Context, host string, port int, message *Message, opts ...ClientOption) error {
+	client, err := NewClient(host, port, opts...)
+	if err != nil {
+		return err
+	}
+	return client.Send(ctx, message)
+}
+
+// SendText creates and sends a plain text message.
+func SendText(ctx context.Context, host string, port int, from string, to []string, subject, text string, opts ...ClientOption) error {
+	msgOpts := []MessageOption{WithFrom(from), WithSubject(subject), WithText(text)}
+	msgOpts = append(msgOpts, WithTo(to...))
+	message, err := NewMessage(msgOpts...)
+	if err != nil {
+		return err
+	}
+	return Send(ctx, host, port, message, opts...)
+}
+
+// SendHTML creates and sends an HTML message.
+func SendHTML(ctx context.Context, host string, port int, from string, to []string, subject, html string, opts ...ClientOption) error {
+	msgOpts := []MessageOption{WithFrom(from), WithSubject(subject), WithHTML(html)}
+	msgOpts = append(msgOpts, WithTo(to...))
+	message, err := NewMessage(msgOpts...)
+	if err != nil {
+		return err
+	}
+	return Send(ctx, host, port, message, opts...)
+}
+
+// Send sends message with context cancellation and configured SMTP security.
+func (c *Client) Send(ctx context.Context, message *Message) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if message == nil {
+		return ErrMissingBody
+	}
+	if err := message.Validate(); err != nil {
+		return err
+	}
+	sender, err := c.senderProvider(c.config)
+	if err != nil {
+		return err
+	}
+	return sender.Send(ctx, message)
+}
+
+// WithAuth sets SMTP username and password.
+func WithAuth(username, password string) ClientOption {
+	return func(c *Client) error {
+		c.config.Username = username
+		c.config.Password = password
+		return nil
+	}
+}
+
+// WithTLSConfig sets the TLS configuration. The value is cloned.
+func WithTLSConfig(config *tls.Config) ClientOption {
+	return func(c *Client) error {
+		if config == nil {
+			c.config.TLSConfig = nil
+			return nil
+		}
+		c.config.TLSConfig = config.Clone()
+		return nil
+	}
+}
+
+// WithTLSPolicy sets SMTP TLS behavior.
+func WithTLSPolicy(policy TLSPolicy) ClientOption {
+	return func(c *Client) error {
+		c.config.TLSPolicy = policy
+		return nil
+	}
+}
+
+// WithAllowPlainAuth permits SMTP AUTH without TLS. Prefer TLS instead.
+func WithAllowPlainAuth(allow bool) ClientOption {
+	return func(c *Client) error {
+		c.config.AllowPlainAuth = allow
+		return nil
+	}
+}
+
+// WithTimeout sets a client-wide operation timeout.
+func WithTimeout(timeout time.Duration) ClientOption {
+	return func(c *Client) error {
+		c.config.Timeout = timeout
+		return nil
+	}
+}
+
+// WithLocalName sets the HELO/EHLO local name.
+func WithLocalName(name string) ClientOption {
+	return func(c *Client) error {
+		if hasCRLF(name) || name == "" {
+			return ErrInvalidHeader
+		}
+		c.config.LocalName = name
+		return nil
+	}
+}
+
+// WithDialContext sets the network dialer.
+func WithDialContext(dial DialContextFunc) ClientOption {
+	return func(c *Client) error {
+		if dial == nil {
+			return errors.New("mail: nil dialer")
+		}
+		c.config.DialContext = dial
+		return nil
+	}
+}
+
+// WithSenderProvider sets a custom sender provider, primarily for deterministic tests.
+func WithSenderProvider(provider SenderProvider) ClientOption {
+	return func(c *Client) error {
+		if provider == nil {
+			return errors.New("mail: nil sender provider")
+		}
+		c.senderProvider = provider
+		return nil
+	}
+}
+
+type smtpSender struct{ config Config }
+
+func (s smtpSender) Send(ctx context.Context, message *Message) error {
+	ctx, cancel := withClientTimeout(ctx, s.config.Timeout)
+	defer cancel()
+	addr := net.JoinHostPort(s.config.Host, strconv.Itoa(s.config.Port))
+	tlsConfig := s.tlsConfig()
+	conn, err := s.dial(ctx, addr, tlsConfig)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+	if deadline, ok := ctx.Deadline(); ok {
+		_ = conn.SetDeadline(deadline)
+	}
+	client, err := smtp.NewClient(conn, s.config.Host)
+	if err != nil {
+		return fmt.Errorf("create smtp client: %w", err)
+	}
+	defer client.Close()
+	if s.config.LocalName != "" {
+		if err := client.Hello(s.config.LocalName); err != nil {
+			return fmt.Errorf("smtp hello: %w", err)
+		}
+	}
+	isTLS := s.config.TLSPolicy == TLSImplicit
+	if s.config.TLSPolicy == TLSMandatoryStartTLS || s.config.TLSPolicy == TLSOpportunisticStartTLS {
+		if ok, _ := client.Extension("STARTTLS"); ok {
+			if err := client.StartTLS(tlsConfig); err != nil {
+				return fmt.Errorf("smtp starttls: %w", err)
+			}
+			isTLS = true
+		} else if s.config.TLSPolicy == TLSMandatoryStartTLS {
+			return ErrTLSRequired
+		}
+	}
+	if s.config.Username != "" {
+		if !isTLS && !s.config.AllowPlainAuth {
+			return ErrPlainAuth
+		}
+		if err := client.Auth(smtp.PlainAuth("", s.config.Username, s.config.Password, s.config.Host)); err != nil {
+			return fmt.Errorf("smtp auth: %w", err)
+		}
+	}
+	if err := client.Mail(message.From.Email); err != nil {
+		return fmt.Errorf("smtp mail from: %w", err)
+	}
+	for _, recipient := range message.Recipients() {
+		if err := client.Rcpt(recipient); err != nil {
+			return fmt.Errorf("smtp rcpt to %q: %w", recipient, err)
+		}
+	}
+	w, err := client.Data()
+	if err != nil {
+		return fmt.Errorf("smtp data: %w", err)
+	}
+	var body bytes.Buffer
+	if _, err := message.WriteTo(&body); err != nil {
+		_ = w.Close()
+		return err
+	}
+	if _, err := body.WriteTo(w); err != nil {
+		_ = w.Close()
+		return fmt.Errorf("smtp write data: %w", err)
+	}
+	if err := w.Close(); err != nil {
+		return fmt.Errorf("smtp close data: %w", err)
+	}
+	if err := client.Quit(); err != nil {
+		return fmt.Errorf("smtp quit: %w", err)
+	}
+	return ctx.Err()
+}
+
+func (s smtpSender) dial(ctx context.Context, addr string, tlsConfig *tls.Config) (net.Conn, error) {
+	conn, err := s.config.DialContext(ctx, "tcp", addr)
+	if err != nil {
+		return nil, fmt.Errorf("smtp dial: %w", err)
+	}
+	if s.config.TLSPolicy == TLSImplicit {
+		tlsConn := tls.Client(conn, tlsConfig)
+		if deadline, ok := ctx.Deadline(); ok {
+			_ = tlsConn.SetDeadline(deadline)
+		}
+		if err := tlsConn.HandshakeContext(ctx); err != nil {
+			_ = conn.Close()
+			return nil, fmt.Errorf("smtp tls handshake: %w", err)
+		}
+		return tlsConn, nil
+	}
+	return conn, nil
+}
+
+func (s smtpSender) tlsConfig() *tls.Config {
+	if s.config.TLSConfig != nil {
+		config := s.config.TLSConfig.Clone()
+		if config.ServerName == "" {
+			config.ServerName = s.config.Host
+		}
+		return config
+	}
+	return &tls.Config{ServerName: s.config.Host, MinVersion: tls.VersionTLS12}
+}
+
+func withClientTimeout(ctx context.Context, timeout time.Duration) (context.Context, context.CancelFunc) {
+	if timeout <= 0 {
+		return context.WithCancel(ctx)
+	}
+	if _, ok := ctx.Deadline(); ok {
+		return context.WithCancel(ctx)
+	}
+	return context.WithTimeout(ctx, timeout)
+}
