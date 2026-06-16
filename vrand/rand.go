@@ -29,7 +29,9 @@ func StringUpper(n int) string                { return StringUpperWithOptions(n)
 func StringFrom(charset string, n int) string { return StringFromWithOptions(charset, n) }
 func Ele[T any](a []T) T                      { return EleWithOptions(a) }
 
-// WithRandomSource sets the pseudo-random source used by numeric, string, element, and fallback byte helpers.
+// WithRandomSource sets the pseudo-random source used by numeric, string,
+// element, and compatibility fallback byte helpers. Use SecureBytes for
+// secrets, tokens, keys, and nonces.
 func WithRandomSource(source *mathrand.Rand) RandomOption { return randimpl.WithRandomSource(source) }
 
 // WithRandomReader sets the byte source used by BytesWithOptions and SecureBytesWithOptions.
@@ -85,7 +87,8 @@ func EleWithOptions[T any](a []T, opts ...RandomOption) T {
 	return randimpl.RandomEleWithOptions(a, opts...)
 }
 
-// SetSeed resets the package-level pseudo-random source seed.
+// SetSeed resets the package-level pseudo-random source seed for reproducible
+// non-security helpers. It must not be used for secrets, tokens, keys, or nonces.
 func SetSeed(seed int64) { randimpl.SetSeed(seed) }
 
 // ConfigureDefaultRandomSourceProvider sets the provider used to lazily create the package-level pseudo-random source.

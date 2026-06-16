@@ -65,6 +65,33 @@ func main() {
 }
 ```
 
+## Iterate with Go 1.23 range adapters
+
+`Iter` yields values in slice index order. `IterIndexed` yields index-value pairs
+in the same stable order.
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/imajinyun/go-knifer/vslice"
+)
+
+func main() {
+	items := []string{"go", "knifer"}
+
+	for value := range vslice.Iter(items) {
+		fmt.Println(value)
+	}
+
+	for index, value := range vslice.IterIndexed(items) {
+		fmt.Println(index, value)
+	}
+}
+```
+
 ## Set operations and pagination
 
 ```go

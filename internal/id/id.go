@@ -54,7 +54,9 @@ func WithRandomReader(reader io.Reader) RandomOption {
 	return func(c *randomConfig) { c.reader = reader }
 }
 
-// WithFallbackRandomSource sets the pseudo-random fallback used when the primary random reader fails.
+// WithFallbackRandomSource sets the pseudo-random fallback used when the
+// primary random reader fails. It exists for compatibility and deterministic
+// tests; do not use it for security-sensitive identifiers.
 func WithFallbackRandomSource(source *mathrand.Rand) RandomOption {
 	return func(c *randomConfig) { c.fallbackSource = source }
 }
@@ -74,6 +76,8 @@ func applyRandomOptions(opts []RandomOption) randomConfig {
 
 // ConfigureDefaultFallbackRandomSourceProvider sets the provider used to lazily
 // create the package-level fallback PRNG when the primary random reader fails.
+// The fallback PRNG is compatibility behavior for UUID/ObjectId helpers, not a
+// cryptographic entropy source.
 // Passing nil restores the time-seeded default provider and clears cached state.
 func ConfigureDefaultFallbackRandomSourceProvider(provider func() *mathrand.Rand) {
 	defaultRandMu.Lock()
@@ -90,6 +94,7 @@ func ConfigureDefaultFallbackRandomSourceProvider(provider func() *mathrand.Rand
 func ResetDefaultFallbackRandomSource() { ConfigureDefaultFallbackRandomSourceProvider(nil) }
 
 // SetFallbackRandomSeed resets the package-level fallback PRNG to a deterministic seed.
+// It is intended for tests and reproducible non-security fallback behavior only.
 func SetFallbackRandomSeed(seed int64) {
 	defaultRandMu.Lock()
 	defer defaultRandMu.Unlock()
@@ -110,7 +115,9 @@ func WithObjectIDRandomReader(reader io.Reader) ObjectIDOption {
 	return func(c *objectIDConfig) { c.reader = reader }
 }
 
-// WithObjectIDFallbackRandomSource sets the fallback random source used when ObjectId random reads fail.
+// WithObjectIDFallbackRandomSource sets the fallback pseudo-random source used
+// when ObjectId random reads fail. It is intended for compatibility and tests,
+// not for security-sensitive identifiers.
 func WithObjectIDFallbackRandomSource(source *mathrand.Rand) ObjectIDOption {
 	return func(c *objectIDConfig) { c.fallbackSource = source }
 }
@@ -655,6 +662,9 @@ func fillRandomBytesWithConfig(cfg randomConfig, buf []byte) {
 			}
 			return
 		}
+		// Compatibility fallback: ID helpers historically continued when the
+		// primary entropy reader failed. This uses pseudo-random bytes and is not a
+		// security boundary.
 		defaultRandMu.Lock()
 		defer defaultRandMu.Unlock()
 		for i := range buf {

@@ -73,6 +73,38 @@ func main() {
 }
 ```
 
+## Iterate with Go 1.23 range adapters
+
+`Iter`, `IterKeys`, and `IterValues` expose Go iterator adapters for maps. Map
+iteration order follows Go map semantics and is not stable; sort keys first when
+callers need deterministic output.
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/imajinyun/go-knifer/vmap"
+)
+
+func main() {
+	m := map[string]int{"a": 1, "b": 2}
+
+	for key, value := range vmap.Iter(m) {
+		fmt.Println(key, value)
+	}
+
+	for key := range vmap.IterKeys(m) {
+		fmt.Println(key)
+	}
+
+	for value := range vmap.IterValues(m) {
+		fmt.Println(value)
+	}
+}
+```
+
 ## Merge and run set operations
 
 ```go

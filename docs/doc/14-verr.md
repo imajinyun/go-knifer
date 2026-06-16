@@ -87,3 +87,46 @@ func main() {
 	fmt.Println(len(stack) > 0)
 }
 ```
+
+## Initialize Sentry without global side effects in tests
+
+`InitWithOptions` accepts Sentry factories so production code can use
+`sentry-go` while tests inject isolated clients and hook registration. Prefer
+`WithSentryClientOptions`, `WithSentryClient`, or `WithSentryClientFactory` for
+new code. `WithRavenSetDSNFunc` is kept only for legacy migration paths.
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/getsentry/sentry-go"
+	"github.com/imajinyun/go-knifer/verr"
+	"github.com/sirupsen/logrus"
+)
+
+type memoryHook struct{}
+
+func (memoryHook) Levels() []logrus.Level { return []logrus.Level{logrus.ErrorLevel} }
+
+func (memoryHook) Fire(*logrus.Entry) error { return nil }
+
+func main() {
+	var registered bool
+
+	verr.InitWithOptions(
+		verr.WithSentryDSN("https://public@example.invalid/1"),
+		verr.WithSentryClientOptions(sentry.ClientOptions{Environment: "test"}),
+		verr.WithSentryClientFactory(func(options sentry.ClientOptions) (*sentry.Client, error) {
+			return sentry.NewClient(options)
+		}),
+		verr.WithSentryHookFactory(func(*sentry.Client, []logrus.Level) (logrus.Hook, error) {
+			return memoryHook{}, nil
+		}),
+		verr.WithLogHookAdder(func(logrus.Hook) { registered = true }),
+	)
+
+	fmt.Println(registered)
+}
+```

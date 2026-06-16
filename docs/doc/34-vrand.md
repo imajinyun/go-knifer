@@ -58,7 +58,11 @@ func main() {
 }
 ```
 
-## Generate secure random bytes and reproducible results
+## Generate secure random bytes and reproducible pseudo-random results
+
+Use `SecureBytes` for secrets, tokens, keys, and nonces. `WithRandomSource`
+accepts `math/rand` only for reproducible non-security helpers such as examples,
+tests, random selection, and compatibility fallback behavior.
 
 ```go
 package main

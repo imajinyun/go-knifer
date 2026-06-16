@@ -34,7 +34,10 @@ type randomConfig struct {
 // RandomOption customizes per-call random helpers.
 type RandomOption func(*randomConfig)
 
-// WithRandomSource sets the pseudo-random source used by numeric, string, element, and fallback byte helpers.
+// WithRandomSource sets the pseudo-random source used by numeric, string,
+// element, and compatibility fallback byte helpers. Do not use pseudo-random
+// sources for secrets, tokens, keys, or nonces; use SecureRandomBytes with a
+// cryptographic reader for security-sensitive bytes.
 func WithRandomSource(source *mathrand.Rand) RandomOption {
 	return func(c *randomConfig) { c.source = source }
 }
@@ -63,7 +66,9 @@ func applyRandomOptions(opts []RandomOption) randomConfig {
 	return cfg
 }
 
-// SetSeed resets the package-level pseudo-random source seed.
+// SetSeed resets the package-level pseudo-random source seed. It is intended
+// for reproducible non-security helpers such as RandomInt, RandomString, and
+// RandomEle; it must not be used for secrets, tokens, keys, or nonces.
 func SetSeed(seed int64) {
 	defaultRandMu.Lock()
 	defer defaultRandMu.Unlock()
@@ -71,8 +76,10 @@ func SetSeed(seed int64) {
 }
 
 // ConfigureDefaultRandomSourceProvider sets the provider used to lazily create
-// the package-level pseudo-random source. Passing nil restores the time-seeded
-// default provider and clears the cached source.
+// the package-level pseudo-random source. The source is for reproducible or
+// convenience randomness only; SecureRandomBytes does not rely on it unless a
+// caller explicitly supplies an insecure reader and disables strict behavior.
+// Passing nil restores the time-seeded default provider and clears the cached source.
 func ConfigureDefaultRandomSourceProvider(provider func() *mathrand.Rand) {
 	defaultRandMu.Lock()
 	defer defaultRandMu.Unlock()
@@ -204,7 +211,10 @@ func fillRandomBytesWithConfig(buf []byte, cfg randomConfig) error {
 		if cfg.strictCrypto {
 			return err
 		}
-		// Fall back to math/rand when crypto/rand is unavailable.
+		// Compatibility fallback: RandomBytes historically returned bytes even when
+		// crypto/rand failed. This path is intentionally pseudo-random and must not
+		// be used for secrets, tokens, keys, or nonces; SecureRandomBytes enables
+		// strictCrypto and fails closed instead.
 		for i := range buf {
 			buf[i] = byte(randomIntn(cfg, 256))
 		}
@@ -290,5 +300,5 @@ func defaultRandLocked() *mathrand.Rand {
 }
 
 func newDefaultRand() *mathrand.Rand {
-	return mathrand.New(mathrand.NewSource(time.Now().UnixNano()))
+	return mathrand.New(mathrand.NewSource(time.Now().UnixNano())) // #nosec G404 -- non-security helpers and RandomBytes compatibility fallback only; SecureRandomBytes fails closed.
 }

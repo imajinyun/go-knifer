@@ -32,7 +32,9 @@ func ObjectId() string       { return ObjectIdWithOptions() }
 // WithRandomReader sets the entropy source used by UUID helpers.
 func WithRandomReader(reader io.Reader) RandomOption { return idimpl.WithRandomReader(reader) }
 
-// WithFallbackRandomSource sets the fallback PRNG used when UUID random reads fail.
+// WithFallbackRandomSource sets the fallback PRNG used when UUID random reads
+// fail. It is intended for compatibility and deterministic tests, not for
+// security-sensitive identifiers.
 func WithFallbackRandomSource(source *mathrand.Rand) RandomOption {
 	return idimpl.WithFallbackRandomSource(source)
 }
@@ -46,6 +48,7 @@ func ConfigureDefaultFallbackRandomSourceProvider(provider func() *mathrand.Rand
 func ResetDefaultFallbackRandomSource() { idimpl.ResetDefaultFallbackRandomSource() }
 
 // SetFallbackRandomSeed resets the package-level fallback PRNG to a deterministic seed.
+// It is intended for tests and reproducible non-security fallback behavior only.
 func SetFallbackRandomSeed(seed int64) { idimpl.SetFallbackRandomSeed(seed) }
 
 // RandomUUIDWithOptions creates an RFC 4122 UUID with random options.
@@ -67,7 +70,9 @@ func WithObjectIDRandomReader(reader io.Reader) ObjectIDOption {
 	return idimpl.WithObjectIDRandomReader(reader)
 }
 
-// WithObjectIDFallbackRandomSource sets the fallback PRNG used when ObjectId random reads fail.
+// WithObjectIDFallbackRandomSource sets the fallback PRNG used when ObjectId
+// random reads fail. It is intended for compatibility and deterministic tests,
+// not for security-sensitive identifiers.
 func WithObjectIDFallbackRandomSource(source *mathrand.Rand) ObjectIDOption {
 	return idimpl.WithObjectIDFallbackRandomSource(source)
 }
