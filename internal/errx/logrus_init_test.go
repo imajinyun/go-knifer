@@ -4,10 +4,16 @@ import (
 	"io"
 	"testing"
 
-	"github.com/evalphobia/logrus_sentry"
-	"github.com/getsentry/raven-go"
+	"github.com/getsentry/sentry-go"
 	"github.com/sirupsen/logrus"
 )
+
+type testSentryHook struct {
+	levels []logrus.Level
+}
+
+func (h *testSentryHook) Levels() []logrus.Level   { return h.levels }
+func (h *testSentryHook) Fire(*logrus.Entry) error { return nil }
 
 func TestInitWithOptionsUsesInjectedProviders(t *testing.T) {
 	var reportCaller bool
@@ -15,7 +21,8 @@ func TestInitWithOptionsUsesInjectedProviders(t *testing.T) {
 	var formatter logrus.Formatter
 	var getenvKey string
 	var setDSN string
-	var hookClient *raven.Client
+	var clientOptions sentry.ClientOptions
+	var hookClient *sentry.Client
 	var hookLevels []logrus.Level
 	var hookAdded bool
 
@@ -34,10 +41,14 @@ func TestInitWithOptionsUsesInjectedProviders(t *testing.T) {
 			setDSN = dsn
 			return nil
 		}),
-		WithSentryHookFactory(func(client *raven.Client, levels []logrus.Level) (*logrus_sentry.SentryHook, error) {
+		WithSentryClientFactory(func(options sentry.ClientOptions) (*sentry.Client, error) {
+			clientOptions = options
+			return sentry.NewClient(options)
+		}),
+		WithSentryHookFactory(func(client *sentry.Client, levels []logrus.Level) (logrus.Hook, error) {
 			hookClient = client
 			hookLevels = append([]logrus.Level(nil), levels...)
-			return &logrus_sentry.SentryHook{}, nil
+			return &testSentryHook{levels: levels}, nil
 		}),
 		WithLogHookAdder(func(logrus.Hook) { hookAdded = true }),
 		WithSentryLevels(logrus.ErrorLevel),
@@ -48,6 +59,9 @@ func TestInitWithOptionsUsesInjectedProviders(t *testing.T) {
 	}
 	if getenvKey != "CUSTOM_DSN" || setDSN != "https://public@example.com/1" {
 		t.Fatalf("dsn providers key=%q dsn=%q", getenvKey, setDSN)
+	}
+	if clientOptions.Dsn != "https://public@example.com/1" || !clientOptions.AttachStacktrace {
+		t.Fatalf("client options = %#v", clientOptions)
 	}
 	if hookClient == nil || len(hookLevels) != 1 || hookLevels[0] != logrus.ErrorLevel || !hookAdded {
 		t.Fatalf("hook providers client=%v levels=%v added=%v", hookClient, hookLevels, hookAdded)

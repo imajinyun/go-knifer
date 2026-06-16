@@ -43,8 +43,7 @@ err() {
 
 allowed_facade_external_import() {
 	case "$1:$2" in
-	verr:github.com/evalphobia/logrus_sentry | \
-	verr:github.com/getsentry/raven-go | \
+		verr:github.com/getsentry/sentry-go | \
 	verr:github.com/sirupsen/logrus | \
 	vpoi:github.com/xuri/excelize/v2 | \
 	vresty:resty.dev/v3)

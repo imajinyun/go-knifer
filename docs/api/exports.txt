@@ -674,6 +674,8 @@ github.com/imajinyun/go-knifer/verr
   func WithRavenSetDSNFunc
   func WithReportCaller
   func WithSentryClient
+  func WithSentryClientFactory
+  func WithSentryClientOptions
   func WithSentryDSN
   func WithSentryEnvKey
   func WithSentryHookFactory

@@ -3,8 +3,7 @@ module github.com/imajinyun/go-knifer
 go 1.25.0
 
 require (
-	github.com/evalphobia/logrus_sentry v0.8.2
-	github.com/getsentry/raven-go v0.2.0
+	github.com/getsentry/sentry-go v0.46.2
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/makiuchi-d/gozxing v0.1.1
 	github.com/pelletier/go-toml/v2 v2.3.1
@@ -17,10 +16,9 @@ require (
 )
 
 require (
-	github.com/certifi/gocertifi v0.0.0-20210507211836-431795d63e8d // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/richardlehane/mscfb v1.0.6 // indirect
 	github.com/richardlehane/msoleps v1.0.6 // indirect

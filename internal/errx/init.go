@@ -1,11 +1,13 @@
 package errx
 
 import (
+	"errors"
+	"fmt"
 	"io"
+	"net/http"
 	"os"
 
-	"github.com/evalphobia/logrus_sentry"
-	"github.com/getsentry/raven-go"
+	"github.com/getsentry/sentry-go"
 	"github.com/sirupsen/logrus"
 )
 
@@ -22,9 +24,11 @@ type initConfig struct {
 	reportCaller    bool
 	levels          []logrus.Level
 	getenv          func(string) string
-	setDSN          func(string) error
-	sentryClient    *raven.Client
-	newSentryHook   func(*raven.Client, []logrus.Level) (*logrus_sentry.SentryHook, error)
+	legacySetDSN    func(string) error
+	sentryOptions   sentry.ClientOptions
+	sentryClient    *sentry.Client
+	newSentryClient func(sentry.ClientOptions) (*sentry.Client, error)
+	newSentryHook   func(*sentry.Client, []logrus.Level) (logrus.Hook, error)
 	addHook         func(logrus.Hook)
 	setReportCaller func(bool)
 	setOutput       func(io.Writer)
@@ -68,17 +72,25 @@ func WithEnvLookupFunc(getenv func(string) string) InitOption {
 	}
 }
 
-// WithRavenSetDSNFunc sets the function used to configure raven's global DSN.
+// WithRavenSetDSNFunc sets a legacy hook invoked with the resolved DSN before
+// the sentry-go client is created.
+//
+// Deprecated: use WithSentryClientFactory or WithSentryClientOptions instead.
 func WithRavenSetDSNFunc(setDSN func(string) error) InitOption {
 	return func(c *initConfig) {
 		if setDSN != nil {
-			c.setDSN = setDSN
+			c.legacySetDSN = setDSN
 		}
 	}
 }
 
-// WithSentryClient sets the raven client passed to the Sentry hook factory.
-func WithSentryClient(client *raven.Client) InitOption {
+// WithSentryClientOptions sets sentry-go client options used when creating the Sentry client.
+func WithSentryClientOptions(options sentry.ClientOptions) InitOption {
+	return func(c *initConfig) { c.sentryOptions = options }
+}
+
+// WithSentryClient sets the sentry-go client passed to the Sentry hook factory.
+func WithSentryClient(client *sentry.Client) InitOption {
 	return func(c *initConfig) {
 		if client != nil {
 			c.sentryClient = client
@@ -86,8 +98,17 @@ func WithSentryClient(client *raven.Client) InitOption {
 	}
 }
 
+// WithSentryClientFactory sets the factory used to create sentry-go clients.
+func WithSentryClientFactory(factory func(sentry.ClientOptions) (*sentry.Client, error)) InitOption {
+	return func(c *initConfig) {
+		if factory != nil {
+			c.newSentryClient = factory
+		}
+	}
+}
+
 // WithSentryHookFactory sets the factory used to create the Sentry logrus hook.
-func WithSentryHookFactory(factory func(*raven.Client, []logrus.Level) (*logrus_sentry.SentryHook, error)) InitOption {
+func WithSentryHookFactory(factory func(*sentry.Client, []logrus.Level) (logrus.Hook, error)) InitOption {
 	return func(c *initConfig) {
 		if factory != nil {
 			c.newSentryHook = factory
@@ -130,18 +151,121 @@ func WithInitErrorLogger(logError func(error, string)) InitOption {
 
 func defaultInitErrorLogger(err error, msg string) { logrus.WithError(err).Error(msg) }
 
+var sentryLevelMap = map[logrus.Level]sentry.Level{
+	logrus.TraceLevel: sentry.LevelDebug,
+	logrus.DebugLevel: sentry.LevelDebug,
+	logrus.InfoLevel:  sentry.LevelInfo,
+	logrus.WarnLevel:  sentry.LevelWarning,
+	logrus.ErrorLevel: sentry.LevelError,
+	logrus.FatalLevel: sentry.LevelFatal,
+	logrus.PanicLevel: sentry.LevelFatal,
+}
+
+type sentryLogrusHook struct {
+	client *sentry.Client
+	levels []logrus.Level
+}
+
+func newSentryLogrusHook(client *sentry.Client, levels []logrus.Level) (logrus.Hook, error) {
+	if client == nil {
+		return nil, errors.New("nil sentry client")
+	}
+	return &sentryLogrusHook{
+		client: client,
+		levels: append([]logrus.Level(nil), levels...),
+	}, nil
+}
+
+func (h *sentryLogrusHook) Levels() []logrus.Level { return append([]logrus.Level(nil), h.levels...) }
+
+func (h *sentryLogrusHook) Fire(entry *logrus.Entry) error {
+	event := sentry.NewEvent()
+	event.Level = sentryLevelMap[entry.Level]
+	event.Message = entry.Message
+	event.Timestamp = entry.Time
+	event.Logger = "logrus"
+
+	for key, value := range entry.Data {
+		switch key {
+		case logrus.ErrorKey:
+			if err, ok := value.(error); ok {
+				event.SetException(err, h.client.Options().MaxErrorDepth)
+				continue
+			}
+		case "request":
+			switch req := value.(type) {
+			case *http.Request:
+				event.Request = sentry.NewRequest(req)
+				continue
+			case sentry.Request:
+				event.Request = &req
+				continue
+			case *sentry.Request:
+				event.Request = req
+				continue
+			}
+		case "user":
+			switch user := value.(type) {
+			case sentry.User:
+				event.User = user
+				continue
+			case *sentry.User:
+				event.User = *user
+				continue
+			}
+		case "transaction":
+			if transaction, ok := value.(string); ok {
+				event.Transaction = transaction
+				continue
+			}
+		case "fingerprint":
+			if fingerprint, ok := value.([]string); ok {
+				event.Fingerprint = fingerprint
+				continue
+			}
+		}
+		event.Tags[key] = fmt.Sprint(value)
+	}
+
+	var hint *sentry.EventHint
+	if entry.Context != nil {
+		hint = &sentry.EventHint{Context: entry.Context}
+	}
+	if h.client.CaptureEvent(event, hint, nil) == nil {
+		return errors.New("failed to send to sentry")
+	}
+	return nil
+}
+
+func sentryClientOptionsWithDSN(cfg initConfig) sentry.ClientOptions {
+	options := cfg.sentryOptions
+	if options.Dsn == "" {
+		options.Dsn = cfg.dsn
+	}
+	return options
+}
+
+func buildSentryClient(cfg initConfig) (*sentry.Client, error) {
+	if cfg.sentryClient != nil {
+		return cfg.sentryClient, nil
+	}
+	return cfg.newSentryClient(sentryClientOptionsWithDSN(cfg))
+}
+
 func applyInitOptions(dsn string, opts []InitOption) initConfig {
 	cfg := initConfig{
-		dsn:             dsn,
-		envKey:          SentryDSN,
-		output:          io.Discard,
-		formatter:       EmptyFormatter,
-		reportCaller:    true,
-		levels:          []logrus.Level{logrus.PanicLevel, logrus.FatalLevel, logrus.ErrorLevel, logrus.WarnLevel},
-		getenv:          os.Getenv,
-		setDSN:          raven.SetDSN,
-		sentryClient:    raven.DefaultClient,
-		newSentryHook:   logrus_sentry.NewAsyncWithClientSentryHook,
+		dsn:          dsn,
+		envKey:       SentryDSN,
+		output:       io.Discard,
+		formatter:    EmptyFormatter,
+		reportCaller: true,
+		levels:       []logrus.Level{logrus.PanicLevel, logrus.FatalLevel, logrus.ErrorLevel, logrus.WarnLevel},
+		getenv:       os.Getenv,
+		sentryOptions: sentry.ClientOptions{
+			AttachStacktrace: true,
+		},
+		newSentryClient: sentry.NewClient,
+		newSentryHook:   newSentryLogrusHook,
 		addHook:         logrus.AddHook,
 		setReportCaller: logrus.SetReportCaller,
 		setOutput:       logrus.SetOutput,
@@ -165,14 +289,11 @@ func applyInitOptions(dsn string, opts []InitOption) initConfig {
 	if cfg.getenv == nil {
 		cfg.getenv = os.Getenv
 	}
-	if cfg.setDSN == nil {
-		cfg.setDSN = raven.SetDSN
-	}
-	if cfg.sentryClient == nil {
-		cfg.sentryClient = raven.DefaultClient
+	if cfg.newSentryClient == nil {
+		cfg.newSentryClient = sentry.NewClient
 	}
 	if cfg.newSentryHook == nil {
-		cfg.newSentryHook = logrus_sentry.NewAsyncWithClientSentryHook
+		cfg.newSentryHook = newSentryLogrusHook
 	}
 	if cfg.addHook == nil {
 		cfg.addHook = logrus.AddHook
@@ -211,28 +332,30 @@ func InitWithOptions(opts ...InitOption) {
 	if cfg.dsn == "" {
 		return
 	}
-	if err := cfg.setDSN(cfg.dsn); err != nil {
-		cfg.logError(err, "raven init failed")
+	if cfg.legacySetDSN != nil {
+		if err := cfg.legacySetDSN(cfg.dsn); err != nil {
+			cfg.logError(err, "sentry init failed")
+			return
+		}
+	}
+	client, err := buildSentryClient(cfg)
+	if err != nil {
+		cfg.logError(err, "sentry init failed")
 		return
 	}
 
-	sentry, err := cfg.newSentryHook(
-		cfg.sentryClient,
-		cfg.levels,
-	)
+	hook, err := cfg.newSentryHook(client, cfg.levels)
 	if err != nil {
 		cfg.logError(err, "sentry hook init failed")
 		return
 	}
-	sentry.StacktraceConfiguration.Enable = true
-	sentry.StacktraceConfiguration.IncludeErrorBreadcrumb = true
-	cfg.addHook(sentry)
+	cfg.addHook(hook)
 }
 
 // NewIsolatedLogrusWithOptions creates and configures a standalone logrus logger.
 // Unlike InitWithOptions, it does not mutate the package-level logrus logger or
-// raven default client. When a DSN is configured, the returned logger receives a
-// Sentry hook backed by an isolated raven client unless WithSentryClient supplies one.
+// package-level Sentry state. When a DSN is configured, the returned logger receives
+// a Sentry hook backed by an isolated sentry-go client unless WithSentryClient supplies one.
 func NewIsolatedLogrusWithOptions(opts ...InitOption) *logrus.Logger {
 	cfg := applyInitOptions("", opts)
 	logger := logrus.New()
@@ -246,27 +369,23 @@ func NewIsolatedLogrusWithOptions(opts ...InitOption) *logrus.Logger {
 	if cfg.dsn == "" {
 		return logger
 	}
-
-	client := cfg.sentryClient
-	if client == raven.DefaultClient {
-		isolatedClient, err := raven.New(cfg.dsn)
-		if err != nil {
-			cfg.logError(err, "raven init failed")
+	if cfg.legacySetDSN != nil {
+		if err := cfg.legacySetDSN(cfg.dsn); err != nil {
+			cfg.logError(err, "sentry init failed")
 			return logger
 		}
-		client = isolatedClient
-	} else if err := client.SetDSN(cfg.dsn); err != nil {
-		cfg.logError(err, "raven init failed")
+	}
+	client, err := buildSentryClient(cfg)
+	if err != nil {
+		cfg.logError(err, "sentry init failed")
 		return logger
 	}
 
-	sentry, err := cfg.newSentryHook(client, cfg.levels)
+	hook, err := cfg.newSentryHook(client, cfg.levels)
 	if err != nil {
 		cfg.logError(err, "sentry hook init failed")
 		return logger
 	}
-	sentry.StacktraceConfiguration.Enable = true
-	sentry.StacktraceConfiguration.IncludeErrorBreadcrumb = true
-	logger.AddHook(sentry)
+	logger.AddHook(hook)
 	return logger
 }

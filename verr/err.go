@@ -5,8 +5,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/evalphobia/logrus_sentry"
-	"github.com/getsentry/raven-go"
+	"github.com/getsentry/sentry-go"
 	"github.com/sirupsen/logrus"
 
 	errimpl "github.com/imajinyun/go-knifer/internal/errx"
@@ -127,16 +126,29 @@ func WithEnvLookupFunc(getenv func(string) string) InitOption {
 	return errimpl.WithEnvLookupFunc(getenv)
 }
 
-// WithRavenSetDSNFunc sets the function used to configure raven's global DSN.
+// WithRavenSetDSNFunc sets a legacy hook invoked with the resolved DSN before
+// the sentry-go client is created.
+//
+// Deprecated: use WithSentryClientFactory or WithSentryClientOptions instead.
 func WithRavenSetDSNFunc(setDSN func(string) error) InitOption {
 	return errimpl.WithRavenSetDSNFunc(setDSN)
 }
 
-// WithSentryClient sets the raven client passed to the Sentry hook factory.
-func WithSentryClient(client *raven.Client) InitOption { return errimpl.WithSentryClient(client) }
+// WithSentryClientOptions sets sentry-go client options used when creating the Sentry client.
+func WithSentryClientOptions(options sentry.ClientOptions) InitOption {
+	return errimpl.WithSentryClientOptions(options)
+}
+
+// WithSentryClient sets the sentry-go client passed to the Sentry hook factory.
+func WithSentryClient(client *sentry.Client) InitOption { return errimpl.WithSentryClient(client) }
+
+// WithSentryClientFactory sets the factory used to create sentry-go clients.
+func WithSentryClientFactory(factory func(sentry.ClientOptions) (*sentry.Client, error)) InitOption {
+	return errimpl.WithSentryClientFactory(factory)
+}
 
 // WithSentryHookFactory sets the factory used to create the Sentry logrus hook.
-func WithSentryHookFactory(factory func(*raven.Client, []logrus.Level) (*logrus_sentry.SentryHook, error)) InitOption {
+func WithSentryHookFactory(factory func(*sentry.Client, []logrus.Level) (logrus.Hook, error)) InitOption {
 	return errimpl.WithSentryHookFactory(factory)
 }
 
@@ -158,7 +170,7 @@ func WithInitErrorLogger(logError func(error, string)) InitOption {
 // InitWithOptions configures logrus output and optional Sentry forwarding with options.
 func InitWithOptions(opts ...InitOption) { errimpl.InitWithOptions(opts...) }
 
-// NewIsolatedLogrusWithOptions creates a standalone logrus logger without mutating global logrus/raven state.
+// NewIsolatedLogrusWithOptions creates a standalone logrus logger without mutating global logrus/Sentry state.
 func NewIsolatedLogrusWithOptions(opts ...InitOption) *logrus.Logger {
 	return errimpl.NewIsolatedLogrusWithOptions(opts...)
 }
