@@ -7,8 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 )
@@ -23,21 +21,22 @@ type MessageOption func(*Message) error
 
 // Message is an email message with text, HTML, inline files, and attachments.
 type Message struct {
-	From        *Address
-	To          []*Address
-	Cc          []*Address
-	Bcc         []*Address
-	ReplyTo     []*Address
-	Subject     string
-	Text        string
-	HTML        string
-	Headers     Header
-	Attachments []Attachment
-	Inlines     []Attachment
-	Date        time.Time
-	MessageID   string
-	Charset     Charset
-	Encoding    Encoding
+	From         *Address
+	EnvelopeFrom string
+	To           []*Address
+	Cc           []*Address
+	Bcc          []*Address
+	ReplyTo      []*Address
+	Subject      string
+	Text         string
+	HTML         string
+	Headers      Header
+	Attachments  []Attachment
+	Inlines      []Attachment
+	Date         time.Time
+	MessageID    string
+	Charset      Charset
+	Encoding     Encoding
 
 	maxAttachmentBytes int64
 	boundaryGenerator  BoundaryGenerator
@@ -88,6 +87,9 @@ func (m *Message) Validate() error {
 	if validateEmail(m.From.Email) != nil || hasCRLF(m.From.Name) || hasCRLF(m.Subject) || hasCRLF(m.MessageID) {
 		return ErrInvalidHeader
 	}
+	if m.EnvelopeFrom != "" && validateEmail(m.EnvelopeFrom) != nil {
+		return ErrInvalidAddress
+	}
 	for _, attachment := range m.Attachments {
 		if err := attachment.validate(m.maxAttachmentBytes); err != nil {
 			return err
@@ -105,22 +107,39 @@ func (m *Message) Validate() error {
 func (m *Message) Recipients() []string {
 	addresses := append(append(cloneAddresses(m.To), m.Cc...), m.Bcc...)
 	recipients := make([]string, 0, len(addresses))
+	seen := make(map[string]struct{}, len(addresses))
 	for _, addr := range addresses {
-		if addr != nil {
-			recipients = append(recipients, addr.Email)
+		if addr == nil {
+			continue
 		}
+		key := strings.ToLower(addr.Email)
+		if _, ok := seen[key]; ok {
+			continue
+		}
+		seen[key] = struct{}{}
+		recipients = append(recipients, addr.Email)
 	}
 	return recipients
 }
 
+// Sender returns the SMTP envelope sender for MAIL FROM.
+func (m *Message) Sender() string {
+	if m == nil || m.From == nil {
+		return ""
+	}
+	if m.EnvelopeFrom != "" {
+		return m.EnvelopeFrom
+	}
+	return m.From.Email
+}
+
 // WriteTo renders the message to w.
 func (m *Message) WriteTo(w io.Writer) (int64, error) {
-	var buf bytes.Buffer
-	if err := m.write(&buf); err != nil {
+	counting := &countingWriter{out: w}
+	if err := m.write(counting); err != nil {
 		return 0, err
 	}
-	n, err := w.Write(buf.Bytes())
-	return int64(n), err
+	return counting.n, nil
 }
 
 // Bytes renders the message to a byte slice.
@@ -152,6 +171,18 @@ func WithFromAddress(addr *Address) MessageOption {
 		}
 		copyAddr := *addr
 		m.From = &copyAddr
+		return nil
+	}
+}
+
+// WithEnvelopeFrom sets the SMTP envelope sender for MAIL FROM.
+func WithEnvelopeFrom(address string) MessageOption {
+	return func(m *Message) error {
+		address = strings.TrimSpace(address)
+		if err := validateEmail(address); err != nil {
+			return err
+		}
+		m.EnvelopeFrom = address
 		return nil
 	}
 }
@@ -210,6 +241,18 @@ func WithAttachment(name string, content []byte, contentType ContentType) Messag
 	}
 }
 
+// WithAttachmentReader appends an attachment from a reader opener.
+func WithAttachmentReader(name string, size int64, contentType ContentType, open func() (io.ReadCloser, error)) MessageOption {
+	return func(m *Message) error {
+		attachment, err := NewAttachmentReader(name, size, contentType, open)
+		if err != nil {
+			return err
+		}
+		m.Attachments = append(m.Attachments, attachment)
+		return nil
+	}
+}
+
 // WithInline appends an inline file from bytes.
 func WithInline(name, contentID string, content []byte, contentType ContentType) MessageOption {
 	return func(m *Message) error {
@@ -222,23 +265,44 @@ func WithInline(name, contentID string, content []byte, contentType ContentType)
 	}
 }
 
+// WithInlineReader appends an inline file from a reader opener with a Content-ID.
+func WithInlineReader(
+	name string,
+	contentID string,
+	size int64,
+	contentType ContentType,
+	open func() (io.ReadCloser, error),
+) MessageOption {
+	return func(m *Message) error {
+		inline, err := NewInlineReader(name, contentID, size, contentType, open)
+		if err != nil {
+			return err
+		}
+		m.Inlines = append(m.Inlines, inline)
+		return nil
+	}
+}
+
 // WithAttachmentFile appends an attachment loaded lazily from path.
 func WithAttachmentFile(path string) MessageOption {
 	return func(m *Message) error {
-		info, err := os.Stat(path)
+		attachment, err := NewAttachmentFile(path)
 		if err != nil {
 			return fmt.Errorf("stat attachment: %w", err)
 		}
-		attachment := Attachment{
-			Name:        filepath.Base(path),
-			ContentType: detectContentType(path),
-			Encoding:    EncodingBase64,
-			Size:        info.Size(),
-			Open: func() (io.ReadCloser, error) {
-				return os.Open(path) // #nosec G304 -- caller controls attachment path.
-			},
-		}
 		m.Attachments = append(m.Attachments, attachment)
+		return nil
+	}
+}
+
+// WithInlineFile appends an inline attachment loaded lazily from path with a Content-ID.
+func WithInlineFile(path, contentID string) MessageOption {
+	return func(m *Message) error {
+		inline, err := NewInlineFile(path, contentID)
+		if err != nil {
+			return fmt.Errorf("stat inline attachment: %w", err)
+		}
+		m.Inlines = append(m.Inlines, inline)
 		return nil
 	}
 }
@@ -314,4 +378,15 @@ func randomBoundary() (string, error) {
 		return "", fmt.Errorf("generate mime boundary: %w", err)
 	}
 	return hex.EncodeToString(buf[:]), nil
+}
+
+type countingWriter struct {
+	out io.Writer
+	n   int64
+}
+
+func (w *countingWriter) Write(p []byte) (int, error) {
+	n, err := w.out.Write(p)
+	w.n += int64(n)
+	return n, err
 }

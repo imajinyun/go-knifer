@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"mime"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -30,6 +31,32 @@ func NewInline(name, contentID string, content []byte, contentType ContentType) 
 	return newBytesFile(name, content, contentType, contentID, true)
 }
 
+// NewAttachmentReader creates an attachment from a reader opener.
+func NewAttachmentReader(name string, size int64, contentType ContentType, open func() (io.ReadCloser, error)) (Attachment, error) {
+	return newReaderFile(name, size, contentType, "", false, open)
+}
+
+// NewInlineReader creates an inline attachment from a reader opener with a Content-ID.
+func NewInlineReader(
+	name string,
+	contentID string,
+	size int64,
+	contentType ContentType,
+	open func() (io.ReadCloser, error),
+) (Attachment, error) {
+	return newReaderFile(name, size, contentType, contentID, true, open)
+}
+
+// NewAttachmentFile creates an attachment loaded lazily from path.
+func NewAttachmentFile(path string) (Attachment, error) {
+	return newFileAttachment(path, "", false)
+}
+
+// NewInlineFile creates an inline attachment loaded lazily from path with a Content-ID.
+func NewInlineFile(path, contentID string) (Attachment, error) {
+	return newFileAttachment(path, contentID, true)
+}
+
 func newBytesFile(name string, content []byte, contentType ContentType, contentID string, inline bool) (Attachment, error) {
 	name = strings.TrimSpace(name)
 	if name == "" || hasCRLF(name) || hasCRLF(contentID) {
@@ -50,6 +77,45 @@ func newBytesFile(name string, content []byte, contentType ContentType, contentI
 		},
 		isInline: inline,
 	}, nil
+}
+
+func newReaderFile(
+	name string,
+	size int64,
+	contentType ContentType,
+	contentID string,
+	inline bool,
+	open func() (io.ReadCloser, error),
+) (Attachment, error) {
+	name = strings.TrimSpace(name)
+	if name == "" || hasCRLF(name) || hasCRLF(contentID) {
+		return Attachment{}, ErrInvalidHeader
+	}
+	if open == nil {
+		return Attachment{}, errors.New("mail: missing attachment opener")
+	}
+	if contentType == "" {
+		contentType = detectContentType(name)
+	}
+	return Attachment{
+		Name:        filepath.Base(name),
+		ContentType: contentType,
+		ContentID:   strings.Trim(contentID, "<>"),
+		Encoding:    EncodingBase64,
+		Size:        size,
+		Open:        open,
+		isInline:    inline,
+	}, nil
+}
+
+func newFileAttachment(path, contentID string, inline bool) (Attachment, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return Attachment{}, err
+	}
+	return newReaderFile(filepath.Base(path), info.Size(), detectContentType(path), contentID, inline, func() (io.ReadCloser, error) {
+		return os.Open(path) // #nosec G304 -- caller controls attachment path.
+	})
 }
 
 func detectContentType(name string) ContentType {

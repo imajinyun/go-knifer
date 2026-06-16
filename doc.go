@@ -41,7 +41,7 @@
 //
 //	vhttp   standard-library HTTP client/server
 //	vresty  Resty-based HTTP client
-//	vmail   email message construction and SMTP sending
+//	vmail   email message construction, MIME attachments, and SMTP sending
 //	vskt    sockets (SocKeT)
 //	vnet    IP/port/interface utilities
 //

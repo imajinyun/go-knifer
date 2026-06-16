@@ -3,6 +3,7 @@ package vmail
 import (
 	"context"
 	"crypto/tls"
+	"io"
 	"net"
 	"net/smtp"
 	"time"
@@ -12,6 +13,9 @@ import (
 
 // Address is an RFC 5322 mailbox address.
 type Address = mail.Address
+
+// Account stores SMTP server, authentication, and default sender settings.
+type Account = mail.Account
 
 // Attachment is a MIME file part.
 type Attachment = mail.Attachment
@@ -49,8 +53,14 @@ type Message = mail.Message
 // MessageOption customizes message construction.
 type MessageOption = mail.MessageOption
 
+// QuickOption customizes account-based quick send helpers.
+type QuickOption = mail.QuickOption
+
 // Sender is implemented by SMTP send backends.
 type Sender = mail.Sender
+
+// SendCloser sends multiple messages through a reusable SMTP connection.
+type SendCloser = mail.SendCloser
 
 // SenderFunc adapts a function into Sender.
 type SenderFunc = mail.SenderFunc
@@ -106,9 +116,33 @@ func NewAttachment(name string, content []byte, contentType ContentType) (Attach
 	return mail.NewAttachment(name, content, contentType)
 }
 
+// NewAttachmentReader creates an attachment from a reader opener.
+func NewAttachmentReader(name string, size int64, contentType ContentType, open func() (io.ReadCloser, error)) (Attachment, error) {
+	return mail.NewAttachmentReader(name, size, contentType, open)
+}
+
+// NewAttachmentFile creates an attachment loaded lazily from path.
+func NewAttachmentFile(path string) (Attachment, error) { return mail.NewAttachmentFile(path) }
+
 // NewInline creates an inline attachment from bytes with a Content-ID.
 func NewInline(name, contentID string, content []byte, contentType ContentType) (Attachment, error) {
 	return mail.NewInline(name, contentID, content, contentType)
+}
+
+// NewInlineReader creates an inline attachment from a reader opener with a Content-ID.
+func NewInlineReader(
+	name string,
+	contentID string,
+	size int64,
+	contentType ContentType,
+	open func() (io.ReadCloser, error),
+) (Attachment, error) {
+	return mail.NewInlineReader(name, contentID, size, contentType, open)
+}
+
+// NewInlineFile creates an inline attachment loaded lazily from path with a Content-ID.
+func NewInlineFile(path, contentID string) (Attachment, error) {
+	return mail.NewInlineFile(path, contentID)
 }
 
 // NewMessage creates and validates an email message.
@@ -134,11 +168,43 @@ func SendHTML(ctx context.Context, host string, port int, from string, to []stri
 	return mail.SendHTML(ctx, host, port, from, to, subject, html, opts...)
 }
 
+// QuickSend creates and sends a message using account defaults plus quick options.
+func QuickSend(ctx context.Context, account Account, opts ...QuickOption) error {
+	return mail.QuickSend(ctx, account, opts...)
+}
+
+// SendAccountText creates and sends a plain text message using account defaults.
+func SendAccountText(
+	ctx context.Context,
+	account Account,
+	to []string,
+	subject string,
+	text string,
+	opts ...QuickOption,
+) error {
+	return mail.SendAccountText(ctx, account, to, subject, text, opts...)
+}
+
+// SendAccountHTML creates and sends an HTML message using account defaults.
+func SendAccountHTML(
+	ctx context.Context,
+	account Account,
+	to []string,
+	subject string,
+	html string,
+	opts ...QuickOption,
+) error {
+	return mail.SendAccountHTML(ctx, account, to, subject, html, opts...)
+}
+
 // WithFrom sets the From address.
 func WithFrom(address string) MessageOption { return mail.WithFrom(address) }
 
 // WithFromAddress sets the From address.
 func WithFromAddress(addr *Address) MessageOption { return mail.WithFromAddress(addr) }
+
+// WithEnvelopeFrom sets the SMTP envelope sender for MAIL FROM.
+func WithEnvelopeFrom(address string) MessageOption { return mail.WithEnvelopeFrom(address) }
 
 // WithTo appends To recipients.
 func WithTo(addresses ...string) MessageOption { return mail.WithTo(addresses...) }
@@ -169,13 +235,34 @@ func WithAttachment(name string, content []byte, contentType ContentType) Messag
 	return mail.WithAttachment(name, content, contentType)
 }
 
+// WithAttachmentReader appends an attachment from a reader opener.
+func WithAttachmentReader(name string, size int64, contentType ContentType, open func() (io.ReadCloser, error)) MessageOption {
+	return mail.WithAttachmentReader(name, size, contentType, open)
+}
+
 // WithInline appends an inline file from bytes.
 func WithInline(name, contentID string, content []byte, contentType ContentType) MessageOption {
 	return mail.WithInline(name, contentID, content, contentType)
 }
 
+// WithInlineReader appends an inline file from a reader opener with a Content-ID.
+func WithInlineReader(
+	name string,
+	contentID string,
+	size int64,
+	contentType ContentType,
+	open func() (io.ReadCloser, error),
+) MessageOption {
+	return mail.WithInlineReader(name, contentID, size, contentType, open)
+}
+
 // WithAttachmentFile appends an attachment loaded lazily from path.
 func WithAttachmentFile(path string) MessageOption { return mail.WithAttachmentFile(path) }
+
+// WithInlineFile appends an inline attachment loaded lazily from path with a Content-ID.
+func WithInlineFile(path, contentID string) MessageOption {
+	return mail.WithInlineFile(path, contentID)
+}
 
 // WithDate sets the Date header value.
 func WithDate(t time.Time) MessageOption { return mail.WithDate(t) }
@@ -197,6 +284,16 @@ func WithMaxAttachmentBytes(maxBytes int64) MessageOption {
 // WithBoundaryGenerator injects the MIME boundary generator.
 func WithBoundaryGenerator(generator BoundaryGenerator) MessageOption {
 	return mail.WithBoundaryGenerator(generator)
+}
+
+// WithQuickMessageOptions appends message options used by QuickSend and account helpers.
+func WithQuickMessageOptions(opts ...MessageOption) QuickOption {
+	return mail.WithQuickMessageOptions(opts...)
+}
+
+// WithQuickClientOptions appends client options used by QuickSend and account helpers.
+func WithQuickClientOptions(opts ...ClientOption) QuickOption {
+	return mail.WithQuickClientOptions(opts...)
 }
 
 // WithAuth sets SMTP username and password.

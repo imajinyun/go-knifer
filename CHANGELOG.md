@@ -43,6 +43,12 @@ subpackage APIs are treated as the compatibility boundary.
 - Added `vstr` text helpers for Unicode escaping/unescaping and Ant-style path
   matching, plus rune-set Jaccard similarity, rune n-gram similarity, SimHash,
   and 64-bit Hamming distance without introducing a separate text package.
+- Scoped the exported API compatibility snapshot to the module root and
+  top-level `v*` facades, keeping `internal/*` refactors out of the public API
+  gate.
+- Expanded `vmail` with account-based quick send helpers, SMTP envelope sender
+  control, lazy reader/file attachments, and RFC 2231-compliant attachment
+  filename parameter rendering.
 - Added internal generic numeric constraints for shared implementation helpers
   and exposed generic `vnum` sum, average, min, max, and absolute-value APIs.
 - Added direct coverage for `internal/httpx/internal/shared` so HTTP protocol

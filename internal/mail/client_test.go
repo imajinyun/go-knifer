@@ -134,6 +134,99 @@ func TestSendTextAndHTMLConvenienceFunctions(t *testing.T) {
 	}
 }
 
+func TestAccountQuickSendUsesAccountDefaults(t *testing.T) {
+	auth := testSMTPAuth{mechanism: "CUSTOM"}
+	tlsConfig := &tls.Config{ServerName: "smtp.example.com", MinVersion: tls.VersionTLS12}
+	account := Account{
+		Host:           "smtp.example.com",
+		Port:           587,
+		Username:       "user@example.com",
+		Password:       "secret",
+		Auth:           auth,
+		From:           "from@example.com",
+		FromName:       "Sender",
+		TLSConfig:      tlsConfig,
+		TLSPolicy:      TLSNone,
+		AllowPlainAuth: true,
+		Timeout:        time.Second,
+		LocalName:      "mail.local",
+	}
+
+	var got *Message
+	provider := func(config Config) (Sender, error) {
+		if config.Host != account.Host || config.Port != account.Port {
+			t.Fatalf("Config address = %#v", config)
+		}
+		if config.Username != account.Username || config.Password != account.Password || config.Auth == nil {
+			t.Fatalf("Config auth = %#v", config)
+		}
+		if config.TLSPolicy != TLSNone || !config.AllowPlainAuth || config.Timeout != time.Second || config.LocalName != "mail.local" {
+			t.Fatalf("Config transport = %#v", config)
+		}
+		if config.TLSConfig == nil || config.TLSConfig.ServerName != "smtp.example.com" {
+			t.Fatalf("Config TLS = %#v", config.TLSConfig)
+		}
+		return SenderFunc(func(ctx context.Context, message *Message) error {
+			got = message
+			return nil
+		}), nil
+	}
+	err := SendAccountText(
+		context.Background(),
+		account,
+		[]string{"to@example.com"},
+		"subject",
+		"plain",
+		WithQuickMessageOptions(WithHeader("X-Quick", "yes")),
+		WithQuickClientOptions(WithSenderProvider(provider)),
+	)
+	if err != nil {
+		t.Fatalf("SendAccountText() error = %v", err)
+	}
+	if got == nil || got.From.Email != "from@example.com" || got.From.Name != "Sender" {
+		t.Fatalf("sent From = %#v", got)
+	}
+	if got.Subject != "subject" || got.Text != "plain" || got.Headers.Values("X-Quick")[0] != "yes" {
+		t.Fatalf("sent message = %#v", got)
+	}
+
+	tlsConfig.ServerName = "mutated.example.com"
+	if account.TLSConfig.ServerName != "mutated.example.com" {
+		t.Fatalf("test setup did not mutate original TLSConfig")
+	}
+}
+
+func TestQuickSendAndAccountValidation(t *testing.T) {
+	provider := func(config Config) (Sender, error) {
+		return SenderFunc(func(ctx context.Context, message *Message) error { return nil }), nil
+	}
+	account := Account{Host: "smtp.example.com", Port: 587, Username: "user@example.com"}
+	if err := QuickSend(
+		context.Background(),
+		account,
+		WithQuickMessageOptions(WithTo("to@example.com"), WithSubject("subject"), WithHTML("<p>html</p>")),
+		WithQuickClientOptions(WithSenderProvider(provider), WithTLSPolicy(TLSNone)),
+	); err != nil {
+		t.Fatalf("QuickSend() error = %v", err)
+	}
+
+	err := QuickSend(
+		context.Background(),
+		Account{Host: "smtp.example.com", Port: 587},
+		WithQuickMessageOptions(WithTo("to@example.com"), WithText("body")),
+		WithQuickClientOptions(WithSenderProvider(provider)),
+	)
+	if !errors.Is(err, ErrMissingFrom) {
+		t.Fatalf("QuickSend() error = %v, want %v", err, ErrMissingFrom)
+	}
+
+	quickErr := errors.New("quick option failed")
+	err = QuickSend(context.Background(), account, func(*quickConfig) error { return quickErr })
+	if !errors.Is(err, quickErr) {
+		t.Fatalf("QuickSend(option error) = %v, want %v", err, quickErr)
+	}
+}
+
 func TestClientOptionsAndProviderErrors(t *testing.T) {
 	auth := testSMTPAuth{mechanism: "CUSTOM"}
 	tlsConfig := &tls.Config{ServerName: "custom.example.com", MinVersion: tls.VersionTLS13}
@@ -214,6 +307,46 @@ func TestSMTPClientSendAgainstFakeServer(t *testing.T) {
 	}
 	if !strings.Contains(server.Data(), "Subject: hello") || !strings.Contains(server.Data(), "body") {
 		t.Fatalf("SMTP DATA = %q", server.Data())
+	}
+}
+
+func TestSMTPClientUsesEnvelopeSenderAndDedupedRecipients(t *testing.T) {
+	server, err := newFakeSMTPServer(t)
+	if err != nil {
+		t.Fatalf("newFakeSMTPServer() error = %v", err)
+	}
+	defer server.Close()
+
+	msg, err := NewMessage(
+		WithFrom("header@example.com"),
+		WithEnvelopeFrom("bounce@example.com"),
+		WithTo("to@example.com", "TO@example.com"),
+		WithCc("cc@example.com", "to@example.com"),
+		WithBcc("hidden@example.com", "cc@example.com"),
+		WithText("body"),
+	)
+	if err != nil {
+		t.Fatalf("NewMessage() error = %v", err)
+	}
+	client, err := NewClient(server.Host(), server.Port(), WithTLSPolicy(TLSNone), WithTimeout(time.Second))
+	if err != nil {
+		t.Fatalf("NewClient() error = %v", err)
+	}
+	if err := client.Send(context.Background(), msg); err != nil {
+		t.Fatalf("Send() error = %v", err)
+	}
+	if err := server.Wait(); err != nil {
+		t.Fatalf("fake SMTP server error = %v", err)
+	}
+	if got := server.MailFrom(); got != "<bounce@example.com>" {
+		t.Fatalf("MAIL FROM = %q, want bounce envelope", got)
+	}
+	wantRecipients := []string{"<to@example.com>", "<cc@example.com>", "<hidden@example.com>"}
+	if got := server.RcptTo(); strings.Join(got, ",") != strings.Join(wantRecipients, ",") {
+		t.Fatalf("RCPT TO = %v, want %v", got, wantRecipients)
+	}
+	if recipients := msg.Recipients(); strings.Join(recipients, ",") != "to@example.com,cc@example.com,hidden@example.com" {
+		t.Fatalf("Message.Recipients() = %v", recipients)
 	}
 }
 
@@ -416,6 +549,56 @@ func TestSMTPClientContextCancelClosesConnection(t *testing.T) {
 	}
 }
 
+func TestClientDialReusesConnectionWithReset(t *testing.T) {
+	server, err := newFakeSMTPServer(t)
+	if err != nil {
+		t.Fatalf("newFakeSMTPServer() error = %v", err)
+	}
+	defer server.Close()
+
+	client, err := NewClient(server.Host(), server.Port(), WithTLSPolicy(TLSNone))
+	if err != nil {
+		t.Fatalf("NewClient() error = %v", err)
+	}
+	sendCloser, err := client.Dial(context.Background())
+	if err != nil {
+		t.Fatalf("Dial() error = %v", err)
+	}
+
+	first, err := NewMessage(WithFrom("from@example.com"), WithTo("first@example.com"), WithSubject("first"), WithText("first body"))
+	if err != nil {
+		t.Fatalf("NewMessage(first) error = %v", err)
+	}
+	second, err := NewMessage(WithFrom("from@example.com"), WithTo("second@example.com"), WithSubject("second"), WithText("second body"))
+	if err != nil {
+		t.Fatalf("NewMessage(second) error = %v", err)
+	}
+	if err := sendCloser.Send(context.Background(), first); err != nil {
+		t.Fatalf("Send(first) error = %v", err)
+	}
+	if got := server.RSETCount(); got != 0 {
+		t.Fatalf("RSET count after first send = %d, want 0", got)
+	}
+	if err := sendCloser.Send(context.Background(), second); err != nil {
+		t.Fatalf("Send(second) error = %v", err)
+	}
+	if got := server.RSETCount(); got != 1 {
+		t.Fatalf("RSET count after second send = %d, want 1", got)
+	}
+	if err := sendCloser.Close(); err != nil {
+		t.Fatalf("Close() error = %v", err)
+	}
+	if err := sendCloser.Close(); err != nil {
+		t.Fatalf("second Close() error = %v", err)
+	}
+	if err := sendCloser.Send(context.Background(), second); err == nil {
+		t.Fatal("Send() after Close() error = nil")
+	}
+	if err := server.Wait(); err != nil {
+		t.Fatalf("fake SMTP server error = %v", err)
+	}
+}
+
 func TestSMTPHelpers(t *testing.T) {
 	ctx, cancel := withClientTimeout(context.Background(), 0)
 	if _, ok := ctx.Deadline(); ok {
@@ -466,6 +649,9 @@ type fakeSMTPServer struct {
 	dataStarted   chan struct{}
 	mu            sync.Mutex
 	data          string
+	mailFrom      string
+	rcptTo        []string
+	rsetCount     int
 	cert          *testCertificate
 	startTLS      bool
 	implicitTLS   bool
@@ -544,6 +730,24 @@ func (s *fakeSMTPServer) Data() string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.data
+}
+
+func (s *fakeSMTPServer) MailFrom() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.mailFrom
+}
+
+func (s *fakeSMTPServer) RcptTo() []string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return append([]string(nil), s.rcptTo...)
+}
+
+func (s *fakeSMTPServer) RSETCount() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.rsetCount
 }
 
 func (s *fakeSMTPServer) TLSActive() bool {
@@ -634,11 +838,25 @@ func (s *fakeSMTPServer) serve() {
 			s.done <- nil
 			return
 		case strings.HasPrefix(line, "MAIL FROM:"):
+			s.mu.Lock()
+			s.mailFrom = strings.TrimPrefix(line, "MAIL FROM:")
+			s.mu.Unlock()
 			if _, err := io.WriteString(conn, "250 OK\r\n"); err != nil {
 				s.done <- err
 				return
 			}
 		case strings.HasPrefix(line, "RCPT TO:"):
+			s.mu.Lock()
+			s.rcptTo = append(s.rcptTo, strings.TrimPrefix(line, "RCPT TO:"))
+			s.mu.Unlock()
+			if _, err := io.WriteString(conn, "250 OK\r\n"); err != nil {
+				s.done <- err
+				return
+			}
+		case line == "RSET":
+			s.mu.Lock()
+			s.rsetCount++
+			s.mu.Unlock()
 			if _, err := io.WriteString(conn, "250 OK\r\n"); err != nil {
 				s.done <- err
 				return

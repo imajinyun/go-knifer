@@ -67,7 +67,7 @@ func (m *Message) renderBody() (*bytes.Buffer, string, error) {
 			return nil, "", err
 		}
 		for _, attachment := range m.Attachments {
-			if err := writeFilePart(mw, attachment, false, m.Charset); err != nil {
+			if err := writeFilePart(mw, attachment, false); err != nil {
 				return nil, "", err
 			}
 		}
@@ -85,7 +85,7 @@ func (m *Message) renderBody() (*bytes.Buffer, string, error) {
 			return nil, "", err
 		}
 		for _, inline := range m.Inlines {
-			if err := writeFilePart(mw, inline, true, m.Charset); err != nil {
+			if err := writeFilePart(mw, inline, true); err != nil {
 				return nil, "", err
 			}
 		}
@@ -137,7 +137,7 @@ func (m *Message) writeRelatedOrAlternative(mw *multipart.Writer) error {
 		return err
 	}
 	for _, inline := range m.Inlines {
-		if err := writeFilePart(related, inline, true, m.Charset); err != nil {
+		if err := writeFilePart(related, inline, true); err != nil {
 			return err
 		}
 	}
@@ -209,20 +209,27 @@ func newMultipartWriter(w io.Writer, subtype string, generator BoundaryGenerator
 	return mw, fmt.Sprintf(`multipart/%s; boundary=%q`, subtype, boundary), nil
 }
 
-func writeFilePart(mw *multipart.Writer, file Attachment, inline bool, charset Charset) error {
+func writeFilePart(mw *multipart.Writer, file Attachment, inline bool) error {
 	header := textproto.MIMEHeader{}
-	name := mime.BEncoding.Encode(charset.String(), file.Name)
 	contentType := file.ContentType
 	if contentType == "" {
 		contentType = detectContentType(file.Name)
 	}
-	header.Set("Content-Type", fmt.Sprintf(`%s; name=%q`, contentType, name))
+	contentTypeHeader, err := formatMediaType(contentType.String(), map[string]string{"name": file.Name})
+	if err != nil {
+		return err
+	}
+	header.Set("Content-Type", contentTypeHeader)
 	header.Set("Content-Transfer-Encoding", EncodingBase64.String())
 	disposition := "attachment"
 	if inline {
 		disposition = "inline"
 	}
-	header.Set("Content-Disposition", fmt.Sprintf(`%s; filename=%q`, disposition, name))
+	dispositionHeader, err := formatMediaType(disposition, map[string]string{"filename": file.Name})
+	if err != nil {
+		return err
+	}
+	header.Set("Content-Disposition", dispositionHeader)
 	if inline {
 		contentID := file.ContentID
 		if contentID == "" {
@@ -247,6 +254,14 @@ func writeFilePart(mw *multipart.Writer, file Attachment, inline bool, charset C
 		return fmt.Errorf("close file encoder: %w", err)
 	}
 	return nil
+}
+
+func formatMediaType(mediaType string, params map[string]string) (string, error) {
+	value := mime.FormatMediaType(mediaType, params)
+	if value == "" {
+		return "", fmt.Errorf("%w: invalid media type %q", ErrInvalidHeader, mediaType)
+	}
+	return value, nil
 }
 
 func encodeBytes(data []byte, encoding Encoding) ([]byte, error) {

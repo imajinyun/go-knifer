@@ -54,7 +54,7 @@ Not sure which package to import? Start from what you want to do:
 | Produce image thumbnails, convert PNG/JPEG/GIF, read metadata, or generate graphical captchas | [`vimg`](docs/doc/21-vimg.md) |
 | Build/parse JSON, path get/put, JSON↔XML | [`vjson`](docs/doc/23-vjson.md) |
 | JWT sign/verify | [`vjwt`](docs/doc/24-vjwt.md) |
-| Compose and send email with text, HTML, inline files, or attachments | [`vmail`](docs/doc/26-vmail.md) |
+| Compose and send email with text, HTML, inline files, attachments, or account defaults | [`vmail`](docs/doc/26-vmail.md) |
 | Create, query, transform, merge, diff, or sort maps | [`vmap`](docs/doc/27-vmap.md) |
 | Mask sensitive data | [`vmask`](docs/doc/28-vmask.md) |
 | Precise arithmetic, rounding, or evaluate an expression | [`vnum`](docs/doc/30-vnum.md) |
@@ -98,7 +98,7 @@ The project follows an “internal implementation + public facade” layout: `in
 | [`vjson`](docs/doc/23-vjson.md) | `github.com/imajinyun/go-knifer/vjson` | Ordered JSON objects/arrays, JSON parsing and formatting, path-based get/put, provider-backed marshal/unmarshal, injectable scalar parse/format functions, configurable object/array/bean/list conversion, and XML/JSON conversion with parser/writer options. |
 | [`vjwt`](docs/doc/24-vjwt.md) | `github.com/imajinyun/go-knifer/vjwt` | JWT creation, parsing, signing, verification, and time-claim validation; supports HMAC, RSA-PSS, ECDSA, rejects unsigned `alg=none` tokens, and provides JSON marshal/unmarshal options. |
 | [`vlog`](docs/doc/25-vlog.md) | `github.com/imajinyun/go-knifer/vlog` | Logging facade: console/color console loggers, injectable color factories, log levels, global logger, static logging functions, per-call logger options, and isolated logger creation. |
-| [`vmail`](docs/doc/26-vmail.md) | `github.com/imajinyun/go-knifer/vmail` | Mail helpers: RFC 5322 address parsing, fluent message construction, MIME mixed/related/alternative rendering, text/HTML bodies, inline files, attachments, context-aware SMTP sending, mandatory TLS defaults, CRLF injection checks, attachment size limits, and injectable senders/dialers/boundary generators. |
+| [`vmail`](docs/doc/26-vmail.md) | `github.com/imajinyun/go-knifer/vmail` | Mail helpers: RFC 5322 address parsing, fluent message construction, MIME mixed/related/alternative rendering, text/HTML bodies, inline files, byte/reader/file attachments, account-based quick send helpers, context-aware SMTP sending, mandatory TLS defaults, CRLF injection checks, attachment size limits, envelope sender control, and injectable senders/dialers/boundary generators. |
 | [`vmap`](docs/doc/27-vmap.md) | `github.com/imajinyun/go-knifer/vmap` | Map helpers: construction, empty checks, contains/get/find, keys/values and sorted views, map/filter/reject/partition, reduce/group/count, inverse, merge/merge-with-resolver, intersect/diff/symmetric diff, pick/omit, update/clone, and equality checks. |
 | [`vmask`](docs/doc/28-vmask.md) | `github.com/imajinyun/go-knifer/vmask` | Masking helpers: mask names, IDs, phones, addresses, email, passwords, license plates, bank cards, IPs, passports, and credit codes. |
 | [`vnet`](docs/doc/29-vnet.md) | `github.com/imajinyun/go-knifer/vnet` | Network helpers: IPv4/IPv6 conversion, CIDR/range/mask utilities with injectable IP/CIDR/int parsers, local ports, host/interface/MAC lookup, TLS config, address/dial/ping provider options, and multipart form helpers. |
@@ -141,8 +141,10 @@ Facade rules:
 
 API compatibility:
 
-- Public subpackages are the compatibility boundary. The current exported API
-  surface is recorded in `docs/api/exports.txt`.
+- The root package and top-level `v*` subpackages are the public compatibility
+  boundary. Their exported API surface is recorded in `docs/api/exports.txt`;
+  `internal/*` symbols are intentionally excluded so implementation packages can
+  be refactored without public API noise.
 - `make api-check` regenerates a temporary snapshot and compares it with the
   checked-in file. When a public API change is intentional, run
   `UPDATE_API=1 make api-check` and review the snapshot diff together with the
@@ -191,6 +193,7 @@ Provider coverage highlights:
 | Encoding / image / JSON / XML / JWT / hash | `vcodec.Base64EncodeWithEncoding`, `vcodec.Base64DecodeWithEncoding`, `vcodec.Base64RawURLEncode`, `vcodec.Base64RawURLDecode`, `vimg.Thumbnail`, `vimg.ConvertFormat`, `vimg.Info`, `vimg.NewLineCaptcha`, `vimg.NewCircleCaptcha`, `vimg.NewShearCaptcha`, `vimg.NewGifCaptcha`, `vhash.Hash32`, `vjson.WithMarshalFunc`, `vjson.WithUnmarshalFunc`, `vjson.WithParseUnmarshalFunc`, `vjson.WithBeanUnmarshalFunc`, `vjson.WithSprintFunc`, `vjson.WithParseIntFunc`, `vjson.WithParseFloatFunc`, `vjson.WithParseBoolFunc`, `vjson.WithFormatIntFunc`, `vjson.WithFormatFloatFunc`, `vjson.ParseObjWithOptions`, `vjson.ParseArrayWithOptions`, `vjson.ToBeanWithOptions`, `vjson.ToListWithOptions`, `vjson.XMLToJSONWithOptions`, `vjson.ToXMLWithOptions`, `vxml.WithScalarIntParser`, `vxml.WithScalarFloatParser`, `vxml.XMLToMapWithOptions`, `vxml.XMLNodeToMapWithOptions`, `vxml.XMLToMapIntoWithOptions`, `vxml.XMLNodeToMapIntoWithOptions`, `vxml.XMLToBeanWithOptions`, `vxml.XMLNodeToBeanWithOptions`, `vxml.TransformWithOptions`, `vxml.FormatWithOptions`, `vjwt.WithJSONMarshalFunc`, `vjwt.WithJSONUnmarshalFunc`, `vjwt.ParseTokenWithOptions`, `vjwt.WithTokenJSONOptions` |
 | Crypto / password / template / regex / validation / strings | `vcrypto.Digest`, `vcrypto.DigestHex`, `vcrypto.WithGCMBlockFactory`, `vcrypto.AESSealGCMWithOptions`, `vcrypto.AESEncryptGCMWithOptions`, `vcrypto.SignWithRSAOptions`, `vcrypto.VerifyWithRSAOptions`, `vpass.Analyze`, `vpass.Score`, `vpass.StrengthOf`, `vpass.IsStrong`, `vpass.IsWeak`, `vtpl.RenderWithOptions`, `vtpl.WithFuncMap`, `vtpl.WithTemplateFactory`, `vregex.WithCompileFunc`, `vregex.WithDotAll`, `vregex.MatchWithOptions`, `vregex.ReplaceAllFuncWithOptions`, `vform.IsEmailWithOptions`, `vform.WithMobileMatcher`, `vstr.ContainsEmojiWithOptions`, `vstr.RemoveEmojiWithOptions`, `vstr.JaccardSimilarity`, `vstr.NGramSimilarity`, `vstr.SimHash`, `vstr.HammingDistance64` |
 | DB / network / number / URL / system / reflection / socket | `vdb.WithSQLOpenFunc`, `vnet.WithConnectDialer`, `vnet.WithPingDialer`, `vnet.WithAddressNetwork`, `vnet.WithTCPAddrResolver`, `vnet.WithUploadOpenSource`, `vnet.WithIPParser`, `vnet.WithCIDRParser`, `vnet.WithIPIntParser`, `vnet.WithWildcardIPParser`, `vnet.WithWildcardIntParser`, `vnet.IPv4ToLongWithOptions`, `vnet.IsInRangeWithOptions`, `vnum.WithParseFloatFunc`, `vnum.WithDoubleParseFloatFunc`, `vnum.WithDoubleFormatFloatFunc`, `vnum.CalculateWithOptions`, `vnum.ToDoubleWithOptions`, `vurl.WithQueryEscapeFunc`, `vurl.WithPathEscapeFunc`, `vurl.EncodeQueryWithOptions`, `vurl.EncodePathSegmentWithOptions`, `vurl.FormURLEncodeWithOptions`, `vurl.OpenSafeWithOptions`, `vurl.WithAllowedSchemes`, `vurl.WithAllowedHosts`, `vurl.WithRejectPrivateHosts`, `vurl.WithAllowLocalFiles`, `vsys.WithGoEnvOutputFunc`, `vsys.WithGoRootEnvLookupFunc`, `vsys.WithOSEnvLookupFunc`, `vsys.WithEnvLookupFunc`, `vsys.ResetInfoCache`, `vref.WithUnsafeAccess`, `vskt.WithThreadPoolSizeFunc`, `vskt.WithRunner`, `vskt.WithSocketIPParser` |
+| Mail | `vmail.Account`, `vmail.QuickSend`, `vmail.SendAccountText`, `vmail.SendAccountHTML`, `vmail.WithQuickMessageOptions`, `vmail.WithQuickClientOptions`, `vmail.WithEnvelopeFrom`, `vmail.NewAttachmentReader`, `vmail.NewAttachmentFile`, `vmail.NewInlineReader`, `vmail.NewInlineFile`, `vmail.WithAttachmentReader`, `vmail.WithAttachmentFile`, `vmail.WithInlineReader`, `vmail.WithInlineFile`, `vmail.WithSenderProvider`, `vmail.WithDialContext`, `vmail.WithBoundaryGenerator` |
 | Errors / cache / logging / runtime | `verr.NewCollectorWithOptions`, `verr.WithCollectorLogFunc`, `verr.WithCollectorRunner`, `verr.WithCollectorContext`, `verr.WithCollectorLevel`, `verr.WithCollectorTimerFactory`, `verr.WithCollectorStackCaptureOptions`, `verr.WithLogFunc`, `verr.WithCollectorStackOptions`, `verr.WithDebugStackFunc`, `verr.WithCallersFunc`, `verr.WithFuncForPCFunc`, `verr.WithStackFrameCache`, `verr.ResetStackFrameCache`, `verr.ResetDefaultLogFunc`, `verr.NewIsolatedLogrusWithOptions`, `verr.MustExitWithOptions`, `vcache.WithClock`, `vcache.WithTickerFactory`, `vcache.WithRunner`, `vcache.WithWeakFinalizerFunc`, `vcache.WithWeakFinalizerEnabled`, `vlog.WithLogColorFactory`, `vlog.NewIsolatedLogger`, `vlog.LoggerWithOptions`, `vlog.InfoWithOptions` |
 
 Domain boundary rules:
@@ -351,7 +354,7 @@ README keeps module navigation only. Per-package Quickstart examples live in the
 - Root package documentation: `doc.go`
 - Public APIs: `doc.go` and facade files in each `v*` subpackage
 - Quickstart examples: linked `docs/doc/*.md` files from the module matrix
-- Exported API snapshot: `docs/api/exports.txt`
+- Exported public API snapshot: `docs/api/exports.txt`
 - AI-oriented project map: `llms.txt`
 - Online documentation: [pkg.go.dev/github.com/imajinyun/go-knifer](https://pkg.go.dev/github.com/imajinyun/go-knifer)
 
@@ -417,9 +420,9 @@ gofmt -w .
   implementation packages. Raise `COVERAGE_THRESHOLD` or
   `PACKAGE_COVERAGE_THRESHOLDS` only after adding tests that support the new
   gate.
-- API gate: `make api-check` compares exported symbols against
-  `docs/api/exports.txt`. Commit the refreshed snapshot only for intentional API
-  changes.
+- API gate: `make api-check` compares root-package and top-level `v*` exported
+  symbols against `docs/api/exports.txt`. Commit the refreshed snapshot only for
+  intentional public API changes.
 - Stability gate: use `make check` locally before pushing so vet, architecture,
   race/shuffle tests, coverage, API compatibility, lint, and vulnerability
   checks stay aligned with CI.

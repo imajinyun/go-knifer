@@ -1,7 +1,6 @@
 package mail
 
 import (
-	"bytes"
 	"context"
 	"crypto/tls"
 	"errors"
@@ -9,6 +8,7 @@ import (
 	"net"
 	"net/smtp"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -39,6 +39,12 @@ type Sender interface {
 	Send(ctx context.Context, message *Message) error
 }
 
+// SendCloser sends multiple messages through a reusable SMTP connection.
+type SendCloser interface {
+	Sender
+	Close() error
+}
+
 // SenderFunc adapts a function into Sender.
 type SenderFunc func(context.Context, *Message) error
 
@@ -47,6 +53,10 @@ func (f SenderFunc) Send(ctx context.Context, message *Message) error { return f
 
 // SenderProvider creates a sender for a client configuration.
 type SenderProvider func(Config) (Sender, error)
+
+type senderDialer interface {
+	Dial(ctx context.Context) (SendCloser, error)
+}
 
 // Config configures SMTP delivery.
 type Config struct {
@@ -153,6 +163,25 @@ func (c *Client) Send(ctx context.Context, message *Message) error {
 	return sender.Send(ctx, message)
 }
 
+// Dial opens a reusable SMTP connection for sending multiple messages.
+func (c *Client) Dial(ctx context.Context) (SendCloser, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	sender, err := c.senderProvider(c.config)
+	if err != nil {
+		return nil, err
+	}
+	if sendCloser, ok := sender.(SendCloser); ok {
+		return sendCloser, nil
+	}
+	dialer, ok := sender.(senderDialer)
+	if !ok {
+		return nil, errors.New("mail: sender does not support Dial")
+	}
+	return dialer.Dial(ctx)
+}
+
 // WithAuth sets SMTP username and password.
 func WithAuth(username, password string) ClientOption {
 	return func(c *Client) error {
@@ -247,82 +276,169 @@ func (s smtpSender) Send(ctx context.Context, message *Message) error {
 	}
 	ctx, cancel := withClientTimeout(ctx, s.config.Timeout)
 	defer cancel()
+	sendCloser, err := s.Dial(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = sendCloser.Close() }()
+	return sendCloser.Send(ctx, message)
+}
+
+func (s smtpSender) Dial(ctx context.Context) (sendCloser SendCloser, err error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	ctx, cancel := withClientTimeout(ctx, s.config.Timeout)
+	defer cancel()
 	addr := net.JoinHostPort(s.config.Host, strconv.Itoa(s.config.Port))
 	tlsConfig := s.tlsConfig()
 	conn, err := s.dial(ctx, addr, tlsConfig)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer func() { _ = conn.Close() }()
-	done := make(chan struct{})
-	go func() {
-		select {
-		case <-ctx.Done():
-			_ = conn.Close()
-		case <-done:
-		}
-	}()
-	defer close(done)
+	defer closeOnError(&err, conn)
+	stop := context.AfterFunc(ctx, func() { _ = conn.Close() })
+	defer stop()
 	if deadline, ok := ctx.Deadline(); ok {
 		_ = conn.SetDeadline(deadline)
 	}
 	client, err := smtp.NewClient(conn, s.config.Host)
 	if err != nil {
-		return smtpContextError(ctx, "create smtp client", err)
+		return nil, smtpContextError(ctx, "create smtp client", err)
 	}
-	defer func() { _ = client.Close() }()
+	defer closeClientOnError(&err, client)
 	if s.config.LocalName != "" {
 		if err := client.Hello(s.config.LocalName); err != nil {
-			return smtpContextError(ctx, "smtp hello", err)
+			return nil, smtpContextError(ctx, "smtp hello", err)
 		}
 	}
 	isTLS := s.config.TLSPolicy == TLSImplicit
 	if s.config.TLSPolicy == TLSMandatoryStartTLS || s.config.TLSPolicy == TLSOpportunisticStartTLS {
 		if ok, _ := client.Extension("STARTTLS"); ok {
 			if err := client.StartTLS(tlsConfig); err != nil {
-				return smtpContextError(ctx, "smtp starttls", err)
+				return nil, smtpContextError(ctx, "smtp starttls", err)
 			}
 			isTLS = true
 		} else if s.config.TLSPolicy == TLSMandatoryStartTLS {
-			return ErrTLSRequired
+			return nil, ErrTLSRequired
 		}
 	}
 	if auth := s.auth(); auth != nil {
 		if !isTLS && !s.config.AllowPlainAuth {
-			return ErrPlainAuth
+			return nil, ErrPlainAuth
 		}
 		if err := client.Auth(auth); err != nil {
-			return smtpContextError(ctx, "smtp auth", err)
+			return nil, smtpContextError(ctx, "smtp auth", err)
 		}
 	}
-	if err := client.Mail(message.From.Email); err != nil {
-		return smtpContextError(ctx, "smtp mail from", err)
-	}
-	for _, recipient := range message.Recipients() {
-		if err := client.Rcpt(recipient); err != nil {
-			return smtpContextError(ctx, fmt.Sprintf("smtp rcpt to %q", recipient), err)
+	if !stop() {
+		if err := ctx.Err(); err != nil {
+			return nil, err
 		}
 	}
-	w, err := client.Data()
-	if err != nil {
-		return smtpContextError(ctx, "smtp data", err)
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	var body bytes.Buffer
-	if _, err := message.WriteTo(&body); err != nil {
-		_ = w.Close()
+	_ = conn.SetDeadline(time.Time{})
+	return &smtpSendCloser{config: s.config, conn: conn, client: client}, nil
+}
+
+type smtpSendCloser struct {
+	config Config
+	conn   net.Conn
+	client *smtp.Client
+
+	mu     sync.Mutex
+	closed bool
+	sent   bool
+}
+
+func (s *smtpSendCloser) Send(ctx context.Context, message *Message) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if message == nil {
+		return ErrMissingBody
+	}
+	if err := message.Validate(); err != nil {
 		return err
 	}
-	if _, err := body.WriteTo(w); err != nil {
+	ctx, cancel := withClientTimeout(ctx, s.config.Timeout)
+	defer cancel()
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.closed {
+		return errors.New("mail: smtp sender is closed")
+	}
+	stop := context.AfterFunc(ctx, func() { _ = s.conn.Close() })
+	defer stop()
+	defer func() {
+		if !s.closed {
+			_ = s.conn.SetDeadline(time.Time{})
+		}
+	}()
+	if deadline, ok := ctx.Deadline(); ok {
+		_ = s.conn.SetDeadline(deadline)
+	}
+	if s.sent {
+		if err := s.client.Reset(); err != nil {
+			return s.smtpError(ctx, "smtp reset", err)
+		}
+	}
+	if err := s.client.Mail(message.Sender()); err != nil {
+		return s.smtpError(ctx, "smtp mail from", err)
+	}
+	for _, recipient := range message.Recipients() {
+		if err := s.client.Rcpt(recipient); err != nil {
+			return s.smtpError(ctx, fmt.Sprintf("smtp rcpt to %q", recipient), err)
+		}
+	}
+	w, err := s.client.Data()
+	if err != nil {
+		return s.smtpError(ctx, "smtp data", err)
+	}
+	if _, err := message.WriteTo(w); err != nil {
 		_ = w.Close()
-		return smtpContextError(ctx, "smtp write data", err)
+		return s.smtpError(ctx, "smtp write data", err)
 	}
 	if err := w.Close(); err != nil {
-		return smtpContextError(ctx, "smtp close data", err)
+		return s.smtpError(ctx, "smtp close data", err)
 	}
-	if err := client.Quit(); err != nil {
-		return smtpContextError(ctx, "smtp quit", err)
+	if !stop() {
+		if err := ctx.Err(); err != nil {
+			s.closed = true
+			return err
+		}
 	}
-	return ctx.Err()
+	if err := ctx.Err(); err != nil {
+		s.closed = true
+		return err
+	}
+	s.sent = true
+	return nil
+}
+
+func (s *smtpSendCloser) Close() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.closed {
+		return nil
+	}
+	s.closed = true
+	if err := s.client.Quit(); err != nil {
+		_ = s.client.Close()
+		return fmt.Errorf("smtp quit: %w", err)
+	}
+	return nil
+}
+
+func (s *smtpSendCloser) smtpError(ctx context.Context, operation string, err error) error {
+	if ctxErr := ctx.Err(); ctxErr != nil {
+		s.closed = true
+		return ctxErr
+	}
+	return fmt.Errorf("%s: %w", operation, err)
 }
 
 func (s smtpSender) auth() smtp.Auth {
@@ -363,6 +479,18 @@ func (s smtpSender) tlsConfig() *tls.Config {
 		return config
 	}
 	return &tls.Config{ServerName: s.config.Host, MinVersion: tls.VersionTLS12}
+}
+
+func closeOnError(err *error, conn net.Conn) {
+	if *err != nil {
+		_ = conn.Close()
+	}
+}
+
+func closeClientOnError(err *error, client *smtp.Client) {
+	if *err != nil {
+		_ = client.Close()
+	}
 }
 
 func withClientTimeout(ctx context.Context, timeout time.Duration) (context.Context, context.CancelFunc) {
