@@ -2,8 +2,9 @@
 package regex
 
 import (
+	"cmp"
 	"regexp"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -778,7 +779,7 @@ func TemplateVarsWithOptions(template string, opts ...Option) []int {
 			result = append(result, v)
 		}
 	}
-	sort.Sort(sort.Reverse(sort.IntSlice(result)))
+	slices.SortFunc(result, func(a, b int) int { return cmp.Compare(b, a) })
 	return result
 }
 

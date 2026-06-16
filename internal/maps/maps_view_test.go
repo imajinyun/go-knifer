@@ -1,7 +1,7 @@
 package maps
 
 import (
-	"sort"
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,7 +10,7 @@ import (
 
 func sortedStrings(s []string) []string {
 	out := append([]string(nil), s...)
-	sort.Strings(out)
+	slices.Sort(out)
 	return out
 }
 

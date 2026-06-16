@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"sort"
+	"slices"
 	"strings"
 	"unsafe"
 )
@@ -337,7 +337,7 @@ func GetPublicMethodNames(target any) []string {
 	for _, method := range methods {
 		out = append(out, method.Name)
 	}
-	sort.Strings(out)
+	slices.Sort(out)
 	return out
 }
 
@@ -400,7 +400,7 @@ func GetMethodNames(target any) []string {
 	for _, method := range methods {
 		out = append(out, method.Name)
 	}
-	sort.Strings(out)
+	slices.Sort(out)
 	return out
 }
 

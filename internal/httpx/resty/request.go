@@ -8,7 +8,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"sort"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -748,7 +748,7 @@ func (r *HTTPRequest) doExecute() (*HTTPResponse, error) {
 	for k := range r.queryParams {
 		keys = append(keys, k)
 	}
-	sort.Strings(keys)
+	slices.Sort(keys)
 	for _, k := range keys {
 		for _, v := range r.queryParams[k] {
 			req.SetQueryParam(k, v)

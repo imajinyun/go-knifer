@@ -4,7 +4,7 @@ import (
 	"archive/zip"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"testing"
 )
 
@@ -44,7 +44,7 @@ func TestZipFilesCreatesArchiveFromDirectory(t *testing.T) {
 	for _, f := range r.File {
 		names = append(names, f.Name)
 	}
-	sort.Strings(names)
+	slices.Sort(names)
 	want := []string{"a.txt", "empty/", "nested/", "nested/b.txt"}
 	if len(names) != len(want) {
 		t.Fatalf("archive names = %#v", names)

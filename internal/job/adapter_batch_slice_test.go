@@ -3,7 +3,7 @@ package job
 import (
 	"context"
 	"reflect"
-	"sort"
+	"slices"
 	"testing"
 )
 
@@ -21,7 +21,7 @@ func TestBatchSliceAdapters_BitsUT(t *testing.T) {
 		if err := RunWith(context.Background(), j, j.Options); err != nil {
 			t.Fatalf("RunWith() error = %v", err)
 		}
-		sort.Ints(seen)
+		slices.Sort(seen)
 		if want := []int{1, 2, 3}; !reflect.DeepEqual(seen, want) {
 			t.Fatalf("seen = %v, want %v", seen, want)
 		}

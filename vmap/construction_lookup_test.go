@@ -2,7 +2,7 @@ package vmap
 
 import (
 	"reflect"
-	"sort"
+	"slices"
 	"testing"
 )
 
@@ -24,12 +24,12 @@ func TestMapFacade(t *testing.T) {
 		t.Fatal("empty checks failed")
 	}
 	keys := Keys(m)
-	sort.Strings(keys)
+	slices.Sort(keys)
 	if len(keys) != 2 || keys[0] != "a" || keys[1] != "b" {
 		t.Fatalf("Keys failed: %v", keys)
 	}
 	values := Values(m)
-	sort.Ints(values)
+	slices.Sort(values)
 	if len(values) != 2 || values[0] != 1 || values[1] != 2 {
 		t.Fatalf("Values failed: %v", values)
 	}

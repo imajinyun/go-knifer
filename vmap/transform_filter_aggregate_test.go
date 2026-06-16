@@ -1,8 +1,9 @@
 package vmap
 
 import (
+	"cmp"
 	"reflect"
-	"sort"
+	"slices"
 	"testing"
 )
 
@@ -18,7 +19,7 @@ func TestMapTransformFilterAggregateFacades(t *testing.T) {
 		t.Fatalf("SortedValues = %#v", got)
 	}
 	keysOf := KeysOf(map[string]int{"a": 1, "b": 2, "c": 1}, 1)
-	sort.Strings(keysOf)
+	slices.Sort(keysOf)
 	if !reflect.DeepEqual(keysOf, []string{"a", "c"}) {
 		t.Fatalf("KeysOf = %#v", keysOf)
 	}
@@ -34,7 +35,7 @@ func TestMapTransformFilterAggregateFacades(t *testing.T) {
 		t.Fatalf("MapValues = %#v", got)
 	}
 	toSlice := ToSlice(m, func(k string, v int) string { return k + string(rune('0'+v)) })
-	sort.Strings(toSlice)
+	slices.Sort(toSlice)
 	if !reflect.DeepEqual(toSlice, []string{"a1", "b2", "c3"}) {
 		t.Fatalf("ToSlice = %#v", toSlice)
 	}
@@ -78,7 +79,7 @@ func TestMapLoStyleFacades(t *testing.T) {
 	m := map[string]int{"a": 1, "b": 2, "c": 3}
 
 	entries := Entries(m)
-	sort.Slice(entries, func(i, j int) bool { return entries[i].Key < entries[j].Key })
+	slices.SortFunc(entries, func(a, b Pair[string, int]) int { return cmp.Compare(a.Key, b.Key) })
 	if !reflect.DeepEqual(entries, []Pair[string, int]{{Key: "a", Value: 1}, {Key: "b", Value: 2}, {Key: "c", Value: 3}}) {
 		t.Fatalf("Entries = %#v", entries)
 	}
@@ -122,7 +123,7 @@ func TestMapIteratorFacades(t *testing.T) {
 	for key := range IterKeys(m) {
 		keys = append(keys, key)
 	}
-	sort.Strings(keys)
+	slices.Sort(keys)
 	if !reflect.DeepEqual(keys, []string{"a", "b"}) {
 		t.Fatalf("IterKeys = %#v", keys)
 	}
@@ -131,7 +132,7 @@ func TestMapIteratorFacades(t *testing.T) {
 	for value := range IterValues(m) {
 		values = append(values, value)
 	}
-	sort.Ints(values)
+	slices.Sort(values)
 	if !reflect.DeepEqual(values, []int{1, 2}) {
 		t.Fatalf("IterValues = %#v", values)
 	}

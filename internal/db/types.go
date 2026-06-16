@@ -2,7 +2,7 @@ package db
 
 import (
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 	"unicode"
 )
@@ -276,7 +276,7 @@ func (e Entity) sortedKeys() []string {
 	for key := range e.Values {
 		keys = append(keys, key)
 	}
-	sort.Strings(keys)
+	slices.Sort(keys)
 	return keys
 }
 

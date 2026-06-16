@@ -3,7 +3,7 @@ package job
 import (
 	"context"
 	"reflect"
-	"sort"
+	"slices"
 	"testing"
 )
 
@@ -15,7 +15,7 @@ func TestRunWithEmbeddedOptions_BitsUT(t *testing.T) {
 	if err := RunWith(context.Background(), wrapped, wrapped.Options); err != nil {
 		t.Fatalf("RunWith() error = %v", err)
 	}
-	sort.Ints(wrapped.seen)
+	slices.Sort(wrapped.seen)
 	if want := []int{1, 2, 3, 4}; !reflect.DeepEqual(wrapped.seen, want) {
 		t.Fatalf("seen = %v, want %v", wrapped.seen, want)
 	}

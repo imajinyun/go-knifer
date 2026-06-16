@@ -1,7 +1,7 @@
 package slice
 
 import (
-	"sort"
+	"slices"
 	"testing"
 )
 
@@ -11,12 +11,12 @@ func TestUnionIntersectionSubtract(t *testing.T) {
 	a := []int{1, 2, 3}
 	b := []int{2, 3, 4}
 	u := Union(a, b)
-	sort.Ints(u)
+	slices.Sort(u)
 	if len(u) != 4 {
 		t.Fatalf("Union failed: %v", u)
 	}
 	in := Intersection(a, b)
-	sort.Ints(in)
+	slices.Sort(in)
 	if len(in) != 2 || in[0] != 2 || in[1] != 3 {
 		t.Fatalf("Intersection failed: %v", in)
 	}

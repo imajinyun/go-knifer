@@ -15,7 +15,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -1190,7 +1190,7 @@ func appendValue(node *Element, data any) {
 		for k := range m {
 			keys = append(keys, k)
 		}
-		sort.Strings(keys)
+		slices.Sort(keys)
 		for _, key := range keys {
 			appendNamedValue(node, key, m[key])
 		}

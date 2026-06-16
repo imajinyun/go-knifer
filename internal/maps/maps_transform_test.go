@@ -1,7 +1,7 @@
 package maps
 
 import (
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -33,7 +33,7 @@ func TestToSlice(t *testing.T) {
 	got := ToSlice(in, func(k string, v int) string {
 		return k + strconv.Itoa(v)
 	})
-	sort.Strings(got)
+	slices.Sort(got)
 	assert.Equal(t, []string{"a1", "b2"}, got)
 
 	empty := ToSlice(map[string]int{}, func(k string, v int) string {

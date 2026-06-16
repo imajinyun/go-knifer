@@ -3,7 +3,7 @@ package job
 import (
 	"context"
 	"reflect"
-	"sort"
+	"slices"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -46,7 +46,7 @@ func TestRunWithUsesExplicitOptionsAndSerialMergeOrder_BitsUT(t *testing.T) {
 		t.Fatalf("RunWith() error = %v", err)
 	}
 
-	sort.Strings(ranges)
+	slices.Sort(ranges)
 	if want := []string{"0:2", "2:4", "4:5"}; !reflect.DeepEqual(ranges, want) {
 		t.Fatalf("ranges = %v, want %v", ranges, want)
 	}

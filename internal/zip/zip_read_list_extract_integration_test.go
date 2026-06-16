@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"sort"
+	"slices"
 	"testing"
 )
 
@@ -23,7 +23,7 @@ func TestZipReadListAndExtractCreatedArchive(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ListFileNames: %v", err)
 	}
-	sort.Strings(names)
+	slices.Sort(names)
 	if !reflect.DeepEqual(names, []string{"a.txt"}) {
 		t.Fatalf("names: %#v", names)
 	}

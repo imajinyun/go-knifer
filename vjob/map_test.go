@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"reflect"
-	"sort"
+	"slices"
 	"testing"
 )
 
@@ -21,7 +21,7 @@ func TestFacadeMapKeys_BitsUT(t *testing.T) {
 	if err := RunWith(context.Background(), j, j.Options); err != nil {
 		t.Fatalf("RunWith() error = %v", err)
 	}
-	sort.Strings(keys)
+	slices.Sort(keys)
 	if want := []string{"a", "b"}; !reflect.DeepEqual(keys, want) {
 		t.Fatalf("keys = %v, want %v", keys, want)
 	}
@@ -42,7 +42,7 @@ func TestFacadeNewMapE_BitsUT(t *testing.T) {
 	if err := Run(context.Background(), j); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
-	sort.Ints(keys)
+	slices.Sort(keys)
 	if want := []int{1, 2}; !reflect.DeepEqual(keys, want) {
 		t.Fatalf("keys = %v, want %v", keys, want)
 	}

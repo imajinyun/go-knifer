@@ -3,7 +3,7 @@ package crypto
 import (
 	"bytes"
 	"fmt"
-	"sort"
+	"slices"
 )
 
 // SignParams joins params by sorted key and returns the digest hex using digestHex.
@@ -15,7 +15,7 @@ func SignParams(params map[string]any, digestHex func([]byte) string, separator,
 		}
 		keys = append(keys, key)
 	}
-	sort.Strings(keys)
+	slices.Sort(keys)
 	parts := make([]string, 0, len(keys)+len(otherParams))
 	for _, key := range keys {
 		value := params[key]

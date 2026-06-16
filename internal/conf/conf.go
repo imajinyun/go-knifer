@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -488,7 +488,7 @@ func (s *Conf) Groups() []string {
 	for g := range s.data {
 		groups = append(groups, g)
 	}
-	sort.Strings(groups)
+	slices.Sort(groups)
 	return groups
 }
 
@@ -502,7 +502,7 @@ func (s *Conf) Keys(group string) []string {
 	for k := range m {
 		keys = append(keys, k)
 	}
-	sort.Strings(keys)
+	slices.Sort(keys)
 	return keys
 }
 
