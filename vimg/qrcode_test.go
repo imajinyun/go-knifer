@@ -66,4 +66,32 @@ func TestFacadeBarcodeRenderers(t *testing.T) {
 	if !strings.HasPrefix(data, "data:image/png;base64,") {
 		t.Fatalf("BarcodeBase64Data prefix = %q", data[:min(len(data), 30)])
 	}
+
+	customASCII, err := QRCodeASCIIWithChars("facade ascii chars", "##", "..")
+	if err != nil {
+		t.Fatalf("QRCodeASCIIWithChars: %v", err)
+	}
+	if !strings.Contains(customASCII, "##") || !strings.Contains(customASCII, "..") {
+		t.Fatalf("QRCodeASCIIWithChars missing custom chars: %q", customASCII[:min(len(customASCII), 80)])
+	}
+
+	output, err := QRCodeBytes("facade output", BarcodeOutputFormatSVG, WithQRCodeTransparentBackground())
+	if err != nil {
+		t.Fatalf("QRCodeBytes: %v", err)
+	}
+	if !strings.Contains(string(output), `<svg`) || !strings.Contains(string(output), `rgba(0,0,0,0.000)`) {
+		t.Fatalf("QRCodeBytes output missing expected SVG content: %q", string(output[:min(len(output), 120)]))
+	}
+}
+
+func TestFacadeBarcodeCapabilities(t *testing.T) {
+	if !CanEncodeBarcodeFormat(BarcodeFormatQRCode) || !CanDecodeBarcodeFormat(BarcodeFormatQRCode) {
+		t.Fatal("qr code should be supported for encode and decode")
+	}
+	if CanEncodeBarcodeFormat(BarcodeFormatAztec) || !CanDecodeBarcodeFormat(BarcodeFormatAztec) {
+		t.Fatal("aztec should be decode-only")
+	}
+	if len(SupportedEncodeBarcodeFormats()) == 0 || len(SupportedDecodeBarcodeFormats()) == 0 {
+		t.Fatal("supported format lists must not be empty")
+	}
 }

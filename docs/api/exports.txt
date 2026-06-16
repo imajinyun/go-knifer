@@ -1188,16 +1188,25 @@ github.com/imajinyun/go-knifer/vimg
   const BarcodeFormatUPCA
   const BarcodeFormatUPCE
   const BarcodeFormatUnknown
+  const BarcodeOutputFormatASCII
+  const BarcodeOutputFormatBase64Data
+  const BarcodeOutputFormatPNG
+  const BarcodeOutputFormatSVG
+  const BarcodeOutputFormatUnknown
   const QRErrorCorrectionHigh
   const QRErrorCorrectionLow
   const QRErrorCorrectionMedium
   const QRErrorCorrectionQuartile
   const QRErrorCorrectionUnknown
   func BarcodeASCII
+  func BarcodeASCIIWithChars
   func BarcodeBase64Data
+  func BarcodeBytes
   func BarcodeImage
   func BarcodePNG
   func BarcodeSVG
+  func CanDecodeBarcodeFormat
+  func CanEncodeBarcodeFormat
   func ConvertFormat
   func DecodeBarcode
   func DecodeBarcodeImage
@@ -1223,10 +1232,14 @@ github.com/imajinyun/go-knifer/vimg
   func NewShearCaptchaWith
   func NewShearCaptchaWithOptions
   func QRCodeASCII
+  func QRCodeASCIIWithChars
   func QRCodeBase64Data
+  func QRCodeBytes
   func QRCodeImage
   func QRCodePNG
   func QRCodeSVG
+  func SupportedDecodeBarcodeFormats
+  func SupportedEncodeBarcodeFormats
   func Thumbnail
   func VerifyCaptchaIgnoreCase
   func VerifyIgnoreCase
@@ -1241,6 +1254,7 @@ github.com/imajinyun/go-knifer/vimg
   func WithBarcodeLogoSize
   func WithBarcodeMargin
   func WithBarcodeSize
+  func WithBarcodeTransparentBackground
   func WithColorFunc
   func WithCreateParents
   func WithDecodeAlsoInverted
@@ -1265,10 +1279,12 @@ github.com/imajinyun/go-knifer/vimg
   func WithQRCodeErrorCorrection
   func WithQRCodeForeground
   func WithQRCodeLogo
+  func WithQRCodeLogoRatio
   func WithQRCodeLogoSize
   func WithQRCodeMargin
   func WithQRCodeMaskPattern
   func WithQRCodeSize
+  func WithQRCodeTransparentBackground
   func WithQRCodeVersion
   func WithRandomInt
   func WriteBarcode
@@ -1276,6 +1292,7 @@ github.com/imajinyun/go-knifer/vimg
   type AbstractCaptcha
   type BarcodeFormat
   type BarcodeOption
+  type BarcodeOutputFormat
   type Captcha
   type CaptchaOption
   type CircleCaptcha

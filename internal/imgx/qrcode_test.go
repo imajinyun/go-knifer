@@ -76,6 +76,74 @@ func TestBarcodeCode128PNGAndDecode(t *testing.T) {
 	}
 }
 
+func TestBarcodeFormatCapabilities(t *testing.T) {
+	allFormats := []BarcodeFormat{
+		BarcodeFormatUnknown,
+		BarcodeFormatAztec,
+		BarcodeFormatCodabar,
+		BarcodeFormatCode39,
+		BarcodeFormatCode93,
+		BarcodeFormatCode128,
+		BarcodeFormatDataMatrix,
+		BarcodeFormatEAN8,
+		BarcodeFormatEAN13,
+		BarcodeFormatITF,
+		BarcodeFormatMaxiCode,
+		BarcodeFormatPDF417,
+		BarcodeFormatQRCode,
+		BarcodeFormatRSS14,
+		BarcodeFormatRSSExpanded,
+		BarcodeFormatUPCA,
+		BarcodeFormatUPCE,
+	}
+	encodable := map[BarcodeFormat]bool{
+		BarcodeFormatCodabar:    true,
+		BarcodeFormatCode39:     true,
+		BarcodeFormatCode93:     true,
+		BarcodeFormatCode128:    true,
+		BarcodeFormatDataMatrix: true,
+		BarcodeFormatEAN8:       true,
+		BarcodeFormatEAN13:      true,
+		BarcodeFormatITF:        true,
+		BarcodeFormatQRCode:     true,
+		BarcodeFormatUPCA:       true,
+		BarcodeFormatUPCE:       true,
+	}
+	decodable := map[BarcodeFormat]bool{
+		BarcodeFormatAztec:      true,
+		BarcodeFormatCodabar:    true,
+		BarcodeFormatCode39:     true,
+		BarcodeFormatCode93:     true,
+		BarcodeFormatCode128:    true,
+		BarcodeFormatDataMatrix: true,
+		BarcodeFormatEAN8:       true,
+		BarcodeFormatEAN13:      true,
+		BarcodeFormatITF:        true,
+		BarcodeFormatQRCode:     true,
+		BarcodeFormatRSS14:      true,
+		BarcodeFormatUPCA:       true,
+		BarcodeFormatUPCE:       true,
+	}
+
+	for _, format := range allFormats {
+		t.Run(format.String(), func(t *testing.T) {
+			if got := CanEncodeBarcodeFormat(format); got != encodable[format] {
+				t.Fatalf("CanEncodeBarcodeFormat(%v) = %v, want %v", format, got, encodable[format])
+			}
+			if got := CanDecodeBarcodeFormat(format); got != decodable[format] {
+				t.Fatalf("CanDecodeBarcodeFormat(%v) = %v, want %v", format, got, decodable[format])
+			}
+		})
+	}
+
+	if got, want := formatSet(SupportedEncodeBarcodeFormats()), encodable; !sameFormatSet(got, want) {
+		t.Fatalf("SupportedEncodeBarcodeFormats = %v, want %v", got, want)
+	}
+	if got, want := formatSet(SupportedDecodeBarcodeFormats()), decodable; !sameFormatSet(got, want) {
+		t.Fatalf("SupportedDecodeBarcodeFormats = %v, want %v", got, want)
+	}
+}
+
 func TestQRCodeSVGAndASCII(t *testing.T) {
 	svg, err := QRCodeSVG("svg payload", WithQRCodeSize(64), WithQRCodeForeground(color.RGBA{R: 1, G: 2, B: 3, A: 255}))
 	if err != nil {
@@ -95,15 +163,80 @@ func TestQRCodeSVGAndASCII(t *testing.T) {
 	if !strings.Contains(ascii, "██") || !strings.Contains(ascii, "\n") {
 		t.Fatalf("QRCodeASCII did not contain expected blocks/newlines: %q", ascii[:minInt(len(ascii), 80)])
 	}
+
+	customASCII, err := QRCodeASCIIWithChars("ascii payload", "##", "..", WithQRCodeSize(33), WithQRCodeMargin(1))
+	if err != nil {
+		t.Fatalf("QRCodeASCIIWithChars: %v", err)
+	}
+	if !strings.Contains(customASCII, "##") || !strings.Contains(customASCII, "..") {
+		t.Fatalf("QRCodeASCIIWithChars missing custom chars: %q", customASCII[:minInt(len(customASCII), 80)])
+	}
+}
+
+func TestQRCodeOutputs(t *testing.T) {
+	cases := []struct {
+		name   string
+		format BarcodeOutputFormat
+		want   string
+	}{
+		{"png", BarcodeOutputFormatPNG, "\x89PNG"},
+		{"svg", BarcodeOutputFormatSVG, "<svg"},
+		{"ascii", BarcodeOutputFormatASCII, "██"},
+		{"base64 data", BarcodeOutputFormatBase64Data, "data:image/png;base64,"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			data, err := QRCodeBytes("output payload", tc.format, WithQRCodeSize(64))
+			if err != nil {
+				t.Fatalf("QRCodeBytes: %v", err)
+			}
+			if !strings.Contains(string(data), tc.want) {
+				t.Fatalf("QRCodeBytes missing %q in %q", tc.want, string(data[:minInt(len(data), 80)]))
+			}
+		})
+	}
+}
+
+func TestQRCodeTransparentBackground(t *testing.T) {
+	img, err := QRCodeImage("transparent payload", WithQRCodeSize(80), WithQRCodeTransparentBackground())
+	if err != nil {
+		t.Fatalf("QRCodeImage: %v", err)
+	}
+	_, _, _, a := img.At(0, 0).RGBA()
+	if a != 0 {
+		t.Fatalf("background alpha = %d, want transparent", a)
+	}
+
+	svg, err := QRCodeSVG("transparent payload", WithQRCodeSize(80), WithQRCodeTransparentBackground())
+	if err != nil {
+		t.Fatalf("QRCodeSVG: %v", err)
+	}
+	if !strings.Contains(svg, `fill="rgba(0,0,0,0.000)"`) {
+		t.Fatalf("QRCodeSVG missing transparent fill: %q", svg[:minInt(len(svg), 160)])
+	}
+}
+
+func TestQRCodeSVGWithLogo(t *testing.T) {
+	logo := solidTestLogo(color.RGBA{G: 255, A: 255})
+	svg, err := QRCodeSVG("svg logo payload",
+		WithQRCodeSize(120),
+		WithQRCodeErrorCorrection(QRErrorCorrectionHigh),
+		WithQRCodeLogo(logo),
+		WithQRCodeLogoRatio(6),
+	)
+	if err != nil {
+		t.Fatalf("QRCodeSVG: %v", err)
+	}
+	for _, want := range []string{`<image `, `href="data:image/png;base64,`, `<rect`} {
+		want = strings.ReplaceAll(want, `\"`, `"`)
+		if !strings.Contains(svg, want) {
+			t.Fatalf("QRCodeSVG missing %q in %q", want, svg[:minInt(len(svg), 160)])
+		}
+	}
 }
 
 func TestQRCodeLogoRendering(t *testing.T) {
-	logo := image.NewRGBA(image.Rect(0, 0, 12, 12))
-	for y := 0; y < 12; y++ {
-		for x := 0; x < 12; x++ {
-			logo.SetRGBA(x, y, color.RGBA{R: 255, A: 255})
-		}
-	}
+	logo := solidTestLogo(color.RGBA{R: 255, A: 255})
 	img, err := QRCodeImage("logo payload",
 		WithQRCodeSize(120),
 		WithQRCodeErrorCorrection(QRErrorCorrectionHigh),
@@ -139,8 +272,15 @@ func TestQRCodeInvalidArgsClassified(t *testing.T) {
 		{"bad size", func() error { _, err := QRCodePNG("x", WithQRCodeSize(0)); return err }(), knifer.ErrCodeInvalidInput},
 		{"bad margin", func() error { _, err := QRCodePNG("x", WithQRCodeMargin(-1)); return err }(), knifer.ErrCodeInvalidInput},
 		{"unsupported writer", func() error { _, err := BarcodePNG("x", BarcodeFormatAztec); return err }(), knifer.ErrCodeUnsupported},
-		{"svg logo unsupported", func() error {
-			_, err := QRCodeSVG("x", WithQRCodeLogo(image.NewRGBA(image.Rect(0, 0, 1, 1))))
+		{"non qr logo unsupported", func() error {
+			_, err := BarcodePNG("123456789012", BarcodeFormatEAN13, WithBarcodeLogo(image.NewRGBA(image.Rect(0, 0, 1, 1))))
+			return err
+		}(), knifer.ErrCodeUnsupported},
+		{"bad logo ratio", func() error { _, err := QRCodePNG("x", WithQRCodeLogoRatio(0)); return err }(), knifer.ErrCodeInvalidInput},
+		{"bad ascii chars", func() error { _, err := QRCodeASCIIWithChars("x", "", " "); return err }(), knifer.ErrCodeInvalidInput},
+		{"bad output format", func() error { _, err := QRCodeBytes("x", BarcodeOutputFormatUnknown); return err }(), knifer.ErrCodeInvalidInput},
+		{"unsupported decode format", func() error {
+			_, err := DecodeBarcode(strings.NewReader("not an image"), WithDecodeFormats(BarcodeFormatPDF417))
 			return err
 		}(), knifer.ErrCodeUnsupported},
 		{"decode invalid", func() error { _, err := DecodeQRCode(strings.NewReader("not an image")); return err }(), knifer.ErrCodeInvalidInput},
@@ -159,4 +299,34 @@ func TestQRCodeInvalidArgsClassified(t *testing.T) {
 			}
 		})
 	}
+}
+
+func solidTestLogo(c color.Color) image.Image {
+	logo := image.NewRGBA(image.Rect(0, 0, 12, 12))
+	for y := 0; y < 12; y++ {
+		for x := 0; x < 12; x++ {
+			logo.Set(x, y, c)
+		}
+	}
+	return logo
+}
+
+func formatSet(formats []BarcodeFormat) map[BarcodeFormat]bool {
+	out := make(map[BarcodeFormat]bool, len(formats))
+	for _, format := range formats {
+		out[format] = true
+	}
+	return out
+}
+
+func sameFormatSet(got, want map[BarcodeFormat]bool) bool {
+	if len(got) != len(want) {
+		return false
+	}
+	for format, supported := range want {
+		if got[format] != supported {
+			return false
+		}
+	}
+	return true
 }

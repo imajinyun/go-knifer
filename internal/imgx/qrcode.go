@@ -23,9 +23,10 @@ import (
 )
 
 const (
-	defaultBarcodeSize   = 256
-	defaultBarcodeHeight = 80
-	defaultBarcodeMargin = 4
+	defaultBarcodeSize     = 256
+	defaultBarcodeHeight   = 80
+	defaultBarcodeMargin   = 4
+	defaultQRCodeLogoRatio = 6
 )
 
 // BarcodeFormat identifies a QR code or barcode format.
@@ -108,6 +109,22 @@ func (f BarcodeFormat) String() string {
 	}
 }
 
+// BarcodeOutputFormat identifies a barcode rendering output format.
+type BarcodeOutputFormat int
+
+const (
+	// BarcodeOutputFormatUnknown is an invalid output format.
+	BarcodeOutputFormatUnknown BarcodeOutputFormat = iota
+	// BarcodeOutputFormatPNG renders PNG bytes.
+	BarcodeOutputFormatPNG
+	// BarcodeOutputFormatSVG renders SVG bytes.
+	BarcodeOutputFormatSVG
+	// BarcodeOutputFormatASCII renders text bytes.
+	BarcodeOutputFormatASCII
+	// BarcodeOutputFormatBase64Data renders a PNG data URI as bytes.
+	BarcodeOutputFormatBase64Data
+)
+
 // QRErrorCorrectionLevel identifies the QR code error correction level.
 type QRErrorCorrectionLevel int
 
@@ -146,6 +163,7 @@ type barcodeConfig struct {
 	logo         image.Image
 	logoWidth    int
 	logoHeight   int
+	logoRatio    int
 }
 
 // DecodeOption customizes barcode decoding.
@@ -182,6 +200,7 @@ func defaultBarcodeConfig(format BarcodeFormat) barcodeConfig {
 		qrMask:     -1,
 		logoWidth:  -1,
 		logoHeight: -1,
+		logoRatio:  defaultQRCodeLogoRatio,
 	}
 }
 
@@ -244,6 +263,16 @@ func WithBarcodeBackground(background color.Color) BarcodeOption {
 // WithQRCodeBackground sets the color used for light QR modules.
 func WithQRCodeBackground(background color.Color) QRCodeOption {
 	return WithBarcodeBackground(background)
+}
+
+// WithBarcodeTransparentBackground sets a transparent background for raster and SVG output.
+func WithBarcodeTransparentBackground() BarcodeOption {
+	return WithBarcodeBackground(color.Transparent)
+}
+
+// WithQRCodeTransparentBackground sets a transparent background for QR raster and SVG output.
+func WithQRCodeTransparentBackground() QRCodeOption {
+	return WithBarcodeTransparentBackground()
 }
 
 // WithBarcodeColors sets both foreground and background colors.
@@ -358,6 +387,17 @@ func WithBarcodeLogoSize(width, height int) BarcodeOption {
 // WithQRCodeLogoSize sets the embedded QR logo size in pixels.
 func WithQRCodeLogoSize(width, height int) QRCodeOption { return WithBarcodeLogoSize(width, height) }
 
+// WithQRCodeLogoRatio sets the default QR logo long-edge ratio when explicit logo size is not set.
+func WithQRCodeLogoRatio(ratio int) QRCodeOption {
+	return func(c *barcodeConfig) error {
+		if ratio <= 0 {
+			return &knifer.Error{Code: knifer.ErrCodeInvalidInput, Message: "image: qr logo ratio must be positive"}
+		}
+		c.logoRatio = ratio
+		return nil
+	}
+}
+
 // WithBarcodeEncodeHint sets a raw gozxing encode hint.
 func WithBarcodeEncodeHint(hint gozxing.EncodeHintType, value interface{}) BarcodeOption {
 	return func(c *barcodeConfig) error {
@@ -376,8 +416,8 @@ func WithDecodeFormats(formats ...BarcodeFormat) DecodeOption {
 			return &knifer.Error{Code: knifer.ErrCodeInvalidInput, Message: "image: decode formats must not be empty"}
 		}
 		for _, format := range formats {
-			if _, err := toGozxingBarcodeFormat(format); err != nil {
-				return err
+			if !CanDecodeBarcodeFormat(format) {
+				return &knifer.Error{Code: knifer.ErrCodeUnsupported, Message: fmt.Sprintf("image: barcode reader for %s is unsupported", format)}
 			}
 		}
 		c.formats = append([]BarcodeFormat(nil), formats...)
@@ -477,6 +517,39 @@ func BarcodeBase64Data(content string, format BarcodeFormat, opts ...BarcodeOpti
 	return "data:image/png;base64," + base64.StdEncoding.EncodeToString(pngBytes), nil
 }
 
+// BarcodeBytes renders content encoded with format to the requested output bytes.
+func BarcodeBytes(content string, format BarcodeFormat, output BarcodeOutputFormat, opts ...BarcodeOption) ([]byte, error) {
+	switch output {
+	case BarcodeOutputFormatPNG:
+		return BarcodePNG(content, format, opts...)
+	case BarcodeOutputFormatSVG:
+		svg, err := BarcodeSVG(content, format, opts...)
+		if err != nil {
+			return nil, err
+		}
+		return []byte(svg), nil
+	case BarcodeOutputFormatASCII:
+		ascii, err := BarcodeASCII(content, format, opts...)
+		if err != nil {
+			return nil, err
+		}
+		return []byte(ascii), nil
+	case BarcodeOutputFormatBase64Data:
+		data, err := BarcodeBase64Data(content, format, opts...)
+		if err != nil {
+			return nil, err
+		}
+		return []byte(data), nil
+	default:
+		return nil, &knifer.Error{Code: knifer.ErrCodeInvalidInput, Message: "image: invalid barcode output format"}
+	}
+}
+
+// QRCodeBytes renders QR content to the requested output bytes.
+func QRCodeBytes(content string, output BarcodeOutputFormat, opts ...QRCodeOption) ([]byte, error) {
+	return BarcodeBytes(content, BarcodeFormatQRCode, output, opts...)
+}
+
 // QRCodeBase64Data returns a PNG data URI for a QR code.
 func QRCodeBase64Data(content string, opts ...QRCodeOption) (string, error) {
 	return BarcodeBase64Data(content, BarcodeFormatQRCode, opts...)
@@ -488,10 +561,11 @@ func BarcodeSVG(content string, format BarcodeFormat, opts ...BarcodeOption) (st
 	if err != nil {
 		return "", err
 	}
-	if cfg.logo != nil {
-		return "", &knifer.Error{Code: knifer.ErrCodeUnsupported, Message: "image: barcode svg logo is unsupported"}
+	svg, err := renderBarcodeSVG(matrix, cfg)
+	if err != nil {
+		return "", err
 	}
-	return renderBarcodeSVG(matrix, cfg), nil
+	return svg, nil
 }
 
 // QRCodeSVG returns an SVG rendering for a QR code.
@@ -501,16 +575,29 @@ func QRCodeSVG(content string, opts ...QRCodeOption) (string, error) {
 
 // BarcodeASCII returns an ASCII rendering for content encoded with format.
 func BarcodeASCII(content string, format BarcodeFormat, opts ...BarcodeOption) (string, error) {
+	return BarcodeASCIIWithChars(content, format, "██", "  ", opts...)
+}
+
+// BarcodeASCIIWithChars returns a text rendering using custom set and unset strings.
+func BarcodeASCIIWithChars(content string, format BarcodeFormat, setString, unsetString string, opts ...BarcodeOption) (string, error) {
+	if setString == "" || unsetString == "" {
+		return "", &knifer.Error{Code: knifer.ErrCodeInvalidInput, Message: "image: barcode ascii characters must not be empty"}
+	}
 	matrix, _, err := encodeBarcodeMatrix(content, format, opts...)
 	if err != nil {
 		return "", err
 	}
-	return renderBarcodeASCII(matrix, "██", "  "), nil
+	return renderBarcodeASCII(matrix, setString, unsetString), nil
 }
 
 // QRCodeASCII returns an ASCII rendering for a QR code.
 func QRCodeASCII(content string, opts ...QRCodeOption) (string, error) {
 	return BarcodeASCII(content, BarcodeFormatQRCode, opts...)
+}
+
+// QRCodeASCIIWithChars returns a QR text rendering using custom set and unset strings.
+func QRCodeASCIIWithChars(content string, setString, unsetString string, opts ...QRCodeOption) (string, error) {
+	return BarcodeASCIIWithChars(content, BarcodeFormatQRCode, setString, unsetString, opts...)
 }
 
 // DecodeBarcode decodes one barcode from a raster image stream.
@@ -569,18 +656,20 @@ func DecodeBarcodeImage(img image.Image, opts ...DecodeOption) (*DecodeResult, e
 		}
 		hints[gozxing.DecodeHintType_POSSIBLE_FORMATS] = formats
 	}
-	bmp, err := gozxing.NewBinaryBitmapFromImage(img)
+	bitmaps, err := barcodeBitmaps(img)
 	if err != nil {
 		return nil, &knifer.Error{Code: knifer.ErrCodeInvalidInput, Message: "image: barcode bitmap creation failed", Cause: err}
 	}
 	readers := barcodeReaders(cfg.formats)
 	var lastErr error
-	for _, reader := range readers {
-		result, err := reader.Decode(bmp, hints)
-		if err == nil {
-			return newDecodeResult(result), nil
+	for _, bmp := range bitmaps {
+		for _, reader := range readers {
+			result, err := reader.Decode(bmp, hints)
+			if err == nil {
+				return newDecodeResult(result), nil
+			}
+			lastErr = err
 		}
-		lastErr = err
 	}
 	return nil, &knifer.Error{Code: knifer.ErrCodeInvalidInput, Message: "image: barcode decode failed", Cause: lastErr}
 }
@@ -607,6 +696,9 @@ func encodeBarcodeMatrix(content string, format BarcodeFormat, opts ...BarcodeOp
 	goFormat, err := toGozxingBarcodeFormat(format)
 	if err != nil {
 		return nil, barcodeConfig{}, err
+	}
+	if cfg.logo != nil && format != BarcodeFormatQRCode {
+		return nil, barcodeConfig{}, &knifer.Error{Code: knifer.ErrCodeUnsupported, Message: "image: barcode logo is only supported for qr code"}
 	}
 	writer, err := barcodeWriter(format)
 	if err != nil {
@@ -654,6 +746,35 @@ func encodeHints(cfg barcodeConfig, format BarcodeFormat) (map[gozxing.EncodeHin
 	return hints, nil
 }
 
+// CanEncodeBarcodeFormat reports whether format has a barcode writer.
+func CanEncodeBarcodeFormat(format BarcodeFormat) bool {
+	switch format {
+	case BarcodeFormatCodabar, BarcodeFormatCode39, BarcodeFormatCode93, BarcodeFormatCode128,
+		BarcodeFormatDataMatrix, BarcodeFormatEAN8, BarcodeFormatEAN13, BarcodeFormatITF,
+		BarcodeFormatQRCode, BarcodeFormatUPCA, BarcodeFormatUPCE:
+		return true
+	default:
+		return false
+	}
+}
+
+// SupportedEncodeBarcodeFormats returns the barcode formats supported for generation.
+func SupportedEncodeBarcodeFormats() []BarcodeFormat {
+	return []BarcodeFormat{
+		BarcodeFormatCodabar,
+		BarcodeFormatCode39,
+		BarcodeFormatCode93,
+		BarcodeFormatCode128,
+		BarcodeFormatDataMatrix,
+		BarcodeFormatEAN8,
+		BarcodeFormatEAN13,
+		BarcodeFormatITF,
+		BarcodeFormatQRCode,
+		BarcodeFormatUPCA,
+		BarcodeFormatUPCE,
+	}
+}
+
 func barcodeWriter(format BarcodeFormat) (gozxing.Writer, error) {
 	switch format {
 	case BarcodeFormatCodabar:
@@ -685,23 +806,41 @@ func barcodeWriter(format BarcodeFormat) (gozxing.Writer, error) {
 	}
 }
 
+// CanDecodeBarcodeFormat reports whether format has a barcode reader.
+func CanDecodeBarcodeFormat(format BarcodeFormat) bool {
+	switch format {
+	case BarcodeFormatQRCode, BarcodeFormatDataMatrix, BarcodeFormatCode128, BarcodeFormatCode39,
+		BarcodeFormatCode93, BarcodeFormatEAN13, BarcodeFormatEAN8, BarcodeFormatUPCA,
+		BarcodeFormatUPCE, BarcodeFormatITF, BarcodeFormatCodabar, BarcodeFormatRSS14,
+		BarcodeFormatAztec:
+		return true
+	default:
+		return false
+	}
+}
+
+// SupportedDecodeBarcodeFormats returns the barcode formats supported for decoding.
+func SupportedDecodeBarcodeFormats() []BarcodeFormat {
+	return []BarcodeFormat{
+		BarcodeFormatQRCode,
+		BarcodeFormatDataMatrix,
+		BarcodeFormatCode128,
+		BarcodeFormatCode39,
+		BarcodeFormatCode93,
+		BarcodeFormatEAN13,
+		BarcodeFormatEAN8,
+		BarcodeFormatUPCA,
+		BarcodeFormatUPCE,
+		BarcodeFormatITF,
+		BarcodeFormatCodabar,
+		BarcodeFormatRSS14,
+		BarcodeFormatAztec,
+	}
+}
+
 func barcodeReaders(formats []BarcodeFormat) []gozxing.Reader {
 	if len(formats) == 0 {
-		formats = []BarcodeFormat{
-			BarcodeFormatQRCode,
-			BarcodeFormatDataMatrix,
-			BarcodeFormatCode128,
-			BarcodeFormatCode39,
-			BarcodeFormatCode93,
-			BarcodeFormatEAN13,
-			BarcodeFormatEAN8,
-			BarcodeFormatUPCA,
-			BarcodeFormatUPCE,
-			BarcodeFormatITF,
-			BarcodeFormatCodabar,
-			BarcodeFormatRSS14,
-			BarcodeFormatAztec,
-		}
+		formats = SupportedDecodeBarcodeFormats()
 	}
 	readers := make([]gozxing.Reader, 0, len(formats))
 	for _, format := range formats {
@@ -756,24 +895,40 @@ func renderBarcodeImage(matrix *gozxing.BitMatrix, cfg barcodeConfig) image.Imag
 }
 
 func drawBarcodeLogo(dst *image.RGBA, cfg barcodeConfig) {
-	logoBounds := cfg.logo.Bounds()
-	logoWidth := cfg.logoWidth
-	logoHeight := cfg.logoHeight
-	if logoWidth <= 0 || logoHeight <= 0 {
-		maxWidth := dst.Bounds().Dx() / 5
-		maxHeight := dst.Bounds().Dy() / 5
-		logoWidth, logoHeight = fitLongEdge(logoBounds.Dx(), logoBounds.Dy(), minInt(maxWidth, maxHeight))
-	}
+	logo, left, top, logoWidth, logoHeight := prepareBarcodeLogo(cfg, dst.Bounds())
 	if logoWidth <= 0 || logoHeight <= 0 {
 		return
 	}
-	logo := resizeNearest(cfg.logo, logoWidth, logoHeight)
-	left := (dst.Bounds().Dx() - logoWidth) / 2
-	top := (dst.Bounds().Dy() - logoHeight) / 2
 	padding := maxInt(2, minInt(logoWidth, logoHeight)/12)
 	bg := image.Rect(left-padding, top-padding, left+logoWidth+padding, top+logoHeight+padding).Intersect(dst.Bounds())
 	draw.Draw(dst, bg, &image.Uniform{cfg.background}, image.Point{}, draw.Src)
 	draw.Draw(dst, image.Rect(left, top, left+logoWidth, top+logoHeight), logo, image.Point{}, draw.Over)
+}
+
+func prepareBarcodeLogo(cfg barcodeConfig, bounds image.Rectangle) (image.Image, int, int, int, int) {
+	logoBounds := cfg.logo.Bounds()
+	logoWidth := cfg.logoWidth
+	logoHeight := cfg.logoHeight
+	if logoWidth <= 0 || logoHeight <= 0 {
+		maxWidth := bounds.Dx() / cfg.logoRatio
+		maxHeight := bounds.Dy() / cfg.logoRatio
+		logoWidth, logoHeight = fitLongEdge(logoBounds.Dx(), logoBounds.Dy(), minInt(maxWidth, maxHeight))
+	}
+	if logoWidth <= 0 || logoHeight <= 0 {
+		return nil, 0, 0, 0, 0
+	}
+	logo := resizeNearest(cfg.logo, logoWidth, logoHeight)
+	left := bounds.Min.X + (bounds.Dx()-logoWidth)/2
+	top := bounds.Min.Y + (bounds.Dy()-logoHeight)/2
+	return logo, left, top, logoWidth, logoHeight
+}
+
+func pngDataURI(img image.Image) (string, error) {
+	buf := &bytes.Buffer{}
+	if err := png.Encode(buf, img); err != nil {
+		return "", &knifer.Error{Code: knifer.ErrCodeInternal, Message: "image: barcode logo png encode failed", Cause: err}
+	}
+	return "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes()), nil
 }
 
 func resizeNearest(src image.Image, width, height int) image.Image {
@@ -791,7 +946,7 @@ func resizeNearest(src image.Image, width, height int) image.Image {
 	return dst
 }
 
-func renderBarcodeSVG(matrix *gozxing.BitMatrix, cfg barcodeConfig) string {
+func renderBarcodeSVG(matrix *gozxing.BitMatrix, cfg barcodeConfig) (string, error) {
 	width := matrix.GetWidth()
 	height := matrix.GetHeight()
 	fg := svgColor(cfg.foreground)
@@ -808,8 +963,39 @@ func renderBarcodeSVG(matrix *gozxing.BitMatrix, cfg barcodeConfig) string {
 			}
 		}
 	}
-	b.WriteString(`"/></svg>`)
-	return b.String()
+	b.WriteString(`"/>`)
+	if cfg.logo != nil {
+		logo, left, top, logoWidth, logoHeight := prepareBarcodeLogo(cfg, image.Rect(0, 0, width, height))
+		if logoWidth > 0 && logoHeight > 0 {
+			data, err := pngDataURI(logo)
+			if err != nil {
+				return "", err
+			}
+			padding := maxInt(2, minInt(logoWidth, logoHeight)/12)
+			bgRect := image.Rect(left-padding, top-padding, left+logoWidth+padding, top+logoHeight+padding).
+				Intersect(image.Rect(0, 0, width, height))
+			fmt.Fprintf(
+				&b,
+				`<rect x="%d" y="%d" width="%d" height="%d" fill="%s"/>`,
+				bgRect.Min.X,
+				bgRect.Min.Y,
+				bgRect.Dx(),
+				bgRect.Dy(),
+				html.EscapeString(bg),
+			)
+			fmt.Fprintf(
+				&b,
+				`<image x="%d" y="%d" width="%d" height="%d" href="%s"/>`,
+				left,
+				top,
+				logoWidth,
+				logoHeight,
+				html.EscapeString(data),
+			)
+		}
+	}
+	b.WriteString(`</svg>`)
+	return b.String(), nil
 }
 
 func svgColor(c color.Color) string {
@@ -822,6 +1008,19 @@ func svgColor(c color.Color) string {
 
 func renderBarcodeASCII(matrix *gozxing.BitMatrix, setString, unsetString string) string {
 	return matrix.ToString(setString, unsetString)
+}
+
+func barcodeBitmaps(img image.Image) ([]*gozxing.BinaryBitmap, error) {
+	source := gozxing.NewLuminanceSourceFromImage(img)
+	hybrid, err := gozxing.NewBinaryBitmap(gozxing.NewHybridBinarizer(source))
+	if err != nil {
+		return nil, err
+	}
+	global, err := gozxing.NewBinaryBitmap(gozxing.NewGlobalHistgramBinarizer(source))
+	if err != nil {
+		return nil, err
+	}
+	return []*gozxing.BinaryBitmap{hybrid, global}, nil
 }
 
 func withDecodeBoolHint(hint gozxing.DecodeHintType, enabled bool) DecodeOption {

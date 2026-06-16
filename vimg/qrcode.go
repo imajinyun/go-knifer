@@ -31,6 +31,17 @@ const (
 	BarcodeFormatUPCE        = imgx.BarcodeFormatUPCE
 )
 
+// BarcodeOutputFormat identifies a barcode rendering output format.
+type BarcodeOutputFormat = imgx.BarcodeOutputFormat
+
+const (
+	BarcodeOutputFormatUnknown    = imgx.BarcodeOutputFormatUnknown
+	BarcodeOutputFormatPNG        = imgx.BarcodeOutputFormatPNG
+	BarcodeOutputFormatSVG        = imgx.BarcodeOutputFormatSVG
+	BarcodeOutputFormatASCII      = imgx.BarcodeOutputFormatASCII
+	BarcodeOutputFormatBase64Data = imgx.BarcodeOutputFormatBase64Data
+)
+
 // QRErrorCorrectionLevel identifies the QR code error correction level.
 type QRErrorCorrectionLevel = imgx.QRErrorCorrectionLevel
 
@@ -86,6 +97,12 @@ func WithQRCodeBackground(background color.Color) QRCodeOption {
 	return imgx.WithQRCodeBackground(background)
 }
 
+// WithBarcodeTransparentBackground sets a transparent background for raster and SVG output.
+func WithBarcodeTransparentBackground() BarcodeOption { return imgx.WithBarcodeTransparentBackground() }
+
+// WithQRCodeTransparentBackground sets a transparent background for QR raster and SVG output.
+func WithQRCodeTransparentBackground() QRCodeOption { return imgx.WithQRCodeTransparentBackground() }
+
 // WithBarcodeColors sets both foreground and background colors.
 func WithBarcodeColors(foreground, background color.Color) BarcodeOption {
 	return imgx.WithBarcodeColors(foreground, background)
@@ -136,6 +153,9 @@ func WithQRCodeLogoSize(width, height int) QRCodeOption {
 	return imgx.WithQRCodeLogoSize(width, height)
 }
 
+// WithQRCodeLogoRatio sets the default QR logo long-edge ratio when explicit logo size is not set.
+func WithQRCodeLogoRatio(ratio int) QRCodeOption { return imgx.WithQRCodeLogoRatio(ratio) }
+
 // WithDecodeFormats restricts decoding to the provided formats.
 func WithDecodeFormats(formats ...BarcodeFormat) DecodeOption {
 	return imgx.WithDecodeFormats(formats...)
@@ -159,6 +179,18 @@ func WithDecodeCharacterSet(characterSet string) DecodeOption {
 func BarcodeImage(content string, format BarcodeFormat, opts ...BarcodeOption) (image.Image, error) {
 	return imgx.BarcodeImage(content, format, opts...)
 }
+
+// CanEncodeBarcodeFormat reports whether format is supported for generation.
+func CanEncodeBarcodeFormat(format BarcodeFormat) bool { return imgx.CanEncodeBarcodeFormat(format) }
+
+// CanDecodeBarcodeFormat reports whether format is supported for decoding.
+func CanDecodeBarcodeFormat(format BarcodeFormat) bool { return imgx.CanDecodeBarcodeFormat(format) }
+
+// SupportedEncodeBarcodeFormats returns the barcode formats supported for generation.
+func SupportedEncodeBarcodeFormats() []BarcodeFormat { return imgx.SupportedEncodeBarcodeFormats() }
+
+// SupportedDecodeBarcodeFormats returns the barcode formats supported for decoding.
+func SupportedDecodeBarcodeFormats() []BarcodeFormat { return imgx.SupportedDecodeBarcodeFormats() }
 
 // QRCodeImage returns a raster QR image.
 func QRCodeImage(content string, opts ...QRCodeOption) (image.Image, error) {
@@ -195,6 +227,16 @@ func QRCodeBase64Data(content string, opts ...QRCodeOption) (string, error) {
 	return imgx.QRCodeBase64Data(content, opts...)
 }
 
+// BarcodeBytes renders content encoded with format to the requested output bytes.
+func BarcodeBytes(content string, format BarcodeFormat, output BarcodeOutputFormat, opts ...BarcodeOption) ([]byte, error) {
+	return imgx.BarcodeBytes(content, format, output, opts...)
+}
+
+// QRCodeBytes renders QR content to the requested output bytes.
+func QRCodeBytes(content string, output BarcodeOutputFormat, opts ...QRCodeOption) ([]byte, error) {
+	return imgx.QRCodeBytes(content, output, opts...)
+}
+
 // BarcodeSVG returns an SVG rendering for content encoded with format.
 func BarcodeSVG(content string, format BarcodeFormat, opts ...BarcodeOption) (string, error) {
 	return imgx.BarcodeSVG(content, format, opts...)
@@ -210,9 +252,25 @@ func BarcodeASCII(content string, format BarcodeFormat, opts ...BarcodeOption) (
 	return imgx.BarcodeASCII(content, format, opts...)
 }
 
+// BarcodeASCIIWithChars returns a text rendering using custom set and unset strings.
+func BarcodeASCIIWithChars(
+	content string,
+	format BarcodeFormat,
+	setString string,
+	unsetString string,
+	opts ...BarcodeOption,
+) (string, error) {
+	return imgx.BarcodeASCIIWithChars(content, format, setString, unsetString, opts...)
+}
+
 // QRCodeASCII returns an ASCII rendering for a QR code.
 func QRCodeASCII(content string, opts ...QRCodeOption) (string, error) {
 	return imgx.QRCodeASCII(content, opts...)
+}
+
+// QRCodeASCIIWithChars returns a QR text rendering using custom set and unset strings.
+func QRCodeASCIIWithChars(content string, setString string, unsetString string, opts ...QRCodeOption) (string, error) {
+	return imgx.QRCodeASCIIWithChars(content, setString, unsetString, opts...)
 }
 
 // DecodeBarcode decodes one barcode from a raster image stream.
