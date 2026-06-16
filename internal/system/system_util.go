@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"slices"
 	"strconv"
 	"sync"
 )
@@ -102,27 +103,27 @@ type dumpConfig struct {
 
 // WithDumpHostOptions sets host information providers used by DumpSystemInfoWithOptions.
 func WithDumpHostOptions(opts ...HostInfoOption) DumpOption {
-	return func(c *dumpConfig) { c.hostOpts = append([]HostInfoOption(nil), opts...) }
+	return func(c *dumpConfig) { c.hostOpts = slices.Clone(opts) }
 }
 
 // WithDumpOsOptions sets OS information providers used by DumpSystemInfoWithOptions.
 func WithDumpOsOptions(opts ...OsInfoOption) DumpOption {
-	return func(c *dumpConfig) { c.osOpts = append([]OsInfoOption(nil), opts...) }
+	return func(c *dumpConfig) { c.osOpts = slices.Clone(opts) }
 }
 
 // WithDumpUserOptions sets user information providers used by DumpSystemInfoWithOptions.
 func WithDumpUserOptions(opts ...UserInfoOption) DumpOption {
-	return func(c *dumpConfig) { c.userOpts = append([]UserInfoOption(nil), opts...) }
+	return func(c *dumpConfig) { c.userOpts = slices.Clone(opts) }
 }
 
 // WithDumpGoOptions sets Go runtime metadata providers used by DumpSystemInfoWithOptions.
 func WithDumpGoOptions(opts ...GoInfoOption) DumpOption {
-	return func(c *dumpConfig) { c.goOpts = append([]GoInfoOption(nil), opts...) }
+	return func(c *dumpConfig) { c.goOpts = slices.Clone(opts) }
 }
 
 // WithDumpRuntimeOptions sets runtime information providers used by DumpSystemInfoWithOptions.
 func WithDumpRuntimeOptions(opts ...RuntimeInfoOption) DumpOption {
-	return func(c *dumpConfig) { c.runtimeOpts = append([]RuntimeInfoOption(nil), opts...) }
+	return func(c *dumpConfig) { c.runtimeOpts = slices.Clone(opts) }
 }
 
 func applyDumpOptions(opts []DumpOption) dumpConfig {

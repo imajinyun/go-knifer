@@ -437,7 +437,7 @@ func readXMLReader(r io.Reader, cfg parseConfig) (*Document, error) {
 			if !cfg.namespaceAware {
 				name.Space = ""
 			}
-			ele := &Element{Name: name, Attr: append([]stdxml.Attr(nil), t.Attr...)}
+			ele := &Element{Name: name, Attr: slices.Clone(t.Attr)}
 			if len(stack) > 0 {
 				parent := stack[len(stack)-1]
 				ele.Parent = parent

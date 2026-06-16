@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"maps"
 	"net"
 	"net/http"
 	"net/url"
@@ -118,7 +119,7 @@ func (f *formFile) clone() *formFile {
 	return &formFile{
 		field:    f.field,
 		fileName: f.fileName,
-		data:     append([]byte(nil), f.data...),
+		data:     slices.Clone(f.data),
 		reader:   f.reader,
 	}
 }
@@ -143,7 +144,7 @@ func WithClientGlobalConfig(cfg GlobalConfig) ClientOption {
 
 // WithClientRequestOptions sets request options applied to every request created by a Client.
 func WithClientRequestOptions(opts ...RequestOption) ClientOption {
-	return func(c *Client) { c.opts = append([]RequestOption(nil), opts...) }
+	return func(c *Client) { c.opts = slices.Clone(opts) }
 }
 
 // NewClient creates a request factory using the current global configuration snapshot.
@@ -170,7 +171,7 @@ func NewIsolatedClient(opts ...ClientOption) *Client {
 
 // NewClientWithConfig creates a request factory from an explicit configuration snapshot.
 func NewClientWithConfig(cfg GlobalConfig, opts ...RequestOption) *Client {
-	return &Client{cfg: cfg, opts: append([]RequestOption(nil), opts...)}
+	return &Client{cfg: cfg, opts: slices.Clone(opts)}
 }
 
 // NewRequest creates a request from the Client's captured configuration.
@@ -178,7 +179,7 @@ func (c *Client) NewRequest(method Method, rawURL string, opts ...RequestOption)
 	if c == nil {
 		return NewIsolatedRequest(method, rawURL, opts...)
 	}
-	all := append(append([]RequestOption(nil), c.opts...), opts...)
+	all := append(slices.Clone(c.opts), opts...)
 	return NewRequestWithConfig(method, rawURL, c.cfg, all...)
 }
 
@@ -494,8 +495,8 @@ func WithMultipartWriterFactory(factory MultipartWriterFactory) RequestOption {
 func WithURLPolicy(policy URLPolicy) RequestOption {
 	return func(r *HTTPRequest) {
 		p := policy
-		p.AllowedSchemes = append([]string(nil), policy.AllowedSchemes...)
-		p.AllowedHosts = append([]string(nil), policy.AllowedHosts...)
+		p.AllowedSchemes = slices.Clone(policy.AllowedSchemes)
+		p.AllowedHosts = slices.Clone(policy.AllowedHosts)
 		r.urlPolicy = &p
 	}
 }
@@ -508,7 +509,7 @@ func WithAllowedHosts(hosts ...string) RequestOption {
 		if r.urlPolicy == nil {
 			r.urlPolicy = &URLPolicy{AllowedSchemes: []string{"http", "https"}, RejectPrivate: true}
 		}
-		r.urlPolicy.AllowedHosts = append([]string(nil), hosts...)
+		r.urlPolicy.AllowedHosts = slices.Clone(hosts)
 	}
 }
 
@@ -546,7 +547,7 @@ func (r *HTTPRequest) Clone() *HTTPRequest {
 		queryParams:  cloneValues(r.queryParams),
 		headers:      cloneHeader(r.headers),
 		cookieJar:    r.cookieJar,
-		body:         append([]byte(nil), r.body...),
+		body:         slices.Clone(r.body),
 		bodyReader:   r.bodyReader,
 		form:         cloneAnyMap(r.form),
 		multipart:    r.multipart,
@@ -833,20 +834,13 @@ func (r *HTTPRequest) prepareBody() (io.Reader, string, error) {
 func cloneValues(values url.Values) url.Values {
 	out := url.Values{}
 	for k, v := range values {
-		out[k] = append([]string(nil), v...)
+		out[k] = slices.Clone(v)
 	}
 	return out
 }
 
 func cloneAnyMap(m map[string]any) map[string]any {
-	if m == nil {
-		return nil
-	}
-	out := make(map[string]any, len(m))
-	for k, v := range m {
-		out[k] = v
-	}
-	return out
+	return maps.Clone(m)
 }
 
 func cloneURLPolicy(policy *URLPolicy) *URLPolicy {
@@ -854,8 +848,8 @@ func cloneURLPolicy(policy *URLPolicy) *URLPolicy {
 		return nil
 	}
 	p := *policy
-	p.AllowedSchemes = append([]string(nil), policy.AllowedSchemes...)
-	p.AllowedHosts = append([]string(nil), policy.AllowedHosts...)
+	p.AllowedSchemes = slices.Clone(policy.AllowedSchemes)
+	p.AllowedHosts = slices.Clone(policy.AllowedHosts)
 	return &p
 }
 

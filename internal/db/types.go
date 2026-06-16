@@ -245,7 +245,7 @@ func (e Entity) SetIfNotNil(field string, value any) Entity {
 
 // Select limits selected fields.
 func (e Entity) Select(fields ...string) Entity {
-	e.Fields = append([]string(nil), fields...)
+	e.Fields = slices.Clone(fields)
 	return e
 }
 
@@ -370,10 +370,10 @@ type Query struct {
 }
 
 // NewQuery creates a query for tables.
-func NewQuery(tables ...string) Query { return Query{Tables: append([]string(nil), tables...)} }
+func NewQuery(tables ...string) Query { return Query{Tables: slices.Clone(tables)} }
 
 // Select sets selected fields.
-func (q Query) Select(fields ...string) Query { q.Fields = append([]string(nil), fields...); return q }
+func (q Query) Select(fields ...string) Query { q.Fields = slices.Clone(fields); return q }
 
 // Where appends conditions.
 func (q Query) Where(conds ...Condition) Query {

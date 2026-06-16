@@ -3,6 +3,7 @@ package cron
 import (
 	"context"
 	"io"
+	"slices"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -93,7 +94,7 @@ func WithSleeper(sleeper func(time.Duration, <-chan struct{}) bool) SchedulerOpt
 // WithSchedulerPatternOptions sets cron pattern parser providers used by scheduler string-pattern APIs.
 func WithSchedulerPatternOptions(opts ...PatternOption) SchedulerOption {
 	return func(s *Scheduler) {
-		s.patternOpts = append([]PatternOption(nil), opts...)
+		s.patternOpts = slices.Clone(opts)
 	}
 }
 
@@ -139,7 +140,7 @@ func (s *Scheduler) sleep(d time.Duration, stopCh <-chan struct{}) bool {
 }
 
 func (s *Scheduler) parsePattern(pattern string, opts ...PatternOption) (*Pattern, error) {
-	allOpts := append([]PatternOption(nil), s.patternOpts...)
+	allOpts := slices.Clone(s.patternOpts)
 	allOpts = append(allOpts, opts...)
 	return NewPatternWithOptions(pattern, allOpts...)
 }

@@ -9,6 +9,7 @@ import (
 	neturl "net/url"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 	"unicode"
@@ -139,12 +140,12 @@ func WithMaxBytes(n int64) ResourceOption {
 
 // WithAllowedSchemes restricts resource helpers to the provided URL schemes.
 func WithAllowedSchemes(schemes ...string) ResourceOption {
-	return func(c *resourceConfig) { c.allowedSchemes = append([]string(nil), schemes...) }
+	return func(c *resourceConfig) { c.allowedSchemes = slices.Clone(schemes) }
 }
 
 // WithAllowedHosts restricts HTTP(S) resource helpers to the provided host names.
 func WithAllowedHosts(hosts ...string) ResourceOption {
-	return func(c *resourceConfig) { c.allowedHosts = append([]string(nil), hosts...) }
+	return func(c *resourceConfig) { c.allowedHosts = slices.Clone(hosts) }
 }
 
 // WithRejectPrivateHosts rejects localhost, loopback, private, and link-local HTTP(S) hosts unless explicitly allowed.

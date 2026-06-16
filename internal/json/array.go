@@ -1,6 +1,9 @@
 package json
 
-import "strings"
+import (
+	"slices"
+	"strings"
+)
 
 // JSONArray matches the utility JSONArray as an ordered list of JSON values.
 type JSONArray struct {
@@ -114,8 +117,10 @@ func (a *JSONArray) Range(fn func(i int, v any) bool) {
 
 // ToSlice converts to []any.
 func (a *JSONArray) ToSlice() []any {
-	out := make([]any, len(a.values))
-	copy(out, a.values)
+	out := slices.Clone(a.values)
+	if out == nil {
+		return []any{}
+	}
 	return out
 }
 

@@ -10,6 +10,7 @@ import (
 	"io"
 	"math"
 	"math/big"
+	"slices"
 	"strconv"
 	"strings"
 	"unicode"
@@ -512,7 +513,7 @@ func GenRandomNumberWithSeedWithOptions(begin, end, size int, seed []int, opts .
 		return []int{}
 	}
 	cfg := applyRandomNumberOptions(opts)
-	pool := append([]int(nil), seed...)
+	pool := slices.Clone(seed)
 	out := make([]int, size)
 	for i := 0; i < size; i++ {
 		j := secureIntnWithReader(cfg.randomReader, len(pool)-i)

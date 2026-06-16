@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"slices"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/sirupsen/logrus"
@@ -60,7 +61,7 @@ func WithReportCaller(reportCaller bool) InitOption {
 
 // WithSentryLevels sets the log levels forwarded to Sentry.
 func WithSentryLevels(levels ...logrus.Level) InitOption {
-	return func(c *initConfig) { c.levels = append([]logrus.Level(nil), levels...) }
+	return func(c *initConfig) { c.levels = slices.Clone(levels) }
 }
 
 // WithEnvLookupFunc sets the environment lookup used to override the Sentry DSN.
@@ -172,11 +173,11 @@ func newSentryLogrusHook(client *sentry.Client, levels []logrus.Level) (logrus.H
 	}
 	return &sentryLogrusHook{
 		client: client,
-		levels: append([]logrus.Level(nil), levels...),
+		levels: slices.Clone(levels),
 	}, nil
 }
 
-func (h *sentryLogrusHook) Levels() []logrus.Level { return append([]logrus.Level(nil), h.levels...) }
+func (h *sentryLogrusHook) Levels() []logrus.Level { return slices.Clone(h.levels) }
 
 func (h *sentryLogrusHook) Fire(entry *logrus.Entry) error {
 	event := sentry.NewEvent()

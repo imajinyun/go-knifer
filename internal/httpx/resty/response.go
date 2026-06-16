@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/imajinyun/go-knifer/internal/httpx/internal/shared"
@@ -156,7 +157,7 @@ func (r *HTTPResponse) Headers() HeaderValues {
 	}
 	out := HeaderValues{}
 	for k, values := range r.resp.Header() {
-		out[k] = append([]string(nil), values...)
+		out[k] = slices.Clone(values)
 	}
 	return out
 }

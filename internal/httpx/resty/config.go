@@ -1,6 +1,7 @@
 package resty
 
 import (
+	"slices"
 	"sync"
 	"time"
 )
@@ -122,7 +123,7 @@ func isolatedGlobalConfig() GlobalConfig {
 func cloneHeaders(headers HeaderValues) HeaderValues {
 	out := HeaderValues{}
 	for k, v := range headers {
-		out[k] = append([]string(nil), v...)
+		out[k] = slices.Clone(v)
 	}
 	return out
 }

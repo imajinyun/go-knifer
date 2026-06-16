@@ -7,6 +7,7 @@ import (
 	"mime"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -65,7 +66,7 @@ func newBytesFile(name string, content []byte, contentType ContentType, contentI
 	if contentType == "" {
 		contentType = detectContentType(name)
 	}
-	data := append([]byte(nil), content...)
+	data := slices.Clone(content)
 	return Attachment{
 		Name:        filepath.Base(name),
 		ContentType: contentType,

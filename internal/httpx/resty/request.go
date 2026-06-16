@@ -88,7 +88,7 @@ func WithClientGlobalConfig(cfg GlobalConfig) ClientOption {
 
 // WithClientRequestOptions sets request options applied to every request created by a Client.
 func WithClientRequestOptions(opts ...RequestOption) ClientOption {
-	return func(c *Client) { c.opts = append([]RequestOption(nil), opts...) }
+	return func(c *Client) { c.opts = slices.Clone(opts) }
 }
 
 // NewClient creates a request factory using the current global configuration snapshot.
@@ -115,7 +115,7 @@ func NewIsolatedClient(opts ...ClientOption) *Client {
 
 // NewClientWithConfig creates a request factory from an explicit configuration snapshot.
 func NewClientWithConfig(cfg GlobalConfig, opts ...RequestOption) *Client {
-	return &Client{cfg: cfg, opts: append([]RequestOption(nil), opts...)}
+	return &Client{cfg: cfg, opts: slices.Clone(opts)}
 }
 
 // NewRequest creates a request from the Client's captured configuration.
@@ -123,7 +123,7 @@ func (c *Client) NewRequest(method Method, rawURL string, opts ...RequestOption)
 	if c == nil {
 		return NewIsolatedRequest(method, rawURL, opts...)
 	}
-	all := append(append([]RequestOption(nil), c.opts...), opts...)
+	all := append(slices.Clone(c.opts), opts...)
 	return NewRequestWithConfig(method, rawURL, c.cfg, all...)
 }
 
@@ -428,8 +428,8 @@ func WithMaxResponseBytes(maxBytes int64) RequestOption {
 func WithURLPolicy(policy URLPolicy) RequestOption {
 	return func(r *HTTPRequest) {
 		p := policy
-		p.AllowedSchemes = append([]string(nil), policy.AllowedSchemes...)
-		p.AllowedHosts = append([]string(nil), policy.AllowedHosts...)
+		p.AllowedSchemes = slices.Clone(policy.AllowedSchemes)
+		p.AllowedHosts = slices.Clone(policy.AllowedHosts)
 		r.urlPolicy = &p
 	}
 }
@@ -442,7 +442,7 @@ func WithAllowedHosts(hosts ...string) RequestOption {
 		if r.urlPolicy == nil {
 			r.urlPolicy = &URLPolicy{AllowedSchemes: []string{"http", "https"}, RejectPrivate: true}
 		}
-		r.urlPolicy.AllowedHosts = append([]string(nil), hosts...)
+		r.urlPolicy.AllowedHosts = slices.Clone(hosts)
 	}
 }
 
@@ -521,8 +521,8 @@ func (r *HTTPRequest) RestyClient(c *grestry.Client) *HTTPRequest { r.restyClien
 // URLPolicy sets SSRF-oriented validation for this request.
 func (r *HTTPRequest) URLPolicy(policy URLPolicy) *HTTPRequest {
 	p := policy
-	p.AllowedSchemes = append([]string(nil), policy.AllowedSchemes...)
-	p.AllowedHosts = append([]string(nil), policy.AllowedHosts...)
+	p.AllowedSchemes = slices.Clone(policy.AllowedSchemes)
+	p.AllowedHosts = slices.Clone(policy.AllowedHosts)
 	r.urlPolicy = &p
 	return r
 }

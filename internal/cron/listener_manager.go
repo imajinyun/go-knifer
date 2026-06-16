@@ -1,6 +1,9 @@
 package cron
 
-import "sync"
+import (
+	"slices"
+	"sync"
+)
 
 // listenerManager is aligned with the utility toolkit TaskListenerManager.
 type listenerManager struct {
@@ -32,9 +35,7 @@ func (m *listenerManager) remove(l TaskListener) {
 func (m *listenerManager) snapshot() []TaskListener {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	out := make([]TaskListener, len(m.listeners))
-	copy(out, m.listeners)
-	return out
+	return slices.Clone(m.listeners)
 }
 
 func (m *listenerManager) notifyStart(e *TaskExecutor) {

@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -149,7 +150,7 @@ func (b *SQLBuilder) Query(q Query) *SQLBuilder {
 // SQL returns built SQL and params.
 func (b *SQLBuilder) SQL() (string, []any, error) {
 	if len(b.raw) > 0 && b.verb == "" {
-		return strings.Join(b.raw, " "), append([]any(nil), b.params...), nil
+		return strings.Join(b.raw, " "), slices.Clone(b.params), nil
 	}
 	switch b.verb {
 	case "SELECT":
@@ -192,7 +193,7 @@ func (b *SQLBuilder) selectSQL() (string, []any, error) {
 	}
 	parts := []string{"SELECT", wrapList(fields, b.wrapper), "FROM", wrapList(b.tables, b.wrapper)}
 	parts = append(parts, b.joins...)
-	params := append([]any(nil), b.params...)
+	params := slices.Clone(b.params)
 	if len(b.conds) > 0 {
 		where, values, _, err := buildConditions(b.conds, b.dialect, b.wrapper, len(params)+1)
 		if err != nil {
@@ -233,7 +234,7 @@ func (b *SQLBuilder) insertSQL() (string, []any, error) {
 		ph[i] = b.dialect.placeholder(i + 1)
 	}
 	sql := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", b.wrapper.Wrap(b.tables[0]), wrapList(b.fields, b.wrapper), strings.Join(ph, ", "))
-	return sql, append([]any(nil), b.params...), nil
+	return sql, slices.Clone(b.params), nil
 }
 
 func (b *SQLBuilder) updateSQL() (string, []any, error) {
@@ -251,7 +252,7 @@ func (b *SQLBuilder) updateSQL() (string, []any, error) {
 		sets[i] = b.wrapper.Wrap(field) + " = " + b.dialect.placeholder(i+1)
 	}
 	parts := []string{"UPDATE", b.wrapper.Wrap(b.tables[0]), "SET", strings.Join(sets, ", ")}
-	params := append([]any(nil), b.params...)
+	params := slices.Clone(b.params)
 	if len(b.conds) > 0 {
 		where, values, _, err := buildConditions(b.conds, b.dialect, b.wrapper, len(params)+1)
 		if err != nil {
@@ -273,7 +274,7 @@ func (b *SQLBuilder) deleteSQL() (string, []any, error) {
 		return "", nil, err
 	}
 	parts := []string{"DELETE FROM", b.wrapper.Wrap(b.tables[0])}
-	params := append([]any(nil), b.params...)
+	params := slices.Clone(b.params)
 	if len(b.conds) > 0 {
 		where, values, _, err := buildConditions(b.conds, b.dialect, b.wrapper, len(params)+1)
 		if err != nil {

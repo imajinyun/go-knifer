@@ -4,6 +4,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"errors"
+	"slices"
 )
 
 type aesGCMConfig struct {
@@ -33,7 +34,7 @@ func WithGCMBlockFactory(factory func([]byte) (cipher.Block, error)) AESGCMOptio
 
 // WithGCMRandomOptions sets the entropy source options used when AESSealGCM generates a nonce.
 func WithGCMRandomOptions(opts ...RandomOption) AESGCMOption {
-	return func(c *aesGCMConfig) { c.random = append([]RandomOption(nil), opts...) }
+	return func(c *aesGCMConfig) { c.random = slices.Clone(opts) }
 }
 
 func applyAESGCMOptions(opts []AESGCMOption) aesGCMConfig {

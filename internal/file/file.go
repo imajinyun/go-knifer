@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -587,7 +588,7 @@ func readChunksWithConfig(r io.Reader, handle func([]byte) error, cfg fileConfig
 			if cfg.maxBytes > 0 && total > cfg.maxBytes {
 				return invalidInputf("read exceeds max bytes: %d", cfg.maxBytes)
 			}
-			chunk := append([]byte(nil), buf[:n]...)
+			chunk := slices.Clone(buf[:n])
 			if err := handle(chunk); err != nil {
 				return err
 			}

@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"slices"
 )
 
 func defaultGlobalHeaders() http.Header {
@@ -53,7 +54,7 @@ func CloneGlobalHeaders() http.Header {
 func cloneHeader(headers http.Header) http.Header {
 	out := http.Header{}
 	for k, v := range headers {
-		out[k] = append([]string(nil), v...)
+		out[k] = slices.Clone(v)
 	}
 	return out
 }

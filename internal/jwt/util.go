@@ -1,5 +1,7 @@
 package jwt
 
+import "slices"
+
 // Package-level convenience functions matching the utility toolkit-jwt JWTUtil.
 
 type tokenConfig struct {
@@ -27,7 +29,7 @@ func WithTokenPayload(payload map[string]any) TokenOption {
 
 // WithTokenKey sets the HMAC key used by CreateTokenWithOptions.
 func WithTokenKey(key []byte) TokenOption {
-	return func(c *tokenConfig) { c.key = append([]byte(nil), key...) }
+	return func(c *tokenConfig) { c.key = slices.Clone(key) }
 }
 
 // WithTokenStrictKey makes CreateTokenWithOptions enforce the recommended HMAC key length.

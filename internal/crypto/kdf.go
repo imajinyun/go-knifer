@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"hash"
+	"slices"
 )
 
 // PBKDF2 derives a key from password and salt using PBKDF2.
@@ -26,7 +27,7 @@ func PBKDF2(password, salt []byte, iterations, keyLen int, fn func() hash.Hash) 
 		_, _ = u.Write(salt)
 		_, _ = u.Write(blockIndex[:])
 		sum := u.Sum(nil)
-		t := append([]byte(nil), sum...)
+		t := slices.Clone(sum)
 
 		for i := 1; i < iterations; i++ {
 			u = hmac.New(fn, password)

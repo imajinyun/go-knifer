@@ -1,6 +1,9 @@
 package mail
 
-import "strings"
+import (
+	"slices"
+	"strings"
+)
 
 // Header stores message headers in insertion order.
 type Header struct {
@@ -17,7 +20,7 @@ func (h *Header) Add(name string, values ...string) error {
 	if err := validateHeader(name, values...); err != nil {
 		return err
 	}
-	h.fields = append(h.fields, headerField{Name: canonicalHeaderName(name), Values: append([]string(nil), values...)})
+	h.fields = append(h.fields, headerField{Name: canonicalHeaderName(name), Values: slices.Clone(values)})
 	return nil
 }
 
@@ -29,11 +32,11 @@ func (h *Header) Set(name string, values ...string) error {
 	name = canonicalHeaderName(name)
 	for i := range h.fields {
 		if strings.EqualFold(h.fields[i].Name, name) {
-			h.fields[i].Values = append([]string(nil), values...)
+			h.fields[i].Values = slices.Clone(values)
 			return nil
 		}
 	}
-	h.fields = append(h.fields, headerField{Name: name, Values: append([]string(nil), values...)})
+	h.fields = append(h.fields, headerField{Name: name, Values: slices.Clone(values)})
 	return nil
 }
 
@@ -41,7 +44,7 @@ func (h *Header) Set(name string, values ...string) error {
 func (h *Header) Values(name string) []string {
 	for _, field := range h.fields {
 		if strings.EqualFold(field.Name, name) {
-			return append([]string(nil), field.Values...)
+			return slices.Clone(field.Values)
 		}
 	}
 	return nil

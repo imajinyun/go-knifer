@@ -1,6 +1,7 @@
 package json
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -39,8 +40,10 @@ func (o *JSONObject) Len() int { return len(o.keys) }
 
 // Keys returns a copy of keys in insertion order.
 func (o *JSONObject) Keys() []string {
-	out := make([]string, len(o.keys))
-	copy(out, o.keys)
+	out := slices.Clone(o.keys)
+	if out == nil {
+		return []string{}
+	}
 	return out
 }
 

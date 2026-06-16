@@ -3,6 +3,7 @@ package bean
 import (
 	"fmt"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -48,7 +49,7 @@ func NewOptions() Options {
 // WithTagNames sets tag names used to resolve field names and aliases.
 func WithTagNames(names ...string) Option {
 	return func(o *Options) {
-		o.TagNames = append([]string(nil), names...)
+		o.TagNames = slices.Clone(names)
 	}
 }
 
@@ -280,7 +281,7 @@ func structFields(t reflect.Type, cfg Options) []fieldInfo {
 		}
 		if field.Anonymous && !tagged {
 			for _, nested := range structFields(field.Type, cfg) {
-				nested.index = append(append([]int(nil), field.Index...), nested.index...)
+				nested.index = append(slices.Clone(field.Index), nested.index...)
 				out = append(out, nested)
 			}
 			continue

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"maps"
 	"os"
 	"reflect"
 	"slices"
@@ -513,10 +514,7 @@ func (s *Conf) ToMap() map[string]map[string]string {
 	}
 	out := make(map[string]map[string]string, len(s.data))
 	for g, m := range s.data {
-		out[g] = make(map[string]string, len(m))
-		for k, v := range m {
-			out[g][k] = v
-		}
+		out[g] = maps.Clone(m)
 	}
 	return out
 }

@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"encoding/json"
+	"maps"
 	"strings"
 	"time"
 )
@@ -268,11 +269,7 @@ func (j *JWT) Signer() JWTSigner { return j.signer }
 
 // Headers returns a copy of all header fields.
 func (j *JWT) Headers() map[string]any {
-	out := make(map[string]any, len(j.header))
-	for k, v := range j.header {
-		out[k] = v
-	}
-	return out
+	return maps.Clone(j.header)
 }
 
 // Header gets a header field.
@@ -312,11 +309,7 @@ func (j *JWT) Type() string {
 
 // Payloads returns a copy of all payload fields.
 func (j *JWT) Payloads() map[string]any {
-	out := make(map[string]any, len(j.payload))
-	for k, v := range j.payload {
-		out[k] = v
-	}
-	return out
+	return maps.Clone(j.payload)
 }
 
 // Payload gets a payload field.

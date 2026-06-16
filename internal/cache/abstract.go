@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"slices"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -360,7 +361,7 @@ func (c *abstractCache[K, V]) drainRemoveEventsLocked() (CacheListener[K, V], []
 		c.pendingRemoves = nil
 		return nil, nil
 	}
-	events := append([]removeEvent[K, V](nil), c.pendingRemoves...)
+	events := slices.Clone(c.pendingRemoves)
 	c.pendingRemoves = nil
 	return c.listener, events
 }

@@ -4,6 +4,7 @@ package errx
 
 import (
 	"context"
+	"slices"
 	"sync"
 	"time"
 
@@ -162,7 +163,7 @@ func (c *Collector) WithRunner(runner func(func())) *Collector {
 func (c *Collector) WithStackOptions(opts ...StackOption) *Collector {
 	c.mux.Lock()
 	defer c.mux.Unlock()
-	c.stackOptions = append([]StackOption(nil), opts...)
+	c.stackOptions = slices.Clone(opts)
 	return c
 }
 
@@ -293,7 +294,7 @@ func (c *Collector) log(err error, format string, args ...any) {
 	}
 	c.mux.Lock()
 	ctx, level, logFunc := c.ctx, c.level, c.logFunc
-	stackOptions := append([]StackOption(nil), c.stackOptions...)
+	stackOptions := slices.Clone(c.stackOptions)
 	c.mux.Unlock()
 	if logFunc == nil {
 		logFunc = getDefaultLogFunc()

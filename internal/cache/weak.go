@@ -2,6 +2,7 @@ package cache
 
 import (
 	"runtime"
+	"slices"
 	"sync"
 	"time"
 )
@@ -245,7 +246,7 @@ func (c *WeakCache[K, V]) drainRemoveEventsLocked() (CacheListener[K, *V], []rem
 		c.pendingRemoves = nil
 		return nil, nil
 	}
-	events := append([]removeEvent[K, *V](nil), c.pendingRemoves...)
+	events := slices.Clone(c.pendingRemoves)
 	c.pendingRemoves = nil
 	return c.listener, events
 }

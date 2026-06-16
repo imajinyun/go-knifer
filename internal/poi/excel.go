@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 
 	knifer "github.com/imajinyun/go-knifer"
 	"github.com/xuri/excelize/v2"
@@ -109,7 +110,7 @@ func WithReadSheet(sheet string) ReadOption { return func(c *readConfig) { c.she
 
 // WithOpenOptions sets excelize options used when opening workbooks.
 func WithOpenOptions(opts ...excelize.Options) ReadOption {
-	return func(c *readConfig) { c.openOptions = append([]excelize.Options(nil), opts...) }
+	return func(c *readConfig) { c.openOptions = slices.Clone(opts) }
 }
 
 // WithOpenFileFunc sets the workbook opener used by path-based read helpers.
@@ -163,7 +164,7 @@ func WithCreateParents(create bool) WriteOption {
 
 // WithSaveOptions sets excelize options used when saving workbooks.
 func WithSaveOptions(opts ...excelize.Options) WriteOption {
-	return func(c *writeConfig) { c.saveOptions = append([]excelize.Options(nil), opts...) }
+	return func(c *writeConfig) { c.saveOptions = slices.Clone(opts) }
 }
 
 // WithMkdirAll sets the directory creator used when saving workbooks.

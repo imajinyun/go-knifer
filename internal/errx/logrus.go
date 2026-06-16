@@ -2,6 +2,7 @@ package errx
 
 import (
 	"context"
+	"slices"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
@@ -81,7 +82,7 @@ func (w *Wrapper) WithLogFunc(logFunc LogFunc) *Wrapper {
 
 // WithStackOptions sets stack capture options used by wrapper logging.
 func (w *Wrapper) WithStackOptions(opts ...StackOption) *Wrapper {
-	w.stackOptions = append([]StackOption(nil), opts...)
+	w.stackOptions = slices.Clone(opts)
 	return w
 }
 

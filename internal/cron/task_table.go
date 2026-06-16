@@ -1,6 +1,9 @@
 package cron
 
-import "sync"
+import (
+	"slices"
+	"sync"
+)
 
 // TaskTable is aligned with the utility toolkit TaskTable and stores tasks in insertion order.
 type TaskTable struct {
@@ -94,17 +97,19 @@ func (t *TaskTable) IsEmpty() bool { return t.Size() == 0 }
 func (t *TaskTable) IDs() []string {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
-	out := make([]string, len(t.ids))
-	copy(out, t.ids)
+	out := slices.Clone(t.ids)
+	if out == nil {
+		return []string{}
+	}
 	return out
 }
 
 // executeIfMatch triggers matched tasks at the current fire time.
 func (t *TaskTable) executeIfMatch(s *Scheduler, fireTime int64) {
 	t.mu.RLock()
-	ids := append([]string(nil), t.ids...)
-	pats := append([]*Pattern(nil), t.patterns...)
-	tasks := append([]Task(nil), t.tasks...)
+	ids := slices.Clone(t.ids)
+	pats := slices.Clone(t.patterns)
+	tasks := slices.Clone(t.tasks)
 	t.mu.RUnlock()
 	cfg := s.Config()
 	tt := timeFromMillisInLocation(fireTime, cfg.Location)

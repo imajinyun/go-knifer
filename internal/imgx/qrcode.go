@@ -10,6 +10,7 @@ import (
 	"image/draw"
 	"image/png"
 	"io"
+	"slices"
 	"strings"
 
 	knifer "github.com/imajinyun/go-knifer"
@@ -420,7 +421,7 @@ func WithDecodeFormats(formats ...BarcodeFormat) DecodeOption {
 				return &knifer.Error{Code: knifer.ErrCodeUnsupported, Message: fmt.Sprintf("image: barcode reader for %s is unsupported", format)}
 			}
 		}
-		c.formats = append([]BarcodeFormat(nil), formats...)
+		c.formats = slices.Clone(formats)
 		return nil
 	}
 }
@@ -1045,7 +1046,7 @@ func newDecodeResult(result *gozxing.Result) *DecodeResult {
 	out := &DecodeResult{
 		Text:     result.GetText(),
 		Format:   fromGozxingBarcodeFormat(result.GetBarcodeFormat()),
-		RawBytes: append([]byte(nil), raw...),
+		RawBytes: slices.Clone(raw),
 	}
 	if len(metadata) > 0 {
 		out.Metadata = make(map[string]interface{}, len(metadata))

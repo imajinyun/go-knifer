@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -218,7 +219,7 @@ func RecordsToMaps(records [][]string) ([]map[string]string, error) {
 // MapsToRecords converts maps into records using headers as column order.
 func MapsToRecords(headers []string, rows []map[string]string) [][]string {
 	records := make([][]string, 0, len(rows)+1)
-	records = append(records, append([]string(nil), headers...))
+	records = append(records, slices.Clone(headers))
 	for _, row := range rows {
 		record := make([]string, len(headers))
 		for i, header := range headers {

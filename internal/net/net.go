@@ -6,6 +6,7 @@ import (
 	stdnet "net"
 	"net/http"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -55,7 +56,7 @@ func WithPingTimeout(timeout time.Duration) PingOption {
 
 // WithPingPorts sets the destination ports PingWithOptions probes.
 func WithPingPorts(ports ...int) PingOption {
-	return func(c *pingConfig) { c.ports = append([]int(nil), ports...) }
+	return func(c *pingConfig) { c.ports = slices.Clone(ports) }
 }
 
 // WithPingNetwork sets the network used by PingWithOptions, such as tcp, tcp4, or tcp6.
@@ -178,7 +179,7 @@ func WithResolver(resolver *stdnet.Resolver) ResolveOption {
 
 // WithDNSTypes sets the DNS record types looked up by GetDNSInfoWithOptions.
 func WithDNSTypes(attrNames ...string) ResolveOption {
-	return func(c *resolveConfig) { c.attrNames = append([]string(nil), attrNames...) }
+	return func(c *resolveConfig) { c.attrNames = slices.Clone(attrNames) }
 }
 
 // WithAddressNetwork sets the network used by TCP address construction helpers.
@@ -461,7 +462,7 @@ func NewLocalPortGenerator(beginPort int) *LocalPortGenerator {
 
 // NewLocalPortGeneratorWithOptions creates a local port generator with custom probe options.
 func NewLocalPortGeneratorWithOptions(beginPort int, opts ...PortOption) *LocalPortGenerator {
-	return &LocalPortGenerator{next: beginPort, opts: append([]PortOption(nil), opts...)}
+	return &LocalPortGenerator{next: beginPort, opts: slices.Clone(opts)}
 }
 
 // Gen returns the next available local port.
@@ -474,7 +475,7 @@ func (g *LocalPortGenerator) GenWithOptions(opts ...PortOption) (int, error) {
 	if g == nil {
 		return 0, fmt.Errorf("nil local port generator")
 	}
-	allOpts := append(append([]PortOption(nil), g.opts...), opts...)
+	allOpts := append(slices.Clone(g.opts), opts...)
 	port, err := GetUsableLocalPortInRangeWithOptions(g.next, PortRangeMax, allOpts...)
 	if err != nil {
 		return 0, err
