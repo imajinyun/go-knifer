@@ -1,11 +1,10 @@
 package str
 
+import "cmp"
+
 // DefaultIfEmpty returns def when s is empty.
 func DefaultIfEmpty(s, def string) string {
-	if IsEmpty(s) {
-		return def
-	}
-	return s
+	return cmp.Or(s, def)
 }
 
 // DefaultIfBlank returns def when s is blank.

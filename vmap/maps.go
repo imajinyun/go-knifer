@@ -2,6 +2,7 @@ package vmap
 
 import (
 	"cmp"
+	"iter"
 
 	mapsimpl "github.com/imajinyun/go-knifer/internal/maps"
 )
@@ -59,6 +60,11 @@ func SortedValues[K cmp.Ordered, V any](m map[K]V) []V { return mapsimpl.SortedV
 func KeysOf[K, V comparable](m map[K]V, target V) []K  { return mapsimpl.KeysOf(m, target) }
 func Entries[K comparable, V any](m map[K]V) []Pair[K, V] {
 	return mapsimpl.Entries(m)
+}
+func Iter[K comparable, V any](m map[K]V) iter.Seq2[K, V] { return mapsimpl.Iter(m) }
+func IterKeys[K comparable, V any](m map[K]V) iter.Seq[K] { return mapsimpl.IterKeys(m) }
+func IterValues[K comparable, V any](m map[K]V) iter.Seq[V] {
+	return mapsimpl.IterValues(m)
 }
 
 func Map[K1, K2 comparable, V1, V2 any](m map[K1]V1, transform func(K1, V1) (K2, V2)) map[K2]V2 {

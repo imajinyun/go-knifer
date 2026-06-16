@@ -124,3 +124,23 @@ func TestSliceLoStyleFacades(t *testing.T) {
 		t.Fatalf("PartitionBy failed: %v", got)
 	}
 }
+
+func TestSliceIteratorFacades(t *testing.T) {
+	values := []int{10, 20, 30}
+
+	seen := []int{}
+	for value := range Iter(values) {
+		seen = append(seen, value)
+	}
+	if !reflect.DeepEqual(seen, values) {
+		t.Fatalf("Iter failed: %v", seen)
+	}
+
+	indexed := map[int]int{}
+	for index, value := range IterIndexed(values) {
+		indexed[index] = value
+	}
+	if !reflect.DeepEqual(indexed, map[int]int{0: 10, 1: 20, 2: 30}) {
+		t.Fatalf("IterIndexed failed: %v", indexed)
+	}
+}

@@ -106,3 +106,33 @@ func TestMapLoStyleFacades(t *testing.T) {
 		t.Fatalf("Invert = %#v", got)
 	}
 }
+
+func TestMapIteratorFacades(t *testing.T) {
+	m := map[string]int{"a": 1, "b": 2}
+
+	entries := map[string]int{}
+	for key, value := range Iter(m) {
+		entries[key] = value
+	}
+	if !reflect.DeepEqual(entries, m) {
+		t.Fatalf("Iter = %#v", entries)
+	}
+
+	keys := []string{}
+	for key := range IterKeys(m) {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	if !reflect.DeepEqual(keys, []string{"a", "b"}) {
+		t.Fatalf("IterKeys = %#v", keys)
+	}
+
+	values := []int{}
+	for value := range IterValues(m) {
+		values = append(values, value)
+	}
+	sort.Ints(values)
+	if !reflect.DeepEqual(values, []int{1, 2}) {
+		t.Fatalf("IterValues = %#v", values)
+	}
+}

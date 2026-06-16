@@ -1,8 +1,10 @@
 package slice
 
+import "slices"
+
 // Union returns the deduplicated union of a and b.
 func Union[T comparable](a, b []T) []T {
-	return Distinct(append(append([]T{}, a...), b...))
+	return Distinct(slices.Concat(a, b))
 }
 
 // Intersection returns the deduplicated intersection of a and b.
@@ -54,7 +56,5 @@ func Page[T any](a []T, pageNo, pageSize int) []T {
 	if end > len(a) {
 		end = len(a)
 	}
-	out := make([]T, end-start)
-	copy(out, a[start:end])
-	return out
+	return slices.Clone(a[start:end])
 }

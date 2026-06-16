@@ -130,3 +130,23 @@ func TestSliceLoStyleHelpers(t *testing.T) {
 		t.Fatalf("PartitionBy failed: %v", got)
 	}
 }
+
+func TestSliceIterators(t *testing.T) {
+	values := []string{"go", "js", "rust"}
+
+	seen := []string{}
+	for value := range Iter(values) {
+		seen = append(seen, value)
+	}
+	if !reflect.DeepEqual(seen, values) {
+		t.Fatalf("Iter = %v", seen)
+	}
+
+	indexed := map[int]string{}
+	for index, value := range IterIndexed(values) {
+		indexed[index] = value
+	}
+	if !reflect.DeepEqual(indexed, map[int]string{0: "go", 1: "js", 2: "rust"}) {
+		t.Fatalf("IterIndexed = %v", indexed)
+	}
+}

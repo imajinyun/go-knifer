@@ -1713,6 +1713,9 @@ github.com/imajinyun/go-knifer/vmap
   func Invert
   func IsEmpty
   func IsNotEmpty
+  func Iter
+  func IterKeys
+  func IterValues
   func Keys
   func KeysOf
   func Map
@@ -2760,6 +2763,8 @@ github.com/imajinyun/go-knifer/vslice
   func Intersection
   func IsEmpty
   func IsNotEmpty
+  func Iter
+  func IterIndexed
   func Join
   func KeyBy
   func LastIndexOf

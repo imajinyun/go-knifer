@@ -1,6 +1,10 @@
 package vslice
 
-import sliceimpl "github.com/imajinyun/go-knifer/internal/slice"
+import (
+	"iter"
+
+	sliceimpl "github.com/imajinyun/go-knifer/internal/slice"
+)
 
 func IsEmpty[T any](a []T) bool                { return sliceimpl.IsEmpty(a) }
 func IsNotEmpty[T any](a []T) bool             { return sliceimpl.IsNotEmpty(a) }
@@ -29,6 +33,8 @@ func Find[T any](a []T, pred func(T) bool) (T, bool) {
 	return sliceimpl.Find(a, pred)
 }
 func FindIndex[T any](a []T, pred func(T) bool) int { return sliceimpl.FindIndex(a, pred) }
+func Iter[T any](a []T) iter.Seq[T]                 { return sliceimpl.Iter(a) }
+func IterIndexed[T any](a []T) iter.Seq2[int, T]    { return sliceimpl.IterIndexed(a) }
 func GroupBy[T any, K comparable](a []T, keyFn func(T) K) map[K][]T {
 	return sliceimpl.GroupBy(a, keyFn)
 }

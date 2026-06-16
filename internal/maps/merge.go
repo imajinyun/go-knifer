@@ -25,9 +25,7 @@ func Merge[K comparable, V any](ms ...map[K]V) map[K]V {
 	}
 	out := make(map[K]V, total)
 	for _, m := range ms {
-		for k, v := range m {
-			out[k] = v
-		}
+		stdmaps.Copy(out, m)
 	}
 	return out
 }

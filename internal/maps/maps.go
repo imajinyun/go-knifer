@@ -6,8 +6,9 @@ package maps
 import (
 	"cmp"
 	"fmt"
+	"iter"
 	stdmaps "maps"
-	"sort"
+	"slices"
 )
 
 // ---------------------------------------------------------------------------
@@ -114,32 +115,19 @@ func ContainsKey[K comparable, V any](m map[K]V, key K) bool {
 // ContainsValue reports whether any entry of m has the given value.
 // V must be comparable.
 func ContainsValue[K, V comparable](m map[K]V, value V) bool {
-	for _, v := range m {
-		if v == value {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(slices.Collect(stdmaps.Values(m)), value)
 }
 
 // Some reports whether at least one entry satisfies the predicate.
 func Some[K comparable, V any](m map[K]V, pred func(K, V) bool) bool {
-	for k, v := range m {
-		if pred(k, v) {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(Entries(m), func(entry Pair[K, V]) bool {
+		return pred(entry.Key, entry.Value)
+	})
 }
 
 // Every reports whether every entry satisfies the predicate. Empty maps return true.
 func Every[K comparable, V any](m map[K]V, pred func(K, V) bool) bool {
-	for k, v := range m {
-		if !pred(k, v) {
-			return false
-		}
-	}
-	return true
+	return !Some(m, func(k K, v V) bool { return !pred(k, v) })
 }
 
 // ---------------------------------------------------------------------------
@@ -202,37 +190,31 @@ func FindKey[K comparable, V any](m map[K]V, pred func(V) bool) (K, bool) {
 
 // Keys returns all keys. Order follows Go map iteration and is not stable.
 func Keys[K comparable, V any](m map[K]V) []K {
-	out := make([]K, 0, len(m))
-	for k := range m {
-		out = append(out, k)
-	}
-	return out
+	return slices.Collect(stdmaps.Keys(m))
 }
 
 // Values returns all values. Order follows Go map iteration and is not stable.
 func Values[K comparable, V any](m map[K]V) []V {
-	out := make([]V, 0, len(m))
-	for _, v := range m {
-		out = append(out, v)
-	}
-	return out
+	return slices.Collect(stdmaps.Values(m))
 }
 
 // SortedKeys returns all keys sorted in ascending order. K must be ordered.
 func SortedKeys[K cmp.Ordered, V any](m map[K]V) []K {
-	ks := make([]K, 0, len(m))
-	for k := range m {
-		ks = append(ks, k)
-	}
-	sort.Slice(ks, func(i, j int) bool { return ks[i] < ks[j] })
-	return ks
+	return slices.Sorted(stdmaps.Keys(m))
 }
 
 // SortedKeysFunc returns all keys sorted by the supplied less function.
 func SortedKeysFunc[K comparable, V any](m map[K]V, less func(a, b K) bool) []K {
-	out := Keys(m)
-	sort.Slice(out, func(i, j int) bool { return less(out[i], out[j]) })
-	return out
+	return slices.SortedFunc(stdmaps.Keys(m), func(a, b K) int {
+		switch {
+		case less(a, b):
+			return -1
+		case less(b, a):
+			return 1
+		default:
+			return 0
+		}
+	})
 }
 
 // SortedValues returns values sorted by their keys ascending. K must be ordered.
@@ -264,6 +246,18 @@ func Entries[K comparable, V any](m map[K]V) []Pair[K, V] {
 	}
 	return out
 }
+
+// Iter returns an iterator over map key-value pairs.
+// Iteration order follows Go map semantics and is not stable.
+func Iter[K comparable, V any](m map[K]V) iter.Seq2[K, V] { return stdmaps.All(m) }
+
+// IterKeys returns an iterator over map keys.
+// Iteration order follows Go map semantics and is not stable.
+func IterKeys[K comparable, V any](m map[K]V) iter.Seq[K] { return stdmaps.Keys(m) }
+
+// IterValues returns an iterator over map values.
+// Iteration order follows Go map semantics and is not stable.
+func IterValues[K comparable, V any](m map[K]V) iter.Seq[V] { return stdmaps.Values(m) }
 
 // ---------------------------------------------------------------------------
 // Transformation
@@ -521,9 +515,7 @@ func Assign[K comparable, V any](maps ...map[K]V) map[K]V {
 
 // Clear removes all entries from m in place.
 func Clear[K comparable, V any](m map[K]V) {
-	for k := range m {
-		delete(m, k)
-	}
+	clear(m)
 }
 
 // Update copies all entries from src into dst, overriding existing keys.
@@ -532,9 +524,7 @@ func Update[K comparable, V any](dst, src map[K]V) map[K]V {
 	if dst == nil {
 		dst = make(map[K]V, len(src))
 	}
-	for k, v := range src {
-		dst[k] = v
-	}
+	stdmaps.Copy(dst, src)
 	return dst
 }
 
@@ -553,28 +543,11 @@ func Clone[K comparable, V any](m map[K]V) map[K]V {
 // Equal reports whether two maps contain the same key-value pairs.
 // V must be comparable.
 func Equal[K, V comparable](a, b map[K]V) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for k, v := range a {
-		if bv, ok := b[k]; !ok || bv != v {
-			return false
-		}
-	}
-	return true
+	return stdmaps.Equal(a, b)
 }
 
 // EqualFunc reports whether two maps contain the same keys and pairwise-equivalent
 // values per eq.
 func EqualFunc[K comparable, V1, V2 any](a map[K]V1, b map[K]V2, eq func(V1, V2) bool) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for k, va := range a {
-		vb, ok := b[k]
-		if !ok || !eq(va, vb) {
-			return false
-		}
-	}
-	return true
+	return stdmaps.EqualFunc(a, b, eq)
 }

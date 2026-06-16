@@ -3,6 +3,8 @@ package slice
 
 import (
 	"fmt"
+	"iter"
+	"slices"
 	"strings"
 )
 
@@ -18,22 +20,12 @@ func IsNotEmpty[T any](a []T) bool { return len(a) > 0 }
 
 // Contains reports whether the slice contains v. T must be comparable.
 func Contains[T comparable](a []T, v T) bool {
-	for _, x := range a {
-		if x == v {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(a, v)
 }
 
 // IndexOf returns the first index of v, or -1 when v is absent.
 func IndexOf[T comparable](a []T, v T) int {
-	for i, x := range a {
-		if x == v {
-			return i
-		}
-	}
-	return -1
+	return slices.Index(a, v)
 }
 
 // LastIndexOf returns the last index of v, or -1 when v is absent.
@@ -48,9 +40,7 @@ func LastIndexOf[T comparable](a []T, v T) int {
 
 // Reverse reverses the input slice in place and returns the same slice.
 func Reverse[T any](a []T) []T {
-	for i, j := 0, len(a)-1; i < j; i, j = i+1, j-1 {
-		a[i], a[j] = a[j], a[i]
-	}
+	slices.Reverse(a)
 	return a
 }
 
@@ -161,10 +151,9 @@ func ForEach[T any](a []T, fn func(T)) {
 
 // Find returns the first element satisfying pred.
 func Find[T any](a []T, pred func(T) bool) (T, bool) {
-	for _, v := range a {
-		if pred(v) {
-			return v, true
-		}
+	idx := slices.IndexFunc(a, pred)
+	if idx >= 0 {
+		return a[idx], true
 	}
 	var zero T
 	return zero, false
@@ -172,13 +161,14 @@ func Find[T any](a []T, pred func(T) bool) (T, bool) {
 
 // FindIndex returns the first index satisfying pred, or -1 when absent.
 func FindIndex[T any](a []T, pred func(T) bool) int {
-	for i, v := range a {
-		if pred(v) {
-			return i
-		}
-	}
-	return -1
+	return slices.IndexFunc(a, pred)
 }
+
+// Iter returns an iterator over slice values in index order.
+func Iter[T any](a []T) iter.Seq[T] { return slices.Values(a) }
+
+// IterIndexed returns an iterator over slice index-value pairs in index order.
+func IterIndexed[T any](a []T) iter.Seq2[int, T] { return slices.All(a) }
 
 // GroupBy groups slice items by keyFn while preserving item order inside each group.
 func GroupBy[T any, K comparable](a []T, keyFn func(T) K) map[K][]T {
@@ -234,9 +224,7 @@ func Chunk[T any](a []T, size int) [][]T {
 		if end > len(a) {
 			end = len(a)
 		}
-		chunk := make([]T, end-start)
-		copy(chunk, a[start:end])
-		out = append(out, chunk)
+		out = append(out, slices.Clone(a[start:end]))
 	}
 	return out
 }
@@ -257,7 +245,12 @@ func Flatten[T any](a [][]T) []T {
 // Compact removes zero-value elements while preserving order.
 func Compact[T comparable](a []T) []T {
 	var zero T
-	return Filter(a, func(v T) bool { return v != zero })
+	out := slices.Clone(a)
+	out = slices.DeleteFunc(out, func(v T) bool { return v == zero })
+	if out == nil {
+		return []T{}
+	}
+	return out
 }
 
 // PartitionBy groups adjacent items that share the same key returned by keyFn.
@@ -307,20 +300,14 @@ func Sub[T any](a []T, fromIndex, toIndex int) []T {
 	if fromIndex >= n {
 		return []T{}
 	}
-	out := make([]T, toIndex-fromIndex)
-	copy(out, a[fromIndex:toIndex])
-	return out
+	return slices.Clone(a[fromIndex:toIndex])
 }
 
 // Concat concatenates multiple slices into a new slice.
-func Concat[T any](slices ...[]T) []T {
-	total := 0
-	for _, s := range slices {
-		total += len(s)
-	}
-	out := make([]T, 0, total)
-	for _, s := range slices {
-		out = append(out, s...)
+func Concat[T any](items ...[]T) []T {
+	out := slices.Concat(items...)
+	if out == nil {
+		return []T{}
 	}
 	return out
 }
