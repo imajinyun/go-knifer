@@ -1,10 +1,10 @@
-// Package imgx provides a tiny, stdlib-only surface on top of the
-// standard image, image/jpeg, image/png and image/gif packages.
+// Package imgx provides image utilities on top of the standard image packages
+// plus optional ZXing-backed QR code and barcode helpers.
 //
 // It intentionally keeps its helper set small: image metadata inspection,
 // lossless format conversion between PNG/JPEG/GIF, and a simple proportional
-// downscaling helper. Nothing is drawn on top of third-party libraries so
-// callers only pay for the pieces they actually use.
+// downscaling helper. QR code and barcode generation/decoding is implemented
+// with gozxing to align with Hutool-style QR utilities.
 package imgx
 
 import (

@@ -1171,7 +1171,38 @@ github.com/imajinyun/go-knifer/vident
   type RegionCardInfo
 
 github.com/imajinyun/go-knifer/vimg
+  const BarcodeFormatAztec
+  const BarcodeFormatCodabar
+  const BarcodeFormatCode128
+  const BarcodeFormatCode39
+  const BarcodeFormatCode93
+  const BarcodeFormatDataMatrix
+  const BarcodeFormatEAN13
+  const BarcodeFormatEAN8
+  const BarcodeFormatITF
+  const BarcodeFormatMaxiCode
+  const BarcodeFormatPDF417
+  const BarcodeFormatQRCode
+  const BarcodeFormatRSS14
+  const BarcodeFormatRSSExpanded
+  const BarcodeFormatUPCA
+  const BarcodeFormatUPCE
+  const BarcodeFormatUnknown
+  const QRErrorCorrectionHigh
+  const QRErrorCorrectionLow
+  const QRErrorCorrectionMedium
+  const QRErrorCorrectionQuartile
+  const QRErrorCorrectionUnknown
+  func BarcodeASCII
+  func BarcodeBase64Data
+  func BarcodeImage
+  func BarcodePNG
+  func BarcodeSVG
   func ConvertFormat
+  func DecodeBarcode
+  func DecodeBarcodeImage
+  func DecodeQRCode
+  func DecodeQRCodeImage
   func GenMathGeneratorWithOptions
   func GenRandomGeneratorWithOptions
   func Info
@@ -1191,12 +1222,32 @@ github.com/imajinyun/go-knifer/vimg
   func NewShearCaptcha
   func NewShearCaptchaWith
   func NewShearCaptchaWithOptions
+  func QRCodeASCII
+  func QRCodeBase64Data
+  func QRCodeImage
+  func QRCodePNG
+  func QRCodeSVG
   func Thumbnail
   func VerifyCaptchaIgnoreCase
   func VerifyIgnoreCase
   func WithBackground
+  func WithBarcodeBackground
+  func WithBarcodeCharacterSet
+  func WithBarcodeColors
+  func WithBarcodeForceCodeSet
+  func WithBarcodeForeground
+  func WithBarcodeGS1Format
+  func WithBarcodeLogo
+  func WithBarcodeLogoSize
+  func WithBarcodeMargin
+  func WithBarcodeSize
   func WithColorFunc
   func WithCreateParents
+  func WithDecodeAlsoInverted
+  func WithDecodeCharacterSet
+  func WithDecodeFormats
+  func WithDecodePureBarcode
+  func WithDecodeTryHarder
   func WithDirPerm
   func WithFilePerm
   func WithFontSize
@@ -1209,17 +1260,35 @@ github.com/imajinyun/go-knifer/vimg
   func WithMkdirAll
   func WithOpenFile
   func WithOverwrite
+  func WithQRCodeBackground
+  func WithQRCodeColors
+  func WithQRCodeErrorCorrection
+  func WithQRCodeForeground
+  func WithQRCodeLogo
+  func WithQRCodeLogoSize
+  func WithQRCodeMargin
+  func WithQRCodeMaskPattern
+  func WithQRCodeSize
+  func WithQRCodeVersion
   func WithRandomInt
+  func WriteBarcode
+  func WriteQRCode
   type AbstractCaptcha
+  type BarcodeFormat
+  type BarcodeOption
   type Captcha
   type CaptchaOption
   type CircleCaptcha
   type CodeGenerator
+  type DecodeOption
+  type DecodeResult
   type GeneratorOption
   type GifCaptcha
   type ICaptcha
   type LineCaptcha
   type MathGenerator
+  type QRCodeOption
+  type QRErrorCorrectionLevel
   type RandomGenerator
   type ShearCaptcha
   type WriteOption
