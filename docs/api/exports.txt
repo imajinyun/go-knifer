@@ -1683,12 +1683,14 @@ github.com/imajinyun/go-knifer/vmail
   var ErrTLSRequired
 
 github.com/imajinyun/go-knifer/vmap
+  func Assign
   func Clear
   func Clone
   func ContainsKey
   func ContainsValue
   func CountBy
   func Diff
+  func Entries
   func Equal
   func EqualFunc
   func Every
@@ -1698,6 +1700,7 @@ github.com/imajinyun/go-knifer/vmap
   func Find
   func FindKey
   func ForEach
+  func FromEntries
   func FromPairs
   func Get
   func GetAny
@@ -1705,6 +1708,7 @@ github.com/imajinyun/go-knifer/vmap
   func GroupBy
   func Intersect
   func Inverse
+  func Invert
   func IsEmpty
   func IsNotEmpty
   func Keys
@@ -1721,9 +1725,11 @@ github.com/imajinyun/go-knifer/vmap
   func Of
   func OfE
   func Omit
+  func OmitBy
   func OrEmpty
   func Partition
   func Pick
+  func PickBy
   func Reduce
   func Reject
   func Some
@@ -2733,22 +2739,40 @@ github.com/imajinyun/go-knifer/vskt
   type SocketRuntimeError
 
 github.com/imajinyun/go-knifer/vslice
+  func Associate
+  func Chunk
+  func Compact
   func Concat
   func Contains
+  func CountBy
   func Distinct
   func Filter
+  func FilterMap
+  func Find
+  func FindIndex
+  func FlatMap
+  func Flatten
+  func ForEach
+  func GroupBy
   func IndexOf
   func Intersection
   func IsEmpty
   func IsNotEmpty
   func Join
+  func KeyBy
   func LastIndexOf
   func Map
   func Page
+  func PartitionBy
+  func Reduce
+  func Reject
   func Reverse
+  func SliceToMap
   func Sub
   func Subtract
   func Union
+  func Uniq
+  func UniqBy
 
 github.com/imajinyun/go-knifer/vstr
   func AddPrefixIfNot

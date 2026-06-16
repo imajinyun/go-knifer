@@ -18,6 +18,10 @@ func OfE[K comparable, V any](kvs ...any) (map[K]V, error) {
 func FromPairs[K comparable, V any](pairs ...Pair[K, V]) map[K]V {
 	return mapsimpl.FromPairs(pairs...)
 }
+
+func FromEntries[K comparable, V any](entries []Pair[K, V]) map[K]V {
+	return mapsimpl.FromEntries(entries)
+}
 func OrEmpty[K comparable, V any](m map[K]V) map[K]V { return mapsimpl.OrEmpty(m) }
 func IsEmpty[K comparable, V any](m map[K]V) bool    { return mapsimpl.IsEmpty(m) }
 func IsNotEmpty[K comparable, V any](m map[K]V) bool { return mapsimpl.IsNotEmpty(m) }
@@ -53,6 +57,10 @@ func SortedKeysFunc[K comparable, V any](m map[K]V, less func(a, b K) bool) []K 
 }
 func SortedValues[K cmp.Ordered, V any](m map[K]V) []V { return mapsimpl.SortedValues(m) }
 func KeysOf[K, V comparable](m map[K]V, target V) []K  { return mapsimpl.KeysOf(m, target) }
+func Entries[K comparable, V any](m map[K]V) []Pair[K, V] {
+	return mapsimpl.Entries(m)
+}
+
 func Map[K1, K2 comparable, V1, V2 any](m map[K1]V1, transform func(K1, V1) (K2, V2)) map[K2]V2 {
 	return mapsimpl.Map(m, transform)
 }
@@ -85,6 +93,14 @@ func FilterValues[K comparable, V any](m map[K]V, pred func(V) bool) map[K]V {
 	return mapsimpl.FilterValues(m, pred)
 }
 
+func PickBy[K comparable, V any](m map[K]V, pred func(K, V) bool) map[K]V {
+	return mapsimpl.PickBy(m, pred)
+}
+
+func OmitBy[K comparable, V any](m map[K]V, pred func(K, V) bool) map[K]V {
+	return mapsimpl.OmitBy(m, pred)
+}
+
 func Partition[K comparable, V any](m map[K]V, pred func(K, V) bool) (map[K]V, map[K]V) {
 	return mapsimpl.Partition(m, pred)
 }
@@ -101,7 +117,12 @@ func CountBy[T any, K comparable](items []T, keyFn func(T) K) map[K]int {
 	return mapsimpl.CountBy(items, keyFn)
 }
 func Inverse[K, V comparable](m map[K]V) map[V]K         { return mapsimpl.Inverse(m) }
+func Invert[K, V comparable](m map[K]V) map[V]K          { return mapsimpl.Invert(m) }
 func Merge[K comparable, V any](maps ...map[K]V) map[K]V { return mapsimpl.Merge(maps...) }
+func Assign[K comparable, V any](maps ...map[K]V) map[K]V {
+	return mapsimpl.Assign(maps...)
+}
+
 func MergeWithOverwrite[K comparable, V any](dstMap map[K]V, srcMaps ...map[K]V) {
 	mapsimpl.MergeWithOverwrite(dstMap, srcMaps...)
 }

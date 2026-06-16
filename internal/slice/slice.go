@@ -56,6 +56,11 @@ func Reverse[T any](a []T) []T {
 
 // Distinct removes duplicates while preserving the first occurrence order.
 func Distinct[T comparable](a []T) []T {
+	return Uniq(a)
+}
+
+// Uniq removes duplicates while preserving the first occurrence order.
+func Uniq[T comparable](a []T) []T {
 	seen := make(map[T]struct{}, len(a))
 	out := make([]T, 0, len(a))
 	for _, v := range a {
@@ -63,6 +68,21 @@ func Distinct[T comparable](a []T) []T {
 			continue
 		}
 		seen[v] = struct{}{}
+		out = append(out, v)
+	}
+	return out
+}
+
+// UniqBy removes duplicates by key while preserving the first occurrence order.
+func UniqBy[T any, K comparable](a []T, keyFn func(T) K) []T {
+	seen := make(map[K]struct{}, len(a))
+	out := make([]T, 0, len(a))
+	for _, v := range a {
+		key := keyFn(v)
+		if _, ok := seen[key]; ok {
+			continue
+		}
+		seen[key] = struct{}{}
 		out = append(out, v)
 	}
 	return out
@@ -88,6 +108,23 @@ func Filter[T any](a []T, pred func(T) bool) []T {
 	return out
 }
 
+// Reject returns elements for which pred returns false.
+func Reject[T any](a []T, pred func(T) bool) []T {
+	return Filter(a, func(v T) bool { return !pred(v) })
+}
+
+// FilterMap transforms elements and keeps only values explicitly accepted by fn.
+func FilterMap[T, R any](a []T, fn func(T) (R, bool)) []R {
+	out := make([]R, 0, len(a))
+	for _, v := range a {
+		mapped, ok := fn(v)
+		if ok {
+			out = append(out, mapped)
+		}
+	}
+	return out
+}
+
 // Map maps each element to another value while preserving order.
 func Map[T, R any](a []T, fn func(T) R) []R {
 	out := make([]R, len(a))
@@ -95,6 +132,153 @@ func Map[T, R any](a []T, fn func(T) R) []R {
 		out[i] = fn(v)
 	}
 	return out
+}
+
+// FlatMap maps each element to zero or more values and flattens one level.
+func FlatMap[T, R any](a []T, fn func(T) []R) []R {
+	out := make([]R, 0, len(a))
+	for _, v := range a {
+		out = append(out, fn(v)...)
+	}
+	return out
+}
+
+// Reduce folds a slice from left to right.
+func Reduce[T, R any](a []T, initial R, fn func(R, T) R) R {
+	acc := initial
+	for _, v := range a {
+		acc = fn(acc, v)
+	}
+	return acc
+}
+
+// ForEach invokes fn for every element in order.
+func ForEach[T any](a []T, fn func(T)) {
+	for _, v := range a {
+		fn(v)
+	}
+}
+
+// Find returns the first element satisfying pred.
+func Find[T any](a []T, pred func(T) bool) (T, bool) {
+	for _, v := range a {
+		if pred(v) {
+			return v, true
+		}
+	}
+	var zero T
+	return zero, false
+}
+
+// FindIndex returns the first index satisfying pred, or -1 when absent.
+func FindIndex[T any](a []T, pred func(T) bool) int {
+	for i, v := range a {
+		if pred(v) {
+			return i
+		}
+	}
+	return -1
+}
+
+// GroupBy groups slice items by keyFn while preserving item order inside each group.
+func GroupBy[T any, K comparable](a []T, keyFn func(T) K) map[K][]T {
+	out := make(map[K][]T)
+	for _, v := range a {
+		key := keyFn(v)
+		out[key] = append(out[key], v)
+	}
+	return out
+}
+
+// CountBy counts slice items grouped by keyFn.
+func CountBy[T any, K comparable](a []T, keyFn func(T) K) map[K]int {
+	out := make(map[K]int)
+	for _, v := range a {
+		out[keyFn(v)]++
+	}
+	return out
+}
+
+// KeyBy builds a map from keyFn(item) to item. Later duplicate keys overwrite earlier ones.
+func KeyBy[T any, K comparable](a []T, keyFn func(T) K) map[K]T {
+	out := make(map[K]T, len(a))
+	for _, v := range a {
+		out[keyFn(v)] = v
+	}
+	return out
+}
+
+// Associate builds a map from transform(item). Later duplicate keys overwrite earlier ones.
+func Associate[T any, K comparable, V any](a []T, transform func(T) (K, V)) map[K]V {
+	out := make(map[K]V, len(a))
+	for _, item := range a {
+		key, value := transform(item)
+		out[key] = value
+	}
+	return out
+}
+
+// SliceToMap is an alias of Associate for callers familiar with lo-style naming.
+func SliceToMap[T any, K comparable, V any](a []T, transform func(T) (K, V)) map[K]V {
+	return Associate(a, transform)
+}
+
+// Chunk splits a slice into fixed-size chunks. Non-positive size returns an empty slice.
+func Chunk[T any](a []T, size int) [][]T {
+	if size <= 0 || len(a) == 0 {
+		return [][]T{}
+	}
+	out := make([][]T, 0, (len(a)+size-1)/size)
+	for start := 0; start < len(a); start += size {
+		end := start + size
+		if end > len(a) {
+			end = len(a)
+		}
+		chunk := make([]T, end-start)
+		copy(chunk, a[start:end])
+		out = append(out, chunk)
+	}
+	return out
+}
+
+// Flatten flattens one level of nested slices.
+func Flatten[T any](a [][]T) []T {
+	total := 0
+	for _, item := range a {
+		total += len(item)
+	}
+	out := make([]T, 0, total)
+	for _, item := range a {
+		out = append(out, item...)
+	}
+	return out
+}
+
+// Compact removes zero-value elements while preserving order.
+func Compact[T comparable](a []T) []T {
+	var zero T
+	return Filter(a, func(v T) bool { return v != zero })
+}
+
+// PartitionBy groups adjacent items that share the same key returned by keyFn.
+func PartitionBy[T any, K comparable](a []T, keyFn func(T) K) [][]T {
+	if len(a) == 0 {
+		return [][]T{}
+	}
+	out := make([][]T, 0)
+	current := []T{a[0]}
+	currentKey := keyFn(a[0])
+	for _, v := range a[1:] {
+		key := keyFn(v)
+		if key == currentKey {
+			current = append(current, v)
+			continue
+		}
+		out = append(out, current)
+		current = []T{v}
+		currentKey = key
+	}
+	return append(out, current)
 }
 
 // Sub returns a copied sub-slice and supports negative indexes.

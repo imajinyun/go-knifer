@@ -48,3 +48,79 @@ func TestSliceFacade(t *testing.T) {
 		t.Fatalf("Page failed: %v", got)
 	}
 }
+
+func TestSliceLoStyleFacades(t *testing.T) {
+	values := []int{1, 2, 2, 3, 4}
+
+	if got := Uniq(values); !reflect.DeepEqual(got, []int{1, 2, 3, 4}) {
+		t.Fatalf("Uniq failed: %v", got)
+	}
+	if got := UniqBy([]string{"go", "js", "java"}, func(s string) int { return len(s) }); !reflect.DeepEqual(got, []string{"go", "java"}) {
+		t.Fatalf("UniqBy failed: %v", got)
+	}
+	if got := Reject(values, func(v int) bool { return v%2 == 0 }); !reflect.DeepEqual(got, []int{1, 3}) {
+		t.Fatalf("Reject failed: %v", got)
+	}
+	if got := FilterMap(values, func(v int) (string, bool) {
+		if v%2 == 0 {
+			return string(rune('a' + v)), true
+		}
+		return "", false
+	}); !reflect.DeepEqual(got, []string{"c", "c", "e"}) {
+		t.Fatalf("FilterMap failed: %v", got)
+	}
+	if got := FlatMap([]int{1, 2}, func(v int) []int { return []int{v, -v} }); !reflect.DeepEqual(got, []int{1, -1, 2, -2}) {
+		t.Fatalf("FlatMap failed: %v", got)
+	}
+	if got := Reduce(values, 0, func(acc, v int) int { return acc + v }); got != 12 {
+		t.Fatalf("Reduce failed: %v", got)
+	}
+
+	seen := []int{}
+	ForEach([]int{1, 2, 3}, func(v int) { seen = append(seen, v*2) })
+	if !reflect.DeepEqual(seen, []int{2, 4, 6}) {
+		t.Fatalf("ForEach failed: %v", seen)
+	}
+	if got, ok := Find(values, func(v int) bool { return v > 2 }); !ok || got != 3 {
+		t.Fatalf("Find = %v, %v", got, ok)
+	}
+	if got, ok := Find(values, func(v int) bool { return v > 9 }); ok || got != 0 {
+		t.Fatalf("Find missing = %v, %v", got, ok)
+	}
+	if got := FindIndex(values, func(v int) bool { return v == 3 }); got != 3 {
+		t.Fatalf("FindIndex = %d", got)
+	}
+
+	words := []string{"go", "js", "rust", "java"}
+	if got := GroupBy(words, func(s string) int { return len(s) }); !reflect.DeepEqual(got, map[int][]string{2: {"go", "js"}, 4: {"rust", "java"}}) {
+		t.Fatalf("GroupBy failed: %v", got)
+	}
+	if got := CountBy(words, func(s string) int { return len(s) }); !reflect.DeepEqual(got, map[int]int{2: 2, 4: 2}) {
+		t.Fatalf("CountBy failed: %v", got)
+	}
+	if got := KeyBy(words, func(s string) int { return len(s) }); !reflect.DeepEqual(got, map[int]string{2: "js", 4: "java"}) {
+		t.Fatalf("KeyBy failed: %v", got)
+	}
+	if got := Associate(words, func(s string) (string, int) { return s, len(s) }); !reflect.DeepEqual(got, map[string]int{"go": 2, "js": 2, "rust": 4, "java": 4}) {
+		t.Fatalf("Associate failed: %v", got)
+	}
+	if got := SliceToMap(words, func(s string) (int, string) { return len(s), s }); !reflect.DeepEqual(got, map[int]string{2: "js", 4: "java"}) {
+		t.Fatalf("SliceToMap failed: %v", got)
+	}
+
+	if got := Chunk([]int{1, 2, 3, 4, 5}, 2); !reflect.DeepEqual(got, [][]int{{1, 2}, {3, 4}, {5}}) {
+		t.Fatalf("Chunk failed: %v", got)
+	}
+	if got := Chunk([]int{1, 2}, 0); !reflect.DeepEqual(got, [][]int{}) {
+		t.Fatalf("Chunk zero failed: %v", got)
+	}
+	if got := Flatten([][]int{{1, 2}, {}, {3}}); !reflect.DeepEqual(got, []int{1, 2, 3}) {
+		t.Fatalf("Flatten failed: %v", got)
+	}
+	if got := Compact([]int{0, 1, 0, 2}); !reflect.DeepEqual(got, []int{1, 2}) {
+		t.Fatalf("Compact failed: %v", got)
+	}
+	if got := PartitionBy([]int{1, 3, 2, 4, 5}, func(v int) bool { return v%2 == 0 }); !reflect.DeepEqual(got, [][]int{{1, 3}, {2, 4}, {5}}) {
+		t.Fatalf("PartitionBy failed: %v", got)
+	}
+}

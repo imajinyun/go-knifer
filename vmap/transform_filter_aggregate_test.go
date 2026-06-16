@@ -73,3 +73,36 @@ func TestMapTransformFilterAggregateFacades(t *testing.T) {
 		t.Fatalf("CountBy = %#v", got)
 	}
 }
+
+func TestMapLoStyleFacades(t *testing.T) {
+	m := map[string]int{"a": 1, "b": 2, "c": 3}
+
+	entries := Entries(m)
+	sort.Slice(entries, func(i, j int) bool { return entries[i].Key < entries[j].Key })
+	if !reflect.DeepEqual(entries, []Pair[string, int]{{Key: "a", Value: 1}, {Key: "b", Value: 2}, {Key: "c", Value: 3}}) {
+		t.Fatalf("Entries = %#v", entries)
+	}
+	if got := FromEntries(entries); !reflect.DeepEqual(got, m) {
+		t.Fatalf("FromEntries = %#v", got)
+	}
+
+	if got := Pick(m, "a", "c", "missing"); !reflect.DeepEqual(got, map[string]int{"a": 1, "c": 3}) {
+		t.Fatalf("Pick = %#v", got)
+	}
+	if got := Omit(m, "b", "missing"); !reflect.DeepEqual(got, map[string]int{"a": 1, "c": 3}) {
+		t.Fatalf("Omit = %#v", got)
+	}
+	if got := PickBy(m, func(_ string, v int) bool { return v%2 == 1 }); !reflect.DeepEqual(got, map[string]int{"a": 1, "c": 3}) {
+		t.Fatalf("PickBy = %#v", got)
+	}
+	if got := OmitBy(m, func(_ string, v int) bool { return v%2 == 1 }); !reflect.DeepEqual(got, map[string]int{"b": 2}) {
+		t.Fatalf("OmitBy = %#v", got)
+	}
+
+	if got := Assign(map[string]int{"a": 1}, map[string]int{"a": 10, "b": 2}, nil); !reflect.DeepEqual(got, map[string]int{"a": 10, "b": 2}) {
+		t.Fatalf("Assign = %#v", got)
+	}
+	if got := Invert(map[string]int{"a": 1, "b": 2}); !reflect.DeepEqual(got, map[int]string{1: "a", 2: "b"}) {
+		t.Fatalf("Invert = %#v", got)
+	}
+}

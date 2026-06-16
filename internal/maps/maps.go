@@ -77,6 +77,16 @@ func FromPairs[K comparable, V any](pairs ...Pair[K, V]) map[K]V {
 	return out
 }
 
+// FromEntries builds a map from typed key-value entries.
+// Later duplicate keys override earlier ones.
+func FromEntries[K comparable, V any](entries []Pair[K, V]) map[K]V {
+	out := make(map[K]V, len(entries))
+	for _, entry := range entries {
+		out[entry.Key] = entry.Value
+	}
+	return out
+}
+
 // OrEmpty returns m if non-nil, otherwise an empty map.
 func OrEmpty[K comparable, V any](m map[K]V) map[K]V {
 	if m == nil {
@@ -246,6 +256,15 @@ func KeysOf[K, V comparable](m map[K]V, target V) []K {
 	return out
 }
 
+// Entries returns all key-value pairs. Order follows Go map iteration and is not stable.
+func Entries[K comparable, V any](m map[K]V) []Pair[K, V] {
+	out := make([]Pair[K, V], 0, len(m))
+	for k, v := range m {
+		out = append(out, Pair[K, V]{Key: k, Value: v})
+	}
+	return out
+}
+
 // ---------------------------------------------------------------------------
 // Transformation
 // ---------------------------------------------------------------------------
@@ -315,6 +334,16 @@ func FilterValues[K comparable, V any](m map[K]V, pred func(V) bool) map[K]V {
 	return Filter(m, func(_ K, v V) bool { return pred(v) })
 }
 
+// PickBy returns entries satisfying the predicate.
+func PickBy[K comparable, V any](m map[K]V, pred func(K, V) bool) map[K]V {
+	return Filter(m, pred)
+}
+
+// OmitBy returns entries NOT satisfying the predicate.
+func OmitBy[K comparable, V any](m map[K]V, pred func(K, V) bool) map[K]V {
+	return Reject(m, pred)
+}
+
 // Partition splits m into two maps: matched and rest, by predicate.
 func Partition[K comparable, V any](m map[K]V, pred func(K, V) bool) (matched, rest map[K]V) {
 	matched = make(map[K]V)
@@ -380,6 +409,11 @@ func Inverse[K, V comparable](m map[K]V) map[V]K {
 		out[v] = k
 	}
 	return out
+}
+
+// Invert swaps keys and values. It is an alias of Inverse for lo-style naming.
+func Invert[K, V comparable](m map[K]V) map[V]K {
+	return Inverse(m)
 }
 
 // Intersect returns entries whose keys appear in every input map.
@@ -474,6 +508,11 @@ func Omit[K comparable, V any](m map[K]V, keys ...K) map[K]V {
 		out[k] = v
 	}
 	return out
+}
+
+// Assign merges maps into a new map. Later maps override earlier ones on duplicate keys.
+func Assign[K comparable, V any](maps ...map[K]V) map[K]V {
+	return Merge(maps...)
 }
 
 // ---------------------------------------------------------------------------
