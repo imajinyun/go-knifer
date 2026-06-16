@@ -72,6 +72,11 @@ func TestSecureBytes(t *testing.T) {
 	if err != nil || string(b) != "abc" {
 		t.Fatalf("SecureBytesWithOptions = %q, %v", b, err)
 	}
+
+	_, err = SecureBytesWithOptions(3, WithRandomReader(strings.NewReader("x")), WithRandomSource(mathrand.New(mathrand.NewSource(1))))
+	if err == nil {
+		t.Fatal("SecureBytesWithOptions error = nil, want entropy error")
+	}
 }
 
 func TestRandFacadeDefaultSourceProvider(t *testing.T) {

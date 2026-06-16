@@ -42,6 +42,40 @@ When changing `internal/slice`, `vslice`, `internal/maps`, or `vmap`, keep the p
 5. Any new public facade function in `vslice` or `vmap` must update `docs/api/exports.txt` via the API compatibility workflow and include focused tests in both the internal package and facade package.
 6. Validate collection changes with focused tests first (`./internal/slice ./vslice` or `./internal/maps ./vmap`), then run the normal repository gates from the general workflow before reporting completion.
 
+## Governance audit workflow
+
+When the user asks to continue general governance, generate next governance tasks, or uses equivalent Chinese wording such as “继续治理”, “生成下一步治理任务”, or “更新工作流”, treat it as an autonomous quality pass over security, public facade usability, coverage stability, and benchmark baselines:
+
+1. Start with safety checks and repository context:
+   - Run `git status --porcelain=v1 -b` and avoid mixing unrelated local files into the current logical change.
+   - Run `govulncheck ./...` before changing dependencies or security-sensitive code. If vulnerabilities are reported, classify reachable findings separately from dependency-only findings and do not upgrade dependencies blindly.
+2. Review security suppressions and random/entropy boundaries:
+   - Search `#nosec` and confirm each suppression has a narrow reason tied to the operation, especially `G304`, `G115`, `G404`, `G110`, `G103`, and `G204`.
+   - Keep `math/rand` confined to non-security helpers, deterministic tests, or documented compatibility fallbacks. Security-sensitive bytes must use fail-closed crypto-random helpers.
+3. Audit public facade usability after internal improvements:
+   - Compare recent internal or facade changes with `docs/api/exports.txt` and quickstart/example coverage.
+   - Add executable `ExampleXxx` tests for reader-facing behavior, especially iterator adapters in `vslice`/`vmap` and security-sensitive examples in `vrand`, `vid`, and `verr`.
+   - Keep examples deterministic; sort map-derived output before printing.
+4. Use coverage data to choose small, stable test improvements:
+   - Generate a fresh profile with `go test -coverprofile=/tmp/go-knifer-coverage-audit.out ./...` and inspect `go tool cover -func=/tmp/go-knifer-coverage-audit.out`.
+   - Prefer low-risk tests for public facade options, error branches, nil/empty boundaries, deterministic fallback behavior, and serialization round trips.
+   - Do not test implementation details or add flaky timing/network dependencies only to increase coverage.
+5. Establish benchmark baselines before performance work:
+   - Add benchmarks only for stable hot-path helpers with deterministic inputs, such as `internal/slice`, `internal/maps`, `internal/str`, and `internal/num`.
+   - Cover empty, small, medium, and large input sizes where meaningful.
+   - Use `b.Loop()` for new benchmarks because the module targets Go 1.25. Keep benchmark results out of assertions; they are baselines, not optimization claims.
+   - Run `go test -bench=. -run=^$ ./<target packages>` and report that the benchmark suite runs, not that a performance change was proven.
+6. Validate the final governance change with the normal repository gates:
+   - `gofmt -w` on touched Go files.
+   - Focused tests for changed packages.
+   - `go test -v -gcflags="all=-l -N" ./...`.
+   - `go vet ./...`.
+   - `bash bin/check_arch.sh`.
+   - `bash bin/check_api_compat.sh` when public exports may have changed.
+   - `golangci-lint run ./...` when available.
+   - `go test -race -shuffle=on -coverprofile=/tmp/go-knifer-coverage.out ./...` followed by `bash bin/check_coverage.sh /tmp/go-knifer-coverage.out`.
+   - `git diff --check`.
+
 ## Package test governance workflow
 
 When the user asks to continue package test governance, package-level test cleanup, or uses equivalent Chinese wording such as “继续推进包测试治理”, treat it as an autonomous rolling workflow:

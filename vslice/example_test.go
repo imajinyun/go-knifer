@@ -32,3 +32,21 @@ func ExampleUnion() {
 	fmt.Println(vslice.Union([]int{1, 2}, []int{2, 3}))
 	// Output: [1 2 3]
 }
+
+func ExampleIter() {
+	for value := range vslice.Iter([]string{"go", "knifer"}) {
+		fmt.Println(value)
+	}
+	// Output:
+	// go
+	// knifer
+}
+
+func ExampleIterIndexed() {
+	for index, value := range vslice.IterIndexed([]string{"go", "knifer"}) {
+		fmt.Printf("%d:%s\n", index, value)
+	}
+	// Output:
+	// 0:go
+	// 1:knifer
+}

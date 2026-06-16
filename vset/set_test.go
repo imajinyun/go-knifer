@@ -2,6 +2,7 @@ package vset_test
 
 import (
 	"encoding/json"
+	"sort"
 	"testing"
 
 	"github.com/imajinyun/go-knifer/vset"
@@ -79,5 +80,61 @@ func TestVSetGenericJSONRoundTrip(t *testing.T) {
 	}
 	if !decoded.Equal(original) {
 		t.Fatalf("decoded = %v, want %v", decoded.Members(), original.Members())
+	}
+}
+
+func TestVSetFacadeExplicitJSONAndYAMLHelpers(t *testing.T) {
+	s := vset.New("a", "b")
+	s.Remove("b")
+	if !s.Equal(vset.New("a")) {
+		t.Fatalf("Remove() set = %v", s.Members())
+	}
+	if text := s.String(); text == "" {
+		t.Fatal("String() returned empty text")
+	}
+
+	marshalCalled := false
+	b, err := s.MarshalJSONWithOptions(vset.WithSetMarshalFunc(func(v any) ([]byte, error) {
+		marshalCalled = true
+		return json.Marshal(v)
+	}))
+	if err != nil || !marshalCalled {
+		t.Fatalf("MarshalJSONWithOptions called=%v err=%v", marshalCalled, err)
+	}
+
+	unmarshalCalled := false
+	var decoded vset.Set[string]
+	if err := decoded.UnmarshalJSONWithOptions(b, vset.WithSetUnmarshalFunc(func(data []byte, v any) error {
+		unmarshalCalled = true
+		return json.Unmarshal(data, v)
+	})); err != nil {
+		t.Fatal(err)
+	}
+	if !unmarshalCalled || !decoded.Equal(s) {
+		t.Fatalf("UnmarshalJSONWithOptions called=%v decoded=%v", unmarshalCalled, decoded.Members())
+	}
+
+	yamlValue, err := s.MarshalYAML()
+	if err != nil {
+		t.Fatal(err)
+	}
+	members, ok := yamlValue.([]string)
+	if !ok || len(members) != 1 || members[0] != "a" {
+		t.Fatalf("MarshalYAML = %#v", yamlValue)
+	}
+
+	var yamlDecoded vset.Set[string]
+	err = yamlDecoded.UnmarshalYAML(func(v any) error {
+		out := v.(*[]string)
+		*out = []string{"x", "y"}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := yamlDecoded.Members()
+	sort.Strings(got)
+	if len(got) != 2 || got[0] != "x" || got[1] != "y" {
+		t.Fatalf("UnmarshalYAML members = %v", got)
 	}
 }
