@@ -28,3 +28,96 @@ func TestValidators(t *testing.T) {
 		t.Fatalf("IsNumberStr failed")
 	}
 }
+
+func TestValidatorsWithCustomMatchers(t *testing.T) {
+	cases := []struct {
+		name string
+		got  bool
+	}{
+		{
+			name: "email",
+			got: IsEmailWithOptions("custom-email", WithEmailMatcher(func(s string) bool {
+				return s == "custom-email"
+			})),
+		},
+		{
+			name: "mobile",
+			got: IsMobileWithOptions("custom-mobile", WithMobileMatcher(func(s string) bool {
+				return s == "custom-mobile"
+			})),
+		},
+		{
+			name: "id-card",
+			got: IsIDCardWithOptions("custom-id", WithIDCardMatcher(func(s string) bool {
+				return s == "custom-id"
+			})),
+		},
+		{
+			name: "chinese",
+			got: IsChineseWithOptions("custom-chinese", WithChineseMatcher(func(s string) bool {
+				return s == "custom-chinese"
+			})),
+		},
+		{
+			name: "number",
+			got: IsNumberStrWithOptions("custom-number", WithNumberMatcher(func(s string) bool {
+				return s == "custom-number"
+			})),
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			if !tt.got {
+				t.Fatal("custom matcher was not used")
+			}
+		})
+	}
+}
+
+func TestValidatorOptionsFallbackToDefaults(t *testing.T) {
+	if !IsEmailWithOptions("a@b.com", nil, WithEmailMatcher(nil)) {
+		t.Fatal("nil email matcher should fallback to default")
+	}
+	if !IsMobileWithOptions("13812345678", nil, WithMobileMatcher(nil)) {
+		t.Fatal("nil mobile matcher should fallback to default")
+	}
+	if !IsIDCardWithOptions("11010519491231002X", nil, WithIDCardMatcher(nil)) {
+		t.Fatal("nil id card matcher should fallback to default")
+	}
+	if !IsChineseWithOptions("你好", nil, WithChineseMatcher(nil)) {
+		t.Fatal("nil chinese matcher should fallback to default")
+	}
+	if !IsNumberStrWithOptions("-3.14", nil, WithNumberMatcher(nil)) {
+		t.Fatal("nil number matcher should fallback to default")
+	}
+}
+
+func TestValidatorBoundaryInputs(t *testing.T) {
+	if IsChineseWithOptions("", WithChineseMatcher(func(string) bool { return true })) {
+		t.Fatal("empty string should not be treated as Chinese even when matcher accepts it")
+	}
+	validEmails := []string{"first.last+tag@example.co", "a_b-1@example-domain.com"}
+	for _, email := range validEmails {
+		if !IsEmail(email) {
+			t.Fatalf("IsEmail(%q) = false", email)
+		}
+	}
+	invalidEmails := []string{"@example.com", "a@b", "a b@example.com"}
+	for _, email := range invalidEmails {
+		if IsEmail(email) {
+			t.Fatalf("IsEmail(%q) = true", email)
+		}
+	}
+	validNumbers := []string{"0", "-0", "123", "-123.456"}
+	for _, number := range validNumbers {
+		if !IsNumberStr(number) {
+			t.Fatalf("IsNumberStr(%q) = false", number)
+		}
+	}
+	invalidNumbers := []string{"", ".5", "1.", "+1", "1e3"}
+	for _, number := range invalidNumbers {
+		if IsNumberStr(number) {
+			t.Fatalf("IsNumberStr(%q) = true", number)
+		}
+	}
+}
