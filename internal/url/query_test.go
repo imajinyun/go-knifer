@@ -24,6 +24,12 @@ func TestQueryHelpers(t *testing.T) {
 	if got := DecodeQueryFirst("a=1&a=2&b=x+y"); got["a"] == "" || got["b"] != "x y" {
 		t.Fatalf("DecodeQueryFirst: %#v", got)
 	}
+	if got := DecodeQuery("a=1&a=2&b=x+y"); len(got["a"]) != 2 || got["b"][0] != "x y" {
+		t.Fatalf("DecodeQuery: %#v", got)
+	}
+	if got := DecodeQuery("bad=%zz"); len(got) != 0 {
+		t.Fatalf("DecodeQuery invalid = %#v", got)
+	}
 	if got := AppendQuery("https://example.com/path?x=1", map[string]any{"y": 2}); !strings.Contains(got, "x=1") || !strings.Contains(got, "y=2") {
 		t.Fatalf("AppendQuery: %q", got)
 	}

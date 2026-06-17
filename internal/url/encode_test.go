@@ -48,3 +48,32 @@ func TestEncodeAndURLBuilder(t *testing.T) {
 		t.Fatalf("URLBuilder = %q", built)
 	}
 }
+
+func TestEncodeHelpersCoverPathFragmentAndFallbacks(t *testing.T) {
+	decoded, err := DecodeForPath("a+b%2Fc")
+	if err != nil {
+		t.Fatalf("DecodeForPath: %v", err)
+	}
+	if decoded != "a+b/c" {
+		t.Fatalf("DecodeForPath = %q", decoded)
+	}
+
+	if got := EncodeAll("AZ az-._~:/?"); got != "AZ%20az-._~%3A%2F%3F" {
+		t.Fatalf("EncodeAll = %q", got)
+	}
+	if got := EncodeFragment("a b/?#中"); got != "a%20b/?%23%E4%B8%AD" {
+		t.Fatalf("EncodeFragment = %q", got)
+	}
+	if got := FormURLEncode("a b+c"); got != "a+b%2Bc" {
+		t.Fatalf("FormURLEncode = %q", got)
+	}
+	if got := URLEncodeWithOptions("x y", WithQueryEscapeFunc(func(string) string { return "custom" })); got != "custom" {
+		t.Fatalf("URLEncodeWithOptions = %q", got)
+	}
+	if got := EncodeQueryWithOptions("a b", WithQueryEscapeFunc(nil)); got != "a+b" {
+		t.Fatalf("EncodeQueryWithOptions nil fallback = %q", got)
+	}
+	if got := EncodePathSegmentWithOptions("a/b", WithPathEscapeFunc(nil)); got != "a%2Fb" {
+		t.Fatalf("EncodePathSegmentWithOptions nil fallback = %q", got)
+	}
+}
