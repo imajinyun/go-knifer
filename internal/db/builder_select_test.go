@@ -47,3 +47,53 @@ func TestSQLBuilderRejectsUnsafeIdentifiers(t *testing.T) {
 		})
 	}
 }
+
+func TestSQLBuilderRawAppendJoinGroupHaving(t *testing.T) {
+	sqlText, args, err := Raw("SELECT * FROM users WHERE id = ?", 7).
+		Append("AND status = ?", "active").
+		SQL()
+	if err != nil {
+		t.Fatalf("Raw SQL error = %v", err)
+	}
+	if sqlText != "SELECT * FROM users WHERE id = ? AND status = ?" || !reflect.DeepEqual(args, []any{7, "active"}) {
+		t.Fatalf("raw sql=%q args=%#v", sqlText, args)
+	}
+
+	sqlText, args, err = NewBuilder(WithDialect(DialectQuestion), WithWrapper(WrapperForDialect(DialectMySQL))).
+		Select("users.id", "orders.total").
+		From("users").
+		Join("LEFT JOIN orders ON orders.user_id = users.id").
+		Where(Eq("users.status", "active")).
+		GroupBy("users.id", "orders.total").
+		Having("COUNT(*) > 1").
+		SQL()
+	if err != nil {
+		t.Fatalf("join/group SQL error = %v", err)
+	}
+	wantSQL := "SELECT `users`.`id`, `orders`.`total` FROM `users` LEFT JOIN orders ON orders.user_id = users.id WHERE `users`.`status` = ? GROUP BY `users`.`id`, `orders`.`total` HAVING COUNT(*) > 1"
+	if sqlText != wantSQL || !reflect.DeepEqual(args, []any{"active"}) {
+		t.Fatalf("join/group sql=%q args=%#v", sqlText, args)
+	}
+}
+
+func TestSQLBuilderQueryAndOrderHelpers(t *testing.T) {
+	q := NewQuery("users").Select("id", "name").Where(Eq("status", "active")).WithPage(NewPage(2, 3)).OrderBy(Asc(""), Desc("id"))
+	sqlText, args, err := NewBuilder(WithDialect(DialectSQLServer), WithWrapper(WrapperForDialect(DialectSQLServer))).Query(q).SQL()
+	if err != nil {
+		t.Fatalf("Query SQL error = %v", err)
+	}
+	want := "SELECT [id], [name] FROM [users] WHERE [status] = @p1 ORDER BY [id] DESC OFFSET 3 ROWS FETCH NEXT 3 ROWS ONLY"
+	if sqlText != want || !reflect.DeepEqual(args, []any{"active"}) {
+		t.Fatalf("query sql=%q args=%#v", sqlText, args)
+	}
+
+	if got := RemoveOuterOrderBy("SELECT * FROM (SELECT * FROM users ORDER BY id) t ORDER BY name"); got != "SELECT * FROM (SELECT * FROM users ORDER BY id) t" {
+		t.Fatalf("RemoveOuterOrderBy nested = %q", got)
+	}
+	if got := RemoveOuterOrderBy("SELECT 'ORDER BY literal' AS x"); got != "SELECT 'ORDER BY literal' AS x" {
+		t.Fatalf("RemoveOuterOrderBy literal = %q", got)
+	}
+	if !IsInClause("WHERE id IN (?, ?)") || IsInClause("WHERE name = ?") {
+		t.Fatal("IsInClause returned unexpected result")
+	}
+}
