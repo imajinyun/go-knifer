@@ -2,6 +2,7 @@ package vconf_test
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	knifer "github.com/imajinyun/go-knifer"
 	"github.com/imajinyun/go-knifer/vconf"
 )
 
@@ -66,4 +68,83 @@ func TestFacadeRemoteSafeWrappers(t *testing.T) {
 	if _, err := vconf.LoadRemoteSafe("http://127.0.0.1/app.setting"); err == nil {
 		t.Fatal("LoadRemoteSafe private host error = nil")
 	}
+}
+
+func TestFacadeLoadRemoteSafeRejectsBoundaryFailures(t *testing.T) {
+	publicLookup := func(context.Context, string) ([]net.IP, error) {
+		return []net.IP{net.ParseIP("93.184.216.34")}, nil
+	}
+
+	t.Run("max bytes", func(t *testing.T) {
+		client := &http.Client{Transport: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(strings.NewReader("name=too-large\n")),
+				Request:    req,
+			}, nil
+		})}
+		_, err := vconf.LoadRemoteSafeWithOptions("http://config.example/app.setting", vconf.LoadOptions{
+			RemoteClient:       client,
+			RemoteAllowedHosts: []string{"config.example"},
+			LookupIP:           publicLookup,
+			MaxBytes:           4,
+		})
+		if !errors.Is(err, knifer.ErrCodeInvalidInput) {
+			t.Fatalf("LoadRemoteSafeWithOptions max bytes error = %v, want invalid input classification", err)
+		}
+	})
+
+	t.Run("allowlisted private host", func(t *testing.T) {
+		client := &http.Client{Transport: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+			t.Fatal("private host must be rejected before request execution")
+			return nil, nil
+		})}
+		_, err := vconf.LoadRemoteSafeWithOptions("http://config.example/app.setting", vconf.LoadOptions{
+			RemoteClient:       client,
+			RemoteAllowedHosts: []string{"config.example"},
+			LookupIP: func(context.Context, string) ([]net.IP, error) {
+				return []net.IP{net.ParseIP("10.0.0.1")}, nil
+			},
+		})
+		if !errors.Is(err, knifer.ErrCodeInvalidInput) {
+			t.Fatalf("LoadRemoteSafeWithOptions private error = %v, want invalid input", err)
+		}
+	})
+
+	t.Run("unsafe redirect", func(t *testing.T) {
+		client := &http.Client{Transport: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+			return &http.Response{
+				StatusCode: http.StatusFound,
+				Header:     http.Header{"Location": []string{"http://127.0.0.1/app.setting"}},
+				Body:       io.NopCloser(strings.NewReader("")),
+				Request:    req,
+			}, nil
+		})}
+		_, err := vconf.LoadRemoteSafeWithOptions("http://config.example/app.setting", vconf.LoadOptions{
+			RemoteClient:       client,
+			RemoteAllowedHosts: []string{"config.example"},
+			LookupIP:           publicLookup,
+		})
+		if !errors.Is(err, knifer.ErrCodeInvalidInput) {
+			t.Fatalf("LoadRemoteSafeWithOptions redirect error = %v, want invalid input classification", err)
+		}
+	})
+
+	t.Run("non 2xx status", func(t *testing.T) {
+		client := &http.Client{Transport: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+			return &http.Response{
+				StatusCode: http.StatusTeapot,
+				Body:       io.NopCloser(strings.NewReader("nope")),
+				Request:    req,
+			}, nil
+		})}
+		_, err := vconf.LoadRemoteSafeWithOptions("http://config.example/app.setting", vconf.LoadOptions{
+			RemoteClient:       client,
+			RemoteAllowedHosts: []string{"config.example"},
+			LookupIP:           publicLookup,
+		})
+		if !errors.Is(err, knifer.ErrCodeInvalidInput) {
+			t.Fatalf("LoadRemoteSafeWithOptions status error = %v, want invalid input", err)
+		}
+	})
 }

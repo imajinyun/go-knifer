@@ -48,4 +48,6 @@ Changes touching these packages require extra review:
 - `vdb`: SQL construction, named arguments, transactions, and resource cleanup.
 
 Security linter suppressions in `.golangci.yml` must stay narrow and documented.
-Prefer adding a regression test over broadening a suppression.
+Prefer adding a regression test over broadening a suppression. New `#nosec` or
+`//nolint:gosec` comments must name the specific operation, explain why it is
+safe for that trust boundary, and stay next to the suppressed line.

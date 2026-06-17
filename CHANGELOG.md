@@ -46,6 +46,10 @@ subpackage APIs are treated as the compatibility boundary.
 - Scoped the exported API compatibility snapshot to the module root and
   top-level `v*` facades, keeping `internal/*` refactors out of the public API
   gate.
+- Expanded the API compatibility snapshot from exported symbol names to
+  function signatures, exported type definitions, exported struct fields,
+  interface methods, and method sets so breaking public API shape changes are
+  detected before release.
 - Expanded `vmail` with account-based quick send helpers, SMTP envelope sender
   control, lazy reader/file attachments, and RFC 2231-compliant attachment
   filename parameter rendering.

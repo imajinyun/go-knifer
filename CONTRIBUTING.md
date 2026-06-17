@@ -188,6 +188,9 @@ make check
 - Do not report suspected vulnerabilities in public issues.
 - Keep `.golangci.yml` security exclusions narrow and documented; prefer a
   regression test over a broader `gosec` suppression.
+- New `#nosec` or `//nolint:gosec` suppressions must include the specific rule
+  reason at the call site and should be paired with a boundary or regression
+  test when the code touches untrusted input.
 
 ## Linter exceptions
 

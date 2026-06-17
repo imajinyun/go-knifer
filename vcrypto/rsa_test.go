@@ -5,6 +5,7 @@ import (
 	stdcrypto "crypto"
 	"crypto/rsa"
 	"crypto/sha256"
+	"errors"
 	"testing"
 
 	"github.com/imajinyun/go-knifer/vcrypto"
@@ -44,6 +45,27 @@ func TestRSAEncryptDecryptAndSignVerify(t *testing.T) {
 	}
 	if err := vcrypto.VerifySHA256WithRSA(plain, quickSig, pub); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestRSAFacadeNilKeyErrors(t *testing.T) {
+	plain := []byte("rsa message")
+	digest := sha256.Sum256(plain)
+
+	if _, err := vcrypto.RSAEncryptOAEP(plain, nil, nil); err == nil {
+		t.Fatal("RSAEncryptOAEP nil public key error = nil")
+	}
+	if _, err := vcrypto.RSADecryptOAEP([]byte("cipher"), nil, nil); err == nil {
+		t.Fatal("RSADecryptOAEP nil private key error = nil")
+	}
+	if _, err := vcrypto.RSASignPSS(nil, stdcrypto.SHA256, digest[:]); err == nil {
+		t.Fatal("RSASignPSS nil private key error = nil")
+	}
+	if err := vcrypto.RSAVerifyPSS(nil, stdcrypto.SHA256, digest[:], []byte("sig")); err == nil {
+		t.Fatal("RSAVerifyPSS nil public key error = nil")
+	}
+	if _, err := vcrypto.PBKDF2SHA256([]byte("password"), []byte("salt"), 0, 32); !errors.Is(err, vcrypto.ErrInvalidKey) {
+		t.Fatalf("PBKDF2SHA256 invalid iterations error = %v", err)
 	}
 }
 

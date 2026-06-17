@@ -74,6 +74,9 @@ func AESSealGCM(plain, key, additionalData []byte) (nonce, cipherText []byte, er
 
 // AESSealGCMWithOptions encrypts plain data using AES-GCM and a freshly generated nonce.
 func AESSealGCMWithOptions(plain, key, additionalData []byte, opts ...AESGCMOption) (nonce, cipherText []byte, err error) {
+	if err := ValidateAESKey(key); err != nil {
+		return nil, nil, err
+	}
 	cfg := applyAESGCMOptions(opts)
 	block, err := cfg.blockFunc(key)
 	if err != nil {
@@ -107,6 +110,9 @@ func AESEncryptGCM(plain, key, nonce, additionalData []byte) ([]byte, error) {
 
 // AESEncryptGCMWithOptions encrypts plain data using AES-GCM with options.
 func AESEncryptGCMWithOptions(plain, key, nonce, additionalData []byte, opts ...AESGCMOption) ([]byte, error) {
+	if err := ValidateAESKey(key); err != nil {
+		return nil, err
+	}
 	cfg := applyAESGCMOptions(opts)
 	block, err := cfg.blockFunc(key)
 	if err != nil {
@@ -129,6 +135,9 @@ func AESDecryptGCM(cipherText, key, nonce, additionalData []byte) ([]byte, error
 
 // AESDecryptGCMWithOptions decrypts AES-GCM data with options.
 func AESDecryptGCMWithOptions(cipherText, key, nonce, additionalData []byte, opts ...AESGCMOption) ([]byte, error) {
+	if err := ValidateAESKey(key); err != nil {
+		return nil, err
+	}
 	cfg := applyAESGCMOptions(opts)
 	block, err := cfg.blockFunc(key)
 	if err != nil {

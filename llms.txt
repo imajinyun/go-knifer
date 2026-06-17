@@ -14,7 +14,7 @@
 
 - `make ci-test`: module verification, vet, tidy/diff checks, architecture checks, race/shuffle tests, coverage gate, and exported API snapshot check.
 - `make check`: local full gate, including lint and vulnerability scan.
-- `UPDATE_API=1 make api-check`: refresh the root-package and top-level `v*` exported API snapshot after intentional public API changes.
+- `UPDATE_API=1 make api-check`: refresh the root-package and top-level `v*` API snapshot after intentional public API signature, exported field, interface method, or method-set changes.
 
 ## Governance notes
 

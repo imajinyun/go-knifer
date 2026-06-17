@@ -86,3 +86,28 @@ func TestFacadeUnzipRejectsPathTraversal(t *testing.T) {
 		t.Fatalf("path traversal wrote outside destination, stat err=%v", err)
 	}
 }
+
+func TestFacadeUnzipRejectsSymlinkEscape(t *testing.T) {
+	tmp := t.TempDir()
+	archive := filepath.Join(tmp, "symlink.zip")
+	if err := vzip.ZipEntries(archive, vzip.EntryData{Name: "link/payload.txt", Data: []byte("bad")}); err != nil {
+		t.Fatalf("ZipEntries: %v", err)
+	}
+	dest := filepath.Join(tmp, "dest")
+	outside := filepath.Join(tmp, "outside")
+	if err := os.MkdirAll(filepath.Join(dest, "link"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(outside, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := vzip.UnzipToWithOptions(archive, dest, vzip.WithEvalSymlinks(func(path string) (string, error) {
+		if filepath.Clean(path) == filepath.Join(dest, "link") {
+			return outside, nil
+		}
+		return path, nil
+	})); !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("UnzipToWithOptions symlink escape error = %v, want invalid input", err)
+	}
+}

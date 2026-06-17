@@ -29,6 +29,9 @@ linters:
         - -ST1003
   exclusions:
     rules:
+      # Tests intentionally use local HTTP servers, fixed entropy, and fixture
+      # paths. Keep security suppressions scoped to tests; production #nosec
+      # comments must remain inline and justified at the call site.
       - path: _test\.go
         linters:
           - cyclop
@@ -46,11 +49,7 @@ linters:
         linters:
           - gosec
         text: "weak random number generator"
-      - path: internal/(file/file|bloomfilter/bitset_bloomfilter|extra/extra)\.go
-        linters:
-          - gosec
-        text: "Potential file inclusion via variable"
-      - path: internal/(http/response|conf/conf)\.go
+      - path: internal/(file/file|bloomfilter/bitset_bloomfilter|conf/load|httpx/http/response|httpx/resty/response|url/url|xml/xml|imgx/captcha|mail/attachment|net/multipart)\.go
         linters:
           - gosec
         text: "Potential file inclusion via variable"
@@ -58,22 +57,14 @@ linters:
         linters:
           - gosec
         text: "weak cryptographic primitive"
-      - path: internal/http/request\.go
+      - path: internal/httpx/http/request\.go
         linters:
           - gosec
         text: "InsecureSkipVerify"
-      - path: internal/(file/file|captcha/captcha|extra/extra)\.go
+      - path: internal/(file/file|httpx/http/response|httpx/resty/response|imgx/captcha|net/multipart|xml/xml)\.go
         linters:
           - gosec
         text: "Expect .* permissions"
-      - path: internal/extra/extra\.go
-        linters:
-          - gosec
-        text: "File traversal when extracting zip/tar archive"
-      - path: internal/extra/extra\.go
-        linters:
-          - gosec
-        text: "Potential DoS vulnerability via decompression bomb"
 
 formatters:
   enable:

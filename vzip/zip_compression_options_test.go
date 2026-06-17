@@ -42,3 +42,22 @@ func TestFacadeCompressionOptions(t *testing.T) {
 		t.Fatalf("ZlibReaderWithOptions len=%d err=%v", len(got), err)
 	}
 }
+
+func TestFacadeDecompressionMaxBytesOptions(t *testing.T) {
+	payload := []byte("compressed payload")
+	gz, err := vzip.GzipWithOptions(payload, vzip.WithMaxBytes(int64(len(payload))))
+	if err != nil {
+		t.Fatalf("GzipWithOptions: %v", err)
+	}
+	if _, err := vzip.UnGzipWithOptions(gz, vzip.WithMaxBytes(1)); err == nil {
+		t.Fatal("UnGzipWithOptions max bytes error = nil")
+	}
+
+	zlibBytes, err := vzip.ZlibLevelWithOptions(payload, flate.BestSpeed, vzip.WithMaxBytes(int64(len(payload))))
+	if err != nil {
+		t.Fatalf("ZlibLevelWithOptions: %v", err)
+	}
+	if _, err := vzip.UnZlibWithOptions(zlibBytes, vzip.WithMaxBytes(1)); err == nil {
+		t.Fatal("UnZlibWithOptions max bytes error = nil")
+	}
+}

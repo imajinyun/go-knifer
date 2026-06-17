@@ -1,6 +1,7 @@
 package vrand
 
 import (
+	"errors"
 	mathrand "math/rand"
 	"strings"
 	"testing"
@@ -78,6 +79,31 @@ func TestSecureBytes(t *testing.T) {
 		t.Fatal("SecureBytesWithOptions error = nil, want entropy error")
 	}
 }
+
+func TestRandFacadeBytesFailureBoundaries(t *testing.T) {
+	readerErr := errors.New("entropy failed")
+	if _, err := SecureBytesWithOptions(4, WithRandomReader(failingReader{err: readerErr})); !errors.Is(err, readerErr) {
+		t.Fatalf("SecureBytesWithOptions reader error = %v, want %v", err, readerErr)
+	}
+	if _, err := SecureBytesWithOptions(4, WithRandomReader(strings.NewReader("x"))); err == nil {
+		t.Fatal("SecureBytesWithOptions short read error = nil")
+	}
+
+	if _, err := BytesWithOptions(4, WithRandomReader(failingReader{err: readerErr}), WithStrictCryptoRandom()); !errors.Is(err, readerErr) {
+		t.Fatalf("BytesWithOptions strict reader error = %v, want %v", err, readerErr)
+	}
+	fallback, err := BytesWithOptions(4,
+		WithRandomReader(failingReader{err: readerErr}),
+		WithRandomSource(mathrand.New(mathrand.NewSource(7))),
+	)
+	if err != nil || len(fallback) != 4 {
+		t.Fatalf("BytesWithOptions fallback len=%d err=%v", len(fallback), err)
+	}
+}
+
+type failingReader struct{ err error }
+
+func (r failingReader) Read([]byte) (int, error) { return 0, r.err }
 
 func TestRandFacadeDefaultSourceProvider(t *testing.T) {
 	ResetDefaultRandomSource()

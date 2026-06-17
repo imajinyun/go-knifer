@@ -115,6 +115,9 @@ func RSAEncryptOAEP(plain []byte, pub *rsa.PublicKey, label []byte) ([]byte, err
 
 // RSAEncryptOAEPWithOptions encrypts data using RSA-OAEP with options.
 func RSAEncryptOAEPWithOptions(plain []byte, pub *rsa.PublicKey, label []byte, opts ...RSAOption) ([]byte, error) {
+	if pub == nil {
+		return nil, ErrInvalidKey
+	}
 	cfg := applyRSAOptions(opts...)
 	return rsa.EncryptOAEP(cfg.oaepHash(), cfg.random, pub, plain, label)
 }
@@ -126,6 +129,9 @@ func RSADecryptOAEP(cipherText []byte, priv *rsa.PrivateKey, label []byte) ([]by
 
 // RSADecryptOAEPWithOptions decrypts data using RSA-OAEP with options.
 func RSADecryptOAEPWithOptions(cipherText []byte, priv *rsa.PrivateKey, label []byte, opts ...RSAOption) ([]byte, error) {
+	if priv == nil {
+		return nil, ErrInvalidKey
+	}
 	cfg := applyRSAOptions(opts...)
 	return rsa.DecryptOAEP(cfg.oaepHash(), cfg.random, priv, cipherText, label)
 }
@@ -137,6 +143,9 @@ func RSASignPSS(priv *rsa.PrivateKey, hash stdcrypto.Hash, digest []byte) ([]byt
 
 // RSASignPSSWithOptions signs digest using RSA-PSS with options.
 func RSASignPSSWithOptions(priv *rsa.PrivateKey, hash stdcrypto.Hash, digest []byte, opts ...RSAOption) ([]byte, error) {
+	if priv == nil {
+		return nil, ErrInvalidKey
+	}
 	cfg := applyRSAOptions(opts...)
 	return rsa.SignPSS(cfg.random, priv, hash, digest, cfg.pssOptions)
 }
@@ -148,6 +157,9 @@ func RSAVerifyPSS(pub *rsa.PublicKey, hash stdcrypto.Hash, digest, sig []byte) e
 
 // RSAVerifyPSSWithOptions verifies an RSA-PSS signature with options.
 func RSAVerifyPSSWithOptions(pub *rsa.PublicKey, hash stdcrypto.Hash, digest, sig []byte, opts ...RSAOption) error {
+	if pub == nil {
+		return ErrInvalidKey
+	}
 	cfg := applyRSAOptions(opts...)
 	return rsa.VerifyPSS(pub, hash, digest, sig, cfg.pssOptions)
 }
@@ -164,6 +176,9 @@ func VerifySHA256WithRSA(data, sig []byte, pub *rsa.PublicKey) error {
 
 // SignWithRSAOptions hashes data and signs it with configurable RSA options.
 func SignWithRSAOptions(data []byte, priv *rsa.PrivateKey, opts ...RSADigestOption) ([]byte, error) {
+	if priv == nil {
+		return nil, ErrInvalidKey
+	}
 	cfg := applyRSADigestOptions(opts...)
 	digest := Digest(data, cfg.newHash)
 	return rsa.SignPSS(cfg.random, priv, cfg.hashID, digest, cfg.pssOptions)
@@ -171,6 +186,9 @@ func SignWithRSAOptions(data []byte, priv *rsa.PrivateKey, opts ...RSADigestOpti
 
 // VerifyWithRSAOptions hashes data and verifies an RSA signature with configurable options.
 func VerifyWithRSAOptions(data, sig []byte, pub *rsa.PublicKey, opts ...RSADigestOption) error {
+	if pub == nil {
+		return ErrInvalidKey
+	}
 	cfg := applyRSADigestOptions(opts...)
 	digest := Digest(data, cfg.newHash)
 	return rsa.VerifyPSS(pub, cfg.hashID, digest, sig, cfg.pssOptions)

@@ -101,3 +101,23 @@ func TestAdditionalAESGCMAndRandomErrors(t *testing.T) {
 		t.Fatal("RandomBytesWithOptions short reader error = nil")
 	}
 }
+
+func TestFacadeAESGCMValidationErrorClassification(t *testing.T) {
+	key := bytes.Repeat([]byte{0x11}, 16)
+	nonce := bytes.Repeat([]byte{0x22}, 12)
+	plain := []byte("payload")
+	cipherText, err := vcrypto.AESEncryptGCM(plain, key, nonce, nil)
+	if err != nil {
+		t.Fatalf("AESEncryptGCM: %v", err)
+	}
+
+	if _, err := vcrypto.AESEncryptGCM(plain, []byte("short"), nonce, nil); !errors.Is(err, vcrypto.ErrInvalidKey) {
+		t.Fatalf("AESEncryptGCM invalid key error = %v", err)
+	}
+	if _, err := vcrypto.AESOpenGCM(cipherText, key, []byte("short"), nil); !errors.Is(err, vcrypto.ErrInvalidIV) {
+		t.Fatalf("AESOpenGCM invalid nonce error = %v", err)
+	}
+	if _, err := vcrypto.AESOpenGCM(cipherText[:len(cipherText)-1], key, nonce, nil); err == nil {
+		t.Fatal("AESOpenGCM truncated tag error = nil")
+	}
+}

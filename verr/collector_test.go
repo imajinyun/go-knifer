@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/imajinyun/go-knifer/verr"
 )
 
@@ -44,3 +46,41 @@ func TestCollectorWaitOptionsFacade(t *testing.T) {
 		t.Fatal("facade wait timer factory was not called")
 	}
 }
+
+func TestCollectorOptionsFacadeUsesRunnerAndStackProvider(t *testing.T) {
+	want := errors.New("collector option failure")
+	ctx := context.WithValue(context.Background(), collectorContextKey{}, "facade")
+	var ran bool
+	var loggedErr error
+	var loggedStack string
+	var loggedLevel logrus.Level
+	c := verr.NewCollectorWithOptions(
+		verr.WithCollectorContext(ctx),
+		verr.WithCollectorLevel(logrus.WarnLevel),
+		verr.WithCollectorRunner(func(fn func()) {
+			ran = true
+			fn()
+		}),
+		verr.WithCollectorStackCaptureOptions(verr.WithDebugStackFunc(func() []byte { return []byte("collector facade stack") })),
+		verr.WithCollectorLogFunc(func(gotCtx context.Context, level logrus.Level, err error, stack string, format string, args ...any) {
+			if gotCtx.Value(collectorContextKey{}) != "facade" {
+				t.Fatalf("collector context value = %v", gotCtx.Value(collectorContextKey{}))
+			}
+			loggedErr = err
+			loggedStack = stack
+			loggedLevel = level
+		}),
+	)
+	c.GoRun(func() error { return want }, "collector facade")
+	if !ran {
+		t.Fatal("collector runner was not used")
+	}
+	if got := c.Error(); !verr.ErrorIs(got, want) {
+		t.Fatalf("Collector.Error() = %v, want %v", got, want)
+	}
+	if !verr.ErrorIs(loggedErr, want) || loggedStack != "collector facade stack" || loggedLevel != logrus.WarnLevel {
+		t.Fatalf("collector log err=%v stack=%q level=%s", loggedErr, loggedStack, loggedLevel)
+	}
+}
+
+type collectorContextKey struct{}

@@ -142,9 +142,11 @@ Facade rules:
 API compatibility:
 
 - The root package and top-level `v*` subpackages are the public compatibility
-  boundary. Their exported API surface is recorded in `docs/api/exports.txt`;
-  `internal/*` symbols are intentionally excluded so implementation packages can
-  be refactored without public API noise.
+  boundary. Their exported API surface is recorded in `docs/api/exports.txt`
+  with function signatures, exported type definitions, exported struct fields,
+  interface methods, and method sets; standalone `internal/*` packages are
+  intentionally excluded so implementation packages can be refactored without
+  public API noise.
 - `make api-check` regenerates a temporary snapshot and compares it with the
   checked-in file. When a public API change is intentional, run
   `UPDATE_API=1 make api-check` and review the snapshot diff together with the
@@ -438,12 +440,16 @@ gofmt -w .
   core HTTP implementation packages. Raise `COVERAGE_THRESHOLD` or
   `PACKAGE_COVERAGE_THRESHOLDS` only after adding tests that support the new
   gate.
-- API gate: `make api-check` compares root-package and top-level `v*` exported
-  symbols against `docs/api/exports.txt`. Commit the refreshed snapshot only for
-  intentional public API changes.
+- API gate: `make api-check` compares root-package and top-level `v*` API
+  signatures, exported fields, interface methods, and method sets against
+  `docs/api/exports.txt`. Commit the refreshed snapshot only for intentional
+  public API changes.
 - Stability gate: use `make check` locally before pushing so vet, architecture,
   race/shuffle tests, coverage, API compatibility, lint, and vulnerability
   checks stay aligned with CI.
+- Security suppressions: keep `.golangci.yml`, `#nosec`, and
+  `//nolint:gosec` exceptions narrow and justified at the call site; prefer a
+  regression test before broadening an exclusion.
 - Benchmark baseline: use `make bench-core` to ensure hot-path benchmark suites
   run, or `make bench-facade` for the matching public facade packages. Treat the
   output as a baseline unless a separate `benchstat` comparison proves a

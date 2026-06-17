@@ -2,10 +2,12 @@ package vurl_test
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -105,6 +107,92 @@ func TestFacadeSafeResourceRejectsUnsafeRedirect(t *testing.T) {
 	); err == nil {
 		_ = rc.Close()
 		t.Fatal("OpenSafeWithOptions unsafe redirect error = nil")
+	}
+}
+
+func TestFacadeOpenSafeRejectsLocalResources(t *testing.T) {
+	tmp := t.TempDir()
+	local := tmp + string(os.PathSeparator) + "config.setting"
+	if err := os.WriteFile(local, []byte("name=local"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, raw := range []string{local, "file://" + local} {
+		t.Run(raw, func(t *testing.T) {
+			if rc, err := vurl.OpenSafe(raw); err == nil {
+				_ = rc.Close()
+				t.Fatal("OpenSafe local resource error = nil")
+			}
+			if _, err := vurl.ContentLengthSafe(raw); err == nil {
+				t.Fatal("ContentLengthSafe local resource error = nil")
+			}
+		})
+	}
+}
+
+func TestFacadeContentLengthSafeRejectsUnsafeRedirect(t *testing.T) {
+	client := &http.Client{Transport: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: http.StatusFound,
+			Header:     http.Header{"Location": []string{"http://127.0.0.1/private"}},
+			Body:       io.NopCloser(strings.NewReader("")),
+			Request:    req,
+		}, nil
+	})}
+	lookup := func(context.Context, string) ([]net.IP, error) {
+		return []net.IP{net.ParseIP("93.184.216.34")}, nil
+	}
+
+	if _, err := vurl.ContentLengthSafeWithOptions("http://example.com/redirect",
+		vurl.WithHTTPClient(client),
+		vurl.WithAllowedHosts("example.com"),
+		vurl.WithLookupIP(lookup),
+	); err == nil {
+		t.Fatal("ContentLengthSafeWithOptions unsafe redirect error = nil")
+	}
+}
+
+func TestFacadeContentLengthSafeStatusAndLimit(t *testing.T) {
+	client := &http.Client{Transport: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+		if req.Method != http.MethodHead {
+			t.Fatalf("method = %s, want HEAD", req.Method)
+		}
+		return &http.Response{
+			StatusCode:    http.StatusOK,
+			ContentLength: 10,
+			Header:        http.Header{"Content-Length": []string{"10"}},
+			Body:          io.NopCloser(strings.NewReader("")),
+			Request:       req,
+		}, nil
+	})}
+	lookup := func(context.Context, string) ([]net.IP, error) {
+		return []net.IP{net.ParseIP("93.184.216.34")}, nil
+	}
+	opts := []vurl.ResourceOption{
+		vurl.WithHTTPClient(client),
+		vurl.WithAllowedHosts("example.com"),
+		vurl.WithLookupIP(lookup),
+	}
+	if got, err := vurl.ContentLengthSafeWithOptions("http://example.com/large", opts...); err != nil || got != 10 {
+		t.Fatalf("ContentLengthSafeWithOptions = %d, %v", got, err)
+	}
+	if _, err := vurl.ContentLengthSafeWithOptions("http://example.com/large", append(opts, vurl.WithMaxBytes(1))...); err == nil {
+		t.Fatal("ContentLengthSafeWithOptions max bytes error = nil")
+	}
+
+	statusClient := &http.Client{Transport: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: http.StatusTeapot,
+			Body:       io.NopCloser(strings.NewReader("")),
+			Request:    req,
+		}, nil
+	})}
+	if _, err := vurl.ContentLengthSafeWithOptions("http://example.com/status",
+		vurl.WithHTTPClient(statusClient),
+		vurl.WithAllowedHosts("example.com"),
+		vurl.WithLookupIP(lookup),
+	); err == nil || errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("ContentLengthSafeWithOptions status error = %v", err)
 	}
 }
 
