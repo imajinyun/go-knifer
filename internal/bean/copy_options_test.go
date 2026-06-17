@@ -65,3 +65,65 @@ func TestWeaklyTypedDisabled(t *testing.T) {
 		t.Fatal("expected strict assignment error")
 	}
 }
+
+func TestOptionFallbacksAndIgnoreZero(t *testing.T) {
+	type target struct {
+		Name  string
+		Age   int
+		Admin bool
+		Score float64
+		Quota uint
+	}
+
+	var dst target
+	err := CopyProperties(map[string]any{
+		"Name":  "alice",
+		"Age":   "42",
+		"Admin": "yes",
+		"Score": "9.5",
+		"Quota": "7",
+	}, &dst,
+		func(o *Options) {
+			o.ParseBool = nil
+			o.ParseInt = nil
+			o.ParseUint = nil
+			o.ParseFloat = nil
+		},
+	)
+	if err != nil {
+		t.Fatalf("CopyProperties() fallback parser error = %v", err)
+	}
+	if dst != (target{Name: "alice", Age: 42, Admin: true, Score: 9.5, Quota: 7}) {
+		t.Fatalf("fallback parser dst = %+v", dst)
+	}
+
+	dst = target{Name: "kept", Age: 11, Admin: true, Score: 1.5, Quota: 3}
+	err = CopyProperties(target{}, &dst, WithIgnoreZero(true))
+	if err != nil {
+		t.Fatalf("CopyProperties() ignore zero error = %v", err)
+	}
+	if dst != (target{Name: "kept", Age: 11, Admin: true, Score: 1.5, Quota: 3}) {
+		t.Fatalf("ignore zero dst = %+v", dst)
+	}
+}
+
+func TestNilParserOptionsKeepDefaults(t *testing.T) {
+	options := NewOptions()
+	WithBoolParser(nil)(&options)
+	WithIntParser(nil)(&options)
+	WithUintParser(nil)(&options)
+	WithFloatParser(nil)(&options)
+
+	if got, err := options.ParseBool("on"); err != nil || !got {
+		t.Fatalf("ParseBool(on) = %v, %v", got, err)
+	}
+	if got, err := options.ParseInt("8", 10, 64); err != nil || got != 8 {
+		t.Fatalf("ParseInt(8) = %v, %v", got, err)
+	}
+	if got, err := options.ParseUint("9", 10, 64); err != nil || got != 9 {
+		t.Fatalf("ParseUint(9) = %v, %v", got, err)
+	}
+	if got, err := options.ParseFloat("1.25", 64); err != nil || got != 1.25 {
+		t.Fatalf("ParseFloat(1.25) = %v, %v", got, err)
+	}
+}
