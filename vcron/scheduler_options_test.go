@@ -2,6 +2,7 @@ package vcron_test
 
 import (
 	"bytes"
+	"strconv"
 	"testing"
 	"time"
 
@@ -45,5 +46,43 @@ func TestFacadeSchedulerIDRandomReaderOption(t *testing.T) {
 	}
 	if id != "0807060504030201" {
 		t.Fatalf("id = %q, want 0807060504030201", id)
+	}
+}
+
+func TestFacadeSchedulerPatternOptions(t *testing.T) {
+	s := vcron.NewSchedulerWithOptions(
+		vcron.WithSchedulerPatternOptions(vcron.WithPatternIntParser(func(s string) (int, error) {
+			if s == "custom" {
+				return 5, nil
+			}
+			return strconv.Atoi(s)
+		})),
+	)
+	if err := s.ScheduleWithID("custom", "* custom * * *", vcron.TaskFunc(func() {})); err != nil {
+		t.Fatalf("ScheduleWithID with scheduler pattern options: %v", err)
+	}
+	if s.GetPattern("custom") == nil || s.GetTask("custom") == nil {
+		t.Fatal("scheduled task should be retrievable")
+	}
+}
+
+func TestFacadeTaskConstructors(t *testing.T) {
+	pattern := vcron.MustNewPattern("* * * * *")
+	executed := false
+	task := vcron.TaskFunc(func() { executed = true })
+	cronTask := vcron.NewCronTask("task-id", pattern, task)
+	if cronTask == nil || cronTask.ID() != "task-id" || cronTask.Pattern() != pattern || cronTask.Raw() == nil {
+		t.Fatalf("NewCronTask = %#v", cronTask)
+	}
+	cronTask.Execute()
+	if !executed {
+		t.Fatal("CronTask.Execute should delegate to raw task")
+	}
+	table := vcron.NewTaskTable()
+	if table == nil || !table.IsEmpty() {
+		t.Fatalf("NewTaskTable = %#v", table)
+	}
+	if err := table.Add("task-id", pattern, task); err != nil || table.Size() != 1 {
+		t.Fatalf("TaskTable.Add err=%v size=%d", err, table.Size())
 	}
 }

@@ -22,3 +22,51 @@ func TestFacadeDefaultSchedulerOptions(t *testing.T) {
 		t.Fatal("CronRemoveWithOptions should remove isolated task")
 	}
 }
+
+func TestFacadeDefaultSchedulerGeneratedOptions(t *testing.T) {
+	global := vcron.ConfigureDefaultScheduler(vcron.WithIDGenerator(func() string { return "global-id" }))
+	t.Cleanup(func() { vcron.ConfigureDefaultScheduler() })
+
+	selected := vcron.DefaultSchedulerWithOptions(vcron.WithDefaultSchedulerOptions(vcron.WithIDGenerator(func() string { return "isolated-id" })))
+	if selected == nil || selected == global {
+		t.Fatal("DefaultSchedulerWithOptions should return isolated scheduler from options")
+	}
+	id, err := vcron.CronScheduleFuncWithOptions("* * * * *", func() {}, vcron.WithDefaultScheduler(selected))
+	if err != nil {
+		t.Fatalf("CronScheduleFuncWithOptions isolated: %v", err)
+	}
+	if id != "isolated-id" || selected.Size() != 1 || global.Size() != 0 {
+		t.Fatalf("isolated scheduler mismatch: id=%q selected=%d global=%d", id, selected.Size(), global.Size())
+	}
+	if vcron.DefaultScheduler() != global {
+		t.Fatal("DefaultScheduler should still return configured global scheduler")
+	}
+}
+
+func TestFacadeDefaultSchedulerDelegates(t *testing.T) {
+	s := vcron.ConfigureDefaultScheduler(
+		vcron.WithMatchSecond(true),
+		vcron.WithIDGenerator(func() string { return "auto-id" }),
+	)
+	t.Cleanup(func() { vcron.ConfigureDefaultScheduler() })
+
+	if err := vcron.CronScheduleWithID("manual", "* * * * * *", vcron.TaskFunc(func() {})); err != nil {
+		t.Fatalf("CronScheduleWithID: %v", err)
+	}
+	id, err := vcron.CronSchedule("* * * * * *", vcron.TaskFunc(func() {}))
+	if err != nil || id != "auto-id" {
+		t.Fatalf("CronSchedule = %q, %v", id, err)
+	}
+	if s.Size() != 2 {
+		t.Fatalf("scheduled task count = %d, want 2", s.Size())
+	}
+	if err := vcron.CronUpdatePattern("manual", "*/2 * * * * *"); err != nil {
+		t.Fatalf("CronUpdatePattern: %v", err)
+	}
+	if err := vcron.CronUpdatePatternWithOptions("auto-id", "*/3 * * * * *", vcron.WithDefaultScheduler(s)); err != nil {
+		t.Fatalf("CronUpdatePatternWithOptions: %v", err)
+	}
+	if !vcron.CronRemove("manual") || !vcron.CronRemove("auto-id") || !s.IsEmpty() {
+		t.Fatalf("remove delegates failed, size=%d", s.Size())
+	}
+}

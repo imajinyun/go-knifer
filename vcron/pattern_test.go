@@ -1,6 +1,8 @@
 package vcron_test
 
 import (
+	"errors"
+	"strings"
 	"testing"
 
 	"github.com/imajinyun/go-knifer/vcron"
@@ -42,4 +44,29 @@ func TestFacadeMustPattern(t *testing.T) {
 		}
 	}()
 	vcron.MustNewPattern("bad")
+}
+
+func TestFacadePatternParserAndErrors(t *testing.T) {
+	parseErr := errors.New("bad integer")
+	s := vcron.NewSchedulerWithOptions(vcron.WithSchedulerPatternOptions(
+		vcron.WithPatternIntParser(func(s string) (int, error) {
+			if s == "nope" {
+				return 0, parseErr
+			}
+			return 1, nil
+		}),
+	))
+	err := s.ScheduleWithID("bad", "nope * * * * *", vcron.TaskFunc(func() {}))
+	if err == nil || !strings.Contains(err.Error(), "invalid number") || !strings.Contains(err.Error(), "nope") {
+		t.Fatalf("ScheduleWithID parser error = %v, want invalid number for nope", err)
+	}
+
+	cause := errors.New("cause")
+	wrapped := vcron.WrapCronError(cause, "schedule %s", "failed")
+	if !errors.Is(wrapped, cause) || !strings.Contains(wrapped.Error(), "schedule failed") {
+		t.Fatalf("WrapCronError = %v", wrapped)
+	}
+	if got := vcron.NewCronError("plain %d", 1); !strings.Contains(got.Error(), "plain 1") {
+		t.Fatalf("NewCronError = %v", got)
+	}
 }

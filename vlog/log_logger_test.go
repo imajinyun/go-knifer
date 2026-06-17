@@ -51,3 +51,47 @@ func TestFacadeLoggerWithOptions(t *testing.T) {
 		t.Fatalf("NewIsolatedLogger leaked global factory: %q", isolated.GetName())
 	}
 }
+
+func TestFacadeLoggerGeneratedDelegates(t *testing.T) {
+	vlog.SetFactory(vlog.LogFactoryFunc(func(name string) vlog.Log { return vlog.NewConsoleLog("delegate:" + name) }))
+	t.Cleanup(func() {
+		vlog.SetFactory(vlog.LogFactoryFunc(func(name string) vlog.Log { return vlog.NewConsoleLog(name) }))
+	})
+
+	if vlog.GetFactory() == nil {
+		t.Fatal("GetFactory should return configured factory")
+	}
+	if got := vlog.Get("facade.delegate"); got.GetName() != "delegate:facade.delegate" {
+		t.Fatalf("Get delegate name = %q", got.GetName())
+	}
+	if got := vlog.GetWithOptions("facade.direct", vlog.WithLoggerFactory(vlog.LogFactoryFunc(func(name string) vlog.Log {
+		return vlog.NewConsoleLog("direct:" + name)
+	}))); got.GetName() != "direct:facade.direct" {
+		t.Fatalf("GetWithOptions delegate name = %q", got.GetName())
+	}
+	if got := vlog.GetDefault(); got.GetName() != "delegate:default" {
+		t.Fatalf("GetDefault delegate name = %q", got.GetName())
+	}
+	if got := vlog.GetDefaultWithOptions(vlog.WithLoggerFactory(vlog.LogFactoryFunc(func(name string) vlog.Log {
+		return vlog.NewConsoleLog("default-option:" + name)
+	}))); got.GetName() != "default-option:default" {
+		t.Fatalf("GetDefaultWithOptions name = %q", got.GetName())
+	}
+}
+
+func TestFacadeLoggerCacheOption(t *testing.T) {
+	created := 0
+	vlog.SetFactory(vlog.LogFactoryFunc(func(name string) vlog.Log {
+		created++
+		return vlog.NewConsoleLog(name)
+	}))
+	t.Cleanup(func() {
+		vlog.SetFactory(vlog.LogFactoryFunc(func(name string) vlog.Log { return vlog.NewConsoleLog(name) }))
+	})
+
+	_ = vlog.LoggerWithOptions("facade.no-cache", vlog.WithLoggerCache(false))
+	_ = vlog.LoggerWithOptions("facade.no-cache", vlog.WithLoggerCache(false))
+	if created != 2 {
+		t.Fatalf("WithLoggerCache(false) created %d loggers, want 2", created)
+	}
+}

@@ -2,6 +2,7 @@ package vlog_test
 
 import (
 	"bytes"
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -38,4 +39,44 @@ func TestFacadeStaticLog(t *testing.T) {
 	vlog.Infof("formatted %s", "info")
 	vlog.Warnf("formatted %s", "warn")
 	vlog.Errorf("formatted %s", "error")
+}
+
+func TestFacadeStaticLogAllOptions(t *testing.T) {
+	old := vlog.GetLogLevel()
+	vlog.SetLogLevel(vlog.LogLevelAll)
+	t.Cleanup(func() { vlog.SetLogLevel(old) })
+
+	out := &bytes.Buffer{}
+	errOut := &bytes.Buffer{}
+	opts := []vlog.LoggerOption{vlog.WithLoggerConsoleOptions(
+		vlog.WithLogOutput(out, errOut),
+		vlog.WithLogClock(func() time.Time { return time.Date(2024, 8, 9, 10, 11, 12, 0, time.UTC) }),
+		vlog.WithLogTimeLayout("15:04:05"),
+	)}
+	vlog.TraceWithOptions(opts, "trace option")
+	vlog.TracefWithOptions(opts, "trace %s", "format")
+	vlog.DebugWithOptions(opts, "debug option")
+	vlog.DebugfWithOptions(opts, "debug %s", "format")
+	vlog.InfofWithOptions(opts, "info %s", "format")
+	vlog.WarnWithOptions(opts, "warn option")
+	vlog.WarnfWithOptions(opts, "warn %s", "format")
+	vlog.ErrorLogWithOptions(opts, "error option")
+	vlog.ErrorfWithOptions(opts, "error %s", "format")
+	vlog.LogAt(vlog.LogLevelInfo, "logat %s", "global")
+	vlog.LogAtWithOptions(opts, vlog.LogLevelInfo, "logat %s", "option")
+	vlog.LogAtE(vlog.LogLevelError, errors.New("global boom"), "loge %s", "global")
+	vlog.LogAtEWithOptions(opts, vlog.LogLevelError, errors.New("option boom"), "loge %s", "option")
+
+	stdout := out.String()
+	for _, want := range []string{"trace option", "trace format", "debug option", "debug format", "info format", "logat option", "10:11:12"} {
+		if !strings.Contains(stdout, want) {
+			t.Fatalf("stdout missing %q: %q", want, stdout)
+		}
+	}
+	stderr := errOut.String()
+	for _, want := range []string{"warn option", "warn format", "error option", "error format", "loge option", "option boom"} {
+		if !strings.Contains(stderr, want) {
+			t.Fatalf("stderr missing %q: %q", want, stderr)
+		}
+	}
 }
