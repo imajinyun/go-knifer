@@ -1,3 +1,5 @@
+//go:generate go run ./bin/api_snapshot.go
+
 // Package knifer is the root package of the go-knifer utility toolkit.
 //
 // This module is split into 48 public subpackages by domain. Import only the
@@ -106,6 +108,4 @@
 // should import the public v* packages. This keeps domain boundaries explicit
 // and allows internal implementations to evolve without exposing every helper as
 // public API.
-
-//go:generate go run ./bin/api_snapshot.go
 package knifer
