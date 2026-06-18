@@ -130,3 +130,37 @@ func TestAttachmentReaderAndInlineFileRendering(t *testing.T) {
 	assertContains(t, text, "Content-Id: <logo-id>")
 	assertContains(t, text, "bG9nby1kYXRh")
 }
+
+func TestNewInlineReader(t *testing.T) {
+	inline, err := NewInlineReader("inline.txt", "cid-123", 11, TypeTextPlain, func() (io.ReadCloser, error) {
+		return io.NopCloser(strings.NewReader("inline-data")), nil
+	})
+	if err != nil {
+		t.Fatalf("NewInlineReader() error = %v", err)
+	}
+	if inline.Name != "inline.txt" || inline.ContentID != "cid-123" {
+		t.Fatalf("inline = %#v", inline)
+	}
+}
+
+func TestWithInlineReader(t *testing.T) {
+	msg, err := NewMessage(
+		WithFrom("from@example.com"),
+		WithTo("to@example.com"),
+		WithHTML(`<img src="cid:cid-123">`),
+		WithInlineReader("inline.txt", "cid-123", 11, TypeTextPlain, func() (io.ReadCloser, error) {
+			return io.NopCloser(strings.NewReader("inline-data")), nil
+		}),
+		WithBoundaryGenerator(sequenceBoundary("with-inline-reader")),
+	)
+	if err != nil {
+		t.Fatalf("NewMessage() with WithInlineReader error = %v", err)
+	}
+	raw, err := msg.Bytes()
+	if err != nil {
+		t.Fatalf("Bytes() error = %v", err)
+	}
+	text := string(raw)
+	assertContains(t, text, "Content-Id: <cid-123>")
+	assertContains(t, text, "aW5saW5lLWRhdGE=")
+}

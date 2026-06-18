@@ -34,3 +34,29 @@ func TestIsValidIDCard15(t *testing.T) {
 		t.Fatal("expected invalid birthday to be rejected")
 	}
 }
+
+func TestIsValidIDCard(t *testing.T) {
+	if !IsValidIDCard("11010519491231002X") {
+		t.Fatal("IsValidIDCard should accept valid 18-digit ID")
+	}
+	if !IsValidIDCard("130503670401001") {
+		t.Fatal("IsValidIDCard should accept valid 15-digit ID")
+	}
+	if IsValidIDCard("") {
+		t.Fatal("IsValidIDCard should reject empty string")
+	}
+	if IsValidIDCard("123") {
+		t.Fatal("IsValidIDCard should reject too-short string")
+	}
+}
+
+func TestCheckCode18(t *testing.T) {
+	// 11010519491231002 has check code X
+	if got := CheckCode18("11010519491231002"); got != 'X' {
+		t.Fatalf("CheckCode18 = %c, want X", got)
+	}
+	// Invalid body length
+	if got := CheckCode18("123"); got != ' ' {
+		t.Fatalf("CheckCode18(short) = %c, want space", got)
+	}
+}

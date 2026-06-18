@@ -14,8 +14,11 @@ func TestStringHashAlgorithms(t *testing.T) {
 	if FnvHashString(s) < 0 {
 		t.Fatal("FnvHashString must be non-negative")
 	}
-	if ApHash(s) == 0 && HfHash(s) == 0 {
-		t.Fatal("ApHash/HfHash unexpectedly zero")
+	if ApHash(s) == 0 {
+		t.Fatal("ApHash unexpectedly zero")
+	}
+	if HfHash(s) == 0 {
+		t.Fatal("HfHash unexpectedly zero")
 	}
 	if HfIpHash(s) == 0 {
 		t.Fatal("HfIpHash unexpectedly zero")

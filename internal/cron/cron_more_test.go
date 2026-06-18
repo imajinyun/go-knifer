@@ -275,3 +275,268 @@ func TestIsLeapYear(t *testing.T) {
 		t.Fatal("2023 should not be leap")
 	}
 }
+
+func TestSchedulerRemoveListener(t *testing.T) {
+	s := NewScheduler()
+	l := SimpleTaskListener{}
+	s.AddListener(l)
+	s.RemoveListener(l) // should not panic
+}
+
+func TestSchedulerTaskTableGetTaskIsEmptyClear(t *testing.T) {
+	s := NewScheduler()
+	if !s.IsEmpty() {
+		t.Fatal("new scheduler should be empty")
+	}
+	tt := s.TaskTable()
+	if tt == nil {
+		t.Fatal("TaskTable should not be nil")
+	}
+	if got := s.GetTask("nonexistent"); got != nil {
+		t.Fatal("GetTask nonexistent should return nil")
+	}
+	s.SchedulePattern("t1", MustNewPattern("* * * * *"), TaskFunc(func() {}))
+	if s.IsEmpty() {
+		t.Fatal("scheduler should not be empty after schedule")
+	}
+	if s.Size() != 1 {
+		t.Fatal("size should be 1")
+	}
+	s.Clear()
+	if !s.IsEmpty() {
+		t.Fatal("scheduler should be empty after Clear")
+	}
+}
+
+func TestMustNewPatternWithOptions(t *testing.T) {
+	p := MustNewPatternWithOptions("* * * * *")
+	if p == nil {
+		t.Fatal("MustNewPatternWithOptions returned nil")
+	}
+	if p.Raw() != "* * * * *" {
+		t.Fatalf("Raw = %q", p.Raw())
+	}
+}
+
+func TestYearValueMatcherNextAfter(t *testing.T) {
+	m := newYearValueMatcher([]int{2020, 2024, 2025, 2030})
+	if !m.Match(2024) {
+		t.Fatal("Match 2024 should be true")
+	}
+	if m.Match(2023) {
+		t.Fatal("Match 2023 should be false")
+	}
+	if got := m.NextAfter(2025); got != 2025 {
+		t.Fatalf("NextAfter(2025) = %d, want 2025", got)
+	}
+	if got := m.NextAfter(2026); got != 2030 {
+		t.Fatalf("NextAfter(2026) = %d, want 2030", got)
+	}
+	if got := m.NextAfter(2031); got != -1 {
+		t.Fatalf("NextAfter(2031) = %d, want -1", got)
+	}
+}
+
+func TestListenerManagerRemove(t *testing.T) {
+	m := newListenerManager()
+	l := SimpleTaskListener{}
+	m.add(l)
+	m.add(SimpleTaskListener{})
+	m.remove(l) // should remove first instance only
+	// Should not panic removing non-existent
+	m.remove(SimpleTaskListener{})
+}
+
+func TestScheduleWrappersWithNewScheduler(t *testing.T) {
+	s := NewScheduler()
+	// Schedule (no WithOptions)
+	_, err := ScheduleWithOptions("* * * * *", TaskFunc(func() {}), WithDefaultScheduler(s))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// ScheduleFunc
+	_, err = ScheduleFuncWithOptions("* * * * *", func() {}, WithDefaultScheduler(s))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// ScheduleWithID
+	err = ScheduleWithIDWithOptions("fixed-id", "* * * * *", TaskFunc(func() {}), WithDefaultScheduler(s))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s.Size() != 3 {
+		t.Fatalf("expected 3 tasks, got %d", s.Size())
+	}
+	// Remove
+	if !RemoveWithOptions("fixed-id", WithDefaultScheduler(s)) {
+		t.Fatal("RemoveWithOptions failed")
+	}
+}
+
+func TestRestartWithOptions(t *testing.T) {
+	s := NewScheduler()
+	if err := s.Start(); err != nil {
+		t.Fatal(err)
+	}
+	if err := RestartWithOptions(WithDefaultScheduler(s)); err != nil {
+		t.Fatal(err)
+	}
+	s.Stop()
+}
+
+func TestStopShutdownWithOptions(t *testing.T) {
+	s := NewScheduler()
+	if err := s.Start(); err != nil {
+		t.Fatal(err)
+	}
+	StopWithOptions(WithDefaultScheduler(s))
+	// Stopped scheduler can be shutdown
+	if err := ShutdownWithOptions(context.Background(), WithDefaultScheduler(s)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestDayOfMonthMatcherIsLast(t *testing.T) {
+	m := newDayOfMonthMatcher([]int{1, 15})
+	if m.IsLast() {
+		t.Fatal("should not have L sentinel")
+	}
+	m2 := newDayOfMonthMatcher([]int{1, 32}) // 32 = lastDayOfMonthSentinel
+	if !m2.IsLast() {
+		t.Fatal("should have L sentinel")
+	}
+}
+
+func TestDayOfMonthMatcherMatchDay(t *testing.T) {
+	m := newDayOfMonthMatcher([]int{15})
+	if !m.MatchDay(15, 1, false) {
+		t.Fatal("MatchDay 15 should be true")
+	}
+	if m.MatchDay(10, 1, false) {
+		t.Fatal("MatchDay 10 should be false")
+	}
+	// L sentinel for last day
+	mL := newDayOfMonthMatcher([]int{1, 32})
+	if !mL.MatchDay(31, 1, false) {
+		t.Fatal("MatchDay 31 (January) should match L")
+	}
+	if !mL.MatchDay(28, 2, false) {
+		t.Fatal("MatchDay 28 (Feb non-leap) should match L (28 is last day)")
+	}
+	if !mL.MatchDay(29, 2, true) {
+		t.Fatal("MatchDay 29 (Feb leap) should match L")
+	}
+	// day that is neither explicit nor last
+	if mL.MatchDay(15, 1, false) {
+		t.Fatal("MatchDay 15 (January) should not match L or explicit values")
+	}
+}
+
+// TestDefaultSchedulerWrappers tests the non-option wrapper functions that delegate to *WithOptions.
+func TestDefaultSchedulerWrappers(t *testing.T) {
+	prev := ConfigureDefaultScheduler()
+	prev.Stop()
+	defer prev.Start()
+
+	s := getDefaultScheduler()
+	SetMatchSecond(true)
+	if !s.IsMatchSecond() {
+		t.Fatal("SetMatchSecond failed")
+	}
+	if err := SetMatchSecondE(false); err != nil {
+		t.Fatal(err)
+	}
+	if s.IsMatchSecond() {
+		t.Fatal("SetMatchSecondE(false) failed")
+	}
+
+	s.SetMatchSecond(true)
+	id, err := Schedule("* * * * * *", TaskFunc(func() {}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if id == "" {
+		t.Fatal("Schedule returned empty id")
+	}
+
+	id2, err := ScheduleFunc("* * * * * *", func() {})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if id2 == "" {
+		t.Fatal("ScheduleFunc returned empty id")
+	}
+
+	if err := ScheduleWithID("fixed-id", "* * * * * *", TaskFunc(func() {})); err != nil {
+		t.Fatal(err)
+	}
+	if s.Size() != 3 {
+		t.Fatalf("expected 3 tasks, got %d", s.Size())
+	}
+
+	if !Remove("fixed-id") {
+		t.Fatal("Remove failed")
+	}
+	if s.Size() != 2 {
+		t.Fatalf("expected 2 tasks after remove, got %d", s.Size())
+	}
+
+	if err := UpdatePattern(id, "0 0 * * *"); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestDefaultSchedulerLifecycleWrappers(t *testing.T) {
+	prev := ConfigureDefaultScheduler()
+	prev.Stop()
+	defer func() {
+		_ = prev.Start()
+	}()
+
+	if err := Start(); err != nil {
+		t.Fatal(err)
+	}
+	Stop()
+	// Shutdown on stopped scheduler
+	if err := Shutdown(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if err := ShutdownWithOptions(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := Start(); err != nil {
+		t.Fatal(err)
+	}
+	if err := Restart(); err != nil {
+		t.Fatal(err)
+	}
+	Stop()
+}
+
+func TestConfigureDefaultScheduler(t *testing.T) {
+	s := ConfigureDefaultScheduler()
+	if s == nil {
+		t.Fatal("ConfigureDefaultScheduler returned nil")
+	}
+	s.Stop()
+}
+
+func TestDefaultSchedulerWrappersOnNilDefault(t *testing.T) {
+	defaultMu.Lock()
+	old := defaultScheduler
+	defaultScheduler = nil
+	defaultMu.Unlock()
+	defer func() {
+		defaultMu.Lock()
+		defaultScheduler = old
+		defaultMu.Unlock()
+	}()
+
+	// Should not panic, should create a new scheduler
+	s := DefaultScheduler()
+	if s == nil {
+		t.Fatal("DefaultScheduler should not return nil")
+	}
+	s.Stop()
+}

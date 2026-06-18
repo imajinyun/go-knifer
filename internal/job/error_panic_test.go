@@ -54,6 +54,26 @@ func TestRunWithHandlesErrorsAndPanics_BitsUT(t *testing.T) {
 	})
 }
 
+func TestSentinelErrorCode(t *testing.T) {
+	if got := ErrNilJob.(*sentinel).ErrorCode(); got != knifer.ErrCodeInvalidInput {
+		t.Fatalf("ErrNilJob.ErrorCode() = %v, want %v", got, knifer.ErrCodeInvalidInput)
+	}
+	if got := ErrInvalidRange.(*sentinel).ErrorCode(); got != knifer.ErrCodeInvalidInput {
+		t.Fatalf("ErrInvalidRange.ErrorCode() = %v, want %v", got, knifer.ErrCodeInvalidInput)
+	}
+}
+
+func TestBatchJobOptions(t *testing.T) {
+	j := NewBatch(func(ctx context.Context, vals []int) (Merge, error) { return nil, nil }, []int{1, 2, 3})
+	opts := j.JobOptions()
+	if opts.BatchSize != 0 {
+		t.Fatalf("JobOptions().BatchSize = %d, want 0", opts.BatchSize)
+	}
+	if opts.MaxConcurrency != 0 {
+		t.Fatalf("JobOptions().MaxConcurrency = %d, want 0", opts.MaxConcurrency)
+	}
+}
+
 func expectPanic(t *testing.T, fn func()) {
 	t.Helper()
 	defer func() {
