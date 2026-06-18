@@ -147,6 +147,7 @@ Useful focused commands:
 
 ```bash
 make doctor
+make worktree-check
 make quick-check
 make security-check
 make install-hooks

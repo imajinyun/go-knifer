@@ -25,7 +25,10 @@ jobs:
           cache: true
 
       - name: Verify release gates
-        run: make ci-test
+        run: make ci-test COVERAGE_FILE=/tmp/go-knifer-release-coverage.out
+
+      - name: Verify release security gates
+        run: make security-check
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

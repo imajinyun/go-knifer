@@ -34,7 +34,7 @@ jobs:
           cache: true
 
       - name: Run CI test gates
-        run: make ci-test
+        run: make ci-test COVERAGE_FILE=coverage.out
 
       - name: Upload coverage
         uses: actions/upload-artifact@v7

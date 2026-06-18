@@ -148,6 +148,7 @@ make check       # 完整本地门禁：测试、vet、lint、漏洞、覆盖率
 
 ```bash
 make doctor
+make worktree-check
 make quick-check
 make security-check
 make install-hooks

@@ -91,6 +91,7 @@
 | `make coverage-report COVERAGE_FILE=<file>` | Print function coverage |
 | `make coverage-check COVERAGE_FILE=<file>` | Enforce coverage gates |
 | `make doctor` | Diagnose local Go/tooling/Git environment without modifying files |
+| `make worktree-check` | Fail when unrelated untracked Go files may pollute tests or commits |
 | `make quick-check` | Fast local: mod-verify → vet → arch → test → api-check → diff-whitespace |
 | `make security-check` | Lint + govulncheck |
 | `make full-check COVERAGE_FILE=/tmp/coverage.out` | Full pre-push: quick-check + race coverage + coverage gate + lint + vuln |
@@ -132,6 +133,8 @@ When the user asks to implement, rename, refactor, document, or otherwise modify
 
 2. **Apply** only the requested logical change. Do not include unrelated local files, generated experiments, secrets, or user-owned untracked files.
 
+   Run `make worktree-check` before broad validation. If unrelated untracked Go files exist, do not stage, edit, delete, or rely on them unless the user explicitly includes them in scope. Set `SKIP_WORKTREE_CHECK=1` only when those files are intentionally excluded and report them.
+
 3. **Format** touched Go files with `gofmt -w` before validation.
 
 4. **Validate** focused tests first, then broaden to repository-level gates when feasible:
@@ -155,9 +158,11 @@ When the user asks to implement, rename, refactor, document, or otherwise modify
 
 7. **Commit**: Generate a conventional commit message from the actual diff, preferring concise messages such as `feat: ...`, `fix: ...`, `docs: ...`, `refactor: ...`, or `test: ...`. Stage only files belonging to the requested logical change, commit them.
 
-8. **Push** the branch to the configured remote when the user asks to commit/push or when the workflow explicitly requires it.
+8. **Local hooks**: `make install-hooks` and `make uninstall-hooks` modify local Git config. Do not run them unless the user explicitly asks to enable or disable hooks.
 
-9. After pushing, run `git status --porcelain=v1 -b` to confirm the branch is clean/in sync, then **report** the commit hash, pushed branch, validation commands, and any intentionally excluded local files.
+9. **Push** the branch to the configured remote when the user asks to commit/push or when the workflow explicitly requires it.
+
+10. After pushing, run `git status --porcelain=v1 -b` to confirm the branch is clean/in sync, then **report** the commit hash, pushed branch, validation commands, and any intentionally excluded local files.
 
 ### Collection modernization
 

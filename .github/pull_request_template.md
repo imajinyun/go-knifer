@@ -16,8 +16,9 @@
 - [ ] I avoided new dependencies in public facades, or updated the architecture allowlist with justification.
 - [ ] I added or updated tests for changed behavior.
 - [ ] I ran `make quick-check` or documented why it is not applicable.
-- [ ] I ran `go test -race -shuffle=on -coverprofile=coverage.out ./...` when the change is non-trivial.
-- [ ] I ran `bash bin/check_coverage.sh coverage.out` when a fresh coverage profile was generated.
+- [ ] I ran `make worktree-check` or documented unrelated untracked files below.
+- [ ] I ran `go test -race -shuffle=on -coverprofile=/tmp/go-knifer-coverage.out ./...` when the change is non-trivial.
+- [ ] I ran `bash bin/check_coverage.sh /tmp/go-knifer-coverage.out` when a fresh coverage profile was generated.
 - [ ] I ran `bash bin/check_arch.sh`.
 - [ ] I ran `golangci-lint run ./...`.
 - [ ] I updated `CHANGELOG.md` for user-visible changes.
@@ -43,6 +44,20 @@
 ## Intentionally excluded files
 
 -
+
+## AI / Agent assistance
+
+- [ ] This PR was not AI-assisted.
+- [ ] This PR was AI-assisted and the generated changes were reviewed.
+- Agent/tools used:
+  -
+- Commands run by Agent:
+  -
+- Commands intentionally skipped by Agent and reason:
+  -
+- Unrelated local/untracked files intentionally excluded:
+  -
+- [ ] No local hook or Git config changes are included unless explicitly requested.
 
 ## Security review
 

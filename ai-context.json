@@ -8,21 +8,142 @@
     "layout": "public v* facade packages delegate to internal/* implementation packages"
   },
   "commands": {
-    "environment_diagnostics": "make doctor",
-    "test": "make test",
-    "quick_check": "make quick-check",
-    "ci_test": "make ci-test",
-    "full_check": "make check",
-    "security_check": "make security-check",
-    "coverage_profile": "make coverage-profile COVERAGE_FILE=/tmp/go-knifer-coverage.out",
-    "coverage_check": "make coverage-check COVERAGE_FILE=/tmp/go-knifer-coverage.out",
-    "api_check": "make api-check",
-    "api_update": "UPDATE_API=1 make api-check",
-    "install_hooks": "make install-hooks",
-    "uninstall_hooks": "make uninstall-hooks",
-    "bench_core": "make bench-core",
-    "bench_facade": "make bench-facade",
-    "bench_codec": "make bench-codec"
+    "environment_diagnostics": {
+      "cmd": "make doctor",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": false,
+      "notes": "Reports local Go/tooling/Git state without modifying repository files."
+    },
+    "worktree_check": {
+      "cmd": "make worktree-check",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": false,
+      "notes": "Fails when unrelated untracked Go files may pollute tests or commits. Use SKIP_WORKTREE_CHECK=1 only when intentionally excluding those files."
+    },
+    "test": {
+      "cmd": "make test",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": false,
+      "notes": "Runs unit tests for PKGS, defaulting to ./...."
+    },
+    "quick_check": {
+      "cmd": "make quick-check",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": false,
+      "notes": "Fast local gate; includes worktree-check, module verification, vet, architecture, tests, API snapshot, and whitespace diff checks."
+    },
+    "ci_test": {
+      "cmd": "make ci-test COVERAGE_FILE=/tmp/go-knifer-coverage.out",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": false,
+      "creates_artifacts": ["/tmp/go-knifer-coverage.out"],
+      "notes": "Local reproduction of the GitHub Actions test job without creating coverage artifacts in the repository root."
+    },
+    "full_check": {
+      "cmd": "make check COVERAGE_FILE=/tmp/go-knifer-coverage.out",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": true,
+      "creates_artifacts": ["/tmp/go-knifer-coverage.out"],
+      "notes": "Full local pre-push gate; govulncheck may require vulnerability database access."
+    },
+    "security_check": {
+      "cmd": "make security-check",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": true,
+      "notes": "Runs golangci-lint and govulncheck."
+    },
+    "coverage_profile": {
+      "cmd": "make coverage-profile COVERAGE_FILE=/tmp/go-knifer-coverage.out",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": false,
+      "creates_artifacts": ["/tmp/go-knifer-coverage.out"],
+      "notes": "Generates a race/shuffle coverage profile outside the repository root."
+    },
+    "coverage_check": {
+      "cmd": "make coverage-check COVERAGE_FILE=/tmp/go-knifer-coverage.out",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": false,
+      "reads_artifacts": ["/tmp/go-knifer-coverage.out"],
+      "notes": "Requires a fresh coverage profile at the configured path."
+    },
+    "api_check": {
+      "cmd": "make api-check",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": false,
+      "notes": "Checks that docs/api/exports.txt is current."
+    },
+    "api_update": {
+      "cmd": "UPDATE_API=1 make api-check",
+      "safe_for_agent_auto_run": false,
+      "requires_user_consent": true,
+      "writes_workspace": true,
+      "writes_git_config": false,
+      "network_required": false,
+      "writes_files": ["docs/api/exports.txt"],
+      "notes": "Only run after confirming an intentional public API change."
+    },
+    "install_hooks": {
+      "cmd": "make install-hooks",
+      "safe_for_agent_auto_run": false,
+      "requires_user_consent": true,
+      "writes_workspace": false,
+      "writes_git_config": true,
+      "network_required": false,
+      "notes": "Modifies local Git config core.hooksPath and file executable bits; do not run unless explicitly requested."
+    },
+    "uninstall_hooks": {
+      "cmd": "make uninstall-hooks",
+      "safe_for_agent_auto_run": false,
+      "requires_user_consent": true,
+      "writes_workspace": false,
+      "writes_git_config": true,
+      "network_required": false,
+      "notes": "Modifies local Git config; do not run unless explicitly requested."
+    },
+    "bench_core": {
+      "cmd": "make bench-core",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": false,
+      "notes": "Runs benchmark baselines for core packages; output is evidence, not a performance claim."
+    },
+    "bench_facade": {
+      "cmd": "make bench-facade",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": false,
+      "notes": "Runs benchmark baselines for facade packages; output is evidence, not a performance claim."
+    },
+    "bench_codec": {
+      "cmd": "make bench-codec",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": false,
+      "notes": "Runs JSON/XML benchmark baselines; output is evidence, not a performance claim."
+    }
   },
   "git_hooks": {
     "optional": true,
