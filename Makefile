@@ -29,6 +29,7 @@ help:
 	@echo "  quick-check     Run fast local governance gates"
 	@echo "  security-check  Run lint and govulncheck"
 	@echo "  full-check      Run full local gates with race coverage"
+	@echo "  generate        Run go:generate directives (API snapshot, code gen)"
 	@echo "  api-check       Verify exported API snapshot is current"
 	@echo "  check           Run local stability gates"
 	@echo "  ci-test         Run CI test-job gates"
@@ -89,6 +90,9 @@ coverage-check:
 
 api-check:
 	bash bin/check_api_compat.sh
+
+generate:
+	$(GO) generate ./...
 
 mod-verify:
 	$(GO) mod verify
