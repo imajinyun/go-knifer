@@ -9,18 +9,97 @@
 - `bin/`: repository validation scripts.
 - `docs/`: project documentation and API stability artifacts.
 - `.github/workflows/`: CI and release automation.
+- `CLAUDE.md`: AI agent guide with workflow and package catalog.
+- `doc.go`: root package with `//go:generate go run ./bin/api_snapshot.go`.
+
+## Package name mapping
+
+| Public facade | Full domain | internal package |
+|---|---|---|
+| vstr | string/text helpers | internal/str |
+| vslice | slice utilities | internal/slice |
+| vmap | map utilities | internal/maps |
+| vcache | caches (FIFO/LRU/LFU/TTL) | internal/cache |
+| vcrypto | cryptography/digests | internal/crypto |
+| vhttp | HTTP (stdlib) | internal/httpx |
+| vresty | HTTP (Resty) | internal/httpx/resty |
+| vjson | JSON | internal/json |
+| vconf | configuration | internal/conf |
+| vid | UUID/Snowflake/NanoId | internal/id |
+| vjwt | JWT sign/verify | internal/jwt |
+| vrand | randomness | internal/rand |
+| vlog | logging | internal/log |
+| verr | error handling (errx) | internal/errx |
+| vfile | file/IO | internal/file |
+| vurl | URL/URI | internal/url |
+| vmask | data masking | internal/mask |
+| vcodec | Base64/Hex | internal/codec |
+| vhash | non-crypto hashes | internal/hash |
+| vzip | archive/compression | internal/zip |
+| vset | sets | internal/sets |
+| vblf | bloom filter | internal/bloomfilter |
+| vbean | struct/map mapping | internal/bean |
+| vconv | type conversion | internal/conv |
+| vdate | date/time | internal/date |
+| vref | reflection | internal/ref |
+| vregex | regular expressions | internal/regex |
+| vtpl | templates | internal/template |
+| vbool | booleans | internal/boolean |
+| vnum | numeric helpers | internal/num |
+| vcsv | CSV | internal/csvx |
+| vimg | images/captchas | internal/imgx |
+| vxml | XML | internal/xml |
+| vmail | email/SMTP | internal/mail |
+| vskt | sockets | internal/socket |
+| vnet | IP/port/network | internal/net |
+| vdb | database/SQL | internal/db |
+| vcron | cron scheduling | internal/cron |
+| vjob | job orchestration | internal/job |
+| vsem | semaphores | internal/semaphore |
+| vdfa | DFA word-tree matching | internal/dfa |
+| vpass | password strength | internal/pass |
+| vident | identity numbers | internal/identity |
+| vform | form/input validation | internal/validator |
+| vver | version comparison | internal/version |
+| vsys | system information | internal/system |
+| vpoi | office documents (Excel) | internal/poi |
+| vyaml | YAML | internal/yaml |
+| vobj | object helpers | internal/obj |
+
+## Iconography
+
+- `v*` = public facade package, `internal/*` = implementation package.
+
+## Architecture rules
+
+1. Facades are thin — forward to `internal/*`, no business logic.
+2. No `v*` imports another `v*` — shared code goes into `internal/*`.
+3. Every `v<domain>` has a `doc.go`.
+4. `internal/*` never imports `v*`.
+5. Production `panic` only in `MustXxx`/`PanicXxx` APIs.
+6. Error contract: root `errors.go` defines `ErrCode`, `Error{Code,Message,Cause}`, `CodeCarrier`, `CodeOf`.
+
+## API design
+
+- Prefer `(result, error)` over `panic`.
+- IO/network functions take `context.Context` as first parameter.
+- Renaming a public symbol = breaking change (SemVer).
+- Security-sensitive: vhttp, vresty, vurl, vconf, vzip, vfile, vcrypto, vjwt, vrand, vid, vdb.
 
 ## Validation commands
 
 - `make quick-check`: fast local gate with module verification, vet, architecture check, unit tests, API snapshot check, and whitespace diff check.
 - `make security-check`: lint and govulncheck vulnerability scan.
 - `make full-check COVERAGE_FILE=/tmp/go-knifer-coverage.out`: full local pre-push gate with module verification, vet, architecture check, race/shuffle coverage, coverage gate, API snapshot check, lint, vulnerability scan, and whitespace diff check.
-- `make ci-test`: GitHub Actions test-job gate with module verification, vet, tidy/diff checks, architecture check, race/shuffle coverage, coverage gate, and exported API snapshot check.
+- `make ci-test`: GitHub Actions test-job gate.
 - `make check`: alias for `make full-check`.
-- `UPDATE_API=1 make api-check`: refresh the root-package and top-level `v*` API snapshot after intentional public API signature, exported field, interface method, or method-set changes.
+- `UPDATE_API=1 make api-check`: refresh the API snapshot after intentional public API changes.
+- `go generate ./...`: refresh the API snapshot (via `//go:generate` in `doc.go`).
+- `go test -race -shuffle=on -coverprofile=coverage.out ./... && bash bin/check_coverage.sh coverage.out`: full coverage check.
 
 ## Governance notes
 
 - Keep package tests split by source-file responsibility.
 - Keep production code free of forbidden panic patterns checked by `bin/check_arch.sh`.
 - Keep total coverage above the threshold enforced by `bin/check_coverage.sh`.
+- API compatibility is CI-enforced via `docs/api/exports.txt` snapshot.

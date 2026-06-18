@@ -1,0 +1,22 @@
+# Auto-detect text files and normalize to LF
+*.go text=auto
+*.md text=auto
+*.yml text=auto
+*.yaml text=auto
+*.sh text=auto
+*.toml text=auto
+*.json text=auto
+*.mod text=auto
+*.sum -text
+*.sum -diff
+*.out -text
+*.jpeg binary
+*.png binary
+*.jpg binary
+*.ico binary
+
+# Git diff behavior
+*.go diff=go
+
+# Generated / vendored files that should never be diffed
+go.sum -diff

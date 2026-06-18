@@ -80,6 +80,7 @@
 //	vform   form and input validators
 //	vver    version comparison (VERsion)
 //	vdb     database/sql helpers
+//	vyaml   YAML
 //
 // Example:
 //
@@ -105,4 +106,6 @@
 // should import the public v* packages. This keeps domain boundaries explicit
 // and allows internal implementations to evolve without exposing every helper as
 // public API.
+
+//go:generate go run ./bin/api_snapshot.go
 package knifer
