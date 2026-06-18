@@ -56,3 +56,173 @@ func TestFacadeSocketFactories(t *testing.T) {
 	}
 	_ = nioClient.Close()
 }
+
+func TestFacadeGeneratedSocketHelpers(t *testing.T) {
+	client, server := net.Pipe()
+	accepted := false
+	action := &vskt.SimpleIoAction{OnAccept: func(session *vskt.AioSession) {
+		accepted = session != nil
+	}}
+	aioClient := vskt.NewAioClientWithConn(client, action, vskt.NewSocketConfig())
+	defer func() { _ = aioClient.Close() }()
+	defer func() { _ = server.Close() }()
+	if aioClient.Session() == nil || !accepted {
+		t.Fatalf("NewAioClientWithConn session=%#v accepted=%v", aioClient.Session(), accepted)
+	}
+
+	addr := &net.TCPAddr{IP: net.ParseIP("127.0.0.1"), Port: 7777}
+	dialer := &facadeFakeDialer{}
+	conn, err := vskt.ChannelUtilDial(nil, 0)
+	if err == nil {
+		_ = conn.Close()
+		t.Fatal("ChannelUtilDial with nil address should fail")
+	}
+	conn, err = vskt.ChannelDialWithOptions(addr, vskt.WithConnectDialer(dialer))
+	if err != nil {
+		t.Fatalf("ChannelDialWithOptions with fake dialer failed: %v", err)
+	}
+	_ = conn.Close()
+	_ = dialer.server.Close()
+
+	remoteClient, remoteServer := net.Pipe()
+	defer func() { _ = remoteClient.Close() }()
+	defer func() { _ = remoteServer.Close() }()
+	if got := vskt.GetRemoteAddress(remoteClient); got == nil {
+		t.Fatal("GetRemoteAddress should return the remote endpoint for net.Pipe")
+	}
+	if got := vskt.SocketRemoteAddress(remoteClient); got == nil {
+		t.Fatal("SocketRemoteAddress should return the remote endpoint for net.Pipe")
+	}
+}
+
+func TestFacadePortServerConstructorsUseListenerFactory(t *testing.T) {
+	plainNio, err := vskt.NewNioServer(0)
+	if err != nil {
+		t.Fatalf("NewNioServer: %v", err)
+	}
+	_ = plainNio.Close()
+
+	nioListener := &facadeFakeListener{addr: facadeFakeAddr("nio-port")}
+	nio, err := vskt.NewNioServerWithOptions(0, vskt.WithListenerFactory(func(addr *net.TCPAddr) (net.Listener, error) {
+		if addr == nil || addr.Port != 0 {
+			return nil, errors.New("unexpected nio port address")
+		}
+		return nioListener, nil
+	}))
+	if err != nil {
+		t.Fatalf("NewNioServerWithOptions: %v", err)
+	}
+	if nio.Listener() != nioListener || nio.LocalAddr().String() != "nio-port" {
+		t.Fatalf("nio listener = %#v addr=%v", nio.Listener(), nio.LocalAddr())
+	}
+	_ = nio.Close()
+
+	nioConfigListener := &facadeFakeListener{addr: facadeFakeAddr("nio-config")}
+	nioWithConfig, err := vskt.NewNioServerWithConfig(0, vskt.NewSocketConfigWithOptions(vskt.WithListenerFactory(func(addr *net.TCPAddr) (net.Listener, error) {
+		if addr == nil || addr.Port != 0 {
+			return nil, errors.New("unexpected nio config address")
+		}
+		return nioConfigListener, nil
+	})))
+	if err != nil {
+		t.Fatalf("NewNioServerWithConfig: %v", err)
+	}
+	if nioWithConfig.Listener() != nioConfigListener {
+		t.Fatalf("nio config listener = %#v", nioWithConfig.Listener())
+	}
+	_ = nioWithConfig.Close()
+
+	nioAddr, err := vskt.NewNioServerAddr(&net.TCPAddr{Port: 0})
+	if err != nil {
+		t.Fatalf("NewNioServerAddr: %v", err)
+	}
+	_ = nioAddr.Close()
+
+	nioAddrConfigListener := &facadeFakeListener{addr: facadeFakeAddr("nio-addr-config")}
+	nioAddrConfig, err := vskt.NewNioServerAddrWithConfig(&net.TCPAddr{Port: 0}, vskt.NewSocketConfigWithOptions(vskt.WithListenerFactory(func(addr *net.TCPAddr) (net.Listener, error) {
+		return nioAddrConfigListener, nil
+	})))
+	if err != nil {
+		t.Fatalf("NewNioServerAddrWithConfig: %v", err)
+	}
+	if nioAddrConfig.Listener() != nioAddrConfigListener {
+		t.Fatalf("nio addr config listener = %#v", nioAddrConfig.Listener())
+	}
+	_ = nioAddrConfig.Close()
+
+	plainAio, err := vskt.NewAioServer(0)
+	if err != nil {
+		t.Fatalf("NewAioServer: %v", err)
+	}
+	_ = plainAio.Close()
+
+	aioListener := &facadeFakeListener{addr: facadeFakeAddr("aio-port")}
+	aio, err := vskt.NewAioServerWithOptions(0, vskt.WithListenerFactory(func(addr *net.TCPAddr) (net.Listener, error) {
+		if addr == nil || addr.Port != 0 {
+			return nil, errors.New("unexpected aio port address")
+		}
+		return aioListener, nil
+	}))
+	if err != nil {
+		t.Fatalf("NewAioServerWithOptions: %v", err)
+	}
+	if aio.Listener() != aioListener || aio.LocalAddr().String() != "aio-port" {
+		t.Fatalf("aio listener = %#v addr=%v", aio.Listener(), aio.LocalAddr())
+	}
+	_ = aio.Close()
+
+	aioAddrListener := &facadeFakeListener{addr: facadeFakeAddr("aio-addr")}
+	aioAddr, err := vskt.NewAioServerAddr(&net.TCPAddr{Port: 0}, vskt.NewSocketConfigWithOptions(vskt.WithListenerFactory(func(addr *net.TCPAddr) (net.Listener, error) {
+		return aioAddrListener, nil
+	})))
+	if err != nil {
+		t.Fatalf("NewAioServerAddr: %v", err)
+	}
+	if aioAddr.Listener() != aioAddrListener {
+		t.Fatalf("aio addr listener = %#v", aioAddr.Listener())
+	}
+	_ = aioAddr.Close()
+}
+
+func TestFacadeClientConstructorsWithProviders(t *testing.T) {
+	dialed := false
+	client, server := net.Pipe()
+	defer func() { _ = server.Close() }()
+	nioClient, err := vskt.NewNioClientWithOptions("service.local", 8080,
+		vskt.WithSocketIPParser(func(host string) net.IP {
+			if host != "service.local" {
+				t.Fatalf("host = %q, want service.local", host)
+			}
+			return net.IPv4(127, 0, 0, 1)
+		}),
+		vskt.WithConnFactory(func(addr *net.TCPAddr) (net.Conn, error) {
+			dialed = true
+			if addr.Port != 8080 {
+				return nil, errors.New("unexpected nio client port")
+			}
+			return client, nil
+		}),
+	)
+	if err != nil {
+		t.Fatalf("NewNioClientWithOptions: %v", err)
+	}
+	if !dialed || nioClient.Channel() != client {
+		t.Fatalf("NewNioClientWithOptions dialed=%v channel=%#v", dialed, nioClient.Channel())
+	}
+	_ = nioClient.Close()
+
+	if _, err := vskt.NewAioClient(nil, &vskt.SimpleIoAction{}); err == nil {
+		t.Fatal("NewAioClient with nil address should fail")
+	}
+	if _, err := vskt.NewAioClientWithConfig(nil, &vskt.SimpleIoAction{}, vskt.NewSocketConfig()); err == nil {
+		t.Fatal("NewAioClientWithConfig with nil address should fail")
+	}
+
+	sessionClient, sessionServer := net.Pipe()
+	defer func() { _ = sessionServer.Close() }()
+	session := vskt.NewAioSession(sessionClient, &vskt.SimpleIoAction{}, vskt.NewSocketConfig())
+	if session == nil {
+		t.Fatal("NewAioSession returned nil")
+	}
+	_ = session.Close()
+}
