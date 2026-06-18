@@ -120,6 +120,7 @@ More recommendations are documented in [Recommended API entry points](./docs/doc
 - 🌐 Online Go docs: [pkg.go.dev/github.com/imajinyun/go-knifer](https://pkg.go.dev/github.com/imajinyun/go-knifer)
 - 🧾 API snapshot: [`docs/api/exports.txt`](./docs/api/exports.txt)
 - 🗺️ AI-oriented project map: [`llms.txt`](./llms.txt)
+- 🤖 Machine-readable AI/CLI metadata: [`ai-context.json`](./ai-context.json)
 - 🧯 Security policy: [`SECURITY.md`](./SECURITY.md)
 - 📝 Changelog: [`CHANGELOG.md`](./CHANGELOG.md)
 
@@ -145,8 +146,10 @@ make check       # full local gate: tests, vet, lint, vuln, coverage, API checks
 Useful focused commands:
 
 ```bash
+make doctor
 make quick-check
 make security-check
+make install-hooks
 make bench-core
 make bench-facade
 UPDATE_API=1 make api-check

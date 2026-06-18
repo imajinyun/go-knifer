@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+set -eu
+
+echo "go-knifer pre-commit: running make quick-check"
+make quick-check

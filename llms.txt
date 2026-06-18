@@ -63,7 +63,6 @@
 | vver | version comparison | internal/version |
 | vsys | system information | internal/system |
 | vpoi | office documents (Excel) | internal/poi |
-| vyaml | YAML | internal/yaml |
 | vobj | object helpers | internal/obj |
 
 ## Iconography
@@ -89,8 +88,10 @@
 ## Validation commands
 
 - `make quick-check`: fast local gate with module verification, vet, architecture check, unit tests, API snapshot check, and whitespace diff check.
+- `make doctor`: diagnose the local Go/tooling/Git environment without modifying repository files.
 - `make security-check`: lint and govulncheck vulnerability scan.
 - `make full-check COVERAGE_FILE=/tmp/go-knifer-coverage.out`: full local pre-push gate with module verification, vet, architecture check, race/shuffle coverage, coverage gate, API snapshot check, lint, vulnerability scan, and whitespace diff check.
+- `make install-hooks`: enable optional Git hooks that run `make quick-check` before commit and `make full-check COVERAGE_FILE=/tmp/go-knifer-coverage.out` before push.
 - `make ci-test`: GitHub Actions test-job gate.
 - `make check`: alias for `make full-check`.
 - `UPDATE_API=1 make api-check`: refresh the API snapshot after intentional public API changes.

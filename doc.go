@@ -82,7 +82,6 @@
 //	vform   form and input validators
 //	vver    version comparison (VERsion)
 //	vdb     database/sql helpers
-//	vyaml   YAML
 //
 // Example:
 //

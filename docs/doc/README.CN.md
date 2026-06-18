@@ -22,6 +22,7 @@
 - 🌐 在线 Go 文档：[pkg.go.dev/github.com/imajinyun/go-knifer](https://pkg.go.dev/github.com/imajinyun/go-knifer)
 - 🧾 公共 API 快照：[`../api/exports.txt`](../api/exports.txt)
 - 🗺️ AI 项目地图：[`../../llms.txt`](../../llms.txt)
+- 🤖 机器可读 AI/CLI 元数据：[`../../ai-context.json`](../../ai-context.json)
 - 🧯 安全策略：[`../../SECURITY.md`](../../SECURITY.md)
 - 📝 变更日志：[`../../CHANGELOG.md`](../../CHANGELOG.md)
 
@@ -197,6 +198,18 @@ cd go-knifer
 make test
 ```
 
+诊断本地 Go/tooling/Git 环境，且不修改文件：
+
+```bash
+make doctor
+```
+
+可选安装本地 Git hooks，使提交前运行 `make quick-check`，推送前运行 `make full-check COVERAGE_FILE=/tmp/go-knifer-coverage.out`：
+
+```bash
+make install-hooks
+```
+
 本地运行 CI test-job 门禁。它会验证模块、vet、tidy/diff 清洁度、架构规则、race/shuffle 测试、覆盖率门禁和导出 API 快照：
 
 ```bash
@@ -241,7 +254,7 @@ gofmt -w .
 - 发布说明：参见 [`../../CHANGELOG.md`](../../CHANGELOG.md)。面向用户的变更应在打发布标签前记录。
 - 覆盖率门禁：CI 使用 `bash bin/check_coverage.sh coverage.out` 执行仓库基线。只有新增测试支撑后，才提升 `COVERAGE_THRESHOLD` 或 `PACKAGE_COVERAGE_THRESHOLDS`。
 - API 门禁：`make api-check` 会将根包和顶层 `v*` 包的 API 签名、导出字段、接口方法和方法集与 [`../api/exports.txt`](../api/exports.txt) 对比。仅在有意修改公共 API 时提交刷新后的快照。
-- 工作流门禁：使用 `make quick-check` 做快速本地验证，使用 `make security-check` 做 lint 与漏洞扫描，使用 `make full-check COVERAGE_FILE=/tmp/go-knifer-coverage.out` 做完整 pre-push 门禁，使用 `make ci-test` 对齐 GitHub Actions test-job。
+- 工作流门禁：使用 `make doctor` 做环境诊断，使用 `make quick-check` 做快速本地验证，使用 `make security-check` 做 lint 与漏洞扫描，使用 `make full-check COVERAGE_FILE=/tmp/go-knifer-coverage.out` 做完整 pre-push 门禁，使用 `make ci-test` 对齐 GitHub Actions test-job。可选 Git hooks 可通过 `make install-hooks` 启用，并通过 `make uninstall-hooks` 关闭。
 - 安全抑制：保持 `.golangci.yml`、`#nosec` 和 `//nolint:gosec` 例外范围足够窄，并在调用点说明原因；扩大排除前优先补充回归测试。
 - Benchmark 基线：使用 `make bench-core` 确认热点工具函数 benchmark 可运行，或使用 `make bench-facade` 确认对应 public facade 包 benchmark 可运行。除非单独使用 `benchstat` 对比，否则输出只作为基线。
 

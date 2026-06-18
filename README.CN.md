@@ -121,6 +121,7 @@ go get github.com/imajinyun/go-knifer
 - 🌐 在线 Go 文档：[pkg.go.dev/github.com/imajinyun/go-knifer](https://pkg.go.dev/github.com/imajinyun/go-knifer)
 - 🧾 API 快照：[`docs/api/exports.txt`](./docs/api/exports.txt)
 - 🗺️ AI 项目地图：[`llms.txt`](./llms.txt)
+- 🤖 机器可读 AI/CLI 元数据：[`ai-context.json`](./ai-context.json)
 - 🧯 安全策略：[`SECURITY.md`](./SECURITY.md)
 - 📝 变更日志：[`CHANGELOG.md`](./CHANGELOG.md)
 
@@ -146,8 +147,10 @@ make check       # 完整本地门禁：测试、vet、lint、漏洞、覆盖率
 常用聚焦命令：
 
 ```bash
+make doctor
 make quick-check
 make security-check
+make install-hooks
 make bench-core
 make bench-facade
 UPDATE_API=1 make api-check

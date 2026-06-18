@@ -81,7 +81,6 @@
 | vver | version comparison | internal/version |
 | vsys | system information | internal/system |
 | vpoi | office documents (Excel) | internal/poi |
-| vyaml | YAML | internal/yaml |
 
 ### Validation commands
 
@@ -91,9 +90,11 @@
 | `make test-race` / `make coverage-profile` | Race/shuffle tests with coverage |
 | `make coverage-report COVERAGE_FILE=<file>` | Print function coverage |
 | `make coverage-check COVERAGE_FILE=<file>` | Enforce coverage gates |
+| `make doctor` | Diagnose local Go/tooling/Git environment without modifying files |
 | `make quick-check` | Fast local: mod-verify → vet → arch → test → api-check → diff-whitespace |
 | `make security-check` | Lint + govulncheck |
 | `make full-check COVERAGE_FILE=/tmp/coverage.out` | Full pre-push: quick-check + race coverage + coverage gate + lint + vuln |
+| `make install-hooks` / `make uninstall-hooks` | Enable or disable optional local Git hooks for pre-commit/pre-push validation |
 | `make ci-test` | CI test-job gate (mod-verify + vet + tidy-check + diff-check + arch + test-race + coverage-check + api-check) |
 | `make check` | Alias for `full-check` |
 | `UPDATE_API=1 make api-check` | Refresh API snapshot after intentional public API changes |

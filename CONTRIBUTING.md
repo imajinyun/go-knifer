@@ -1,7 +1,7 @@
 # Contributing to go-knifer
 
 Thanks for contributing! go-knifer is a large, multi-domain Go utility library
-(45 public subpackages). To keep it consistent and maintainable at this scale,
+(48 public subpackages). To keep it consistent and maintainable at this scale,
 please follow the conventions below. Most of them are enforced by CI
 (`go vet`, `golangci-lint`, and `bin/check_arch.sh`).
 

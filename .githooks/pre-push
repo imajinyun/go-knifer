@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+set -eu
+
+COVERAGE_FILE="${COVERAGE_FILE:-/tmp/go-knifer-coverage.out}"
+export COVERAGE_FILE
+
+echo "go-knifer pre-push: running make full-check COVERAGE_FILE=${COVERAGE_FILE}"
+make full-check COVERAGE_FILE="${COVERAGE_FILE}"
