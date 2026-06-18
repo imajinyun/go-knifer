@@ -15,7 +15,7 @@
 - [ ] I kept `v*` packages as thin facades over `internal/*`.
 - [ ] I avoided new dependencies in public facades, or updated the architecture allowlist with justification.
 - [ ] I added or updated tests for changed behavior.
-- [ ] I ran `make quick-check` or documented why it is not applicable.
+- [ ] I ran `make agent-check` or documented why it is not applicable.
 - [ ] I ran `make worktree-check` or documented unrelated untracked files below.
 - [ ] I ran `go test -race -shuffle=on -coverprofile=/tmp/go-knifer-coverage.out ./...` when the change is non-trivial.
 - [ ] I ran `bash bin/check_coverage.sh /tmp/go-knifer-coverage.out` when a fresh coverage profile was generated.
@@ -51,9 +51,12 @@
 - [ ] This PR was AI-assisted and the generated changes were reviewed.
 - Agent/tools used:
   -
+- Highest Agent command risk level used: low / medium / high / forbidden_for_agent / not applicable
 - Commands run by Agent:
   -
 - Commands intentionally skipped by Agent and reason:
+  -
+- User-consent commands executed by Agent:
   -
 - Unrelated local/untracked files intentionally excluded:
   -

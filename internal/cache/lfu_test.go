@@ -23,3 +23,11 @@ func TestLFUCache(t *testing.T) {
 		t.Fatalf("key3 should be evicted")
 	}
 }
+
+func TestLFUWithTimeoutConstructor(t *testing.T) {
+	c := NewLFUCacheWithTimeout[string, string](10, time.Second)
+	c.Put("a", "1")
+	if v, ok := c.Get("a"); !ok || v != "1" {
+		t.Fatalf("LFU with timeout: got %q, %v", v, ok)
+	}
+}

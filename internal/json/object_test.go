@@ -18,6 +18,39 @@ func TestObjectOrderPreserved(t *testing.T) {
 	}
 }
 
+func TestObjectUnmarshalJSON(t *testing.T) {
+	var obj JSONObject
+	if err := obj.UnmarshalJSON([]byte(`{"a":1,"b":"x"}`)); err != nil {
+		t.Fatalf("UnmarshalJSON: %v", err)
+	}
+	if obj.GetInt("a") != 1 || obj.GetString("b") != "x" {
+		t.Fatalf("after UnmarshalJSON: %s", obj.String())
+	}
+
+	var bad JSONObject
+	if err := bad.UnmarshalJSON([]byte(`[1,2]`)); err == nil {
+		t.Fatal("expect error for array in object UnmarshalJSON")
+	}
+}
+
+func TestQuoteAndGetByPathOr(t *testing.T) {
+	if got := Quote(`a"b`); got != `"a\"b"` {
+		t.Fatalf("Quote = %q", got)
+	}
+	if got := Quote("plain"); got != `"plain"` {
+		t.Fatalf("Quote plain = %q", got)
+	}
+
+	root := NewJSONObject().Set("x", 42)
+	got := GetByPathOr(root, "x", 0)
+	if v, ok := got.(int64); !ok || v != 42 {
+		t.Fatalf("GetByPathOr found = %v (type %T), want int64(42)", got, got)
+	}
+	if got := GetByPathOr(root, "missing", "def"); got != "def" {
+		t.Fatalf("GetByPathOr default = %v", got)
+	}
+}
+
 func TestNullHandling(t *testing.T) {
 	obj := NewJSONObject().Set("a", nil)
 	if !obj.IsNull("a") {

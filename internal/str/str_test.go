@@ -4,6 +4,63 @@ import "testing"
 
 // Tests cover the utility toolkit-core CharSequenceUtilTest and StrUtilTest.
 
+func TestDefaultFunctions(t *testing.T) {
+	if got := DefaultIfEmpty("", "def"); got != "def" {
+		t.Fatalf("DefaultIfEmpty('', 'def') = %q", got)
+	}
+	if got := DefaultIfEmpty("x", "def"); got != "x" {
+		t.Fatalf("DefaultIfEmpty('x', 'def') = %q", got)
+	}
+	if got := DefaultIfBlank("", "def"); got != "def" {
+		t.Fatalf("DefaultIfBlank('', 'def') = %q", got)
+	}
+	if got := DefaultIfBlank("  ", "def"); got != "def" {
+		t.Fatalf("DefaultIfBlank('  ', 'def') = %q", got)
+	}
+	if got := DefaultIfBlank("x", "def"); got != "x" {
+		t.Fatalf("DefaultIfBlank('x', 'def') = %q", got)
+	}
+}
+
+func TestHTMLEscape(t *testing.T) {
+	if got := EscapeHTML(`<script>"&x'`); got != `&lt;script&gt;&quot;&amp;x&#39;` {
+		t.Fatalf("EscapeHTML = %q", got)
+	}
+	if got := UnescapeHTML(`&lt;script&gt;&quot;&amp;x&#39;`); got != `<script>"&x'` {
+		t.Fatalf("UnescapeHTML = %q", got)
+	}
+	if got := UnescapeHTML("&nbsp;"); got != "\u00A0" {
+		t.Fatalf("UnescapeHTML nbsp = %q", got)
+	}
+	if got := UnescapeHTML("&apos;"); got != "'" {
+		t.Fatalf("UnescapeHTML apos = %q", got)
+	}
+}
+
+func TestTrimAndSplit(t *testing.T) {
+	if got := Trim(" a "); got != "a" {
+		t.Fatalf("Trim = %q", got)
+	}
+	if got := TrimToEmpty(" b "); got != "b" {
+		t.Fatalf("TrimToEmpty = %q", got)
+	}
+	if got := TrimStart(" a "); got != "a " {
+		t.Fatalf("TrimStart = %q", got)
+	}
+	if got := TrimEnd(" a "); got != " a" {
+		t.Fatalf("TrimEnd = %q", got)
+	}
+	if got := Split("", ","); len(got) != 0 {
+		t.Fatalf("Split('') = %v, want empty", got)
+	}
+	if got := Split("a,b,c", ","); len(got) != 3 || got[0] != "a" || got[1] != "b" || got[2] != "c" {
+		t.Fatalf("Split = %v", got)
+	}
+	if !Contains("abc", "b") || Contains("abc", "z") {
+		t.Fatalf("Contains failed")
+	}
+}
+
 func TestIsEmptyAndBlank(t *testing.T) {
 	if !IsEmpty("") || IsEmpty("a") {
 		t.Fatalf("IsEmpty failed")

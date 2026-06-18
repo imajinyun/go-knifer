@@ -95,6 +95,9 @@
 | `make quick-check` | Fast local: mod-verify → vet → arch → test → api-check → diff-whitespace |
 | `make security-check` | Lint + govulncheck |
 | `make full-check COVERAGE_FILE=/tmp/coverage.out` | Full pre-push: quick-check + race coverage + coverage gate + lint + vuln |
+| `make agent-check` | Default AI/Agent-safe validation gate; delegates to `quick-check` |
+| `make agent-full-check COVERAGE_FILE=/tmp/go-knifer-coverage.out` | Full AI/Agent validation gate with coverage, lint, and vulnerability scan |
+| `make agent-security-check` | AI/Agent security validation gate |
 | `make install-hooks` / `make uninstall-hooks` | Enable or disable optional local Git hooks for pre-commit/pre-push validation |
 | `make ai-context-check` | Validate machine-readable AI metadata, command side effects, facade inventory, and coverage gates |
 | `make generate` | Run repository go:generate directives; ask first because generated files may change |
@@ -118,10 +121,10 @@
 
 ### Governance constraints
 
-- **Coverage**: Keep total coverage above the threshold in `bin/check_coverage.sh`.
+- **Coverage**: Keep total coverage above the threshold in `ai-context.json`; `bin/check_coverage.sh` reads `ai-context.json` as the default source of truth.
 - **Architecture**: 8 rules enforced by `bin/check_arch.sh` — doc.go existence, no v*-to-v* imports, per-file internal/ imports, no internal→v* imports, package comments, panic policy, facade boundary policy, dependency allowlist.
 - **API snapshot**: `docs/api/exports.txt` is CI-enforced. Run `UPDATE_API=1 make api-check` after intentional public API changes.
-- **AI metadata**: `ai-context.json` is CI-enforced by `make ai-context-check`; update command side-effect metadata when Makefile targets, facades, security-sensitive package lists, or coverage gates change.
+- **AI metadata**: `ai-context.json` is CI-enforced by `make ai-context-check`; update command side-effect metadata, `risk_level`, facades, security-sensitive package lists, or coverage gates when governance inputs change.
 - **Panic**: Production code must not introduce new `panic()` calls unless in a `MustXxx`/`PanicXxx` function.
 
 ---
@@ -149,14 +152,14 @@ When the user asks to implement, rename, refactor, document, or otherwise modify
    - `golangci-lint run ./...` after non-trivial Go code or test changes when the tool is available.
    - For coverage gates, first generate a fresh profile, then pass that exact file to the checker, e.g. `go test -race -shuffle=on -coverprofile=/tmp/go-knifer-coverage.out ./...` followed by `bash bin/check_coverage.sh /tmp/go-knifer-coverage.out`. Do not rely on an implicit or stale `coverage.out`.
    - `git diff --check` before committing.
-   - Prefer the named workflow targets when they match the change scope: `make quick-check` for fast local validation, `make security-check` for lint/vulnerability gates, `make full-check` or `make check` for the full pre-push gate, and `make ci-test` for the CI test-job gate.
+   - Prefer the named workflow targets when they match the change scope: `make agent-check` for the default AI/Agent-safe gate, `make agent-security-check` for lint/vulnerability gates, `make agent-full-check COVERAGE_FILE=/tmp/go-knifer-coverage.out` for the full AI/Agent gate, and `make ci-test` for the CI test-job gate.
 
 5. If validation fails, **fix the cause** and re-run the failing command before reporting completion.
 
 6. Before committing, **re-check the final staged logical change**:
    - Run `git status --porcelain=v1 -b` and review `git diff --stat` / `git diff --staged --stat` so the commit contains only the requested files.
    - Ensure the latest validation was run after the final edit/API snapshot update, not before it.
-   - For non-trivial Go changes, the pre-commit validation set should include: focused package tests, `go test -v -gcflags="all=-l -N" ./...`, `go vet ./...`, `bash bin/check_arch.sh`, `bash bin/check_api_compat.sh`, `golangci-lint run ./...`, `go test -race -shuffle=on -coverprofile=/tmp/go-knifer-coverage.out ./...`, `bash bin/check_coverage.sh /tmp/go-knifer-coverage.out`, and `git diff --check`. `make full-check COVERAGE_FILE=/tmp/go-knifer-coverage.out` is the preferred aggregate target when a full local gate is feasible.
+   - For non-trivial Go changes, the pre-commit validation set should include: focused package tests, `go test -v -gcflags="all=-l -N" ./...`, `go vet ./...`, `bash bin/check_arch.sh`, `bash bin/check_api_compat.sh`, `golangci-lint run ./...`, `go test -race -shuffle=on -coverprofile=/tmp/go-knifer-coverage.out ./...`, `bash bin/check_coverage.sh /tmp/go-knifer-coverage.out`, and `git diff --check`. `make agent-full-check COVERAGE_FILE=/tmp/go-knifer-coverage.out` is the preferred AI/Agent aggregate target when a full local gate is feasible.
    - If a public API snapshot was intentionally refreshed, run the API check once to observe the stale snapshot, then `UPDATE_API=1 bash bin/check_api_compat.sh`, then re-run `bash bin/check_api_compat.sh` and include `docs/api/exports.txt` in the same logical commit.
 
 7. **Commit**: Generate a conventional commit message from the actual diff, preferring concise messages such as `feat: ...`, `fix: ...`, `docs: ...`, `refactor: ...`, or `test: ...`. Stage only files belonging to the requested logical change, commit them.

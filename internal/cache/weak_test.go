@@ -20,6 +20,17 @@ func TestWeakCacheBasic(t *testing.T) {
 	}
 }
 
+func TestWeakCacheStats(t *testing.T) {
+	c := NewWeak[string, int](0)
+	v := 42
+	c.Put("a", &v)
+	_, _ = c.Get("a")
+	_, _ = c.Get("missing")
+	if c.HitCount() != 1 || c.MissCount() != 1 {
+		t.Fatalf("WeakCache stats: hit=%d miss=%d", c.HitCount(), c.MissCount())
+	}
+}
+
 func TestWeakCacheTimeout(t *testing.T) {
 	c := NewWeak[string, int](10 * time.Millisecond)
 	v := 42

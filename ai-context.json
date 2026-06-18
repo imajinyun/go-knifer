@@ -14,6 +14,7 @@
       "writes_workspace": false,
       "writes_git_config": false,
       "network_required": false,
+      "risk_level": "low",
       "notes": "Reports local Go/tooling/Git state without modifying repository files."
     },
     "worktree_check": {
@@ -22,6 +23,7 @@
       "writes_workspace": false,
       "writes_git_config": false,
       "network_required": false,
+      "risk_level": "low",
       "notes": "Fails when unrelated untracked Go files may pollute tests or commits. Use SKIP_WORKTREE_CHECK=1 only when intentionally excluding those files."
     },
     "test": {
@@ -30,6 +32,7 @@
       "writes_workspace": false,
       "writes_git_config": false,
       "network_required": false,
+      "risk_level": "low",
       "notes": "Runs unit tests for PKGS, defaulting to ./...."
     },
     "quick_check": {
@@ -38,7 +41,36 @@
       "writes_workspace": false,
       "writes_git_config": false,
       "network_required": false,
+      "risk_level": "low",
       "notes": "Fast local gate; includes worktree-check, module verification, vet, architecture, tests, API snapshot, and whitespace diff checks."
+    },
+    "agent_check": {
+      "cmd": "make agent-check",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": false,
+      "risk_level": "low",
+      "notes": "Default AI/Agent-safe validation entrypoint; delegates to quick-check."
+    },
+    "agent_full_check": {
+      "cmd": "make agent-full-check COVERAGE_FILE=/tmp/go-knifer-coverage.out",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": true,
+      "risk_level": "medium",
+      "creates_artifacts": ["/tmp/go-knifer-coverage.out"],
+      "notes": "Full AI/Agent validation entrypoint; runs race coverage, lint, and vulnerability checks."
+    },
+    "agent_security_check": {
+      "cmd": "make agent-security-check",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": true,
+      "risk_level": "medium",
+      "notes": "AI/Agent security validation entrypoint; runs lint and govulncheck."
     },
     "ci_test": {
       "cmd": "make ci-test COVERAGE_FILE=/tmp/go-knifer-coverage.out",
@@ -46,6 +78,7 @@
       "writes_workspace": false,
       "writes_git_config": false,
       "network_required": false,
+      "risk_level": "medium",
       "creates_artifacts": ["/tmp/go-knifer-coverage.out"],
       "notes": "Local reproduction of the GitHub Actions test job without creating coverage artifacts in the repository root."
     },
@@ -55,6 +88,7 @@
       "writes_workspace": false,
       "writes_git_config": false,
       "network_required": true,
+      "risk_level": "medium",
       "creates_artifacts": ["/tmp/go-knifer-coverage.out"],
       "notes": "Full local pre-push gate; govulncheck may require vulnerability database access."
     },
@@ -64,6 +98,7 @@
       "writes_workspace": false,
       "writes_git_config": false,
       "network_required": true,
+      "risk_level": "medium",
       "notes": "Runs golangci-lint and govulncheck."
     },
     "coverage_profile": {
@@ -72,6 +107,7 @@
       "writes_workspace": false,
       "writes_git_config": false,
       "network_required": false,
+      "risk_level": "medium",
       "creates_artifacts": ["/tmp/go-knifer-coverage.out"],
       "notes": "Generates a race/shuffle coverage profile outside the repository root."
     },
@@ -81,6 +117,7 @@
       "writes_workspace": false,
       "writes_git_config": false,
       "network_required": false,
+      "risk_level": "medium",
       "reads_artifacts": ["/tmp/go-knifer-coverage.out"],
       "notes": "Requires a fresh coverage profile at the configured path."
     },
@@ -90,6 +127,7 @@
       "writes_workspace": false,
       "writes_git_config": false,
       "network_required": false,
+      "risk_level": "low",
       "notes": "Checks that docs/api/exports.txt is current."
     },
     "ai_context_check": {
@@ -98,6 +136,7 @@
       "writes_workspace": false,
       "writes_git_config": false,
       "network_required": false,
+      "risk_level": "low",
       "notes": "Validates ai-context.json schema, command side-effect metadata, facade inventory, and security-sensitive package references."
     },
     "generate": {
@@ -107,6 +146,7 @@
       "writes_workspace": true,
       "writes_git_config": false,
       "network_required": false,
+      "risk_level": "high",
       "writes_files": ["docs/api/exports.txt"],
       "notes": "Runs repository go:generate directives. Only run after confirming generated output is expected."
     },
@@ -117,6 +157,7 @@
       "writes_workspace": true,
       "writes_git_config": false,
       "network_required": false,
+      "risk_level": "high",
       "writes_files": ["docs/api/exports.txt"],
       "notes": "Only run after confirming an intentional public API change."
     },
@@ -127,6 +168,7 @@
       "writes_workspace": false,
       "writes_git_config": true,
       "network_required": false,
+      "risk_level": "high",
       "notes": "Modifies local Git config core.hooksPath and file executable bits; do not run unless explicitly requested."
     },
     "uninstall_hooks": {
@@ -136,6 +178,7 @@
       "writes_workspace": false,
       "writes_git_config": true,
       "network_required": false,
+      "risk_level": "high",
       "notes": "Modifies local Git config; do not run unless explicitly requested."
     },
     "bench_core": {
@@ -144,6 +187,7 @@
       "writes_workspace": false,
       "writes_git_config": false,
       "network_required": false,
+      "risk_level": "low",
       "notes": "Runs benchmark baselines for core packages; output is evidence, not a performance claim."
     },
     "bench_facade": {
@@ -152,6 +196,7 @@
       "writes_workspace": false,
       "writes_git_config": false,
       "network_required": false,
+      "risk_level": "low",
       "notes": "Runs benchmark baselines for facade packages; output is evidence, not a performance claim."
     },
     "bench_codec": {
@@ -160,6 +205,7 @@
       "writes_workspace": false,
       "writes_git_config": false,
       "network_required": false,
+      "risk_level": "low",
       "notes": "Runs JSON/XML benchmark baselines; output is evidence, not a performance claim."
     }
   },

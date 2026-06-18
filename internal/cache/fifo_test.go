@@ -34,3 +34,11 @@ func TestFIFOCapacity(t *testing.T) {
 		t.Fatalf("size: %d", got)
 	}
 }
+
+func TestFIFOWithTimeoutConstructor(t *testing.T) {
+	c := NewFIFOCacheWithTimeout[string, string](10, time.Second)
+	c.Put("a", "1")
+	if v, ok := c.Get("a"); !ok || v != "1" {
+		t.Fatalf("FIFO with timeout: got %q, %v", v, ok)
+	}
+}

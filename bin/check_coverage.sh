@@ -1,13 +1,37 @@
 #!/usr/bin/env bash
 #
 # check_coverage.sh enforces repository-wide and package-level coverage baselines.
-# Set COVERAGE_THRESHOLD or PACKAGE_COVERAGE_THRESHOLDS to tune required percentages.
+# ai-context.json is the source of truth for default thresholds.
+# Set COVERAGE_THRESHOLD or PACKAGE_COVERAGE_THRESHOLDS to override defaults locally.
 
 set -euo pipefail
 
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+AI_CONTEXT="${ROOT_DIR}/ai-context.json"
+
 coverage_file="${1:-coverage.out}"
-threshold="${COVERAGE_THRESHOLD:-75.2}"
-package_thresholds="${PACKAGE_COVERAGE_THRESHOLDS:-github.com/imajinyun/go-knifer/vhttp=75.0 github.com/imajinyun/go-knifer/vresty=65.0 github.com/imajinyun/go-knifer/vconf=75.0 github.com/imajinyun/go-knifer/vzip=80.0 github.com/imajinyun/go-knifer/vcrypto=70.0 github.com/imajinyun/go-knifer/vurl=80.0 github.com/imajinyun/go-knifer/vfile=85.0 github.com/imajinyun/go-knifer/vset=80.0 github.com/imajinyun/go-knifer/vdate=85.0 github.com/imajinyun/go-knifer/vform=90.0 github.com/imajinyun/go-knifer/vbean=90.0 github.com/imajinyun/go-knifer/vcache=90.0 github.com/imajinyun/go-knifer/vimg=90.0 github.com/imajinyun/go-knifer/vsys=90.0 github.com/imajinyun/go-knifer/internal/db=60.0 github.com/imajinyun/go-knifer/internal/obj=90.0 github.com/imajinyun/go-knifer/internal/validator=100.0 github.com/imajinyun/go-knifer/internal/bean=75.0 github.com/imajinyun/go-knifer/internal/net=80.0 github.com/imajinyun/go-knifer/internal/url=80.0 github.com/imajinyun/go-knifer/internal/template=95.0 github.com/imajinyun/go-knifer/internal/mask=95.0 github.com/imajinyun/go-knifer/internal/httpx/http=75.0 github.com/imajinyun/go-knifer/internal/httpx/resty=75.0 github.com/imajinyun/go-knifer/internal/httpx/internal/shared=80.0}"
+coverage_config="$(
+	python3 - "${AI_CONTEXT}" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], "r", encoding="utf-8") as f:
+    data = json.load(f)
+
+coverage_gates = data["coverage_gates"]
+repository_threshold = coverage_gates["repository_threshold"]
+package_thresholds = " ".join(
+    f"{package_path}={threshold:.1f}"
+    for package_path, threshold in coverage_gates["package_thresholds"].items()
+)
+print(f"{repository_threshold:.1f}|{package_thresholds}")
+PY
+)"
+
+metadata_threshold="${coverage_config%%|*}"
+metadata_package_thresholds="${coverage_config#*|}"
+threshold="${COVERAGE_THRESHOLD:-${metadata_threshold}}"
+package_thresholds="${PACKAGE_COVERAGE_THRESHOLDS:-${metadata_package_thresholds}}"
 
 if [ ! -f "${coverage_file}" ]; then
 	echo "COVERAGE CHECK ERROR: ${coverage_file} does not exist" >&2

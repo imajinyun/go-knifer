@@ -1,4 +1,4 @@
-.PHONY: help doctor install-hooks uninstall-hooks worktree-check test test-race coverage-profile coverage-report coverage-check api-check ai-context-check generate mod-verify tidy-check diff-whitespace diff-clean diff-check vet arch lint govulncheck quick-check security-check full-check bench bench-core bench-facade bench-codec bench-smoke check ci-test
+.PHONY: help doctor install-hooks uninstall-hooks worktree-check test test-race coverage-profile coverage-report coverage-check api-check ai-context-check generate mod-verify tidy-check diff-whitespace diff-clean diff-check vet arch lint govulncheck quick-check security-check full-check agent-check agent-full-check agent-security-check bench bench-core bench-facade bench-codec bench-smoke check ci-test
 
 GO ?= go
 GOLANGCI_LINT ?= golangci-lint
@@ -29,6 +29,9 @@ help:
 	@echo "  quick-check     Run fast local governance gates"
 	@echo "  security-check  Run lint and govulncheck"
 	@echo "  full-check      Run full local gates with race coverage"
+	@echo "  agent-check     Run default AI/Agent-safe validation gates"
+	@echo "  agent-full-check Run full AI/Agent validation gates"
+	@echo "  agent-security-check Run AI/Agent security validation gates"
 	@echo "  generate        Run go:generate directives (API snapshot, code gen)"
 	@echo "  api-check       Verify exported API snapshot is current"
 	@echo "  ai-context-check Verify machine-readable AI context metadata"
@@ -130,6 +133,12 @@ quick-check: worktree-check mod-verify vet arch test api-check ai-context-check 
 security-check: lint govulncheck
 
 full-check: worktree-check mod-verify vet arch test-race coverage-check api-check ai-context-check lint govulncheck diff-whitespace
+
+agent-check: quick-check
+
+agent-full-check: full-check
+
+agent-security-check: security-check
 
 bench:
 	$(GO) test -bench=$(BENCH) -benchmem -benchtime=$(BENCHTIME) -count=$(BENCHCOUNT) -run=^$$ $(BENCH_PKGS)

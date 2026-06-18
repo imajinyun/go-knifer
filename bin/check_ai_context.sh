@@ -55,6 +55,14 @@ def require_number(value, path):
     return float(value)
 
 
+def require_enum(value, path, allowed):
+    value = require_string(value, path)
+    if value and value not in allowed:
+        add_error(f"{path} must be one of: {', '.join(sorted(allowed))}")
+        return ""
+    return value
+
+
 try:
     with open(ai_context, "r", encoding="utf-8") as f:
         data = json.load(f)
@@ -75,6 +83,7 @@ for key in ("name", "module", "language", "go_version", "layout"):
 
 commands = require_mapping(data.get("commands"), "commands")
 command_name_pattern = re.compile(r"^[a-z][a-z0-9_]*$")
+allowed_risk_levels = {"low", "medium", "high", "forbidden_for_agent"}
 for name, spec in sorted(commands.items()):
     if not command_name_pattern.match(name):
         add_error(f"commands.{name} must use snake_case")
@@ -86,7 +95,8 @@ for name, spec in sorted(commands.items()):
     )
     writes_workspace = require_bool(spec.get("writes_workspace"), f"commands.{name}.writes_workspace")
     writes_git_config = require_bool(spec.get("writes_git_config"), f"commands.{name}.writes_git_config")
-    require_bool(spec.get("network_required"), f"commands.{name}.network_required")
+    network_required = require_bool(spec.get("network_required"), f"commands.{name}.network_required")
+    risk_level = require_enum(spec.get("risk_level"), f"commands.{name}.risk_level", allowed_risk_levels)
     require_string(spec.get("notes"), f"commands.{name}.notes")
 
     requires_user_consent = spec.get("requires_user_consent", False)
@@ -103,6 +113,16 @@ for name, spec in sorted(commands.items()):
         add_error(f"commands.{name} writes Git config and must not be auto-runnable")
     if writes_workspace and safe_for_agent_auto_run:
         add_error(f"commands.{name} writes workspace files and must not be auto-runnable")
+    if safe_for_agent_auto_run and risk_level in {"high", "forbidden_for_agent"}:
+        add_error(f"commands.{name} is auto-runnable and must not be high or forbidden_for_agent risk")
+    if requires_user_consent and risk_level == "low":
+        add_error(f"commands.{name} requires user consent and must not be low risk")
+    if writes_workspace and risk_level == "low":
+        add_error(f"commands.{name} writes workspace files and must not be low risk")
+    if writes_git_config and risk_level not in {"high", "forbidden_for_agent"}:
+        add_error(f"commands.{name} writes Git config and must be high or forbidden_for_agent risk")
+    if network_required and risk_level == "low":
+        add_error(f"commands.{name} requires network and must be at least medium risk")
     if writes_workspace and not spec.get("writes_files"):
         add_error(f"commands.{name} writes workspace files and must declare writes_files")
     if "writes_files" in spec:
@@ -134,53 +154,16 @@ coverage_gates = require_mapping(data.get("coverage_gates"), "coverage_gates")
 repository_threshold = require_number(coverage_gates.get("repository_threshold"), "coverage_gates.repository_threshold")
 package_thresholds = require_mapping(coverage_gates.get("package_thresholds"), "coverage_gates.package_thresholds")
 
+module_path = project.get("module")
+if repository_threshold <= 0 or repository_threshold > 100:
+    add_error("coverage_gates.repository_threshold must be greater than 0 and no more than 100")
 for package_path, threshold in sorted(package_thresholds.items()):
     require_string(package_path, f"coverage_gates.package_thresholds.{package_path}")
-    require_number(threshold, f"coverage_gates.package_thresholds.{package_path}")
-
-coverage_script = os.path.join(root_dir, "bin", "check_coverage.sh")
-with open(coverage_script, "r", encoding="utf-8") as f:
-    coverage_script_text = f.read()
-
-script_threshold_match = re.search(r'threshold="\$\{COVERAGE_THRESHOLD:-([0-9.]+)\}"', coverage_script_text)
-if not script_threshold_match:
-    add_error("bin/check_coverage.sh repository threshold could not be parsed")
-else:
-    script_repository_threshold = float(script_threshold_match.group(1))
-    if repository_threshold != script_repository_threshold:
-        add_error(
-            "coverage_gates.repository_threshold does not match bin/check_coverage.sh "
-            f"({repository_threshold} != {script_repository_threshold})"
-        )
-
-script_package_match = re.search(
-    r'package_thresholds="\$\{PACKAGE_COVERAGE_THRESHOLDS:-(.*?)\}"',
-    coverage_script_text,
-)
-if not script_package_match:
-    add_error("bin/check_coverage.sh package thresholds could not be parsed")
-else:
-    script_package_thresholds = {}
-    for gate in script_package_match.group(1).split():
-        if "=" not in gate:
-            add_error(f"bin/check_coverage.sh has invalid package coverage gate {gate!r}")
-            continue
-        package_path, threshold = gate.split("=", 1)
-        script_package_thresholds[package_path] = float(threshold)
-
-    metadata_package_thresholds = {package_path: float(threshold) for package_path, threshold in package_thresholds.items()}
-    missing_thresholds = sorted(set(script_package_thresholds) - set(metadata_package_thresholds))
-    stale_thresholds = sorted(set(metadata_package_thresholds) - set(script_package_thresholds))
-    if missing_thresholds:
-        add_error("coverage_gates.package_thresholds is missing package(s): " + ", ".join(missing_thresholds))
-    if stale_thresholds:
-        add_error("coverage_gates.package_thresholds contains stale package(s): " + ", ".join(stale_thresholds))
-    for package_path in sorted(set(script_package_thresholds) & set(metadata_package_thresholds)):
-        if script_package_thresholds[package_path] != metadata_package_thresholds[package_path]:
-            add_error(
-                f"coverage_gates.package_thresholds.{package_path} does not match bin/check_coverage.sh "
-                f"({metadata_package_thresholds[package_path]} != {script_package_thresholds[package_path]})"
-            )
+    threshold = require_number(threshold, f"coverage_gates.package_thresholds.{package_path}")
+    if module_path and not package_path.startswith(module_path + "/"):
+        add_error(f"coverage_gates.package_thresholds.{package_path} must start with project.module")
+    if threshold <= 0 or threshold > 100:
+        add_error(f"coverage_gates.package_thresholds.{package_path} must be greater than 0 and no more than 100")
 
 public_facades = data.get("public_facades")
 if not isinstance(public_facades, list):
