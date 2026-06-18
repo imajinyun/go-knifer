@@ -14,6 +14,37 @@ on:
     branches: ["main"]
 
 jobs:
+  agent-governance:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Select change policy base
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "AGENT_CHANGE_BASE_REF=origin/${{ github.base_ref }}" >> "${GITHUB_ENV}"
+          elif [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            echo "AGENT_CHANGE_BASE_REF=${{ github.event.before }}" >> "${GITHUB_ENV}"
+          fi
+
+      - name: Run Agent governance workflow
+        env:
+          AGENT_EVIDENCE_FILE: go-knifer-agent-validation.json
+        run: make ci-agent-governance
+
+      - name: Upload Agent validation evidence
+        uses: actions/upload-artifact@v7
+        with:
+          name: agent-validation-evidence
+          path: go-knifer-agent-validation.json
+
   test:
     runs-on: ubuntu-latest
     permissions:

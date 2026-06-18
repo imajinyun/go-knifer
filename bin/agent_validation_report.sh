@@ -45,6 +45,22 @@ def run(args):
 
 def changed_files():
     files = set()
+    base_ref = os.environ.get("AGENT_CHANGE_BASE_REF")
+    if not base_ref and os.environ.get("GITHUB_BASE_REF"):
+        base_ref = "origin/" + os.environ["GITHUB_BASE_REF"]
+    if base_ref:
+        result = subprocess.run(
+            ["git", "-C", root_dir, "rev-parse", "--verify", "--quiet", base_ref + "^{commit}"],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        if result.returncode == 0:
+            output = git(["diff", "--name-only", "--diff-filter=ACMRTUXB", base_ref + "...HEAD", "--"])
+            for line in output.splitlines():
+                line = line.strip().strip("/")
+                if line:
+                    files.add(line)
     for args in (
         ["diff", "--name-only", "--diff-filter=ACMRTUXB", "HEAD", "--"],
         ["diff", "--name-only", "--cached", "--diff-filter=ACMRTUXB", "--"],
@@ -129,7 +145,9 @@ report = {
     "worktree_status": git(["status", "--short"]),
 }
 
-os.makedirs(os.path.dirname(output_file), exist_ok=True)
+output_dir = os.path.dirname(output_file)
+if output_dir:
+    os.makedirs(output_dir, exist_ok=True)
 with open(output_file, "w", encoding="utf-8") as f:
     json.dump(report, f, indent=2, sort_keys=True)
     f.write("\n")

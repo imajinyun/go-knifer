@@ -110,6 +110,16 @@
       "creates_artifacts": ["/tmp/go-knifer-coverage.out"],
       "notes": "Local reproduction of the GitHub Actions test job without creating coverage artifacts in the repository root."
     },
+    "ci_agent_governance": {
+      "cmd": "make ci-agent-governance",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": false,
+      "risk_level": "low",
+      "creates_artifacts": ["/tmp/go-knifer-agent-validation.json"],
+      "notes": "CI Agent governance gate; detects changed policies against AGENT_CHANGE_BASE_REF and emits validation evidence."
+    },
     "full_check": {
       "cmd": "make check COVERAGE_FILE=/tmp/go-knifer-coverage.out",
       "safe_for_agent_auto_run": true,

@@ -1,4 +1,4 @@
-.PHONY: help doctor install-hooks uninstall-hooks worktree-check change-policy-check security-sensitive-diff agent-evidence test test-race coverage-profile coverage-report coverage-check api-check ai-context-check generate mod-verify tidy-check diff-whitespace diff-clean diff-check vet arch lint govulncheck quick-check security-check full-check agent-check agent-full-check agent-security-check bench bench-core bench-facade bench-codec bench-smoke check ci-test
+.PHONY: help doctor install-hooks uninstall-hooks worktree-check change-policy-check security-sensitive-diff agent-evidence test test-race coverage-profile coverage-report coverage-check api-check ai-context-check generate mod-verify tidy-check diff-whitespace diff-clean diff-check vet arch lint govulncheck quick-check security-check full-check agent-check agent-full-check agent-security-check ci-agent-governance bench bench-core bench-facade bench-codec bench-smoke check ci-test
 
 GO ?= go
 GOLANGCI_LINT ?= golangci-lint
@@ -35,6 +35,7 @@ help:
 	@echo "  agent-check     Run default AI/Agent-safe validation gates"
 	@echo "  agent-full-check Run full AI/Agent validation gates"
 	@echo "  agent-security-check Run AI/Agent security validation gates"
+	@echo "  ci-agent-governance Run CI Agent governance policy/evidence gates"
 	@echo "  generate        Run go:generate directives (API snapshot, code gen)"
 	@echo "  api-check       Verify exported API snapshot is current"
 	@echo "  ai-context-check Verify machine-readable AI context metadata"
@@ -151,6 +152,8 @@ agent-check: quick-check change-policy-check security-sensitive-diff
 agent-full-check: full-check
 
 agent-security-check: security-check
+
+ci-agent-governance: change-policy-check ai-context-check agent-evidence
 
 bench:
 	$(GO) test -bench=$(BENCH) -benchmem -benchtime=$(BENCHTIME) -count=$(BENCHCOUNT) -run=^$$ $(BENCH_PKGS)
