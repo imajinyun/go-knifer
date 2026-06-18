@@ -1,6 +1,7 @@
 # 🔪 go-knifer
 
-> 🍬 A set of Go tools that keep development sharp.
+> 🔪 A Swiss Army knife for Go development, keeping your daily coding sharp.
+>  🧰 Batteries-included utility toolkit: string, slice, map, crypto, HTTP, cache, ID generation, logging, config, and more. Import only what you need via `v*` domain packages.
 
 ![go-knifer](./go-knifer.jpeg)
 
