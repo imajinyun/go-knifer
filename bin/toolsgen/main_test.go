@@ -94,6 +94,19 @@ func Hidden() {}
 	if pkg.ImportPath != modulePath+"/vtool" || pkg.Name != "vtool" {
 		t.Fatalf("unexpected package: %#v", pkg)
 	}
+	wantPackageSummary := PackageSummaryDoc{
+		FunctionCount:          3,
+		FunctionsWithExamples:  1,
+		ExampleCoveragePercent: 33.3,
+		SynopsisSources: map[string]int{
+			"empty":    0,
+			"facade":   1,
+			"internal": 2,
+		},
+	}
+	if !reflect.DeepEqual(pkg.Summary, wantPackageSummary) {
+		t.Fatalf("package summary = %#v, want %#v", pkg.Summary, wantPackageSummary)
+	}
 	if !strings.Contains(pkg.Synopsis, "Package vtool exposes test facade helpers.") {
 		t.Fatalf("package synopsis = %q", pkg.Synopsis)
 	}
@@ -268,6 +281,41 @@ func TestToolsCatalogSecuritySensitiveExamplesBudget(t *testing.T) {
 	}
 }
 
+func TestToolsCatalogPackageSummariesMatchFunctions(t *testing.T) {
+	root := repositoryRoot(t)
+	doc, err := generateToolsDoc(root)
+	if err != nil {
+		t.Fatalf("generateToolsDoc(%q) error = %v", root, err)
+	}
+	for _, pkg := range doc.Packages {
+		want := summarizePackageDoc(pkg.Functions)
+		if !reflect.DeepEqual(pkg.Summary, want) {
+			t.Fatalf("%s summary = %#v, want %#v", pkg.Name, pkg.Summary, want)
+		}
+	}
+}
+
+func TestSummarizePackageDocRoundsExampleCoverage(t *testing.T) {
+	summary := summarizePackageDoc([]FuncDoc{
+		{Name: "One", Examples: []string{"ExampleOne"}, SynopsisSource: "facade"},
+		{Name: "Two", SynopsisSource: "internal"},
+		{Name: "Three"},
+	})
+	want := PackageSummaryDoc{
+		FunctionCount:          3,
+		FunctionsWithExamples:  1,
+		ExampleCoveragePercent: 33.3,
+		SynopsisSources: map[string]int{
+			"empty":    1,
+			"facade":   1,
+			"internal": 1,
+		},
+	}
+	if !reflect.DeepEqual(summary, want) {
+		t.Fatalf("summary = %#v, want %#v", summary, want)
+	}
+}
+
 func toolsExamplesByPackage(doc ToolsDoc) map[string]int {
 	examplesByPackage := map[string]int{}
 	for _, pkg := range doc.Packages {
@@ -324,6 +372,12 @@ func TestRenderToolsMarkdownIncludesSummaryAndPackages(t *testing.T) {
 				ImportPath: modulePath + "/vtool",
 				Name:       "vtool",
 				Synopsis:   "Package vtool exposes | test helpers.",
+				Summary: PackageSummaryDoc{
+					FunctionCount:          2,
+					FunctionsWithExamples:  1,
+					ExampleCoveragePercent: 50,
+					SynopsisSources:        map[string]int{"empty": 1, "facade": 1, "internal": 0},
+				},
 				Functions: []FuncDoc{
 					{
 						Name:           "Run",
@@ -351,6 +405,7 @@ func TestRenderToolsMarkdownIncludesSummaryAndPackages(t *testing.T) {
 		"### vtool",
 		"Import path: `" + modulePath + "/vtool`",
 		"Package vtool exposes | test helpers.",
+		"Quality: 2 functions · 1 with examples · 50.0% example coverage · synopsis sources: facade=1, internal=0, empty=1",
 		"| `Run` | `func Run(name string) (string, error)` | Run executes \\| the test helper. | facade | `ExampleRun` |",
 		"| `HiddenDoc` | `func HiddenDoc()` | — | empty | — |",
 	}

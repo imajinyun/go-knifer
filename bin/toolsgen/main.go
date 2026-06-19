@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/types"
+	"math"
 	"os"
 	"sort"
 	"strings"
@@ -22,7 +23,7 @@ import (
 const modulePath = "github.com/imajinyun/go-knifer"
 
 // schemaVersion is bumped when the tools.json structure changes.
-const schemaVersion = "1.3"
+const schemaVersion = "1.4"
 
 // ToolsDoc is the top-level machine-readable tool catalog.
 type ToolsDoc struct {
@@ -46,10 +47,20 @@ type SummaryDoc struct {
 
 // PackageDoc describes one public facade package.
 type PackageDoc struct {
-	ImportPath string    `json:"import_path"`
-	Name       string    `json:"name"`
-	Synopsis   string    `json:"synopsis"`
-	Functions  []FuncDoc `json:"functions"`
+	ImportPath string            `json:"import_path"`
+	Name       string            `json:"name"`
+	Synopsis   string            `json:"synopsis"`
+	Summary    PackageSummaryDoc `json:"summary"`
+	Functions  []FuncDoc         `json:"functions"`
+}
+
+// PackageSummaryDoc stores per-package quality counts so consumers can rank or
+// filter package quality without scanning every function first.
+type PackageSummaryDoc struct {
+	FunctionCount          int            `json:"function_count"`
+	FunctionsWithExamples  int            `json:"functions_with_examples"`
+	ExampleCoveragePercent float64        `json:"example_coverage_percent"`
+	SynopsisSources        map[string]int `json:"synopsis_sources"`
 }
 
 // FuncDoc describes one exported top-level function.
@@ -156,6 +167,14 @@ func renderToolsMarkdown(doc ToolsDoc) []byte {
 			b.WriteString(pkg.Synopsis)
 			b.WriteString("\n\n")
 		}
+		fmt.Fprintf(
+			&b,
+			"Quality: %d functions · %d with examples · %.1f%% example coverage · synopsis sources: %s\n\n",
+			pkg.Summary.FunctionCount,
+			pkg.Summary.FunctionsWithExamples,
+			pkg.Summary.ExampleCoveragePercent,
+			markdownSynopsisSourceCounts(pkg.Summary.SynopsisSources),
+		)
 		b.WriteString("| Function | Signature | Synopsis | Source | Examples |\n")
 		b.WriteString("| --- | --- | --- | --- | --- |\n")
 		for _, fn := range pkg.Functions {
@@ -287,6 +306,18 @@ func markdownExamples(examples []string) string {
 	return strings.Join(parts, ", ")
 }
 
+func markdownSynopsisSourceCounts(sources map[string]int) string {
+	ordered := orderedSynopsisSources(sources)
+	if len(ordered) == 0 {
+		return "—"
+	}
+	parts := make([]string, 0, len(ordered))
+	for _, source := range ordered {
+		parts = append(parts, fmt.Sprintf("%s=%d", markdownEscape(source), sources[source]))
+	}
+	return strings.Join(parts, ", ")
+}
+
 func markdownText(text string) string {
 	if strings.TrimSpace(text) == "" {
 		return "—"
@@ -392,6 +423,24 @@ func summarizeToolsDoc(pkgs []PackageDoc) SummaryDoc {
 	return summary
 }
 
+func summarizePackageDoc(functions []FuncDoc) PackageSummaryDoc {
+	summary := PackageSummaryDoc{
+		FunctionCount:   len(functions),
+		SynopsisSources: map[string]int{"empty": 0, "facade": 0, "internal": 0},
+	}
+	for _, fn := range functions {
+		if len(fn.Examples) > 0 {
+			summary.FunctionsWithExamples++
+		}
+		summary.SynopsisSources[synopsisSource(fn.SynopsisSource)]++
+	}
+	if summary.FunctionCount > 0 {
+		coverage := float64(summary.FunctionsWithExamples) * 100 / float64(summary.FunctionCount)
+		summary.ExampleCoveragePercent = math.Round(coverage*10) / 10
+	}
+	return summary
+}
+
 func hasTestFiles(pkg *packages.Package) bool {
 	for _, file := range pkg.GoFiles {
 		if strings.HasSuffix(file, "_test.go") {
@@ -470,6 +519,7 @@ func buildPackageDoc(pkg *packages.Package, exampleSet map[string]struct{}, impl
 	sort.Slice(pd.Functions, func(i, j int) bool {
 		return pd.Functions[i].Name < pd.Functions[j].Name
 	})
+	pd.Summary = summarizePackageDoc(pd.Functions)
 	return pd
 }
 

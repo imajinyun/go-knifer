@@ -8,7 +8,7 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 
 | Metric | Value |
 | --- | ---: |
-| Schema | 1.3 |
+| Schema | 1.4 |
 | Module | `github.com/imajinyun/go-knifer` |
 | Packages | 48 |
 | Functions | 2528 |
@@ -27,6 +27,8 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 Import path: `github.com/imajinyun/go-knifer/vbean`
 
 Package vbean provides public APIs for struct/map property mapping.
+
+Quality: 15 functions · 5 with examples · 33.3% example coverage · synopsis sources: facade=15, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -51,6 +53,8 @@ Package vbean provides public APIs for struct/map property mapping.
 Import path: `github.com/imajinyun/go-knifer/vblf`
 
 Package vblf provides public APIs for Bloom filter utilities.
+
+Quality: 60 functions · 5 with examples · 8.3% example coverage · synopsis sources: facade=60, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -121,6 +125,8 @@ Import path: `github.com/imajinyun/go-knifer/vbool`
 
 Package vbool provides public APIs for boolean utilities.
 
+Quality: 4 functions · 4 with examples · 100.0% example coverage · synopsis sources: facade=0, internal=4, empty=0
+
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `And` | `func And(bs ...bool) bool` | And returns true only when all inputs are true. | internal | `ExampleAnd` |
@@ -133,6 +139,8 @@ Package vbool provides public APIs for boolean utilities.
 Import path: `github.com/imajinyun/go-knifer/vcache`
 
 Package vcache provides public APIs for cache utilities.
+
+Quality: 24 functions · 5 with examples · 20.8% example coverage · synopsis sources: facade=24, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -167,6 +175,8 @@ Import path: `github.com/imajinyun/go-knifer/vcodec`
 
 Package vcodec provides public APIs for encoding and decoding utilities.
 
+Quality: 14 functions · 5 with examples · 35.7% example coverage · synopsis sources: facade=0, internal=14, empty=0
+
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `Base64Decode` | `func Base64Decode(s string) ([]byte, error)` | Base64Decode decodes a standard Base64 string. | internal | `ExampleBase64Decode` |
@@ -189,6 +199,8 @@ Package vcodec provides public APIs for encoding and decoding utilities.
 Import path: `github.com/imajinyun/go-knifer/vconf`
 
 Package vconf provides configuration file reading and grouped configuration utilities.
+
+Quality: 38 functions · 5 with examples · 13.2% example coverage · synopsis sources: facade=38, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -237,6 +249,8 @@ Import path: `github.com/imajinyun/go-knifer/vconv`
 
 Package vconv provides public APIs for permissive type conversion.
 
+Quality: 27 functions · 5 with examples · 18.5% example coverage · synopsis sources: facade=0, internal=27, empty=0
+
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `ToBool` | `func ToBool(v any) bool` | ToBool converts a value to bool and returns false on failure. | internal | `ExampleToBool` |
@@ -272,6 +286,8 @@ Package vconv provides public APIs for permissive type conversion.
 Import path: `github.com/imajinyun/go-knifer/vcron`
 
 Package vcron provides public APIs for cron scheduling utilities.
+
+Quality: 51 functions · 5 with examples · 9.8% example coverage · synopsis sources: facade=51, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -332,6 +348,8 @@ Package vcron provides public APIs for cron scheduling utilities.
 Import path: `github.com/imajinyun/go-knifer/vcrypto`
 
 Package vcrypto provides public APIs for cryptographic utilities.
+
+Quality: 71 functions · 5 with examples · 7.0% example coverage · synopsis sources: facade=71, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -413,6 +431,8 @@ Import path: `github.com/imajinyun/go-knifer/vcsv`
 
 Package vcsv provides public APIs for CSV reading and writing.
 
+Quality: 23 functions · 5 with examples · 21.7% example coverage · synopsis sources: facade=0, internal=23, empty=0
+
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `ForEach` | `func ForEach(r io.Reader, handle func([]string) error, opts ...ReadOption) error` | ForEach reads CSV records from r and invokes handle for each record. | internal | — |
@@ -444,6 +464,8 @@ Package vcsv provides public APIs for CSV reading and writing.
 Import path: `github.com/imajinyun/go-knifer/vdate`
 
 Package vdate provides public APIs for date/time utilities.
+
+Quality: 29 functions · 5 with examples · 17.2% example coverage · synopsis sources: facade=0, internal=29, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -482,6 +504,8 @@ Package vdate provides public APIs for date/time utilities.
 Import path: `github.com/imajinyun/go-knifer/vdb`
 
 Package vdb exposes database/sql helper APIs for SQL execution, query building, entities, conditions, pagination, transactions, named parameters, and lightweight metadata lookup.
+
+Quality: 50 functions · 5 with examples · 10.0% example coverage · synopsis sources: facade=11, internal=39, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -542,6 +566,8 @@ Import path: `github.com/imajinyun/go-knifer/vdfa`
 
 Package vdfa exposes deterministic-finite-automaton text matching APIs.
 
+Quality: 41 functions · 5 with examples · 12.2% example coverage · synopsis sources: facade=41, internal=0, empty=0
+
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `ConfigureAsyncRunner` | `func ConfigureAsyncRunner(runner func(func()))` | ConfigureAsyncRunner sets the runner used by asynchronous package-level matcher initialization. | facade | — |
@@ -591,6 +617,8 @@ Package vdfa exposes deterministic-finite-automaton text matching APIs.
 Import path: `github.com/imajinyun/go-knifer/verr`
 
 Package verr exposes error handling, panic recovery, and stack helpers.
+
+Quality: 53 functions · 5 with examples · 9.4% example coverage · synopsis sources: facade=53, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -653,6 +681,8 @@ Package verr exposes error handling, panic recovery, and stack helpers.
 Import path: `github.com/imajinyun/go-knifer/vfile`
 
 Package vfile provides public APIs for file and IO utilities.
+
+Quality: 59 functions · 5 with examples · 8.5% example coverage · synopsis sources: facade=53, internal=6, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -722,6 +752,8 @@ Import path: `github.com/imajinyun/go-knifer/vform`
 
 Package vform provides public APIs for form and input validation utilities.
 
+Quality: 18 functions · 5 with examples · 27.8% example coverage · synopsis sources: facade=18, internal=0, empty=0
+
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `IsChinese` | `func IsChinese(s string) bool` | IsChinese reports whether s consists only of Chinese Han characters. | facade | — |
@@ -749,6 +781,8 @@ Import path: `github.com/imajinyun/go-knifer/vhash`
 
 Package vhash provides public APIs for hash utilities.
 
+Quality: 16 functions · 5 with examples · 31.3% example coverage · synopsis sources: facade=16, internal=0, empty=0
+
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `AdditiveHash` | `func AdditiveHash(s string, prime int) int` | AdditiveHash calculates an additive hash modulo prime. | facade | `ExampleAdditiveHash` |
@@ -773,6 +807,8 @@ Package vhash provides public APIs for hash utilities.
 Import path: `github.com/imajinyun/go-knifer/vhttp`
 
 Package vhttp provides public APIs for HTTP utilities.
+
+Quality: 161 functions · 5 with examples · 3.1% example coverage · synopsis sources: facade=156, internal=5, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -944,6 +980,8 @@ Import path: `github.com/imajinyun/go-knifer/vid`
 
 Package vid provides public APIs for ID generation utilities.
 
+Quality: 53 functions · 5 with examples · 9.4% example coverage · synopsis sources: facade=53, internal=0, empty=0
+
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `ConfigureDefaultFallbackRandomSourceProvider` | `func ConfigureDefaultFallbackRandomSourceProvider(provider func() *rand.Rand)` | ConfigureDefaultFallbackRandomSourceProvider sets the provider used to lazily create the package-level fallback PRNG. | facade | — |
@@ -1006,6 +1044,8 @@ Import path: `github.com/imajinyun/go-knifer/vident`
 
 Package vident provides identity and legal identifier helpers.
 
+Quality: 48 functions · 5 with examples · 10.4% example coverage · synopsis sources: facade=48, internal=0, empty=0
+
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `Age` | `func Age(idCard string) (int, bool)` | Age returns the current age encoded in idCard. | facade | — |
@@ -1062,6 +1102,8 @@ Package vident provides identity and legal identifier helpers.
 Import path: `github.com/imajinyun/go-knifer/vimg`
 
 Package vimg provides public APIs for image utilities.
+
+Quality: 91 functions · 5 with examples · 5.5% example coverage · synopsis sources: facade=91, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -1163,6 +1205,8 @@ Import path: `github.com/imajinyun/go-knifer/vjob`
 
 Package vjob provides public APIs for sliceable job execution.
 
+Quality: 9 functions · 5 with examples · 55.6% example coverage · synopsis sources: facade=9, internal=0, empty=0
+
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `NewBatch` | `func NewBatch[T any](run func(context.Context, []T) (Merge, error), vals []T) *Batch[T]` | NewBatch creates a typed slice job. | facade | `ExampleNewBatch` |
@@ -1180,6 +1224,8 @@ Package vjob provides public APIs for sliceable job execution.
 Import path: `github.com/imajinyun/go-knifer/vjson`
 
 Package vjson provides public APIs for JSON utilities.
+
+Quality: 65 functions · 7 with examples · 10.8% example coverage · synopsis sources: facade=65, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -1254,6 +1300,8 @@ Package vjson provides public APIs for JSON utilities.
 Import path: `github.com/imajinyun/go-knifer/vjwt`
 
 Package vjwt provides public APIs for JWT utilities.
+
+Quality: 72 functions · 5 with examples · 6.9% example coverage · synopsis sources: facade=72, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -1336,6 +1384,8 @@ Import path: `github.com/imajinyun/go-knifer/vlog`
 
 Package vlog provides public APIs for logging utilities.
 
+Quality: 54 functions · 5 with examples · 9.3% example coverage · synopsis sources: facade=54, internal=0, empty=0
+
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `Debug` | `func Debug(args ...any)` | Debug logs debug-level output through the static logger. | facade | — |
@@ -1399,6 +1449,8 @@ Import path: `github.com/imajinyun/go-knifer/vmail`
 
 Package vmail exposes email message construction, MIME attachment, and SMTP sending helpers.
 
+Quality: 51 functions · 5 with examples · 9.8% example coverage · synopsis sources: facade=51, internal=0, empty=0
+
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `NewAddress` | `func NewAddress(name string, email string) (*Address, error)` | NewAddress validates and returns a mailbox address. | facade | `ExampleNewAddress` |
@@ -1458,6 +1510,8 @@ Package vmail exposes email message construction, MIME attachment, and SMTP send
 Import path: `github.com/imajinyun/go-knifer/vmap`
 
 Package vmap provides public APIs for map utilities.
+
+Quality: 60 functions · 6 with examples · 10.0% example coverage · synopsis sources: facade=4, internal=56, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -1528,6 +1582,8 @@ Import path: `github.com/imajinyun/go-knifer/vmask`
 
 Package vmask provides data masking (desensitization) utilities.
 
+Quality: 20 functions · 5 with examples · 25.0% example coverage · synopsis sources: facade=20, internal=0, empty=0
+
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `Address` | `func Address(address string, sensitiveSize int) string` | Address masks the last sensitiveSize characters of an address. | facade | — |
@@ -1556,6 +1612,8 @@ Package vmask provides data masking (desensitization) utilities.
 Import path: `github.com/imajinyun/go-knifer/vnet`
 
 Package vnet provides public APIs for network, IP, URL-encoding, TLS, and multipart utilities.
+
+Quality: 166 functions · 5 with examples · 3.0% example coverage · synopsis sources: facade=53, internal=113, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -1732,6 +1790,8 @@ Import path: `github.com/imajinyun/go-knifer/vnum`
 
 Package vnum provides public APIs for numeric utilities.
 
+Quality: 146 functions · 5 with examples · 3.4% example coverage · synopsis sources: facade=15, internal=131, empty=0
+
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `AbsFloat32` | `func AbsFloat32(x float32) float32` | AbsFloat32 returns the absolute value of x without widening to float64. | facade | — |
@@ -1887,6 +1947,8 @@ Import path: `github.com/imajinyun/go-knifer/vobj`
 
 Package vobj provides object utilities.
 
+Quality: 49 functions · 5 with examples · 10.2% example coverage · synopsis sources: facade=49, internal=0, empty=0
+
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `Accept` | `func Accept[T any](source *T, consumer func(T))` | Accept calls consumer when source is not nil. | facade | — |
@@ -1945,6 +2007,8 @@ Import path: `github.com/imajinyun/go-knifer/vpass`
 
 Package vpass provides password strength helpers.
 
+Quality: 5 functions · 5 with examples · 100.0% example coverage · synopsis sources: facade=0, internal=5, empty=0
+
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `Analyze` | `func Analyze(password string) Analysis` | Analyze evaluates password strength using local deterministic rules. | internal | `ExampleAnalyze` |
@@ -1958,6 +2022,8 @@ Package vpass provides password strength helpers.
 Import path: `github.com/imajinyun/go-knifer/vpoi`
 
 Package vpoi provides office-document utilities.
+
+Quality: 26 functions · 5 with examples · 19.2% example coverage · synopsis sources: facade=26, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -1993,6 +2059,8 @@ Package vpoi provides office-document utilities.
 Import path: `github.com/imajinyun/go-knifer/vrand`
 
 Package vrand provides public APIs for random value utilities.
+
+Quality: 29 functions · 5 with examples · 17.2% example coverage · synopsis sources: facade=18, internal=11, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -2031,6 +2099,8 @@ Package vrand provides public APIs for random value utilities.
 Import path: `github.com/imajinyun/go-knifer/vref`
 
 Package vref provides public APIs for reflection utilities.
+
+Quality: 67 functions · 5 with examples · 7.5% example coverage · synopsis sources: facade=5, internal=62, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -2107,6 +2177,8 @@ Package vref provides public APIs for reflection utilities.
 Import path: `github.com/imajinyun/go-knifer/vregex`
 
 Package vregex provides public APIs for regular-expression utilities.
+
+Quality: 89 functions · 5 with examples · 5.6% example coverage · synopsis sources: facade=89, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -2205,6 +2277,8 @@ Package vregex provides public APIs for regular-expression utilities.
 Import path: `github.com/imajinyun/go-knifer/vresty`
 
 Package vresty provides convenient HTTP client wrappers backed by resty.
+
+Quality: 120 functions · 5 with examples · 4.2% example coverage · synopsis sources: facade=120, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -2335,6 +2409,8 @@ Import path: `github.com/imajinyun/go-knifer/vsem`
 
 Package vsem provides public APIs for semaphore utilities.
 
+Quality: 2 functions · 2 with examples · 100.0% example coverage · synopsis sources: facade=2, internal=0, empty=0
+
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `New` | `func New(capacity int) *Semaphore` | New creates a semaphore with capacity permits. | facade | `ExampleNew` |
@@ -2345,6 +2421,8 @@ Package vsem provides public APIs for semaphore utilities.
 Import path: `github.com/imajinyun/go-knifer/vset`
 
 Package vset provides public APIs for set utilities.
+
+Quality: 10 functions · 5 with examples · 50.0% example coverage · synopsis sources: facade=10, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -2364,6 +2442,8 @@ Package vset provides public APIs for set utilities.
 Import path: `github.com/imajinyun/go-knifer/vskt`
 
 Package vskt provides public APIs for socket utilities.
+
+Quality: 50 functions · 5 with examples · 10.0% example coverage · synopsis sources: facade=50, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -2424,6 +2504,8 @@ Import path: `github.com/imajinyun/go-knifer/vslice`
 
 Package vslice provides public APIs for slice utilities.
 
+Quality: 36 functions · 7 with examples · 19.4% example coverage · synopsis sources: facade=0, internal=36, empty=0
+
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `Associate` | `func Associate[T any, K comparable, V any](a []T, transform func(T) (K, V)) map[K]V` | Associate builds a map from transform(item). | internal | — |
@@ -2468,6 +2550,8 @@ Package vslice provides public APIs for slice utilities.
 Import path: `github.com/imajinyun/go-knifer/vstr`
 
 Package vstr provides public APIs for string and text utilities.
+
+Quality: 64 functions · 5 with examples · 7.8% example coverage · synopsis sources: facade=0, internal=64, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -2541,6 +2625,8 @@ Package vstr provides public APIs for string and text utilities.
 Import path: `github.com/imajinyun/go-knifer/vsys`
 
 Package vsys provides public APIs for system information utilities.
+
+Quality: 111 functions · 5 with examples · 4.5% example coverage · synopsis sources: facade=111, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -2662,6 +2748,8 @@ Import path: `github.com/imajinyun/go-knifer/vtpl`
 
 Package vtpl provides Go html/template rendering utilities.
 
+Quality: 9 functions · 5 with examples · 55.6% example coverage · synopsis sources: facade=9, internal=0, empty=0
+
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `Render` | `func Render(tpl string, data any) (string, error)` | Render renders a Go html/template string with data. | facade | `ExampleRender`, `ExampleRender_htmlEscaping`, `ExampleRender_parseError` |
@@ -2679,6 +2767,8 @@ Package vtpl provides Go html/template rendering utilities.
 Import path: `github.com/imajinyun/go-knifer/vurl`
 
 Package vurl provides URL and URI utilities.
+
+Quality: 83 functions · 5 with examples · 6.0% example coverage · synopsis sources: facade=83, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -2772,6 +2862,8 @@ Import path: `github.com/imajinyun/go-knifer/vver`
 
 Package vver provides version comparison and expression matching utilities.
 
+Quality: 11 functions · 5 with examples · 45.5% example coverage · synopsis sources: facade=11, internal=0, empty=0
+
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `AnyMatch` | `func AnyMatch(currentVersion string, compareVersions ...string) bool` | AnyMatch reports whether currentVersion matches any expression in compareVersions. | facade | `ExampleAnyMatch` |
@@ -2791,6 +2883,8 @@ Package vver provides version comparison and expression matching utilities.
 Import path: `github.com/imajinyun/go-knifer/vxml`
 
 Package vxml provides public APIs for XML utilities.
+
+Quality: 86 functions · 5 with examples · 5.8% example coverage · synopsis sources: facade=86, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -2886,6 +2980,8 @@ Package vxml provides public APIs for XML utilities.
 Import path: `github.com/imajinyun/go-knifer/vzip`
 
 Package vzip provides ZIP, gzip, and zlib utilities.
+
+Quality: 92 functions · 5 with examples · 5.4% example coverage · synopsis sources: facade=92, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
