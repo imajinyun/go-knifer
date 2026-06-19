@@ -2,6 +2,8 @@
 
 > Go utility library (48 public `v*` facade packages + `internal/*` implementations).
 
+`AGENTS.md` is the cross-agent concise entrypoint. This file is the Claude-specific detailed guide and should carry the deeper workflow, package-boundary, and validation playbooks. Keep shared rules aligned, but avoid duplicating long policy text across both files.
+
 ---
 
 ## Quick reference
@@ -20,6 +22,7 @@
 │   ├── api/exports.txt # exported API snapshot (19k+ lines, CI-enforced)
 │   ├── api/tools.json  # machine-readable facade function catalog for AI/tooling
 │   └── doc/            # 48 per-package quickstart docs (01-vbean.md .. 48-vzip.md)
+├── AGENTS.md           # cross-agent workflow, validation, and generated-doc rules
 └── .github/workflows/  # CI (go.yml) + release (release.yml) automation
 ```
 
@@ -107,6 +110,8 @@
 | `make install-hooks` / `make uninstall-hooks` | Enable or disable optional local Git hooks for pre-commit/pre-push validation |
 | `make tools-check` | Verify `docs/api/tools.json` matches public facade functions, doc comments, and Example tests |
 | `make tools-gen` | Refresh `docs/api/tools.json`; ask first because generated files may change |
+| `make docs-check` | Verify generated documentation artifacts are current |
+| `make docs-gen` | Refresh generated documentation artifacts; ask first because generated files may change |
 | `make ai-context-check` | Validate machine-readable AI metadata, command side effects, facade inventory, and coverage gates |
 | `make ci-workflow-check` | Validate GitHub Actions workflow invariants declared in `ai-context.json` |
 | `make generate` | Run repository go:generate directives; ask first because generated files may change |
@@ -135,6 +140,7 @@
 - **Architecture**: 8 rules enforced by `bin/check_arch.sh` — doc.go existence, no v*-to-v* imports, per-file internal/ imports, no internal→v* imports, package comments, panic policy, facade boundary policy, dependency allowlist.
 - **API snapshot**: `docs/api/exports.txt` is CI-enforced. Run `UPDATE_API=1 make api-check` after intentional public API changes.
 - **Tools catalog**: `docs/api/tools.json` is CI-enforced by `make tools-check`. Run `make tools-gen` after intentional facade, doc comment, or Example changes.
+- **Generated docs**: `make docs-check` guards generated documentation artifacts. Run `make docs-gen` after intentional generated-doc changes, then re-run `make docs-check`.
 - **AI metadata**: `ai-context.json` is CI-enforced by `make ai-context-check`; update command side-effect metadata, `risk_level`, facades, security-sensitive package lists, or coverage gates when governance inputs change.
 - **Change policies**: `ai-context.json.change_type_policies` maps PR change types to required Agent validation commands; keep PR template change types aligned with those policy keys.
 - **Agent evidence**: `make agent-evidence` writes `/tmp/go-knifer-agent-validation.json`; use it to summarize detected policies, required commands, command attestations, security-sensitive paths, and governance check results.
@@ -169,6 +175,7 @@ When the user asks to implement, rename, refactor, document, or otherwise modify
    - `make security-sensitive-diff` after production changes to identify whether security validation is required.
    - `bash bin/check_api_compat.sh`; if the public API change is intentional, run `UPDATE_API=1 bash bin/check_api_compat.sh` and re-run the check. Public facade additions must update `docs/api/exports.txt` in the same logical change.
    - `make tools-check`; if facade functions, doc comments, or Example tests changed intentionally, run `make tools-gen` and re-run `make tools-check`. Keep `docs/api/tools.json` in the same logical change.
+   - `make docs-check`; if generated documentation artifacts changed intentionally, run `make docs-gen` and re-run `make docs-check`. Keep generated artifacts in the same logical change.
    - `golangci-lint run ./...` after non-trivial Go code or test changes when the tool is available. Because lint analyzes untracked Go files too, either include intentional untracked Go files in the logical change and format/fix them, or exclude/stash unrelated ones before broad lint.
    - For coverage gates, first generate a fresh profile, then pass that exact file to the checker, e.g. `go test -race -shuffle=on -coverprofile=/tmp/go-knifer-coverage.out ./...` followed by `bash bin/check_coverage.sh /tmp/go-knifer-coverage.out`. Do not rely on an implicit or stale `coverage.out`.
    - `git diff --check` before committing.
@@ -184,6 +191,7 @@ When the user asks to implement, rename, refactor, document, or otherwise modify
    - For non-trivial Go changes, the pre-commit validation set should include: focused package tests, `go test -v -gcflags="all=-l -N" ./...`, `go vet ./...`, `bash bin/check_arch.sh`, `bash bin/check_api_compat.sh`, `make tools-check`, `golangci-lint run ./...`, `go test -race -shuffle=on -coverprofile=/tmp/go-knifer-coverage.out ./...`, `bash bin/check_coverage.sh /tmp/go-knifer-coverage.out`, and `git diff --check`. `make agent-full-check COVERAGE_FILE=/tmp/go-knifer-coverage.out` is the preferred AI/Agent aggregate target when a full local gate is feasible.
    - If a public API snapshot was intentionally refreshed, run the API check once to observe the stale snapshot, then `UPDATE_API=1 bash bin/check_api_compat.sh`, then re-run `bash bin/check_api_compat.sh` and include `docs/api/exports.txt` in the same logical commit.
    - If the tools catalog was intentionally refreshed, run `make tools-check` once to observe drift, then `make tools-gen`, then re-run `make tools-check` and include `docs/api/tools.json` in the same logical commit.
+   - If generated docs were intentionally refreshed, run `make docs-check` once to observe drift, then `make docs-gen`, then re-run `make docs-check` and include generated artifacts in the same logical commit.
 
 7. **Commit**: Generate a conventional commit message from the actual diff, preferring concise messages such as `feat: ...`, `fix: ...`, `docs: ...`, `refactor: ...`, or `test: ...`. Stage only files belonging to the requested logical change, commit them.
 

@@ -8,6 +8,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"go/ast"
 	"go/types"
@@ -21,13 +22,26 @@ import (
 const modulePath = "github.com/imajinyun/go-knifer"
 
 // schemaVersion is bumped when the tools.json structure changes.
-const schemaVersion = "1.2"
+const schemaVersion = "1.3"
 
 // ToolsDoc is the top-level machine-readable tool catalog.
 type ToolsDoc struct {
 	Schema   string       `json:"schema"`
 	Module   string       `json:"module"`
+	Summary  SummaryDoc   `json:"summary"`
 	Packages []PackageDoc `json:"packages"`
+}
+
+// SummaryDoc stores precomputed catalog counts so AI consumers can understand
+// the catalog without scanning every package and function first.
+type SummaryDoc struct {
+	PackageCount          int            `json:"package_count"`
+	FunctionCount         int            `json:"function_count"`
+	FunctionsWithExamples int            `json:"functions_with_examples"`
+	ContextAwareFunctions int            `json:"context_aware_functions"`
+	ReturnsErrorFunctions int            `json:"returns_error_functions"`
+	VariadicFunctions     int            `json:"variadic_functions"`
+	SynopsisSources       map[string]int `json:"synopsis_sources"`
 }
 
 // PackageDoc describes one public facade package.
@@ -59,17 +73,31 @@ type Param struct {
 }
 
 func main() {
+	outPath := flag.String("out", "", "write generated catalog to this file instead of stdout")
+	flag.Parse()
+
 	doc, err := generateToolsDoc(".")
 	if err != nil {
 		fatal(err)
 	}
+	if err := writeToolsDoc(doc, *outPath); err != nil {
+		fatal(err)
+	}
+}
+
+func writeToolsDoc(doc ToolsDoc, outPath string) error {
 	out, err := json.MarshalIndent(doc, "", "  ")
 	if err != nil {
-		fatal(err)
+		return err
 	}
-	if _, err := fmt.Fprintln(os.Stdout, string(out)); err != nil {
-		fatal(err)
+	out = append(out, '\n')
+	if outPath != "" {
+		return os.WriteFile(outPath, out, 0o644)
 	}
+	if _, err := os.Stdout.Write(out); err != nil {
+		return err
+	}
+	return nil
 }
 
 func generateToolsDoc(root string) (ToolsDoc, error) {
@@ -118,7 +146,39 @@ func generateToolsDoc(root string) (ToolsDoc, error) {
 	sort.Slice(out.Packages, func(i, j int) bool {
 		return out.Packages[i].ImportPath < out.Packages[j].ImportPath
 	})
+	out.Summary = summarizeToolsDoc(out.Packages)
 	return out, nil
+}
+
+func summarizeToolsDoc(pkgs []PackageDoc) SummaryDoc {
+	summary := SummaryDoc{
+		PackageCount:    len(pkgs),
+		SynopsisSources: map[string]int{"empty": 0, "facade": 0, "internal": 0},
+	}
+	for _, pkg := range pkgs {
+		for _, fn := range pkg.Functions {
+			summary.FunctionCount++
+			if len(fn.Examples) > 0 {
+				summary.FunctionsWithExamples++
+			}
+			if fn.ContextAware {
+				summary.ContextAwareFunctions++
+			}
+			if fn.ReturnsError {
+				summary.ReturnsErrorFunctions++
+			}
+			if fn.Variadic {
+				summary.VariadicFunctions++
+			}
+
+			source := fn.SynopsisSource
+			if source == "" {
+				source = "empty"
+			}
+			summary.SynopsisSources[source]++
+		}
+	}
+	return summary
 }
 
 func hasTestFiles(pkg *packages.Package) bool {

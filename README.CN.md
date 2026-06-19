@@ -120,6 +120,7 @@ go get github.com/imajinyun/go-knifer
 - 📚 English documentation hub: [`docs/doc/README.md`](./docs/doc/README.md)
 - 🌐 在线 Go 文档：[pkg.go.dev/github.com/imajinyun/go-knifer](https://pkg.go.dev/github.com/imajinyun/go-knifer)
 - 🧾 API 快照：[`docs/api/exports.txt`](./docs/api/exports.txt)
+- 🤖 机读工具目录：[`docs/api/tools.json`](./docs/api/tools.json)
 - 🗺️ AI 项目地图：[`llms.txt`](./llms.txt)
 - 🤖 机器可读 AI/CLI 元数据：[`ai-context.json`](./ai-context.json)
 - 🧯 安全策略：[`SECURITY.md`](./SECURITY.md)

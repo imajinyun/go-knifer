@@ -187,6 +187,15 @@
       "risk_level": "low",
       "notes": "Checks that docs/api/tools.json is current."
     },
+    "docs_check": {
+      "cmd": "make docs-check",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": false,
+      "risk_level": "low",
+      "notes": "Checks generated documentation artifacts, including the machine-readable tools catalog."
+    },
     "ai_context_check": {
       "cmd": "make ai-context-check",
       "safe_for_agent_auto_run": true,
@@ -213,8 +222,19 @@
       "writes_git_config": false,
       "network_required": false,
       "risk_level": "high",
-      "writes_files": ["docs/api/exports.txt"],
-      "notes": "Runs repository go:generate directives. Only run after confirming generated output is expected."
+      "writes_files": ["docs/api/exports.txt", "docs/api/tools.json"],
+      "notes": "Runs repository go:generate directives and documentation generation targets. Only run after confirming generated output is expected."
+    },
+    "docs_update": {
+      "cmd": "make docs-gen",
+      "safe_for_agent_auto_run": false,
+      "requires_user_consent": true,
+      "writes_workspace": true,
+      "writes_git_config": false,
+      "network_required": false,
+      "risk_level": "high",
+      "writes_files": ["docs/api/tools.json"],
+      "notes": "Regenerates documentation artifacts that are derived from source code. Only run after confirming generated output is expected."
     },
     "api_update": {
       "cmd": "UPDATE_API=1 make api-check",
@@ -307,13 +327,14 @@
       "notes": "Internal refactors should preserve behavior and coverage while passing architecture gates."
     },
     "documentation": {
-      "required_commands": ["change_policy_check", "agent_check", "agent_evidence", "agent_evidence_check"],
+      "required_commands": ["change_policy_check", "agent_check", "docs_check", "agent_evidence", "agent_evidence_check"],
+      "requires_user_consent_commands": ["docs_update"],
       "coverage_required": false,
       "security_review_required": false,
       "notes": "Documentation-only changes should still pass metadata, API snapshot, tools catalog, and whitespace checks."
     },
     "ci_governance": {
-      "required_commands": ["change_policy_check", "agent_check", "ai_context_check", "agent_evidence", "agent_evidence_check"],
+      "required_commands": ["change_policy_check", "agent_check", "ai_context_check", "docs_check", "agent_evidence", "agent_evidence_check"],
       "coverage_required": false,
       "security_review_required": false,
       "notes": "CI and governance changes must keep Makefile targets and AI metadata synchronized."

@@ -119,6 +119,7 @@ More recommendations are documented in [Recommended API entry points](./docs/doc
 - 📚 Documentation hub: [`docs/doc/README.md`](./docs/doc/README.md)
 - 🌐 Online Go docs: [pkg.go.dev/github.com/imajinyun/go-knifer](https://pkg.go.dev/github.com/imajinyun/go-knifer)
 - 🧾 API snapshot: [`docs/api/exports.txt`](./docs/api/exports.txt)
+- 🤖 Machine-readable tool catalog: [`docs/api/tools.json`](./docs/api/tools.json)
 - 🗺️ AI-oriented project map: [`llms.txt`](./llms.txt)
 - 🤖 Machine-readable AI/CLI metadata: [`ai-context.json`](./ai-context.json)
 - 🧯 Security policy: [`SECURITY.md`](./SECURITY.md)

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -69,6 +70,22 @@ func Hidden() {}
 	}
 	if doc.Schema != schemaVersion || doc.Module != modulePath {
 		t.Fatalf("unexpected document identity: %#v", doc)
+	}
+	wantSummary := SummaryDoc{
+		PackageCount:          1,
+		FunctionCount:         3,
+		FunctionsWithExamples: 1,
+		ContextAwareFunctions: 1,
+		ReturnsErrorFunctions: 1,
+		VariadicFunctions:     1,
+		SynopsisSources: map[string]int{
+			"empty":    0,
+			"facade":   1,
+			"internal": 2,
+		},
+	}
+	if !reflect.DeepEqual(doc.Summary, wantSummary) {
+		t.Fatalf("summary = %#v, want %#v", doc.Summary, wantSummary)
 	}
 	if len(doc.Packages) != 1 {
 		t.Fatalf("packages len = %d, want 1: %#v", len(doc.Packages), doc.Packages)
@@ -152,6 +169,32 @@ func TestToolsCatalogSnapshotIsCurrent(t *testing.T) {
 	}
 	if string(snapshot) != string(current) {
 		t.Fatalf("docs/api/tools.json is stale; run make tools-gen after intentional facade/doc/example changes")
+	}
+}
+
+func TestWriteToolsDocWritesIndentedFile(t *testing.T) {
+	outPath := filepath.Join(t.TempDir(), "tools.json")
+	doc := ToolsDoc{
+		Schema: schemaVersion,
+		Module: modulePath,
+		Summary: SummaryDoc{
+			PackageCount:    0,
+			SynopsisSources: map[string]int{"empty": 0, "facade": 0, "internal": 0},
+		},
+	}
+
+	if err := writeToolsDoc(doc, outPath); err != nil {
+		t.Fatalf("writeToolsDoc() error = %v", err)
+	}
+	got, err := os.ReadFile(outPath)
+	if err != nil {
+		t.Fatalf("ReadFile(%q) error = %v", outPath, err)
+	}
+	if !strings.HasSuffix(string(got), "\n") {
+		t.Fatalf("generated file does not end with newline: %q", got)
+	}
+	if !strings.Contains(string(got), `"summary": {`) {
+		t.Fatalf("generated file missing summary object: %s", got)
 	}
 }
 

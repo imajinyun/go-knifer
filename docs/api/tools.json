@@ -1,6 +1,19 @@
 {
-  "schema": "1.2",
+  "schema": "1.3",
   "module": "github.com/imajinyun/go-knifer",
+  "summary": {
+    "package_count": 48,
+    "function_count": 2528,
+    "functions_with_examples": 117,
+    "context_aware_functions": 20,
+    "returns_error_functions": 564,
+    "variadic_functions": 754,
+    "synopsis_sources": {
+      "empty": 69,
+      "facade": 1834,
+      "internal": 625
+    }
+  },
   "packages": [
     {
       "import_path": "github.com/imajinyun/go-knifer/vbean",
