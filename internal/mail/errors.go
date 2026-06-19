@@ -1,22 +1,46 @@
 package mail
 
-import "errors"
+import (
+	knifer "github.com/imajinyun/go-knifer"
+)
+
+// sentinel is a package-level error value that carries a go-knifer error code
+// while preserving sentinel identity for errors.Is comparisons.
+type sentinel struct {
+	code knifer.ErrCode
+	msg  string
+}
+
+func (e *sentinel) Error() string { return e.msg }
+
+// ErrorCode implements the knifer.CodeCarrier interface so knifer.CodeOf can
+// classify mail errors.
+func (e *sentinel) ErrorCode() knifer.ErrCode { return e.code }
+
+// Is matches the same sentinel pointer or a bare knifer.ErrCode target.
+func (e *sentinel) Is(target error) bool {
+	if e == target {
+		return true
+	}
+	code, ok := target.(knifer.ErrCode)
+	return ok && e.code == code
+}
 
 var (
 	// ErrInvalidAddress is returned when an email address cannot be parsed or validated.
-	ErrInvalidAddress = errors.New("mail: invalid address")
+	ErrInvalidAddress error = &sentinel{code: knifer.ErrCodeInvalidInput, msg: "mail: invalid address"}
 	// ErrInvalidHeader is returned when a header name or value is not safe for SMTP/MIME output.
-	ErrInvalidHeader = errors.New("mail: invalid header")
+	ErrInvalidHeader error = &sentinel{code: knifer.ErrCodeInvalidInput, msg: "mail: invalid header"}
 	// ErrMissingFrom is returned when a message has no From address.
-	ErrMissingFrom = errors.New("mail: missing from address")
+	ErrMissingFrom error = &sentinel{code: knifer.ErrCodeInvalidInput, msg: "mail: missing from address"}
 	// ErrMissingRecipient is returned when a message has no To, Cc, or Bcc recipient.
-	ErrMissingRecipient = errors.New("mail: missing recipient")
+	ErrMissingRecipient error = &sentinel{code: knifer.ErrCodeInvalidInput, msg: "mail: missing recipient"}
 	// ErrMissingBody is returned when a message has no body content.
-	ErrMissingBody = errors.New("mail: missing body")
+	ErrMissingBody error = &sentinel{code: knifer.ErrCodeInvalidInput, msg: "mail: missing body"}
 	// ErrTLSRequired is returned when the configured security policy requires TLS but TLS is unavailable.
-	ErrTLSRequired = errors.New("mail: tls required")
+	ErrTLSRequired error = &sentinel{code: knifer.ErrCodeUnsupported, msg: "mail: tls required"}
 	// ErrPlainAuth is returned when SMTP AUTH would be sent over a plaintext connection.
-	ErrPlainAuth = errors.New("mail: plaintext auth disabled")
+	ErrPlainAuth error = &sentinel{code: knifer.ErrCodeUnsupported, msg: "mail: plaintext auth disabled"}
 	// ErrAttachmentTooLarge is returned when an attachment exceeds the configured size limit.
-	ErrAttachmentTooLarge = errors.New("mail: attachment too large")
+	ErrAttachmentTooLarge error = &sentinel{code: knifer.ErrCodeInvalidInput, msg: "mail: attachment too large"}
 )

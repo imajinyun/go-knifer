@@ -42,7 +42,7 @@
       "writes_git_config": false,
       "network_required": false,
       "risk_level": "low",
-      "notes": "Fast local gate; includes worktree-check, module verification, vet, architecture, tests, API snapshot, and whitespace diff checks."
+      "notes": "Fast local gate; includes worktree-check, module verification, vet, architecture, tests, API snapshot, tools catalog, AI context, and whitespace diff checks."
     },
     "agent_check": {
       "cmd": "make agent-check",
@@ -178,6 +178,15 @@
       "risk_level": "low",
       "notes": "Checks that docs/api/exports.txt is current."
     },
+    "tools_check": {
+      "cmd": "make tools-check",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": false,
+      "risk_level": "low",
+      "notes": "Checks that docs/api/tools.json is current."
+    },
     "ai_context_check": {
       "cmd": "make ai-context-check",
       "safe_for_agent_auto_run": true,
@@ -217,6 +226,17 @@
       "risk_level": "high",
       "writes_files": ["docs/api/exports.txt"],
       "notes": "Only run after confirming an intentional public API change."
+    },
+    "tools_update": {
+      "cmd": "make tools-gen",
+      "safe_for_agent_auto_run": false,
+      "requires_user_consent": true,
+      "writes_workspace": true,
+      "writes_git_config": false,
+      "network_required": false,
+      "risk_level": "high",
+      "writes_files": ["docs/api/tools.json"],
+      "notes": "Only run after confirming intentional facade, doc comment, or Example changes."
     },
     "install_hooks": {
       "cmd": "make install-hooks",
@@ -274,11 +294,11 @@
       "notes": "Default policy for localized behavior fixes. Add coverage_profile and coverage_check when the fix is non-trivial."
     },
     "public_api": {
-      "required_commands": ["change_policy_check", "agent_full_check", "api_check", "coverage_check", "agent_evidence", "agent_evidence_check"],
-      "requires_user_consent_commands": ["api_update"],
+      "required_commands": ["change_policy_check", "agent_full_check", "api_check", "tools_check", "coverage_check", "agent_evidence", "agent_evidence_check"],
+      "requires_user_consent_commands": ["api_update", "tools_update"],
       "coverage_required": true,
       "security_review_required": false,
-      "notes": "Public API additions or breaking changes must keep the API snapshot and coverage evidence current."
+      "notes": "Public API additions or breaking changes must keep the API snapshot, tools catalog, and coverage evidence current."
     },
     "internal_refactor": {
       "required_commands": ["change_policy_check", "agent_check", "coverage_profile", "coverage_check", "agent_evidence", "agent_evidence_check"],
@@ -290,7 +310,7 @@
       "required_commands": ["change_policy_check", "agent_check", "agent_evidence", "agent_evidence_check"],
       "coverage_required": false,
       "security_review_required": false,
-      "notes": "Documentation-only changes should still pass metadata, API snapshot, and whitespace checks."
+      "notes": "Documentation-only changes should still pass metadata, API snapshot, tools catalog, and whitespace checks."
     },
     "ci_governance": {
       "required_commands": ["change_policy_check", "agent_check", "ai_context_check", "agent_evidence", "agent_evidence_check"],
@@ -337,7 +357,8 @@
     "Internal packages must not import public v* packages.",
     "Every public v* package directory must contain doc.go with a package comment.",
     "Production panic is allowed only for explicit MustXxx/PanicXxx APIs or documented compatibility cases.",
-    "Intentional public API changes must update docs/api/exports.txt with UPDATE_API=1 make api-check."
+    "Intentional public API changes must update docs/api/exports.txt with UPDATE_API=1 make api-check.",
+    "Intentional facade, doc comment, or Example changes must update docs/api/tools.json with make tools-gen."
   ],
   "coverage_gates": {
     "repository_threshold": 75.2,

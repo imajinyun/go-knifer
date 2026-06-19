@@ -46,3 +46,21 @@ func TestJWTWrappedAndUnsupportedErrors(t *testing.T) {
 		t.Fatalf("CodeOf(unsupportedJWTErrorf) = %q, %v; want unsupported", code, ok)
 	}
 }
+
+func TestJWTErrorIsSameTypeAndNil(t *testing.T) {
+	err := NewJWTError("bad token") // ErrCodeInvalidInput
+	if !err.Is(&JWTError{Code: knifer.ErrCodeInvalidInput}) {
+		t.Fatal("Is(*JWTError same code) should match")
+	}
+	if err.Is(&JWTError{Code: knifer.ErrCodeInternal}) {
+		t.Fatal("Is(*JWTError other code) should not match")
+	}
+	if err.Is(errors.New("x")) || err.Is(nil) {
+		t.Fatal("Is should not match unrelated targets")
+	}
+
+	var e *JWTError
+	if e.Error() != "" || e.Is(knifer.ErrCodeInvalidInput) {
+		t.Fatal("nil *JWTError methods should be zero-valued and safe")
+	}
+}

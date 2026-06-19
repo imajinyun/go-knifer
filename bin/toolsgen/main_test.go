@@ -1,0 +1,176 @@
+package main
+
+import (
+	"encoding/json"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+)
+
+func TestGenerateToolsDocIncludesMachineReadableDetails(t *testing.T) {
+	root := t.TempDir()
+	writeTestFile(t, root, "go.mod", "module github.com/imajinyun/go-knifer\n\ngo 1.25.0\n")
+	writeTestFile(t, root, "vtool/doc.go", `// Package vtool exposes test facade helpers.
+package vtool
+`)
+	writeTestFile(t, root, "vtool/tool.go", `package vtool
+
+import (
+	"context"
+
+	impl "github.com/imajinyun/go-knifer/internal/toolimpl"
+)
+
+// Run executes the test tool.
+func Run(ctx context.Context, name string, values ...int) (string, error) {
+	return name, nil
+}
+
+func Double(v int) int { return impl.Double(v) }
+
+func AddToCounter(c *impl.Counter, v int) int { return c.Add(v) }
+
+// Hidden is deliberately unexported from the tool catalog.
+func hidden() {}
+`)
+	writeTestFile(t, root, "vtool/tool_test.go", `package vtool
+
+func ExampleRun() {
+	_, _ = Run(nil, "demo", 1)
+}
+
+func ExampleRun_withValues() {
+	_, _ = Run(nil, "demo", 1, 2)
+}
+`)
+	writeTestFile(t, root, "internal/toolimpl/tool.go", `package toolimpl
+
+// Double doubles v for fallback documentation.
+func Double(v int) int { return v * 2 }
+
+type Counter struct { Value int }
+
+// Add adds v to the counter and returns the updated value.
+func (c *Counter) Add(v int) int { c.Value += v; return c.Value }
+`)
+	writeTestFile(t, root, "internal/hidden/hidden.go", `package hidden
+
+func Hidden() {}
+`)
+	writeTestFile(t, root, "notfacade/notfacade.go", `package notfacade
+
+func Hidden() {}
+`)
+
+	doc, err := generateToolsDoc(root)
+	if err != nil {
+		t.Fatalf("generateToolsDoc() error = %v", err)
+	}
+	if doc.Schema != schemaVersion || doc.Module != modulePath {
+		t.Fatalf("unexpected document identity: %#v", doc)
+	}
+	if len(doc.Packages) != 1 {
+		t.Fatalf("packages len = %d, want 1: %#v", len(doc.Packages), doc.Packages)
+	}
+	pkg := doc.Packages[0]
+	if pkg.ImportPath != modulePath+"/vtool" || pkg.Name != "vtool" {
+		t.Fatalf("unexpected package: %#v", pkg)
+	}
+	if !strings.Contains(pkg.Synopsis, "Package vtool exposes test facade helpers.") {
+		t.Fatalf("package synopsis = %q", pkg.Synopsis)
+	}
+	if len(pkg.Functions) != 3 {
+		t.Fatalf("functions len = %d, want 3: %#v", len(pkg.Functions), pkg.Functions)
+	}
+	fns := map[string]FuncDoc{}
+	for _, fn := range pkg.Functions {
+		fns[fn.Name] = fn
+	}
+	fn := fns["Run"]
+	if fn.Name != "Run" {
+		t.Fatalf("function name = %q", fn.Name)
+	}
+	if fn.Signature != "func Run(ctx context.Context, name string, values ...int) (string, error)" {
+		t.Fatalf("signature = %q", fn.Signature)
+	}
+	if fn.Synopsis != "Run executes the test tool." {
+		t.Fatalf("synopsis = %q", fn.Synopsis)
+	}
+	if fn.SynopsisSource != "facade" {
+		t.Fatalf("synopsis source = %q, want facade", fn.SynopsisSource)
+	}
+	if !fn.ReturnsError || !fn.ContextAware || !fn.Variadic {
+		t.Fatalf("flags = returns_error:%v context_aware:%v variadic:%v", fn.ReturnsError, fn.ContextAware, fn.Variadic)
+	}
+	if got := len(fn.Params); got != 3 {
+		t.Fatalf("params len = %d, want 3", got)
+	}
+	if fn.Params[0] != (Param{Name: "ctx", Type: "context.Context"}) || fn.Params[2] != (Param{Name: "values", Type: "...int"}) {
+		t.Fatalf("unexpected params: %#v", fn.Params)
+	}
+	if strings.Join(fn.Results, ",") != "string,error" {
+		t.Fatalf("results = %#v", fn.Results)
+	}
+	if strings.Join(fn.Examples, ",") != "ExampleRun,ExampleRun_withValues" {
+		t.Fatalf("examples = %#v", fn.Examples)
+	}
+
+	fallback := fns["Double"]
+	if fallback.Synopsis != "Double doubles v for fallback documentation." {
+		t.Fatalf("fallback synopsis = %q", fallback.Synopsis)
+	}
+	if fallback.SynopsisSource != "internal" {
+		t.Fatalf("fallback synopsis source = %q, want internal", fallback.SynopsisSource)
+	}
+
+	methodFallback := fns["AddToCounter"]
+	if methodFallback.Synopsis != "Add adds v to the counter and returns the updated value." {
+		t.Fatalf("method fallback synopsis = %q", methodFallback.Synopsis)
+	}
+	if methodFallback.SynopsisSource != "internal" {
+		t.Fatalf("method fallback synopsis source = %q, want internal", methodFallback.SynopsisSource)
+	}
+}
+
+func TestToolsCatalogSnapshotIsCurrent(t *testing.T) {
+	root := repositoryRoot(t)
+	doc, err := generateToolsDoc(root)
+	if err != nil {
+		t.Fatalf("generateToolsDoc(%q) error = %v", root, err)
+	}
+	current, err := json.MarshalIndent(doc, "", "  ")
+	if err != nil {
+		t.Fatalf("MarshalIndent() error = %v", err)
+	}
+	current = append(current, '\n')
+
+	snapshotPath := filepath.Join(root, "docs", "api", "tools.json")
+	snapshot, err := os.ReadFile(snapshotPath)
+	if err != nil {
+		t.Fatalf("ReadFile(%q) error = %v", snapshotPath, err)
+	}
+	if string(snapshot) != string(current) {
+		t.Fatalf("docs/api/tools.json is stale; run make tools-gen after intentional facade/doc/example changes")
+	}
+}
+
+func repositoryRoot(t *testing.T) string {
+	t.Helper()
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Getwd() error = %v", err)
+	}
+	return filepath.Clean(filepath.Join(wd, "..", ".."))
+}
+
+func writeTestFile(t *testing.T, root, name, content string) {
+	t.Helper()
+	path := filepath.Join(root, name)
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatalf("MkdirAll() error = %v", err)
+	}
+	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+}

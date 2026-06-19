@@ -1,0 +1,451 @@
+// Command toolsgen generates docs/api/tools.json, a machine-readable catalog of
+// the public v* facade functions for AI/tooling consumption. It is the JSON
+// companion to docs/api/exports.txt and is CI-enforced for drift the same way.
+//
+// Output is fully deterministic: every collection is sorted so that re-running
+// the generator on unchanged source produces byte-identical JSON.
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"go/ast"
+	"go/types"
+	"os"
+	"sort"
+	"strings"
+
+	"golang.org/x/tools/go/packages"
+)
+
+const modulePath = "github.com/imajinyun/go-knifer"
+
+// schemaVersion is bumped when the tools.json structure changes.
+const schemaVersion = "1.2"
+
+// ToolsDoc is the top-level machine-readable tool catalog.
+type ToolsDoc struct {
+	Schema   string       `json:"schema"`
+	Module   string       `json:"module"`
+	Packages []PackageDoc `json:"packages"`
+}
+
+// PackageDoc describes one public facade package.
+type PackageDoc struct {
+	ImportPath string    `json:"import_path"`
+	Name       string    `json:"name"`
+	Synopsis   string    `json:"synopsis"`
+	Functions  []FuncDoc `json:"functions"`
+}
+
+// FuncDoc describes one exported top-level function.
+type FuncDoc struct {
+	Name           string   `json:"name"`
+	Signature      string   `json:"signature"`
+	Synopsis       string   `json:"synopsis"`
+	SynopsisSource string   `json:"synopsis_source,omitempty"`
+	Params         []Param  `json:"params,omitempty"`
+	Results        []string `json:"results,omitempty"`
+	ReturnsError   bool     `json:"returns_error"`
+	ContextAware   bool     `json:"context_aware"`
+	Variadic       bool     `json:"variadic"`
+	Examples       []string `json:"examples,omitempty"`
+}
+
+// Param is a single function parameter.
+type Param struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
+}
+
+func main() {
+	doc, err := generateToolsDoc(".")
+	if err != nil {
+		fatal(err)
+	}
+	out, err := json.MarshalIndent(doc, "", "  ")
+	if err != nil {
+		fatal(err)
+	}
+	if _, err := fmt.Fprintln(os.Stdout, string(out)); err != nil {
+		fatal(err)
+	}
+}
+
+func generateToolsDoc(root string) (ToolsDoc, error) {
+	cfg := &packages.Config{
+		Dir:   root,
+		Tests: true,
+		Mode: packages.NeedName | packages.NeedTypes | packages.NeedTypesInfo |
+			packages.NeedSyntax | packages.NeedFiles | packages.NeedImports | packages.NeedDeps,
+	}
+	pkgs, err := packages.Load(cfg, "./...")
+	if err != nil {
+		return ToolsDoc{}, err
+	}
+
+	// examples maps facade import path -> set of Example function names.
+	examples := map[string]map[string]struct{}{}
+	// implDocs maps fully-qualified function names to their first-sentence docs.
+	implDocs := map[string]string{}
+	// main packages keyed by import path (deduplicated across test variants).
+	mains := map[string]*packages.Package{}
+
+	for _, pkg := range pkgs {
+		if len(pkg.Errors) > 0 {
+			return ToolsDoc{}, pkg.Errors[0]
+		}
+		collectExamples(pkg, examples)
+		collectFunctionDocs(pkg, implDocs)
+		facade := strings.TrimSuffix(pkg.PkgPath, "_test")
+		if pkg.Types == nil || !isFacadePackage(facade) {
+			continue
+		}
+		// Prefer the non-test build of the package (it carries only the real scope).
+		if pkg.PkgPath == facade && !hasTestFiles(pkg) {
+			mains[facade] = pkg
+		}
+	}
+
+	out := ToolsDoc{Schema: schemaVersion, Module: modulePath}
+	for path, pkg := range mains {
+		pd := buildPackageDoc(pkg, examples[path], implDocs)
+		if len(pd.Functions) == 0 {
+			continue
+		}
+		out.Packages = append(out.Packages, pd)
+	}
+	sort.Slice(out.Packages, func(i, j int) bool {
+		return out.Packages[i].ImportPath < out.Packages[j].ImportPath
+	})
+	return out, nil
+}
+
+func hasTestFiles(pkg *packages.Package) bool {
+	for _, file := range pkg.GoFiles {
+		if strings.HasSuffix(file, "_test.go") {
+			return true
+		}
+	}
+	return false
+}
+
+// collectFunctionDocs records first-sentence docs for functions and methods in
+// all loaded packages. Facade functions without comments can reuse the
+// documentation of the internal function or method they directly delegate to.
+func collectFunctionDocs(pkg *packages.Package, docs map[string]string) {
+	if pkg.Types == nil || hasTestFiles(pkg) {
+		return
+	}
+	for _, file := range pkg.Syntax {
+		for _, decl := range file.Decls {
+			fn, ok := decl.(*ast.FuncDecl)
+			if !ok || fn.Name == nil || fn.Doc == nil {
+				continue
+			}
+			obj, _ := pkg.TypesInfo.Defs[fn.Name].(*types.Func)
+			if obj == nil {
+				continue
+			}
+			docs[functionKey(obj)] = firstSentence(fn.Doc.Text())
+		}
+	}
+}
+
+// collectExamples records top-level ExampleXxx functions, attributing them to
+// the facade package they test.
+func collectExamples(pkg *packages.Package, examples map[string]map[string]struct{}) {
+	facade := strings.TrimSuffix(pkg.PkgPath, "_test")
+	if !isFacadePackage(facade) {
+		return
+	}
+	for _, file := range pkg.Syntax {
+		for _, decl := range file.Decls {
+			fn, ok := decl.(*ast.FuncDecl)
+			if !ok || fn.Recv != nil || fn.Name == nil {
+				continue
+			}
+			if !strings.HasPrefix(fn.Name.Name, "Example") {
+				continue
+			}
+			if examples[facade] == nil {
+				examples[facade] = map[string]struct{}{}
+			}
+			examples[facade][fn.Name.Name] = struct{}{}
+		}
+	}
+}
+
+func buildPackageDoc(pkg *packages.Package, exampleSet map[string]struct{}, implDocs map[string]string) PackageDoc {
+	pd := PackageDoc{
+		ImportPath: pkg.PkgPath,
+		Name:       pkg.Name,
+		Synopsis:   packageSynopsis(pkg),
+	}
+	docs := funcDocComments(pkg, implDocs)
+	qualifier := qualifierFor(pkg.Types)
+	scope := pkg.Types.Scope()
+	for _, name := range scope.Names() {
+		obj, ok := scope.Lookup(name).(*types.Func)
+		if !ok || !obj.Exported() {
+			continue
+		}
+		sig, ok := obj.Type().(*types.Signature)
+		if !ok || sig.Recv() != nil {
+			continue
+		}
+		pd.Functions = append(pd.Functions, buildFuncDoc(obj, sig, qualifier, docs[name], exampleSet))
+	}
+	sort.Slice(pd.Functions, func(i, j int) bool {
+		return pd.Functions[i].Name < pd.Functions[j].Name
+	})
+	return pd
+}
+
+func buildFuncDoc(obj *types.Func, sig *types.Signature, qualifier types.Qualifier, doc functionDoc, exampleSet map[string]struct{}) FuncDoc {
+	fd := FuncDoc{
+		Name:           obj.Name(),
+		Signature:      "func " + obj.Name() + signatureTail(sig, qualifier),
+		Synopsis:       doc.synopsis,
+		SynopsisSource: doc.source,
+		Variadic:       sig.Variadic(),
+	}
+
+	params := sig.Params()
+	for i := 0; i < params.Len(); i++ {
+		v := params.At(i)
+		typ := typeString(v.Type(), qualifier)
+		if sig.Variadic() && i == params.Len()-1 {
+			if slice, ok := v.Type().(*types.Slice); ok {
+				typ = "..." + typeString(slice.Elem(), qualifier)
+			}
+		}
+		fd.Params = append(fd.Params, Param{Name: v.Name(), Type: typ})
+		if i == 0 && typ == "context.Context" {
+			fd.ContextAware = true
+		}
+	}
+
+	results := sig.Results()
+	for i := 0; i < results.Len(); i++ {
+		typ := typeString(results.At(i).Type(), qualifier)
+		fd.Results = append(fd.Results, typ)
+		if typ == "error" {
+			fd.ReturnsError = true
+		}
+	}
+
+	fd.Examples = matchExamples(obj.Name(), exampleSet)
+	return fd
+}
+
+// matchExamples returns sorted Example function names that document fn.
+// Go test convention: ExampleFn or ExampleFn_suffix documents function Fn.
+func matchExamples(fnName string, exampleSet map[string]struct{}) []string {
+	if len(exampleSet) == 0 {
+		return nil
+	}
+	var out []string
+	for name := range exampleSet {
+		rest, ok := strings.CutPrefix(name, "Example")
+		if !ok {
+			continue
+		}
+		base, _, _ := strings.Cut(rest, "_")
+		if base == fnName {
+			out = append(out, name)
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
+type functionDoc struct {
+	synopsis string
+	source   string
+}
+
+// funcDocComments returns the first-sentence doc comment for each top-level
+// facade func. If a facade has no comment but directly delegates to an internal
+// function with a comment, the internal comment is used as a fallback.
+func funcDocComments(pkg *packages.Package, implDocs map[string]string) map[string]functionDoc {
+	docs := map[string]functionDoc{}
+	for _, file := range pkg.Syntax {
+		for _, decl := range file.Decls {
+			fn, ok := decl.(*ast.FuncDecl)
+			if !ok || fn.Recv != nil || fn.Name == nil {
+				continue
+			}
+			if fn.Doc != nil {
+				docs[fn.Name.Name] = functionDoc{synopsis: firstSentence(fn.Doc.Text()), source: "facade"}
+				continue
+			}
+			if delegated := delegatedFunc(fn, pkg); delegated != nil {
+				if synopsis := implDocs[functionKey(delegated)]; synopsis != "" {
+					docs[fn.Name.Name] = functionDoc{synopsis: synopsis, source: "internal"}
+				}
+			}
+		}
+	}
+	return docs
+}
+
+func delegatedFunc(fn *ast.FuncDecl, pkg *packages.Package) *types.Func {
+	if fn.Body == nil || len(fn.Body.List) != 1 {
+		return nil
+	}
+	var call *ast.CallExpr
+	switch stmt := fn.Body.List[0].(type) {
+	case *ast.ReturnStmt:
+		if len(stmt.Results) != 1 {
+			return nil
+		}
+		call, _ = stmt.Results[0].(*ast.CallExpr)
+	case *ast.ExprStmt:
+		call, _ = stmt.X.(*ast.CallExpr)
+	}
+	if call == nil {
+		return nil
+	}
+	if pkg.TypesInfo == nil {
+		return nil
+	}
+	selector, ok := call.Fun.(*ast.SelectorExpr)
+	if !ok || selector.Sel == nil {
+		return nil
+	}
+	if obj, ok := pkg.TypesInfo.Uses[selector.Sel].(*types.Func); ok && obj.Pkg() != nil {
+		return obj
+	}
+
+	// Facade helpers sometimes delegate through a method on an aliased internal
+	// type, for example return b.AddRootCABytes(pem). Selector Uses is nil for
+	// methods, but Selections points at the target method.
+	selection := pkg.TypesInfo.Selections[selector]
+	if selection == nil || selection.Kind() != types.MethodVal {
+		return nil
+	}
+	obj, _ := selection.Obj().(*types.Func)
+	if obj == nil || obj.Pkg() == nil {
+		return nil
+	}
+	return obj
+}
+
+func functionKey(fn *types.Func) string {
+	if fn == nil {
+		return ""
+	}
+	return fn.FullName()
+}
+
+func packageSynopsis(pkg *packages.Package) string {
+	for _, file := range pkg.Syntax {
+		if file.Doc != nil {
+			return firstSentence(file.Doc.Text())
+		}
+	}
+	return ""
+}
+
+// firstSentence returns the first sentence of a doc comment, collapsed to a
+// single line.
+func firstSentence(text string) string {
+	text = strings.TrimSpace(text)
+	if text == "" {
+		return ""
+	}
+	if idx := strings.Index(text, "\n\n"); idx >= 0 {
+		text = text[:idx]
+	}
+	text = strings.Join(strings.Fields(text), " ")
+	// Trim to the first sentence-ending period followed by a space or EOS.
+	for i := 0; i < len(text); i++ {
+		if text[i] == '.' && (i+1 == len(text) || text[i+1] == ' ') {
+			return text[:i+1]
+		}
+	}
+	return text
+}
+
+func signatureTail(sig *types.Signature, qualifier types.Qualifier) string {
+	var b strings.Builder
+	b.WriteString(typeParamList(sig.TypeParams(), qualifier))
+	b.WriteString(tupleString(sig.Params(), sig.Variadic(), qualifier))
+	results := sig.Results()
+	switch results.Len() {
+	case 0:
+	case 1:
+		result := results.At(0)
+		if result.Name() == "" {
+			b.WriteString(" ")
+			b.WriteString(typeString(result.Type(), qualifier))
+			break
+		}
+		fallthrough
+	default:
+		b.WriteString(" ")
+		b.WriteString(tupleString(results, false, qualifier))
+	}
+	return b.String()
+}
+
+func tupleString(tuple *types.Tuple, variadic bool, qualifier types.Qualifier) string {
+	if tuple == nil || tuple.Len() == 0 {
+		return "()"
+	}
+	parts := make([]string, 0, tuple.Len())
+	for i := 0; i < tuple.Len(); i++ {
+		v := tuple.At(i)
+		typ := typeString(v.Type(), qualifier)
+		if variadic && i == tuple.Len()-1 {
+			if slice, ok := v.Type().(*types.Slice); ok {
+				typ = "..." + typeString(slice.Elem(), qualifier)
+			}
+		}
+		if v.Name() != "" {
+			typ = v.Name() + " " + typ
+		}
+		parts = append(parts, typ)
+	}
+	return "(" + strings.Join(parts, ", ") + ")"
+}
+
+func typeParamList(params *types.TypeParamList, qualifier types.Qualifier) string {
+	if params == nil || params.Len() == 0 {
+		return ""
+	}
+	items := make([]string, 0, params.Len())
+	for i := 0; i < params.Len(); i++ {
+		param := params.At(i)
+		items = append(items, fmt.Sprintf("%s %s", param.Obj().Name(), typeString(param.Constraint(), qualifier)))
+	}
+	return "[" + strings.Join(items, ", ") + "]"
+}
+
+func qualifierFor(current *types.Package) types.Qualifier {
+	return func(pkg *types.Package) string {
+		if pkg == nil || pkg.Path() == current.Path() {
+			return ""
+		}
+		// Use the short package name to keep signatures readable.
+		return pkg.Name()
+	}
+}
+
+func typeString(t types.Type, qualifier types.Qualifier) string {
+	return types.TypeString(t, qualifier)
+}
+
+func isFacadePackage(importPath string) bool {
+	rest, ok := strings.CutPrefix(importPath, modulePath+"/")
+	if !ok || strings.Contains(rest, "/") {
+		return false
+	}
+	return strings.HasPrefix(rest, "v")
+}
+
+func fatal(err error) {
+	_, _ = fmt.Fprintln(os.Stderr, err)
+	os.Exit(1)
+}

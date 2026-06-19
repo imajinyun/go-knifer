@@ -68,3 +68,73 @@ func TestErrorString(t *testing.T) {
 		t.Fatalf("Error() = %q", got)
 	}
 }
+
+func TestErrorStringCauseWithoutMessage(t *testing.T) {
+	// Cause set but empty message hits the "CODE: cause" branch.
+	err := knifer.WrapError(knifer.ErrCodeTimeout, "", errors.New("deadline"))
+	if got := err.Error(); got != "GK_TIMEOUT: deadline" {
+		t.Fatalf("Error() = %q", got)
+	}
+}
+
+func TestErrorNilReceiver(t *testing.T) {
+	var e *knifer.Error
+	if got := e.Error(); got != "" {
+		t.Fatalf("nil Error() = %q", got)
+	}
+	if got := e.Unwrap(); got != nil {
+		t.Fatalf("nil Unwrap() = %v", got)
+	}
+	if got := e.ErrorCode(); got != "" {
+		t.Fatalf("nil ErrorCode() = %q", got)
+	}
+	if e.Is(knifer.ErrCodeInternal) {
+		t.Fatal("nil Is() should be false")
+	}
+}
+
+func TestErrorCodeAndIsBranches(t *testing.T) {
+	err := knifer.NewError(knifer.ErrCodeNotFound, "missing")
+	if err.ErrorCode() != knifer.ErrCodeNotFound {
+		t.Fatalf("ErrorCode() = %q", err.ErrorCode())
+	}
+	// Is against another *Error with the same code.
+	if !err.Is(knifer.NewError(knifer.ErrCodeNotFound, "other")) {
+		t.Fatal("Is(*Error same code) should match")
+	}
+	// Is against a different-code *Error and an unrelated error returns false.
+	if err.Is(knifer.NewError(knifer.ErrCodeInternal, "x")) {
+		t.Fatal("Is(*Error other code) should not match")
+	}
+	if err.Is(errors.New("plain")) {
+		t.Fatal("Is(plain error) should not match")
+	}
+	if err.Is(nil) {
+		t.Fatal("Is(nil) should not match")
+	}
+}
+
+// codeCarrierEmpty implements CodeCarrier but returns an empty code, forcing
+// CodeOf to fall back to the sentinel ErrCode scan.
+type codeCarrierEmpty struct{}
+
+func (codeCarrierEmpty) Error() string             { return "empty" }
+func (codeCarrierEmpty) ErrorCode() knifer.ErrCode { return "" }
+
+func TestCodeOfFallbacks(t *testing.T) {
+	// Carrier returns empty code -> fall through to sentinel scan, which also
+	// fails to match -> ("", false).
+	if code, ok := knifer.CodeOf(codeCarrierEmpty{}); ok || code != "" {
+		t.Fatalf("CodeOf(empty carrier) = %q, %v", code, ok)
+	}
+
+	// A bare ErrCode value matches itself through the sentinel scan.
+	if code, ok := knifer.CodeOf(knifer.ErrCodeUnsupported); !ok || code != knifer.ErrCodeUnsupported {
+		t.Fatalf("CodeOf(ErrCode) = %q, %v", code, ok)
+	}
+
+	// An error with no go-knifer code yields ("", false).
+	if code, ok := knifer.CodeOf(errors.New("plain")); ok || code != "" {
+		t.Fatalf("CodeOf(plain) = %q, %v", code, ok)
+	}
+}

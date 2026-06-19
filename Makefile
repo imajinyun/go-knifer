@@ -1,4 +1,4 @@
-.PHONY: help doctor install-hooks uninstall-hooks worktree-check change-policy-check security-sensitive-diff agent-evidence agent-evidence-check test test-race coverage-profile coverage-report coverage-check api-check ai-context-check ci-workflow-check generate mod-verify tidy-check diff-whitespace diff-clean diff-check vet arch lint govulncheck quick-check security-check full-check agent-check agent-full-check agent-security-check ci-agent-governance bench bench-core bench-facade bench-codec bench-smoke check ci-test
+.PHONY: help doctor install-hooks uninstall-hooks worktree-check change-policy-check security-sensitive-diff agent-evidence agent-evidence-check test test-race coverage-profile coverage-report coverage-check api-check tools-check tools-gen ai-context-check ci-workflow-check generate mod-verify tidy-check diff-whitespace diff-clean diff-check vet arch lint govulncheck quick-check security-check full-check agent-check agent-full-check agent-security-check ci-agent-governance bench bench-core bench-facade bench-codec bench-smoke check ci-test
 
 GO ?= go
 GOLANGCI_LINT ?= golangci-lint
@@ -39,6 +39,8 @@ help:
 	@echo "  ci-agent-governance Run CI Agent governance policy/evidence gates"
 	@echo "  generate        Run go:generate directives (API snapshot, code gen)"
 	@echo "  api-check       Verify exported API snapshot is current"
+	@echo "  tools-check     Verify machine-readable tools catalog is current"
+	@echo "  tools-gen       Regenerate machine-readable tools catalog"
 	@echo "  ai-context-check Verify machine-readable AI context metadata"
 	@echo "  ci-workflow-check Verify CI workflow governance invariants"
 	@echo "  check           Run local stability gates"
@@ -113,6 +115,12 @@ coverage-check:
 api-check:
 	bash bin/check_api_compat.sh
 
+tools-check:
+	$(GO) test ./bin/toolsgen
+
+tools-gen:
+	$(GO) run ./bin/toolsgen > docs/api/tools.json
+
 ai-context-check:
 	bash bin/check_ai_context.sh
 
@@ -148,11 +156,11 @@ lint:
 govulncheck:
 	$(GO) tool govulncheck $(PKGS)
 
-quick-check: worktree-check mod-verify vet arch test api-check ai-context-check diff-whitespace
+quick-check: worktree-check mod-verify vet arch test api-check tools-check ai-context-check diff-whitespace
 
 security-check: lint govulncheck
 
-full-check: worktree-check mod-verify vet arch test-race coverage-check api-check ai-context-check lint govulncheck diff-whitespace
+full-check: worktree-check mod-verify vet arch test-race coverage-check api-check tools-check ai-context-check lint govulncheck diff-whitespace
 
 agent-check: quick-check change-policy-check security-sensitive-diff
 
@@ -178,4 +186,4 @@ bench-smoke:
 
 check: full-check
 
-ci-test: mod-verify vet tidy-check diff-check arch test-race coverage-check api-check ai-context-check
+ci-test: mod-verify vet tidy-check diff-check arch test-race coverage-check api-check tools-check ai-context-check

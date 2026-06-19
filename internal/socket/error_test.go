@@ -82,3 +82,17 @@ func TestSocketRuntimeErrorIsNilTarget(t *testing.T) {
 		t.Fatal("SocketRuntimeError should not match nil target")
 	}
 }
+
+func TestSocketRuntimeErrorIsSameType(t *testing.T) {
+	e := NewSocketErrorMsg("err") // ErrCodeInternal
+	if !e.Is(&SocketRuntimeError{Code: knifer.ErrCodeInternal}) {
+		t.Fatal("Is(*SocketRuntimeError same code) should match")
+	}
+	if e.Is(&SocketRuntimeError{Code: knifer.ErrCodeInvalidInput}) {
+		t.Fatal("Is(*SocketRuntimeError other code) should not match")
+	}
+	var nilErr *SocketRuntimeError
+	if nilErr.Is(knifer.ErrCodeInternal) {
+		t.Fatal("nil receiver Is should be false")
+	}
+}

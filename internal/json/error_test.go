@@ -37,3 +37,25 @@ func TestJSONErrorMatchesErrCode(t *testing.T) {
 		t.Fatal("WrapJSONError should preserve the cause chain")
 	}
 }
+
+func TestJSONErrorContractAndNil(t *testing.T) {
+	err := NewJSONError("bad")
+
+	// CodeOf classifies through CodeCarrier.
+	if code, ok := knifer.CodeOf(err); !ok || code != knifer.ErrCodeInvalidInput {
+		t.Fatalf("CodeOf = %q, %v", code, ok)
+	}
+	// Is handles both ErrCode and same-type *JSONError targets.
+	if !err.Is(&JSONError{Code: knifer.ErrCodeInvalidInput}) {
+		t.Fatal("Is(*JSONError same code) should match")
+	}
+	if err.Is(knifer.ErrCodeInternal) || err.Is(errors.New("x")) || err.Is(nil) {
+		t.Fatal("Is should not match unrelated targets")
+	}
+
+	// nil receiver safety.
+	var e *JSONError
+	if e.Error() != "" || e.ErrorCode() != "" || e.Unwrap() != nil || e.Is(knifer.ErrCodeInternal) {
+		t.Fatal("nil *JSONError methods should be zero-valued and safe")
+	}
+}

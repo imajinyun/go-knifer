@@ -7,6 +7,21 @@ import (
 	"testing"
 )
 
+func TestZeroValueBatchEnsureInner_BitsUT(t *testing.T) {
+	// A zero-value Batch must lazily build its inner implementation so that Len
+	// and Run work without an explicit constructor.
+	var b Batch[int]
+	if got := b.Len(); got != 0 {
+		t.Fatalf("zero Batch Len = %d, want 0", got)
+	}
+	if _, err := b.Run(context.Background(), 0, 0); err != nil {
+		t.Fatalf("zero Batch Run error = %v", err)
+	}
+	if (Options{}) != b.JobOptions() {
+		t.Fatalf("zero Batch JobOptions = %#v", b.JobOptions())
+	}
+}
+
 func TestFacadeRunWithBatch_BitsUT(t *testing.T) {
 	var seen []int
 	j := NewBatch(func(ctx context.Context, vals []int) (Merge, error) {

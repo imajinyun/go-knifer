@@ -51,6 +51,22 @@ func TestHTTPErrorAndClassification(t *testing.T) {
 	}
 }
 
+func TestHTTPErrorIsSameTypeAndNilError(t *testing.T) {
+	err := HTTPErrorfWithCode(knifer.ErrCodeInvalidInput, "bad url")
+	if !err.Is(&HTTPError{Code: knifer.ErrCodeInvalidInput}) {
+		t.Fatal("Is(*HTTPError same code) should match")
+	}
+	if err.Is(&HTTPError{Code: knifer.ErrCodeTimeout}) {
+		t.Fatal("Is(*HTTPError other code) should not match")
+	}
+	if err.Is(errors.New("x")) || err.Is(nil) {
+		t.Fatal("Is should not match unrelated targets")
+	}
+	if got := (*HTTPError)(nil).Error(); got != "" {
+		t.Fatalf("nil HTTPError Error = %q", got)
+	}
+}
+
 type timeoutNetError struct{}
 
 func (timeoutNetError) Error() string   { return "timeout" }

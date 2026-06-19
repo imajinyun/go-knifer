@@ -32,6 +32,9 @@ func newSchedulerStartedError() *CronError {
 }
 
 func (e *CronError) Error() string {
+	if e == nil {
+		return ""
+	}
 	if e.Cause != nil {
 		return fmt.Sprintf("%s: %v", e.Msg, e.Cause)
 	}
@@ -39,13 +42,31 @@ func (e *CronError) Error() string {
 }
 
 // ErrorCode returns the go-knifer error code.
-func (e *CronError) ErrorCode() knifer.ErrCode { return e.Code }
+func (e *CronError) ErrorCode() knifer.ErrCode {
+	if e == nil {
+		return ""
+	}
+	return e.Code
+}
 
 // Unwrap supports errors.Is and errors.As.
-func (e *CronError) Unwrap() error { return e.Cause }
+func (e *CronError) Unwrap() error {
+	if e == nil {
+		return nil
+	}
+	return e.Cause
+}
 
 // Is supports errors.Is(err, knifer.ErrCodeXxx) matching by error code.
 func (e *CronError) Is(target error) bool {
-	code, ok := target.(knifer.ErrCode)
-	return ok && e.Code == code
+	if e == nil || target == nil {
+		return false
+	}
+	if code, ok := target.(knifer.ErrCode); ok {
+		return e.Code == code
+	}
+	if other, ok := target.(*CronError); ok {
+		return e.Code == other.Code
+	}
+	return false
 }

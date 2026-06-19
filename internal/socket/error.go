@@ -45,8 +45,16 @@ func (e *SocketRuntimeError) Unwrap() error {
 
 // Is supports errors.Is(err, knifer.ErrCodeXxx) matching by error code.
 func (e *SocketRuntimeError) Is(target error) bool {
-	code, ok := target.(knifer.ErrCode)
-	return ok && e.Code == code
+	if e == nil || target == nil {
+		return false
+	}
+	if code, ok := target.(knifer.ErrCode); ok {
+		return e.Code == code
+	}
+	if other, ok := target.(*SocketRuntimeError); ok {
+		return e.Code == other.Code
+	}
+	return false
 }
 
 // NewSocketError creates a SocketRuntimeError from any error.

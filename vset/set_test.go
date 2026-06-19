@@ -2,11 +2,51 @@ package vset_test
 
 import (
 	"encoding/json"
+	"errors"
 	"sort"
 	"testing"
 
 	"github.com/imajinyun/go-knifer/vset"
 )
+
+func TestVSetUnmarshalErrorPaths(t *testing.T) {
+	// Invalid JSON surfaces an error from UnmarshalJSON.
+	var s vset.Set[int]
+	if err := json.Unmarshal([]byte(`{"not":"an array"}`), &s); err == nil {
+		t.Fatal("UnmarshalJSON on object should error")
+	}
+	if err := s.UnmarshalJSONWithOptions([]byte(`[bad`)); err == nil {
+		t.Fatal("UnmarshalJSONWithOptions on invalid JSON should error")
+	}
+
+	// Valid JSON populates the set.
+	var ok vset.Set[int]
+	if err := json.Unmarshal([]byte(`[1,2,3]`), &ok); err != nil || len(ok.Members()) != 3 {
+		t.Fatalf("UnmarshalJSON valid: err=%v size=%d", err, len(ok.Members()))
+	}
+}
+
+func TestVSetUnmarshalYAML(t *testing.T) {
+	var s vset.Set[int]
+	// Success path: the provided decode function fills the slice.
+	err := s.UnmarshalYAML(func(out any) error {
+		ptr, ok := out.(*[]int)
+		if !ok {
+			t.Fatalf("unexpected target type %T", out)
+		}
+		*ptr = []int{4, 5, 6}
+		return nil
+	})
+	if err != nil || len(s.Members()) != 3 || !s.Contains(5) {
+		t.Fatalf("UnmarshalYAML success: err=%v size=%d", err, len(s.Members()))
+	}
+
+	// Error path: decode function returns an error.
+	want := errors.New("yaml boom")
+	if err := s.UnmarshalYAML(func(any) error { return want }); !errors.Is(err, want) {
+		t.Fatalf("UnmarshalYAML error = %v", err)
+	}
+}
 
 func TestVSetFacadeConstructorsAndMethods(t *testing.T) {
 	stringSet := vset.NewString("a", "b")

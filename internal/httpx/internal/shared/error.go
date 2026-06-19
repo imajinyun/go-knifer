@@ -18,6 +18,9 @@ type HTTPError struct {
 
 // Error returns the error message.
 func (e *HTTPError) Error() string {
+	if e == nil {
+		return ""
+	}
 	if e.Cause != nil {
 		return fmt.Sprintf("%s: %v", e.Msg, e.Cause)
 	}
@@ -45,8 +48,13 @@ func (e *HTTPError) Is(target error) bool {
 	if e == nil || target == nil {
 		return false
 	}
-	code, ok := target.(knifer.ErrCode)
-	return ok && e.Code == code
+	if code, ok := target.(knifer.ErrCode); ok {
+		return e.Code == code
+	}
+	if other, ok := target.(*HTTPError); ok {
+		return e.Code == other.Code
+	}
+	return false
 }
 
 // NewHTTPError creates an HTTP error.

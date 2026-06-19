@@ -15,6 +15,9 @@ type JWTError struct {
 
 // Error implements the error interface.
 func (e *JWTError) Error() string {
+	if e == nil {
+		return ""
+	}
 	if e.Err != nil {
 		return e.Msg + ": " + e.Err.Error()
 	}
@@ -42,8 +45,13 @@ func (e *JWTError) Is(target error) bool {
 	if e == nil || target == nil {
 		return false
 	}
-	code, ok := target.(knifer.ErrCode)
-	return ok && e.Code == code
+	if code, ok := target.(knifer.ErrCode); ok {
+		return e.Code == code
+	}
+	if other, ok := target.(*JWTError); ok {
+		return e.Code == other.Code
+	}
+	return false
 }
 
 // NewJWTError creates an error.
