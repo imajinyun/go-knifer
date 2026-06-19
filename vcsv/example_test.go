@@ -11,3 +11,30 @@ func ExampleReadString() {
 	fmt.Println(records)
 	// Output: [[a b c] [1 2 3]]
 }
+
+func ExampleWriteString() {
+	out, err := vcsv.WriteString([][]string{
+		{"name", "age"},
+		{"alice", "30"},
+	})
+
+	fmt.Print(out)
+	fmt.Println(err)
+	// Output:
+	// name,age
+	// alice,30
+	// <nil>
+}
+
+func ExampleRecordsToMaps() {
+	rows, err := vcsv.RecordsToMaps([][]string{
+		{"name", "age"},
+		{"alice", "30"},
+	})
+
+	fmt.Println(rows[0]["name"], rows[0]["age"])
+	fmt.Println(err)
+	// Output:
+	// alice 30
+	// <nil>
+}

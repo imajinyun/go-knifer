@@ -27,3 +27,13 @@ func ExampleNewInt() {
 	// true
 	// false
 }
+
+func ExampleNew() {
+	s := vset.New("red", "blue", "red")
+
+	fmt.Println(len(s.Members()))
+	fmt.Println(s.Contains("blue"))
+	// Output:
+	// 2
+	// true
+}

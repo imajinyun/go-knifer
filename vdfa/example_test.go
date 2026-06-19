@@ -23,3 +23,13 @@ func ExampleFilter() {
 	fmt.Println(result)
 	// Output: this has *** content
 }
+
+func ExampleFilterWithOptions() {
+	result := vdfa.FilterWithOptions(
+		"this has bad content",
+		vdfa.WithMatcherWords([]string{"bad"}),
+	)
+
+	fmt.Println(result)
+	// Output: this has *** content
+}

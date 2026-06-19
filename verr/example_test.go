@@ -26,3 +26,13 @@ func ExampleGetStackWithOptions() {
 	fmt.Println(stack)
 	// Output: captured stack
 }
+
+func ExampleNewCollector() {
+	c := verr.NewCollector()
+	c.Collect(errors.New("first"))
+	c.Collect(errors.New("second"))
+
+	err := c.Error()
+	fmt.Println(err != nil)
+	// Output: true
+}

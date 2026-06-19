@@ -20,3 +20,12 @@ func ExampleIsNil() {
 	// true
 	// false
 }
+
+func ExampleGetFieldValue() {
+	type User struct {
+		Name string
+	}
+
+	fmt.Println(vref.GetFieldValue(User{Name: "Alice"}, "Name"))
+	// Output: Alice
+}

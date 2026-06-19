@@ -35,3 +35,11 @@ func ExampleIsNumberStrWithOptions() {
 	// true
 	// false
 }
+
+func ExampleIsIPv4() {
+	fmt.Println(vform.IsIPv4("192.0.2.1"))
+	fmt.Println(vform.IsIPv4("not-an-ip"))
+	// Output:
+	// true
+	// false
+}

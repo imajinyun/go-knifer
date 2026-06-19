@@ -21,3 +21,11 @@ func ExampleIsNil() {
 	// true
 	// false
 }
+
+func ExampleContains() {
+	fmt.Println(vobj.Contains([]string{"go", "knifer"}, "go"))
+	fmt.Println(vobj.Contains([]string{"go", "knifer"}, "java"))
+	// Output:
+	// true
+	// false
+}

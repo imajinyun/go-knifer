@@ -12,7 +12,7 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Module | `github.com/imajinyun/go-knifer` |
 | Packages | 48 |
 | Functions | 2528 |
-| Functions with examples | 150 |
+| Functions with examples | 184 |
 | Context-aware functions | 20 |
 | Functions returning error | 564 |
 | Variadic functions | 754 |
@@ -31,7 +31,7 @@ Package vbean provides public APIs for struct/map property mapping.
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `Copy` | `func Copy(src any, dst any, opts ...Option) error` | Copy is an alias of CopyProperties. | facade | — |
-| `CopyProperties` | `func CopyProperties(src any, dst any, opts ...Option) error` | CopyProperties copies matching properties between struct/map values. | facade | — |
+| `CopyProperties` | `func CopyProperties(src any, dst any, opts ...Option) error` | CopyProperties copies matching properties between struct/map values. | facade | `ExampleCopyProperties` |
 | `FillMap` | `func FillMap(src any, dst map[string]any, opts ...Option) error` | FillMap copies properties from src into dst. | facade | — |
 | `NewOptions` | `func NewOptions() Options` | NewOptions returns default mapping options. | facade | — |
 | `ToMap` | `func ToMap(src any, opts ...Option) (map[string]any, error)` | ToMap converts a struct or map to map[string]any using field tags and aliases. | facade | `ExampleToMap` |
@@ -139,7 +139,7 @@ Package vcache provides public APIs for cache utilities.
 | `NewFIFO` | `func NewFIFO[K comparable, V any](capacity int) *FIFOCache[K, V]` | NewFIFO creates a FIFO cache. | facade | `ExampleNewFIFO` |
 | `NewFIFOWithOptions` | `func NewFIFOWithOptions[K comparable, V any](opts ...Option[K, V]) *FIFOCache[K, V]` | NewFIFOWithOptions creates a FIFO cache customized by options. | facade | — |
 | `NewFIFOWithTimeout` | `func NewFIFOWithTimeout[K comparable, V any](capacity int, timeout time.Duration) *FIFOCache[K, V]` | NewFIFOWithTimeout creates a FIFO cache with timeout. | facade | — |
-| `NewLFU` | `func NewLFU[K comparable, V any](capacity int) *LFUCache[K, V]` | NewLFU creates an LFU cache. | facade | — |
+| `NewLFU` | `func NewLFU[K comparable, V any](capacity int) *LFUCache[K, V]` | NewLFU creates an LFU cache. | facade | `ExampleNewLFU` |
 | `NewLFUWithOptions` | `func NewLFUWithOptions[K comparable, V any](opts ...Option[K, V]) *LFUCache[K, V]` | NewLFUWithOptions creates an LFU cache customized by options. | facade | — |
 | `NewLFUWithTimeout` | `func NewLFUWithTimeout[K comparable, V any](capacity int, timeout time.Duration) *LFUCache[K, V]` | NewLFUWithTimeout creates an LFU cache with timeout. | facade | — |
 | `NewLRU` | `func NewLRU[K comparable, V any](capacity int) *LRUCache[K, V]` | NewLRU creates an LRU cache. | facade | `ExampleNewLRU` |
@@ -302,9 +302,9 @@ Package vcron provides public APIs for cron scheduling utilities.
 | `CronUpdatePatternWithOptions` | `func CronUpdatePatternWithOptions(id string, pattern string, opts ...DefaultSchedulerOption) error` | CronUpdatePatternWithOptions updates the pattern for a task on the selected default scheduler. | facade | — |
 | `DefaultScheduler` | `func DefaultScheduler() *Scheduler` | DefaultScheduler returns the package-level scheduler. | facade | — |
 | `DefaultSchedulerWithOptions` | `func DefaultSchedulerWithOptions(opts ...DefaultSchedulerOption) *Scheduler` | DefaultSchedulerWithOptions returns the package-level scheduler or a per-call override. | facade | — |
-| `MustNewPattern` | `func MustNewPattern(expr string) *Pattern` | MustNewPattern delegates to the internal cron implementation. | facade | — |
+| `MustNewPattern` | `func MustNewPattern(expr string) *Pattern` | MustNewPattern delegates to the internal cron implementation. | facade | `ExampleMustNewPattern` |
 | `NewConfig` | `func NewConfig() *Config` | NewConfig delegates to the internal cron implementation. | facade | — |
-| `NewConfigWithOptions` | `func NewConfigWithOptions(opts ...ConfigOption) *Config` | NewConfigWithOptions creates cron config customized by options. | facade | — |
+| `NewConfigWithOptions` | `func NewConfigWithOptions(opts ...ConfigOption) *Config` | NewConfigWithOptions creates cron config customized by options. | facade | `ExampleNewConfigWithOptions` |
 | `NewCronError` | `func NewCronError(format string, args ...any) *CronError` | NewCronError delegates to the internal cron implementation. | facade | — |
 | `NewCronTask` | `func NewCronTask(id string, pattern *Pattern, task Task) *CronTask` | NewCronTask delegates to the internal cron implementation. | facade | — |
 | `NewPattern` | `func NewPattern(expr string) (*Pattern, error)` | NewPattern delegates to the internal cron implementation. | facade | `ExampleNewPattern` |
@@ -421,7 +421,7 @@ Package vcsv provides public APIs for CSV reading and writing.
 | `ReadMaps` | `func ReadMaps(r io.Reader, opts ...ReadOption) ([]map[string]string, error)` | ReadMaps reads CSV records into maps keyed by the header row. | internal | — |
 | `ReadString` | `func ReadString(s string, opts ...ReadOption) ([][]string, error)` | ReadString reads all CSV records from s. | internal | `ExampleReadString` |
 | `ReadStringMaps` | `func ReadStringMaps(s string, opts ...ReadOption) ([]map[string]string, error)` | ReadStringMaps reads CSV records from s into maps keyed by the header row. | internal | — |
-| `RecordsToMaps` | `func RecordsToMaps(records [][]string) ([]map[string]string, error)` | RecordsToMaps converts records into maps keyed by the first row. | internal | — |
+| `RecordsToMaps` | `func RecordsToMaps(records [][]string) ([]map[string]string, error)` | RecordsToMaps converts records into maps keyed by the first row. | internal | `ExampleRecordsToMaps` |
 | `StructsToRecords` | `func StructsToRecords(values any) ([][]string, error)` | StructsToRecords converts a slice of structs into CSV records. | internal | — |
 | `WithComma` | `func WithComma(comma rune) Option` | WithComma sets the field delimiter used by readers and writers. | internal | — |
 | `WithComment` | `func WithComment(comment rune) ReadOption` | WithComment sets the comment character used by readers. | internal | — |
@@ -434,7 +434,7 @@ Package vcsv provides public APIs for CSV reading and writing.
 | `WithUseCRLF` | `func WithUseCRLF(enabled bool) WriteOption` | WithUseCRLF makes writers terminate records with \\r\\n. | internal | — |
 | `Write` | `func Write(w io.Writer, records [][]string, opts ...WriteOption) error` | Write writes CSV records to w. | internal | — |
 | `WriteMaps` | `func WriteMaps(w io.Writer, headers []string, rows []map[string]string, opts ...WriteOption) error` | WriteMaps writes maps using headers as the output column order. | internal | — |
-| `WriteString` | `func WriteString(records [][]string, opts ...WriteOption) (string, error)` | WriteString writes CSV records into a string. | internal | — |
+| `WriteString` | `func WriteString(records [][]string, opts ...WriteOption) (string, error)` | WriteString writes CSV records into a string. | internal | `ExampleWriteString` |
 | `WriteStringMaps` | `func WriteStringMaps(headers []string, rows []map[string]string, opts ...WriteOption) (string, error)` | WriteStringMaps writes maps into a CSV string using headers as column order. | internal | — |
 | `WriteStringStructs` | `func WriteStringStructs(values any, opts ...WriteOption) (string, error)` | WriteStringStructs writes a slice of structs into a CSV string. | internal | — |
 | `WriteStructs` | `func WriteStructs(w io.Writer, values any, opts ...WriteOption) error` | WriteStructs writes a slice of structs as CSV records. | internal | — |
@@ -555,7 +555,7 @@ Package vdfa exposes deterministic-finite-automaton text matching APIs.
 | `FilterAnyWithOptions` | `func FilterAnyWithOptions[T any](value T, greedMatch bool, processor Processor, opts ...MatcherOption) (T, error)` | FilterAnyWithOptions marshals value, filters matched text with the selected matcher, and unmarshals it back. | facade | — |
 | `FilterMode` | `func FilterMode(text string, greedMatch bool, processor Processor) string` | FilterMode replaces words found by the package-level matcher using processor. | facade | — |
 | `FilterModeWithOptions` | `func FilterModeWithOptions(text string, greedMatch bool, processor Processor, opts ...MatcherOption) string` | FilterModeWithOptions replaces words found by the selected matcher using processor. | facade | — |
-| `FilterWithOptions` | `func FilterWithOptions(text string, opts ...MatcherOption) string` | FilterWithOptions replaces words found by the selected matcher. | facade | — |
+| `FilterWithOptions` | `func FilterWithOptions(text string, opts ...MatcherOption) string` | FilterWithOptions replaces words found by the selected matcher. | facade | `ExampleFilterWithOptions` |
 | `GetFoundAll` | `func GetFoundAll(text string) []FoundWord` | GetFoundAll returns all found words from the package-level matcher. | facade | — |
 | `GetFoundAllAny` | `func GetFoundAllAny(value any) []FoundWord` | GetFoundAllAny marshals value as JSON and returns all found words. | facade | — |
 | `GetFoundAllAnyWithOptions` | `func GetFoundAllAnyWithOptions(value any, opts ...MatcherOption) []FoundWord` | GetFoundAllAnyWithOptions marshals value as JSON and returns all found words from the selected matcher. | facade | — |
@@ -604,7 +604,7 @@ Package verr exposes error handling, panic recovery, and stack helpers.
 | `InitWithOptions` | `func InitWithOptions(opts ...InitOption)` | InitWithOptions configures logrus output and optional Sentry forwarding with options. | facade | — |
 | `MustExit` | `func MustExit(ctx context.Context, err error)` | MustExit logs err and panics when err is non-nil. | facade | — |
 | `MustExitWithOptions` | `func MustExitWithOptions(ctx context.Context, err error, opts ...ExitOption)` | MustExitWithOptions logs err and panics when err is non-nil with custom options. | facade | — |
-| `NewCollector` | `func NewCollector() *Collector` | NewCollector creates a Collector that logs failures at error level. | facade | — |
+| `NewCollector` | `func NewCollector() *Collector` | NewCollector creates a Collector that logs failures at error level. | facade | `ExampleNewCollector` |
 | `NewCollectorWithOptions` | `func NewCollectorWithOptions(opts ...CollectorOption) *Collector` | NewCollectorWithOptions creates a Collector customized by options. | facade | — |
 | `NewIsolatedLogrusWithOptions` | `func NewIsolatedLogrusWithOptions(opts ...InitOption) *logrus.Logger` | NewIsolatedLogrusWithOptions creates a standalone logrus logger without mutating global logrus/Sentry state. | facade | — |
 | `Recover` | `func Recover(f func() error, format string, args ...any) error` | Recover executes f with panic recovery and logs failures at error level. | facade | — |
@@ -730,7 +730,7 @@ Package vform provides public APIs for form and input validation utilities.
 | `IsEmailWithOptions` | `func IsEmailWithOptions(s string, opts ...Option) bool` | IsEmailWithOptions reports whether s is an email address with options. | facade | — |
 | `IsIDCard` | `func IsIDCard(s string) bool` | IsIDCard reports whether s is a valid identity card number. | facade | — |
 | `IsIDCardWithOptions` | `func IsIDCardWithOptions(s string, opts ...Option) bool` | IsIDCardWithOptions reports whether s is a valid identity card number with options. | facade | — |
-| `IsIPv4` | `func IsIPv4(s string) bool` | IsIPv4 reports whether s is an IPv4 address. | facade | — |
+| `IsIPv4` | `func IsIPv4(s string) bool` | IsIPv4 reports whether s is an IPv4 address. | facade | `ExampleIsIPv4` |
 | `IsIPv6` | `func IsIPv6(s string) bool` | IsIPv6 reports whether s is an IPv6 address. | facade | — |
 | `IsMobile` | `func IsMobile(s string) bool` | IsMobile reports whether s is a mainland China mobile phone number. | facade | — |
 | `IsMobileWithOptions` | `func IsMobileWithOptions(s string, opts ...Option) bool` | IsMobileWithOptions reports whether s is a mobile phone number with options. | facade | — |
@@ -1073,7 +1073,7 @@ Package vimg provides public APIs for image utilities.
 | `BarcodePNG` | `func BarcodePNG(content string, format BarcodeFormat, opts ...BarcodeOption) ([]byte, error)` | BarcodePNG returns PNG bytes for content encoded with format. | facade | — |
 | `BarcodeSVG` | `func BarcodeSVG(content string, format BarcodeFormat, opts ...BarcodeOption) (string, error)` | BarcodeSVG returns an SVG rendering for content encoded with format. | facade | — |
 | `CanDecodeBarcodeFormat` | `func CanDecodeBarcodeFormat(format BarcodeFormat) bool` | CanDecodeBarcodeFormat reports whether format is supported for decoding. | facade | — |
-| `CanEncodeBarcodeFormat` | `func CanEncodeBarcodeFormat(format BarcodeFormat) bool` | CanEncodeBarcodeFormat reports whether format is supported for generation. | facade | — |
+| `CanEncodeBarcodeFormat` | `func CanEncodeBarcodeFormat(format BarcodeFormat) bool` | CanEncodeBarcodeFormat reports whether format is supported for generation. | facade | `ExampleCanEncodeBarcodeFormat` |
 | `ConvertFormat` | `func ConvertFormat(w io.Writer, r io.Reader, format string) error` | ConvertFormat decodes r and re-encodes it into the target format. | facade | — |
 | `DecodeBarcode` | `func DecodeBarcode(r io.Reader, opts ...DecodeOption) (*DecodeResult, error)` | DecodeBarcode decodes one barcode from a raster image stream. | facade | — |
 | `DecodeBarcodeImage` | `func DecodeBarcodeImage(img image.Image, opts ...DecodeOption) (*DecodeResult, error)` | DecodeBarcodeImage decodes one barcode from img. | facade | — |
@@ -1166,11 +1166,11 @@ Package vjob provides public APIs for sliceable job execution.
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `NewBatch` | `func NewBatch[T any](run func(context.Context, []T) (Merge, error), vals []T) *Batch[T]` | NewBatch creates a typed slice job. | facade | `ExampleNewBatch` |
-| `NewBatchSingle` | `func NewBatchSingle[T any](run func(context.Context, T) (Merge, error), vals []T) *Batch[T]` | NewBatchSingle creates a typed slice job that processes one item per shard. | facade | — |
+| `NewBatchSingle` | `func NewBatchSingle[T any](run func(context.Context, T) (Merge, error), vals []T) *Batch[T]` | NewBatchSingle creates a typed slice job that processes one item per shard. | facade | `ExampleNewBatchSingle` |
 | `NewMap` | `func NewMap(run any, m any) *Slice` | NewMap creates a single-item job over map keys. | facade | — |
 | `NewMapE` | `func NewMapE(run any, m any) (*Slice, error)` | NewMapE creates a single-item job over map keys and returns validation errors instead of panicking. | facade | — |
 | `NewMapKeys` | `func NewMapKeys[K comparable, V any](run func(context.Context, K) (Merge, error), m map[K]V) *Batch[K]` | NewMapKeys creates a single-item job over typed map keys. | facade | — |
-| `NewSlice` | `func NewSlice(run func(context.Context, int, int) (Merge, error), length int) *Slice` | NewSlice creates a range-based job. | facade | — |
+| `NewSlice` | `func NewSlice(run func(context.Context, int, int) (Merge, error), length int) *Slice` | NewSlice creates a range-based job. | facade | `ExampleNewSlice` |
 | `NewSliceSingle` | `func NewSliceSingle(run func(context.Context, int) (Merge, error), length int) *Slice` | NewSliceSingle creates a job that processes one index per shard. | facade | — |
 | `Run` | `func Run(ctx context.Context, job Sliceable) error` | Run executes job with the default Options. | facade | — |
 | `RunWith` | `func RunWith(ctx context.Context, job Sliceable, opts Options) error` | RunWith executes job with explicit scheduling options. | facade | — |
@@ -1356,7 +1356,7 @@ Package vlog provides public APIs for logging utilities.
 | `GetLogLevel` | `func GetLogLevel() LogLevel` | GetLogLevel returns the console logging threshold. | facade | — |
 | `GetWithOptions` | `func GetWithOptions(name string, opts ...LoggerOption) Log` | GetWithOptions delegates to the internal logx implementation. | facade | — |
 | `Info` | `func Info(args ...any)` | Info logs info-level output through the static logger. | facade | — |
-| `InfoWithOptions` | `func InfoWithOptions(opts []LoggerOption, args ...any)` | InfoWithOptions logs info-level output through a per-call logger configuration. | facade | — |
+| `InfoWithOptions` | `func InfoWithOptions(opts []LoggerOption, args ...any)` | InfoWithOptions logs info-level output through a per-call logger configuration. | facade | `ExampleInfoWithOptions` |
 | `Infof` | `func Infof(format string, args ...any)` | Infof logs formatted info-level output through the static logger. | facade | — |
 | `InfofWithOptions` | `func InfofWithOptions(opts []LoggerOption, format string, args ...any)` | InfofWithOptions logs formatted info-level output through a per-call logger configuration. | facade | — |
 | `LogAt` | `func LogAt(level LogLevel, format string, args ...any)` | LogAt logs output at the provided level through the static logger. | facade | — |
@@ -1368,7 +1368,7 @@ Package vlog provides public APIs for logging utilities.
 | `NewConsoleColorLog` | `func NewConsoleColorLog(name string) *ConsoleColorLog` | NewConsoleColorLog creates a colored console logger by name. | facade | — |
 | `NewConsoleColorLogWithOptions` | `func NewConsoleColorLogWithOptions(name string, opts ...ConsoleLogOption) *ConsoleColorLog` | NewConsoleColorLogWithOptions creates a colored console logger customized by options. | facade | — |
 | `NewConsoleLog` | `func NewConsoleLog(name string) *ConsoleLog` | NewConsoleLog creates a console logger by name. | facade | — |
-| `NewConsoleLogWithOptions` | `func NewConsoleLogWithOptions(name string, opts ...ConsoleLogOption) *ConsoleLog` | NewConsoleLogWithOptions creates a console logger customized by options. | facade | — |
+| `NewConsoleLogWithOptions` | `func NewConsoleLogWithOptions(name string, opts ...ConsoleLogOption) *ConsoleLog` | NewConsoleLogWithOptions creates a console logger customized by options. | facade | `ExampleNewConsoleLogWithOptions` |
 | `NewIsolatedLogger` | `func NewIsolatedLogger(name string, opts ...LoggerOption) Log` | NewIsolatedLogger creates a logger without reading package-level factory/cache state. | facade | — |
 | `SetColorFactory` | `func SetColorFactory(f ColorFactory)` | SetColorFactory delegates to the internal logx implementation. | facade | — |
 | `SetConsoleLevel` | `func SetConsoleLevel(level Level)` | SetConsoleLevel delegates to the internal logx implementation. | facade | — |
@@ -1401,7 +1401,7 @@ Package vmail exposes email message construction, MIME attachment, and SMTP send
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
-| `NewAddress` | `func NewAddress(name string, email string) (*Address, error)` | NewAddress validates and returns a mailbox address. | facade | — |
+| `NewAddress` | `func NewAddress(name string, email string) (*Address, error)` | NewAddress validates and returns a mailbox address. | facade | `ExampleNewAddress` |
 | `NewAttachment` | `func NewAttachment(name string, content []byte, contentType ContentType) (Attachment, error)` | NewAttachment creates an attachment from bytes. | facade | — |
 | `NewAttachmentFile` | `func NewAttachmentFile(path string) (Attachment, error)` | NewAttachmentFile creates an attachment loaded lazily from path. | facade | — |
 | `NewAttachmentReader` | `func NewAttachmentReader(name string, size int64, contentType ContentType, open func() (io.ReadCloser, error)) (Attachment, error)` | NewAttachmentReader creates an attachment from a reader opener. | facade | — |
@@ -1411,7 +1411,7 @@ Package vmail exposes email message construction, MIME attachment, and SMTP send
 | `NewInlineReader` | `func NewInlineReader(name string, contentID string, size int64, contentType ContentType, open func() (io.ReadCloser, error)) (Attachment, error)` | NewInlineReader creates an inline attachment from a reader opener with a Content-ID. | facade | — |
 | `NewMessage` | `func NewMessage(opts ...MessageOption) (*Message, error)` | NewMessage creates and validates an email message. | facade | `ExampleNewMessage` |
 | `ParseAddress` | `func ParseAddress(value string) (*Address, error)` | ParseAddress parses a single mailbox address. | facade | — |
-| `ParseAddressList` | `func ParseAddressList(value string) ([]*Address, error)` | ParseAddressList parses a comma-separated mailbox address list. | facade | — |
+| `ParseAddressList` | `func ParseAddressList(value string) ([]*Address, error)` | ParseAddressList parses a comma-separated mailbox address list. | facade | `ExampleParseAddressList` |
 | `QuickSend` | `func QuickSend(ctx context.Context, account Account, opts ...QuickOption) error` | QuickSend creates and sends a message using account defaults plus quick options. | facade | — |
 | `Send` | `func Send(ctx context.Context, host string, port int, message *Message, opts ...ClientOption) error` | Send sends message through an SMTP server created from host, port, and options. | facade | — |
 | `SendAccountHTML` | `func SendAccountHTML(ctx context.Context, account Account, to []string, subject string, html string, opts ...QuickOption) error` | SendAccountHTML creates and sends an HTML message using account defaults. | facade | — |
@@ -1542,7 +1542,7 @@ Package vmask provides data masking (desensitization) utilities.
 | `FixedPhone` | `func FixedPhone(num string) string` | FixedPhone masks a fixed-line phone number by keeping first four and last two characters. | facade | — |
 | `Hide` | `func Hide(str string, start int, end int) string` | Hide replaces runes in [start, end) with '*'. | facade | — |
 | `IDCardNum` | `func IDCardNum(idCardNum string, front int, end int) string` | IDCardNum masks an identity card number while keeping front and end characters. | facade | — |
-| `IPv4` | `func IPv4(ipv4 string) string` | IPv4 masks all IPv4 parts except the first one. | facade | — |
+| `IPv4` | `func IPv4(ipv4 string) string` | IPv4 masks all IPv4 parts except the first one. | facade | `ExampleIPv4` |
 | `IPv6` | `func IPv6(ipv6 string) string` | IPv6 masks all IPv6 parts except the first one. | facade | — |
 | `Masked` | `func Masked(str string, typ Type) string` | Masked masks str with the built-in strategy represented by typ. | facade | — |
 | `MaskedPtr` | `func MaskedPtr(str string, typ Type) *string` | MaskedPtr masks str and returns nil for ClearToNullType. | facade | — |
@@ -1563,7 +1563,7 @@ Package vnet provides public APIs for network, IP, URL-encoding, TLS, and multip
 | `AddRootCAFileWithOptions` | `func AddRootCAFileWithOptions(b *TLSConfigBuilder, path string, opts ...TLSFileOption) error` | AddRootCAFileWithOptions appends PEM certificates from path to RootCAs using options. | internal | — |
 | `AddRootCAReader` | `func AddRootCAReader(b *TLSConfigBuilder, r io.Reader) error` | AddRootCAReader appends PEM certificates from r to RootCAs. | internal | — |
 | `AddRootCAReaderWithOptions` | `func AddRootCAReaderWithOptions(b *TLSConfigBuilder, r io.Reader, opts ...TLSFileOption) error` | AddRootCAReaderWithOptions appends PEM certificates from r to RootCAs using options. | internal | — |
-| `BeginIP` | `func BeginIP(ip string, maskBit int) (string, error)` | BeginIP returns the first IPv4 address in an ip/maskBit block. | internal | — |
+| `BeginIP` | `func BeginIP(ip string, maskBit int) (string, error)` | BeginIP returns the first IPv4 address in an ip/maskBit block. | internal | `ExampleBeginIP` |
 | `BeginIPLong` | `func BeginIPLong(ip string, maskBit int) (uint32, error)` | BeginIPLong returns the first IPv4 value in an ip/maskBit block. | internal | — |
 | `BeginIPLongWithOptions` | `func BeginIPLongWithOptions(ip string, maskBit int, opts ...IPOption) (uint32, error)` | BeginIPLongWithOptions returns the first IPv4 value in an ip/maskBit block using custom providers. | internal | — |
 | `BeginIPWithOptions` | `func BeginIPWithOptions(ip string, maskBit int, opts ...IPOption) (string, error)` | BeginIPWithOptions returns the first IPv4 address in an ip/maskBit block using custom providers. | internal | — |
@@ -1619,7 +1619,7 @@ Package vnet provides public APIs for network, IP, URL-encoding, TLS, and multip
 | `HideIPPart` | `func HideIPPart(ip string) string` | HideIPPart hides the last IPv4 segment. | internal | — |
 | `HideIPPartLong` | `func HideIPPartLong(ip uint32) string` | HideIPPartLong hides the last segment of an IPv4 integer. | internal | — |
 | `IDNToASCII` | `func IDNToASCII(unicode string) (string, error)` | IDNToASCII converts a Unicode domain name to ASCII. | internal | — |
-| `IPv4ToLong` | `func IPv4ToLong(strIP string) (uint32, error)` | IPv4ToLong converts a dotted IPv4 string to uint32. | internal | — |
+| `IPv4ToLong` | `func IPv4ToLong(strIP string) (uint32, error)` | IPv4ToLong converts a dotted IPv4 string to uint32. | internal | `ExampleIPv4ToLong` |
 | `IPv4ToLongDefault` | `func IPv4ToLongDefault(strIP string, defaultValue uint32) uint32` | IPv4ToLongDefault converts a dotted IPv4 string to uint32, returning defaultValue when invalid. | internal | — |
 | `IPv4ToLongDefaultWithOptions` | `func IPv4ToLongDefaultWithOptions(strIP string, defaultValue uint32, opts ...IPOption) uint32` | IPv4ToLongDefaultWithOptions converts a dotted IPv4 string to uint32 using custom providers, returning defaultValue when invalid. | internal | — |
 | `IPv4ToLongWithOptions` | `func IPv4ToLongWithOptions(strIP string, opts ...IPOption) (uint32, error)` | IPv4ToLongWithOptions converts a dotted IPv4 string to uint32 using custom providers. | internal | — |
@@ -1899,7 +1899,7 @@ Package vobj provides object utilities.
 | `CloneWithOptions` | `func CloneWithOptions[T any](src T, opts ...CodecOption) (T, error)` | CloneWithOptions creates a deep copy using per-call codec options. | facade | — |
 | `Compare` | `func Compare[T Ordered](a *T, b *T) int` | Compare compares two ordered values. | facade | — |
 | `CompareNull` | `func CompareNull[T Ordered](a *T, b *T, nilGreater bool) int` | CompareNull compares two ordered values and controls nil ordering. | facade | — |
-| `Contains` | `func Contains(obj any, element any) bool` | Contains reports whether obj contains element. | facade | — |
+| `Contains` | `func Contains(obj any, element any) bool` | Contains reports whether obj contains element. | facade | `ExampleContains` |
 | `DefaultIfNil` | `func DefaultIfNil[T any](object *T, defaultValue T) T` | DefaultIfNil returns defaultValue when object is nil. | facade | — |
 | `DefaultIfNilApply` | `func DefaultIfNilApply[T any, R any](source *T, handle func(T) R, defaultValue R) R` | DefaultIfNilApply returns defaultValue when source is nil; otherwise it maps source. | facade | — |
 | `DefaultIfNilFunc` | `func DefaultIfNilFunc[T any](object *T, supplier func() T) T` | DefaultIfNilFunc returns a supplier value when object is nil. | facade | — |
@@ -1949,7 +1949,7 @@ Package vpass provides password strength helpers.
 | --- | --- | --- | --- | --- |
 | `Analyze` | `func Analyze(password string) Analysis` | Analyze evaluates password strength using local deterministic rules. | internal | — |
 | `IsStrong` | `func IsStrong(password string) bool` | IsStrong reports whether password reaches the strong threshold. | internal | `ExampleIsStrong` |
-| `IsWeak` | `func IsWeak(password string) bool` | IsWeak reports whether password is weak or very weak. | internal | — |
+| `IsWeak` | `func IsWeak(password string) bool` | IsWeak reports whether password is weak or very weak. | internal | `ExampleIsWeak` |
 | `Score` | `func Score(password string) int` | Score returns a password strength score in the range 0..100. | internal | `ExampleScore` |
 | `StrengthOf` | `func StrengthOf(password string) Strength` | StrengthOf returns the strength bucket for password. | internal | — |
 
@@ -1962,7 +1962,7 @@ Package vpoi provides office-document utilities.
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `ReadRows` | `func ReadRows(path string, opts ...ReadOption) ([][]string, error)` | ReadRows reads rows from the first worksheet in path. | facade | — |
-| `ReadRowsFromReader` | `func ReadRowsFromReader(r io.Reader, opts ...ReadOption) ([][]string, error)` | ReadRowsFromReader reads rows from the first worksheet in r. | facade | — |
+| `ReadRowsFromReader` | `func ReadRowsFromReader(r io.Reader, opts ...ReadOption) ([][]string, error)` | ReadRowsFromReader reads rows from the first worksheet in r. | facade | `ExampleReadRowsFromReader` |
 | `ReadSheetRows` | `func ReadSheetRows(path string, sheet string) ([][]string, error)` | ReadSheetRows reads rows from sheet in path. | facade | — |
 | `ReadSheetRowsWithOptions` | `func ReadSheetRowsWithOptions(path string, sheet string, opts ...ReadOption) ([][]string, error)` | ReadSheetRowsWithOptions reads rows from sheet in path with custom open options. | facade | — |
 | `SheetNames` | `func SheetNames(path string) ([]string, error)` | SheetNames returns all worksheet names in path. | facade | `ExampleSheetNames` |
@@ -1984,7 +1984,7 @@ Package vpoi provides office-document utilities.
 | `WithStat` | `func WithStat(stat func(string) (os.FileInfo, error)) WriteOption` | WithStat sets the stat provider used when checking workbook overwrite behavior. | facade | — |
 | `WithWriteSheet` | `func WithWriteSheet(sheet string) WriteOption` | WithWriteSheet selects the worksheet written by write helpers. | facade | — |
 | `WriteRows` | `func WriteRows(path string, rows [][]string, opts ...WriteOption) error` | WriteRows writes rows into path using the default worksheet name. | facade | — |
-| `WriteRowsToBuffer` | `func WriteRowsToBuffer(sheet string, rows [][]string, opts ...WriteOption) (*bytes.Buffer, error)` | WriteRowsToBuffer writes rows into an in-memory XLSX workbook. | facade | — |
+| `WriteRowsToBuffer` | `func WriteRowsToBuffer(sheet string, rows [][]string, opts ...WriteOption) (*bytes.Buffer, error)` | WriteRowsToBuffer writes rows into an in-memory XLSX workbook. | facade | `ExampleWriteRowsToBuffer` |
 | `WriteSheetRows` | `func WriteSheetRows(path string, sheet string, rows [][]string, opts ...WriteOption) error` | WriteSheetRows writes rows into path using sheet. | facade | — |
 | `WriteSheets` | `func WriteSheets(path string, sheets map[string][][]string, opts ...WriteOption) error` | WriteSheets writes multiple worksheets into path. | facade | — |
 
@@ -2040,7 +2040,7 @@ Package vref provides public APIs for reflection utilities.
 | `GetField` | `func GetField(target any, name string) reflect.StructField` | GetField returns the first field matched by Go name or common tag alias. | internal | — |
 | `GetFieldMap` | `func GetFieldMap(target any) map[string]reflect.StructField` | GetFieldMap returns a field name to StructField map. | internal | — |
 | `GetFieldName` | `func GetFieldName(field reflect.StructField) string` | GetFieldName returns field alias from ref/json/xml tag, or the Go field name. | internal | — |
-| `GetFieldValue` | `func GetFieldValue(obj any, fieldName string) any` | GetFieldValue returns the value of a named field, or nil when the field cannot be read. | facade | — |
+| `GetFieldValue` | `func GetFieldValue(obj any, fieldName string) any` | GetFieldValue returns the value of a named field, or nil when the field cannot be read. | facade | `ExampleGetFieldValue` |
 | `GetFieldValueWithOptions` | `func GetFieldValueWithOptions(obj any, fieldName string, opts ...FieldAccessOption) any` | GetFieldValueWithOptions returns a field value by name using per-call access options. | internal | — |
 | `GetFields` | `func GetFields(target any, filters ...FieldFilter) []reflect.StructField` | GetFields returns all fields from a struct type and embedded anonymous structs. | internal | — |
 | `GetFieldsDirectly` | `func GetFieldsDirectly(target any, withEmbeddedFields bool) []reflect.StructField` | GetFieldsDirectly returns struct fields. | internal | — |
@@ -2338,7 +2338,7 @@ Package vsem provides public APIs for semaphore utilities.
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `New` | `func New(capacity int) *Semaphore` | New creates a semaphore with capacity permits. | facade | `ExampleNew` |
-| `NewE` | `func NewE(capacity int) (*Semaphore, error)` | NewE creates a semaphore with capacity permits and returns an error for invalid capacity. | facade | — |
+| `NewE` | `func NewE(capacity int) (*Semaphore, error)` | NewE creates a semaphore with capacity permits and returns an error for invalid capacity. | facade | `ExampleNewE` |
 
 ### vset
 
@@ -2348,7 +2348,7 @@ Package vset provides public APIs for set utilities.
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
-| `New` | `func New[T comparable](items ...T) Set[T]` | New creates a generic set. | facade | — |
+| `New` | `func New[T comparable](items ...T) Set[T]` | New creates a generic set. | facade | `ExampleNew` |
 | `NewInt` | `func NewInt(items ...int) Int` | NewInt creates an int set. | facade | `ExampleNewInt` |
 | `NewInt32` | `func NewInt32(items ...int32) Int32` | NewInt32 creates an int32 set. | facade | — |
 | `NewInt64` | `func NewInt64(items ...int64) Int64` | NewInt64 creates an int64 set. | facade | — |
@@ -2393,8 +2393,8 @@ Package vskt provides public APIs for socket utilities.
 | `NewSocketConfig` | `func NewSocketConfig() *SocketConfig` | NewSocketConfig creates a default socket config. | facade | — |
 | `NewSocketConfigWithOptions` | `func NewSocketConfigWithOptions(opts ...ConfigOption) *SocketConfig` | NewSocketConfigWithOptions creates a socket config customized by options. | facade | — |
 | `NewSocketError` | `func NewSocketError(err error) *SocketRuntimeError` | NewSocketError delegates to the internal socketx implementation. | facade | — |
-| `NewSocketErrorMsg` | `func NewSocketErrorMsg(msg string) *SocketRuntimeError` | NewSocketErrorMsg delegates to the internal socketx implementation. | facade | — |
-| `NewSocketErrorf` | `func NewSocketErrorf(format string, args ...any) *SocketRuntimeError` | NewSocketErrorf delegates to the internal socketx implementation. | facade | — |
+| `NewSocketErrorMsg` | `func NewSocketErrorMsg(msg string) *SocketRuntimeError` | NewSocketErrorMsg delegates to the internal socketx implementation. | facade | `ExampleNewSocketErrorMsg` |
+| `NewSocketErrorf` | `func NewSocketErrorf(format string, args ...any) *SocketRuntimeError` | NewSocketErrorf delegates to the internal socketx implementation. | facade | `ExampleNewSocketErrorf` |
 | `SocketConnect` | `func SocketConnect(hostname string, port int, timeout time.Duration) (net.Conn, error)` | SocketConnect connects to host:port with timeout. | facade | — |
 | `SocketConnectAddr` | `func SocketConnectAddr(addr *net.TCPAddr, timeout time.Duration) (net.Conn, error)` | SocketConnectAddr connects to addr with timeout. | facade | — |
 | `SocketConnectAddrWithOptions` | `func SocketConnectAddrWithOptions(addr *net.TCPAddr, opts ...ConnectOption) (net.Conn, error)` | SocketConnectAddrWithOptions connects to addr with custom dial options. | facade | — |
@@ -2555,8 +2555,8 @@ Package vsys provides public APIs for system information utilities.
 | `EnvInt` | `func EnvInt(key string, def int) int` | EnvInt returns an int environment variable or def when missing/invalid. | facade | — |
 | `EnvIntWithOptions` | `func EnvIntWithOptions(key string, def int, opts ...EnvOption) int` | EnvIntWithOptions returns an int environment variable or def using custom providers. | facade | — |
 | `EnvOrDefault` | `func EnvOrDefault(key string, def string) string` | EnvOrDefault returns an environment variable or def when empty/missing. | facade | — |
-| `EnvOrDefaultWithOptions` | `func EnvOrDefaultWithOptions(key string, def string, opts ...EnvOption) string` | EnvOrDefaultWithOptions returns an environment variable or def using custom providers. | facade | — |
-| `EnvWithOptions` | `func EnvWithOptions(key string, opts ...EnvOption) string` | EnvWithOptions returns an environment variable value using custom providers. | facade | — |
+| `EnvOrDefaultWithOptions` | `func EnvOrDefaultWithOptions(key string, def string, opts ...EnvOption) string` | EnvOrDefaultWithOptions returns an environment variable or def using custom providers. | facade | `ExampleEnvOrDefaultWithOptions` |
+| `EnvWithOptions` | `func EnvWithOptions(key string, opts ...EnvOption) string` | EnvWithOptions returns an environment variable value using custom providers. | facade | `ExampleEnvWithOptions` |
 | `FreeMemory` | `func FreeMemory() uint64` | FreeMemory returns idle memory in the current Go process. | facade | — |
 | `FreeMemoryWithOptions` | `func FreeMemoryWithOptions(opts ...RuntimeInfoOption) uint64` | FreeMemoryWithOptions returns idle memory using custom runtime providers. | facade | — |
 | `Get` | `func Get(key string, quiet bool) string` | Get delegates to the internal system implementation. | facade | — |
@@ -2665,8 +2665,8 @@ Package vtpl provides Go html/template rendering utilities.
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `Render` | `func Render(tpl string, data any) (string, error)` | Render renders a Go html/template string with data. | facade | `ExampleRender` |
-| `RenderTemplate` | `func RenderTemplate(tpl string, data any) (string, error)` | RenderTemplate renders a Go html/template string with data. | facade | — |
-| `RenderWithOptions` | `func RenderWithOptions(tpl string, data any, opts ...RenderOption) (string, error)` | RenderWithOptions renders a Go html/template string with per-call options. | facade | — |
+| `RenderTemplate` | `func RenderTemplate(tpl string, data any) (string, error)` | RenderTemplate renders a Go html/template string with data. | facade | `ExampleRenderTemplate` |
+| `RenderWithOptions` | `func RenderWithOptions(tpl string, data any, opts ...RenderOption) (string, error)` | RenderWithOptions renders a Go html/template string with per-call options. | facade | `ExampleRenderWithOptions` |
 | `WithDelims` | `func WithDelims(left string, right string) RenderOption` | WithDelims sets template action delimiters. | facade | — |
 | `WithFuncMap` | `func WithFuncMap(funcMap template.FuncMap) RenderOption` | WithFuncMap sets functions available to the template. | facade | — |
 | `WithTemplateExecutor` | `func WithTemplateExecutor(executor func(*template.Template, io.Writer, any) error) RenderOption` | WithTemplateExecutor sets the executor used after parsing. | facade | — |
@@ -2779,7 +2779,7 @@ Package vver provides version comparison and expression matching utilities.
 | `CompareVersion` | `func CompareVersion(version1 string, version2 string) int` | CompareVersion compares two version strings. | facade | `ExampleCompareVersion` |
 | `IsGreaterThan` | `func IsGreaterThan(currentVersion string, compareVersion string) bool` | IsGreaterThan reports whether currentVersion is greater than compareVersion. | facade | `ExampleIsGreaterThan` |
 | `IsGreaterThanOrEqual` | `func IsGreaterThanOrEqual(currentVersion string, compareVersion string) bool` | IsGreaterThanOrEqual reports whether currentVersion is greater than or equal to compareVersion. | facade | — |
-| `IsLessThan` | `func IsLessThan(currentVersion string, compareVersion string) bool` | IsLessThan reports whether currentVersion is less than compareVersion. | facade | — |
+| `IsLessThan` | `func IsLessThan(currentVersion string, compareVersion string) bool` | IsLessThan reports whether currentVersion is less than compareVersion. | facade | `ExampleIsLessThan` |
 | `IsLessThanOrEqual` | `func IsLessThanOrEqual(currentVersion string, compareVersion string) bool` | IsLessThanOrEqual reports whether currentVersion is less than or equal to compareVersion. | facade | — |
 | `MatchEl` | `func MatchEl(currentVersion string, versionEl string) bool` | MatchEl reports whether currentVersion satisfies a semicolon-separated version expression. | facade | — |
 | `MatchElByDelimiter` | `func MatchElByDelimiter(currentVersion string, versionEl string, versionsDelimiter string) bool` | MatchElByDelimiter is a bool-returning convenience wrapper around MatchElWithDelimiter. | facade | — |
@@ -2805,7 +2805,7 @@ Package vxml provides public APIs for XML utilities.
 | `CreateXMLWithRoot` | `func CreateXMLWithRoot(rootElementName string) *Document` | CreateXMLWithRoot creates an XML document with root element. | facade | — |
 | `CreateXMLWithRootNS` | `func CreateXMLWithRootNS(rootElementName string, namespace string) *Document` | CreateXMLWithRootNS creates an XML document with root element and namespace URI. | facade | — |
 | `ElementText` | `func ElementText(element *Element, tagName string, defaultValue ...string) string` | ElementText returns child text or defaultValue when missing. | facade | — |
-| `Escape` | `func Escape(s string) string` | Escape escapes XML text. | facade | — |
+| `Escape` | `func Escape(s string) string` | Escape escapes XML text. | facade | `ExampleEscape` |
 | `Format` | `func Format(xmlStr string) (string, error)` | Format pretty prints XML content. | facade | — |
 | `FormatWithOptions` | `func FormatWithOptions(xmlStr string, opts ...FormatOption) (string, error)` | FormatWithOptions pretty prints XML content with parser and writer options. | facade | `ExampleFormatWithOptions` |
 | `GetByXPath` | `func GetByXPath(expression string, source any, returnType string) any` | GetByXPath returns matched text, element, or list based on returnType. | facade | — |

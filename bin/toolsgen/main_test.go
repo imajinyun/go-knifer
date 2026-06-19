@@ -209,10 +209,30 @@ func TestToolsCatalogExamplesCoverageBudget(t *testing.T) {
 	if err != nil {
 		t.Fatalf("generateToolsDoc(%q) error = %v", root, err)
 	}
-	const minFunctionsWithExamples = 150
+	const minFunctionsWithExamples = 180
 	got := doc.Summary.FunctionsWithExamples
 	if got < minFunctionsWithExamples {
 		t.Fatalf("functions with examples = %d, want >= %d\n%s", got, minFunctionsWithExamples, renderToolsQualityReport(doc))
+	}
+}
+
+func TestToolsCatalogPerPackageExamplesBudget(t *testing.T) {
+	root := repositoryRoot(t)
+	doc, err := generateToolsDoc(root)
+	if err != nil {
+		t.Fatalf("generateToolsDoc(%q) error = %v", root, err)
+	}
+	const maxMinExamplesPerPackage = 3
+	examplesByPackage := toolsExamplesByPackage(doc)
+	missing := []string{}
+	for _, pkg := range doc.Packages {
+		target := min(maxMinExamplesPerPackage, len(pkg.Functions))
+		if got := examplesByPackage[pkg.Name]; got < target {
+			missing = append(missing, pkg.Name)
+		}
+	}
+	if len(missing) > 0 {
+		t.Fatalf("packages below per-package example budget: %s\n%s", strings.Join(missing, ", "), renderToolsQualityReport(doc))
 	}
 }
 
@@ -236,14 +256,7 @@ func TestToolsCatalogSecuritySensitiveExamplesBudget(t *testing.T) {
 		"vid",
 		"vdb",
 	}
-	examplesByPackage := map[string]int{}
-	for _, pkg := range doc.Packages {
-		for _, fn := range pkg.Functions {
-			if len(fn.Examples) > 0 {
-				examplesByPackage[pkg.Name]++
-			}
-		}
-	}
+	examplesByPackage := toolsExamplesByPackage(doc)
 	missing := []string{}
 	for _, name := range securitySensitivePackages {
 		if got := examplesByPackage[name]; got < minExamplesPerPackage {
@@ -253,6 +266,18 @@ func TestToolsCatalogSecuritySensitiveExamplesBudget(t *testing.T) {
 	if len(missing) > 0 {
 		t.Fatalf("security-sensitive packages below example budget %d: %s\n%s", minExamplesPerPackage, strings.Join(missing, ", "), renderToolsQualityReport(doc))
 	}
+}
+
+func toolsExamplesByPackage(doc ToolsDoc) map[string]int {
+	examplesByPackage := map[string]int{}
+	for _, pkg := range doc.Packages {
+		for _, fn := range pkg.Functions {
+			if len(fn.Examples) > 0 {
+				examplesByPackage[pkg.Name]++
+			}
+		}
+	}
+	return examplesByPackage
 }
 
 func TestWriteToolsDocWritesIndentedFile(t *testing.T) {

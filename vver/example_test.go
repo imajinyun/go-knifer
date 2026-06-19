@@ -23,3 +23,11 @@ func ExampleIsGreaterThan() {
 	// true
 	// false
 }
+
+func ExampleIsLessThan() {
+	fmt.Println(vver.IsLessThan("1.0.0", "2.0.0"))
+	fmt.Println(vver.IsLessThan("2.0.0", "1.0.0"))
+	// Output:
+	// true
+	// false
+}

@@ -25,3 +25,13 @@ func ExampleNewFIFO() {
 	fmt.Println(v, ok)
 	// Output: 20 true
 }
+
+func ExampleNewLFU() {
+	cache := vcache.NewLFU[string, int](2)
+	cache.Put("a", 1)
+	cache.Put("b", 2)
+
+	v, ok := cache.Get("a")
+	fmt.Println(v, ok)
+	// Output: 1 true
+}

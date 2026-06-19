@@ -31,3 +31,19 @@ func ExampleToStruct() {
 	fmt.Printf("%s is %d", u.Name, u.Age)
 	// Output: Bob is 25
 }
+
+func ExampleCopyProperties() {
+	type Source struct {
+		Name string
+		Age  int
+	}
+	type Target struct {
+		Name string
+		Age  int
+	}
+
+	var dst Target
+	_ = vbean.CopyProperties(Source{Name: "Carol", Age: 28}, &dst)
+	fmt.Println(dst.Name, dst.Age)
+	// Output: Carol 28
+}

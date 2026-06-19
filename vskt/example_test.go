@@ -1,15 +1,38 @@
 package vskt_test
 
 import (
+	"bytes"
 	"fmt"
-	"net"
 
 	"github.com/imajinyun/go-knifer/vskt"
 )
 
 func ExampleGetRemoteAddress() {
-	conn, _ := net.Dial("tcp", "example.com:80")
-	addr := vskt.GetRemoteAddress(conn)
-	fmt.Println(addr != nil)
+	fmt.Println(vskt.GetRemoteAddress(nil) == nil)
 	// Output: true
+}
+
+func ExampleFuncEncoder() {
+	encoder := vskt.FuncEncoder[string](func(_ *vskt.AioSession, b *bytes.Buffer, data string) {
+		b.WriteString("encoded:" + data)
+	})
+	var out bytes.Buffer
+
+	encoder.Encode(nil, &out, "payload")
+	fmt.Println(out.String())
+	// Output: encoded:payload
+}
+
+func ExampleNewSocketErrorf() {
+	err := vskt.NewSocketErrorf("socket %s", "closed")
+
+	fmt.Println(err.Error())
+	// Output: socket closed
+}
+
+func ExampleNewSocketErrorMsg() {
+	err := vskt.NewSocketErrorMsg("connection reset")
+
+	fmt.Println(err.Error())
+	// Output: connection reset
 }

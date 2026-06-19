@@ -21,3 +21,11 @@ func ExampleIsStrong() {
 	// false
 	// true
 }
+
+func ExampleIsWeak() {
+	fmt.Println(vpass.IsWeak("password"))
+	fmt.Println(vpass.IsWeak("Str0ng!Pass"))
+	// Output:
+	// true
+	// false
+}

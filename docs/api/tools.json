@@ -4,7 +4,7 @@
   "summary": {
     "package_count": 48,
     "function_count": 2528,
-    "functions_with_examples": 150,
+    "functions_with_examples": 184,
     "context_aware_functions": 20,
     "returns_error_functions": 564,
     "variadic_functions": 754,
@@ -70,7 +70,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleCopyProperties"
+          ]
         },
         {
           "name": "FillMap",
@@ -1669,7 +1672,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewLFU"
+          ]
         },
         {
           "name": "NewLFUWithOptions",
@@ -4238,7 +4244,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleMustNewPattern"
+          ]
         },
         {
           "name": "NewConfig",
@@ -4268,7 +4277,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleNewConfigWithOptions"
+          ]
         },
         {
           "name": "NewCronError",
@@ -6495,7 +6507,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleRecordsToMaps"
+          ]
         },
         {
           "name": "StructsToRecords",
@@ -6755,7 +6770,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleWriteString"
+          ]
         },
         {
           "name": "WriteStringMaps",
@@ -8728,7 +8746,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleFilterWithOptions"
+          ]
         },
         {
           "name": "GetFoundAll",
@@ -9487,7 +9508,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewCollector"
+          ]
         },
         {
           "name": "NewCollectorWithOptions",
@@ -11671,7 +11695,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsIPv4"
+          ]
         },
         {
           "name": "IsIPv6",
@@ -17521,7 +17548,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleCanEncodeBarcodeFormat"
+          ]
         },
         {
           "name": "ConvertFormat",
@@ -19273,7 +19303,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewBatchSingle"
+          ]
         },
         {
           "name": "NewMap",
@@ -19362,7 +19395,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewSlice"
+          ]
         },
         {
           "name": "NewSliceSingle",
@@ -22669,7 +22705,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleInfoWithOptions"
+          ]
         },
         {
           "name": "Infof",
@@ -22939,7 +22978,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleNewConsoleLogWithOptions"
+          ]
         },
         {
           "name": "NewIsolatedLogger",
@@ -23381,7 +23423,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewAddress"
+          ]
         },
         {
           "name": "NewAttachment",
@@ -23634,7 +23679,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleParseAddressList"
+          ]
         },
         {
           "name": "QuickSend",
@@ -26035,7 +26083,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIPv4"
+          ]
         },
         {
           "name": "IPv6",
@@ -26292,7 +26343,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleBeginIP"
+          ]
         },
         {
           "name": "BeginIPLong",
@@ -27480,7 +27534,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIPv4ToLong"
+          ]
         },
         {
           "name": "IPv4ToLongDefault",
@@ -32910,7 +32967,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleContains"
+          ]
         },
         {
           "name": "DefaultIfNil",
@@ -33742,7 +33802,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsWeak"
+          ]
         },
         {
           "name": "Score",
@@ -33834,7 +33897,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleReadRowsFromReader"
+          ]
         },
         {
           "name": "ReadSheetRows",
@@ -34274,7 +34340,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleWriteRowsToBuffer"
+          ]
         },
         {
           "name": "WriteSheetRows",
@@ -35031,7 +35100,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleGetFieldValue"
+          ]
         },
         {
           "name": "GetFieldValueWithOptions",
@@ -40947,7 +41019,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewE"
+          ]
         }
       ]
     },
@@ -40972,7 +41047,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleNew"
+          ]
         },
         {
           "name": "NewInt",
@@ -41750,7 +41828,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewSocketErrorMsg"
+          ]
         },
         {
           "name": "NewSocketErrorf",
@@ -41772,7 +41853,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleNewSocketErrorf"
+          ]
         },
         {
           "name": "SocketConnect",
@@ -44558,7 +44642,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleEnvOrDefaultWithOptions"
+          ]
         },
         {
           "name": "EnvWithOptions",
@@ -44580,7 +44667,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleEnvWithOptions"
+          ]
         },
         {
           "name": "FreeMemory",
@@ -46298,7 +46388,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleRenderTemplate"
+          ]
         },
         {
           "name": "RenderWithOptions",
@@ -46325,7 +46418,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleRenderWithOptions"
+          ]
         },
         {
           "name": "WithDelims",
@@ -48219,7 +48315,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsLessThan"
+          ]
         },
         {
           "name": "IsLessThanOrEqual",
@@ -48591,7 +48690,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleEscape"
+          ]
         },
         {
           "name": "Format",

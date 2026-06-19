@@ -19,3 +19,23 @@ func ExampleNewMessage() {
 	// true
 	// <nil>
 }
+
+func ExampleNewAddress() {
+	addr, err := vmail.NewAddress("Alice", "alice@example.com")
+
+	fmt.Println(addr.String())
+	fmt.Println(err)
+	// Output:
+	// "Alice" <alice@example.com>
+	// <nil>
+}
+
+func ExampleParseAddressList() {
+	list, err := vmail.ParseAddressList("bob@example.com, carol@example.com")
+
+	fmt.Println(len(list), list[0].Email, list[1].Email)
+	fmt.Println(err)
+	// Output:
+	// 2 bob@example.com carol@example.com
+	// <nil>
+}

@@ -19,3 +19,8 @@ func ExampleFormatWithOptions() {
 	fmt.Println(strings.Contains(formatted, "\n  <name>"))
 	// Output: true
 }
+
+func ExampleEscape() {
+	fmt.Println(vxml.Escape("<name>go-knifer</name>"))
+	// Output: &lt;name&gt;go-knifer&lt;/name&gt;
+}

@@ -18,3 +18,11 @@ func ExampleNewMathGeneratorWith() {
 	fmt.Println(len(result) > 0)
 	// Output: true
 }
+
+func ExampleCanEncodeBarcodeFormat() {
+	fmt.Println(vimg.CanEncodeBarcodeFormat(vimg.BarcodeFormatQRCode))
+	fmt.Println(vimg.CanEncodeBarcodeFormat(vimg.BarcodeFormatUnknown))
+	// Output:
+	// true
+	// false
+}
