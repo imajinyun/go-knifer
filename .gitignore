@@ -34,3 +34,6 @@ go.work.sum
 
 # OS metadata
 .DS_Store
+
+# Local agent planning artifacts
+docs/superpowers/
