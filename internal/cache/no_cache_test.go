@@ -12,6 +12,13 @@ func TestNewNoCache(t *testing.T) {
 	}
 }
 
+func TestNewNo(t *testing.T) {
+	c := NewNo[string, int]()
+	if c == nil {
+		t.Fatal("NewNo returned nil")
+	}
+}
+
 func TestNoCacheBasic(t *testing.T) {
 	c := NewNoCache[string, int]()
 

@@ -113,6 +113,47 @@ func TestAccountQuickSendUsesAccountDefaults(t *testing.T) {
 	}
 }
 
+func TestSendAccountHTML(t *testing.T) {
+	auth := testSMTPAuth{mechanism: "CUSTOM"}
+	account := Account{
+		Host:           "smtp.example.com",
+		Port:           587,
+		Username:       "user@example.com",
+		Password:       "secret",
+		Auth:           auth,
+		From:           "from@example.com",
+		FromName:       "Sender",
+		TLSConfig:      nil,
+		TLSPolicy:      TLSNone,
+		AllowPlainAuth: true,
+		Timeout:        time.Second,
+		LocalName:      "mail.local",
+	}
+
+	var got *Message
+	provider := func(config Config) (Sender, error) {
+		return SenderFunc(func(ctx context.Context, message *Message) error {
+			got = message
+			return nil
+		}), nil
+	}
+
+	err := SendAccountHTML(
+		context.Background(),
+		account,
+		[]string{"to@example.com"},
+		"subject",
+		"<b>html</b>",
+		WithQuickClientOptions(WithSenderProvider(provider)),
+	)
+	if err != nil {
+		t.Fatalf("SendAccountHTML() error = %v", err)
+	}
+	if got == nil || got.HTML != "<b>html</b>" {
+		t.Fatalf("sent HTML = %q, want %q", got.HTML, "<b>html</b>")
+	}
+}
+
 func TestQuickSendAndAccountValidation(t *testing.T) {
 	provider := func(config Config) (Sender, error) {
 		return SenderFunc(func(ctx context.Context, message *Message) error { return nil }), nil
