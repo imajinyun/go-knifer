@@ -223,9 +223,20 @@ When changing `internal/slice`, `vslice`, `internal/maps`, or `vmap`, keep the p
 
 6. Validate collection changes with focused tests first (`./internal/slice ./vslice` or `./internal/maps ./vmap`), then run the normal repository gates from the general workflow before reporting completion.
 
+### Roadmap sprint workflow
+
+When the user asks to update the workflow, continue the roadmap, or uses equivalent Chinese wording such as "更新工作流", treat it as a roadmap-state synchronization task before starting more feature work:
+
+1. Read `docs/doc/49-roadmap.md`, `docs/api/tools.json`, and the latest commits to determine the current baseline, completed sprint, active sprint, and next sprint.
+2. Update only existing workflow or roadmap files unless the user explicitly asks for a new planning document. Keep Sprint status, baseline metrics, scenario guidance, and validation commands aligned with the actual repository state.
+3. If a sprint was just completed, mark it as completed in the roadmap, record the commit hash when available, and set the next sprint as `Current`. Do not mark a future sprint as completed without committed code or documentation evidence.
+4. For the next sprint, add the concrete execution loop: scope, first package/files to inspect, tests/examples/benchmarks/docs expected, and validation gates. Prefer TDD for API behavior and deterministic examples for reader-facing APIs.
+5. If the workflow update changes only Markdown or agent instructions, validate with `git diff --check` and `make docs-check`. If it also changes generated artifacts or Go code, follow the broader validation workflow for those touched areas.
+6. Report the files updated, current sprint pointer, validation commands, and whether a commit was created. Do not create a commit unless the user explicitly requested committing in this turn.
+
 ### Governance audit
 
-When the user asks to continue general governance, generate next governance tasks, or uses equivalent Chinese wording such as "继续治理", "生成下一步治理任务", or "更新工作流", treat it as an autonomous quality pass over security, public facade usability, coverage stability, and benchmark baselines:
+When the user asks to continue general governance, generate next governance tasks, or uses equivalent Chinese wording such as "继续治理" or "生成下一步治理任务", treat it as an autonomous quality pass over security, public facade usability, coverage stability, and benchmark baselines:
 
 1. Start with safety checks and repository context:
    - Run `git status --porcelain=v1 -b` and avoid mixing unrelated local files into the current logical change.
