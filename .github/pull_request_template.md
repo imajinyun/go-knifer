@@ -17,6 +17,7 @@
 - [ ] I kept `v*` packages as thin facades over `internal/*`.
 - [ ] I avoided new dependencies in public facades, or updated the architecture allowlist with justification.
 - [ ] I added or updated tests for changed behavior.
+- [ ] I formatted touched Go files with `gofmt -w` before running lint.
 - [ ] I ran `make agent-check` or documented why it is not applicable.
 - [ ] I ran `make worktree-check` or documented unrelated untracked files below.
 - [ ] I ran `make change-policy-check` and applied the detected policy below.
@@ -33,6 +34,8 @@
 - Commands run:
   -
 - Commands intentionally skipped and reason:
+  -
+- Formatting/lint notes:
   -
 - Agent evidence:
   - `/tmp/go-knifer-agent-validation.json` generated: yes / no

@@ -153,7 +153,7 @@ When the user asks to implement, rename, refactor, document, or otherwise modify
 
    Run `make worktree-check` before broad validation. If unrelated untracked Go files exist, do not stage, edit, delete, or rely on them unless the user explicitly includes them in scope. Set `SKIP_WORKTREE_CHECK=1` only when those files are intentionally excluded and report them.
 
-3. **Format** touched Go files with `gofmt -w` before validation.
+3. **Format** touched Go files with `gofmt -w` before validation. If `golangci-lint` reports `gofmt`, run `gofmt -w` on the reported files, then re-run the focused package tests and lint gate.
 
 4. **Validate** focused tests first, then broaden to repository-level gates when feasible:
    - `go test -v -gcflags="all=-l -N" ./<changed-package>` for affected Go packages.
@@ -163,7 +163,7 @@ When the user asks to implement, rename, refactor, document, or otherwise modify
    - `make change-policy-check` to detect which `ai-context.json.change_type_policies` apply to the local diff.
    - `make security-sensitive-diff` after production changes to identify whether security validation is required.
    - `bash bin/check_api_compat.sh`; if the public API change is intentional, run `UPDATE_API=1 bash bin/check_api_compat.sh` and re-run the check. Public facade additions must update `docs/api/exports.txt` in the same logical change.
-   - `golangci-lint run ./...` after non-trivial Go code or test changes when the tool is available.
+   - `golangci-lint run ./...` after non-trivial Go code or test changes when the tool is available. Because lint analyzes untracked Go files too, either include intentional untracked Go files in the logical change and format/fix them, or exclude/stash unrelated ones before broad lint.
    - For coverage gates, first generate a fresh profile, then pass that exact file to the checker, e.g. `go test -race -shuffle=on -coverprofile=/tmp/go-knifer-coverage.out ./...` followed by `bash bin/check_coverage.sh /tmp/go-knifer-coverage.out`. Do not rely on an implicit or stale `coverage.out`.
    - `git diff --check` before committing.
    - `make agent-evidence` after governance checks to generate `/tmp/go-knifer-agent-validation.json` for PR evidence.
@@ -174,7 +174,7 @@ When the user asks to implement, rename, refactor, document, or otherwise modify
 
 6. Before committing, **re-check the final staged logical change**:
    - Run `git status --porcelain=v1 -b` and review `git diff --stat` / `git diff --staged --stat` so the commit contains only the requested files.
-   - Ensure the latest validation was run after the final edit/API snapshot update, not before it.
+   - Ensure the latest validation was run after the final edit/API snapshot update, not before it. If lint required formatting or simplification fixes, re-run lint after those final edits.
    - For non-trivial Go changes, the pre-commit validation set should include: focused package tests, `go test -v -gcflags="all=-l -N" ./...`, `go vet ./...`, `bash bin/check_arch.sh`, `bash bin/check_api_compat.sh`, `golangci-lint run ./...`, `go test -race -shuffle=on -coverprofile=/tmp/go-knifer-coverage.out ./...`, `bash bin/check_coverage.sh /tmp/go-knifer-coverage.out`, and `git diff --check`. `make agent-full-check COVERAGE_FILE=/tmp/go-knifer-coverage.out` is the preferred AI/Agent aggregate target when a full local gate is feasible.
    - If a public API snapshot was intentionally refreshed, run the API check once to observe the stale snapshot, then `UPDATE_API=1 bash bin/check_api_compat.sh`, then re-run `bash bin/check_api_compat.sh` and include `docs/api/exports.txt` in the same logical commit.
 

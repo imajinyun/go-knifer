@@ -113,7 +113,8 @@
 ## Governance notes
 
 - Keep package tests split by source-file responsibility.
-- Do not stage, edit, delete, or rely on unrelated untracked Go files unless the user explicitly includes them in scope.
+- Format touched Go files with `gofmt -w` before lint/test validation; if `golangci-lint` reports `gofmt`, format the reported files and re-run lint.
+- Do not stage, edit, delete, or rely on unrelated untracked Go files unless the user explicitly includes them in scope. Broad `golangci-lint run ./...` analyzes untracked Go files, so format/fix intentional untracked files or exclude unrelated ones before lint.
 - Keep `ai-context.json` synchronized with Makefile targets, facade inventory, command side effects, command `risk_level`, coverage gates, and security-sensitive package lists.
 - Keep `ai-context.json.change_type_policies` synchronized with PR template change types and required Agent validation commands.
 - Use `make change-policy-check` before choosing validation scope and `make agent-evidence` before reporting Agent validation.
