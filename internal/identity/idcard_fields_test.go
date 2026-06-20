@@ -79,3 +79,57 @@ func TestIDCardFields(t *testing.T) {
 		t.Fatalf("DistrictCode() = %q, %v", district, ok)
 	}
 }
+
+func TestInvalidIDCardFieldsReturnFalse(t *testing.T) {
+	if birth, ok := BirthString("123"); ok || birth != "" {
+		t.Fatalf("BirthString(short) = %q, %v; want empty false", birth, ok)
+	}
+	if birth, ok := BirthString("11010519490231002X"); ok || birth != "19490231" {
+		t.Fatalf("BirthString(invalid date) = %q, %v; want birth false", birth, ok)
+	}
+	if _, ok := BirthDate("11010519490231002X"); ok {
+		t.Fatal("BirthDate should reject invalid birthday")
+	}
+	if age, ok := AgeAt("123", time.Date(2024, 1, 1, 0, 0, 0, 0, time.Local)); ok || age != 0 {
+		t.Fatalf("AgeAt(invalid) = %d, %v; want zero false", age, ok)
+	}
+	if year, ok := Year("123"); ok || year != 0 {
+		t.Fatalf("Year(invalid) = %d, %v; want zero false", year, ok)
+	}
+	if month, ok := Month("123"); ok || month != 0 {
+		t.Fatalf("Month(invalid) = %d, %v; want zero false", month, ok)
+	}
+	if day, ok := Day("123"); ok || day != 0 {
+		t.Fatalf("Day(invalid) = %d, %v; want zero false", day, ok)
+	}
+}
+
+func TestGenderOfCoversFifteenDigitAndInvalidInputs(t *testing.T) {
+	gender, ok := GenderOf("130503670401001")
+	if !ok || gender != GenderMale {
+		t.Fatalf("GenderOf(15-digit) = %d, %v; want male true", gender, ok)
+	}
+	gender, ok = GenderOf("123")
+	if ok || gender != GenderUnknown {
+		t.Fatalf("GenderOf(short) = %d, %v; want unknown false", gender, ok)
+	}
+	gender, ok = GenderOf("1101051949123100XX")
+	if ok || gender != GenderUnknown {
+		t.Fatalf("GenderOf(non-digit sequence) = %d, %v; want unknown false", gender, ok)
+	}
+}
+
+func TestRegionCodesRejectInvalidLengths(t *testing.T) {
+	if code, ok := ProvinceCode("123"); ok || code != "" {
+		t.Fatalf("ProvinceCode(short) = %q, %v; want empty false", code, ok)
+	}
+	if name, ok := Province("99010519491231002X"); ok || name != "" {
+		t.Fatalf("Province(unknown) = %q, %v; want empty false", name, ok)
+	}
+	if code, ok := CityCode("123"); ok || code != "" {
+		t.Fatalf("CityCode(short) = %q, %v; want empty false", code, ok)
+	}
+	if code, ok := DistrictCode("123"); ok || code != "" {
+		t.Fatalf("DistrictCode(short) = %q, %v; want empty false", code, ok)
+	}
+}

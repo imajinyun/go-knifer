@@ -22,3 +22,18 @@ func TestIDCardMatcherOptions(t *testing.T) {
 		t.Fatal("custom digits matcher should reject check code input")
 	}
 }
+
+func TestNilMatchersFallBackToDefaults(t *testing.T) {
+	if !IsValidIDCard18WithOptions("11010519491231002X", WithDigitsMatcher(nil)) {
+		t.Fatal("nil digits matcher should fall back to default matcher")
+	}
+	if !IsValidTWIDCardWithOptions("A123456789", WithTWCardMatcher(nil)) {
+		t.Fatal("nil Taiwan matcher should fall back to default matcher")
+	}
+	if _, ok := ParseRegionCardWithOptions("1571234(5)", WithMacauCardMatcher(nil)); !ok {
+		t.Fatal("nil Macau matcher should fall back to default matcher")
+	}
+	if !IsValidHKIDCardWithOptions("A123456(3)", WithHKCardMatcher(nil)) {
+		t.Fatal("nil Hong Kong matcher should fall back to default matcher")
+	}
+}
