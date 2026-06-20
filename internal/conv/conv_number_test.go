@@ -1,6 +1,11 @@
 package conv
 
-import "testing"
+import (
+	"errors"
+	"testing"
+
+	knifer "github.com/imajinyun/go-knifer"
+)
 
 func TestToInt(t *testing.T) {
 	if ToInt("123") != 123 {
@@ -35,5 +40,66 @@ func TestToInt64AndFloat(t *testing.T) {
 	}
 	if ToInt64Default("123", 0) != 123 {
 		t.Fatalf("ToInt64Default valid")
+	}
+}
+
+func TestErrorReturningNumberConversions(t *testing.T) {
+	tests := []struct {
+		name        string
+		convert     func() (any, error)
+		expected    any
+		expectedErr bool
+	}{
+		{
+			name:     "int from string",
+			convert:  func() (any, error) { return ToIntE("42") },
+			expected: 42,
+		},
+		{
+			name:     "int64 from float string truncates",
+			convert:  func() (any, error) { return ToInt64E("42.9") },
+			expected: int64(42),
+		},
+		{
+			name:     "float64 from string",
+			convert:  func() (any, error) { return ToFloat64E("3.5") },
+			expected: 3.5,
+		},
+		{
+			name:        "int invalid string",
+			convert:     func() (any, error) { return ToIntE("bad") },
+			expectedErr: true,
+		},
+		{
+			name:        "int64 nil",
+			convert:     func() (any, error) { return ToInt64E(nil) },
+			expectedErr: true,
+		},
+		{
+			name:        "float64 invalid string",
+			convert:     func() (any, error) { return ToFloat64E("bad") },
+			expectedErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.convert()
+			if tt.expectedErr {
+				if !errors.Is(err, ErrInvalidConversion) {
+					t.Fatalf("error = %v, want ErrInvalidConversion", err)
+				}
+				if !errors.Is(err, knifer.ErrCodeInvalidInput) {
+					t.Fatalf("error = %v, want invalid input code", err)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error = %v", err)
+			}
+			if got != tt.expected {
+				t.Fatalf("got = %#v, want %#v", got, tt.expected)
+			}
+		})
 	}
 }

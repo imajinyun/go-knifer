@@ -1,8 +1,10 @@
 package vconv_test
 
 import (
+	"errors"
 	"fmt"
 
+	knifer "github.com/imajinyun/go-knifer"
 	"github.com/imajinyun/go-knifer/vconv"
 )
 
@@ -35,4 +37,24 @@ func ExampleToString() {
 func ExampleToBytes() {
 	fmt.Println(string(vconv.ToBytes("go")))
 	// Output: go
+}
+
+func ExampleToInt64E() {
+	value, err := vconv.ToInt64E("42.9")
+	fmt.Println(value)
+	fmt.Println(err)
+	// Output:
+	// 42
+	// <nil>
+}
+
+func ExampleToBoolE() {
+	value, err := vconv.ToBoolE("maybe")
+	fmt.Println(value)
+	fmt.Println(errors.Is(err, vconv.ErrInvalidConversion))
+	fmt.Println(errors.Is(err, knifer.ErrCodeInvalidInput))
+	// Output:
+	// false
+	// true
+	// true
 }

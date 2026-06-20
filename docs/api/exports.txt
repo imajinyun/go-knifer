@@ -466,20 +466,28 @@ github.com/imajinyun/go-knifer/vconv
   func ToBool(v any) bool
   func ToBoolDefault(v any, def bool) bool
   func ToBoolDefaultWithOptions(v any, def bool, opts ...Option) bool
+  func ToBoolE(v any) (bool, error)
+  func ToBoolEWithOptions(v any, opts ...Option) (bool, error)
   func ToBoolWithOptions(v any, opts ...Option) bool
   func ToBytes(v any) []byte
   func ToBytesWithOptions(v any, opts ...Option) []byte
   func ToFloat64(v any) float64
   func ToFloat64Default(v any, def float64) float64
   func ToFloat64DefaultWithOptions(v any, def float64, opts ...Option) float64
+  func ToFloat64E(v any) (float64, error)
+  func ToFloat64EWithOptions(v any, opts ...Option) (float64, error)
   func ToFloat64WithOptions(v any, opts ...Option) float64
   func ToInt(v any) int
   func ToInt64(v any) int64
   func ToInt64Default(v any, def int64) int64
   func ToInt64DefaultWithOptions(v any, def int64, opts ...Option) int64
+  func ToInt64E(v any) (int64, error)
+  func ToInt64EWithOptions(v any, opts ...Option) (int64, error)
   func ToInt64WithOptions(v any, opts ...Option) int64
   func ToIntDefault(v any, def int) int
   func ToIntDefaultWithOptions(v any, def int, opts ...Option) int
+  func ToIntE(v any) (int, error)
+  func ToIntEWithOptions(v any, opts ...Option) (int, error)
   func ToIntWithOptions(v any, opts ...Option) int
   func ToString(v any) string
   func ToStringDefault(v any, def string) string
@@ -491,6 +499,7 @@ github.com/imajinyun/go-knifer/vconv
   func WithParseFloatFunc(parser func(string, int) (float64, error)) Option
   func WithParseIntFunc(parser func(string, int, int) (int64, error)) Option
   type Option = github.com/imajinyun/go-knifer/internal/conv.Option
+  var ErrInvalidConversion error
 
 github.com/imajinyun/go-knifer/vcron
   const PartDayOfMonth Part = 3

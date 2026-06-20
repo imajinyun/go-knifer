@@ -1,6 +1,11 @@
 package vconv
 
-import "testing"
+import (
+	"errors"
+	"testing"
+
+	knifer "github.com/imajinyun/go-knifer"
+)
 
 func TestConvFacade(t *testing.T) {
 	if ToString(12) != "12" || ToStringDefault(nil, "x") != "x" {
@@ -59,5 +64,37 @@ func TestConvFacadeWithOptions(t *testing.T) {
 	}
 	if got := string(ToBytesWithOptions(3.5, WithFormatFloatFunc(func(float64, byte, int, int) string { return "FLOAT" }))); got != "FLOAT" {
 		t.Fatalf("ToBytesWithOptions = %q", got)
+	}
+}
+
+func TestConvFacadeErrorReturningHelpers(t *testing.T) {
+	if got, err := ToIntE("42"); err != nil || got != 42 {
+		t.Fatalf("ToIntE = %d, %v", got, err)
+	}
+	if got, err := ToIntEWithOptions("ignored", WithParseIntFunc(func(string, int, int) (int64, error) { return 17, nil })); err != nil || got != 17 {
+		t.Fatalf("ToIntEWithOptions = %d, %v", got, err)
+	}
+	if got, err := ToInt64E("42.9"); err != nil || got != 42 {
+		t.Fatalf("ToInt64E = %d, %v", got, err)
+	}
+	if got, err := ToFloat64E("3.5"); err != nil || got != 3.5 {
+		t.Fatalf("ToFloat64E = %v, %v", got, err)
+	}
+	if got, err := ToBoolE("yes"); err != nil || !got {
+		t.Fatalf("ToBoolE = %v, %v", got, err)
+	}
+
+	for _, err := range []error{
+		func() error { _, err := ToIntE("bad"); return err }(),
+		func() error { _, err := ToInt64E(nil); return err }(),
+		func() error { _, err := ToFloat64E("bad"); return err }(),
+		func() error { _, err := ToBoolE("maybe"); return err }(),
+	} {
+		if !errors.Is(err, ErrInvalidConversion) {
+			t.Fatalf("error = %v, want ErrInvalidConversion", err)
+		}
+		if !errors.Is(err, knifer.ErrCodeInvalidInput) {
+			t.Fatalf("error = %v, want invalid input code", err)
+		}
 	}
 }

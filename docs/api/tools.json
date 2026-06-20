@@ -3,15 +3,15 @@
   "module": "github.com/imajinyun/go-knifer",
   "summary": {
     "package_count": 54,
-    "function_count": 2596,
-    "functions_with_examples": 306,
+    "function_count": 2604,
+    "functions_with_examples": 308,
     "context_aware_functions": 36,
-    "returns_error_functions": 595,
-    "variadic_functions": 772,
+    "returns_error_functions": 603,
+    "variadic_functions": 776,
     "synopsis_sources": {
       "empty": 0,
       "facade": 1962,
-      "internal": 634
+      "internal": 642
     }
   },
   "packages": [
@@ -3883,13 +3883,13 @@
       "name": "vconv",
       "synopsis": "Package vconv provides public APIs for permissive type conversion.",
       "summary": {
-        "function_count": 27,
-        "functions_with_examples": 5,
-        "example_coverage_percent": 18.5,
+        "function_count": 35,
+        "functions_with_examples": 7,
+        "example_coverage_percent": 20,
         "synopsis_sources": {
           "empty": 0,
           "facade": 0,
-          "internal": 27
+          "internal": 35
         }
       },
       "functions": [
@@ -3959,6 +3959,51 @@
             "bool"
           ],
           "returns_error": false,
+          "context_aware": false,
+          "variadic": true
+        },
+        {
+          "name": "ToBoolE",
+          "signature": "func ToBoolE(v any) (bool, error)",
+          "synopsis": "ToBoolE converts a value to bool and returns an error on failure.",
+          "synopsis_source": "internal",
+          "params": [
+            {
+              "name": "v",
+              "type": "any"
+            }
+          ],
+          "results": [
+            "bool",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false,
+          "examples": [
+            "ExampleToBoolE"
+          ]
+        },
+        {
+          "name": "ToBoolEWithOptions",
+          "signature": "func ToBoolEWithOptions(v any, opts ...Option) (bool, error)",
+          "synopsis": "ToBoolEWithOptions converts a value to bool using per-call options and returns an error on failure.",
+          "synopsis_source": "internal",
+          "params": [
+            {
+              "name": "v",
+              "type": "any"
+            },
+            {
+              "name": "opts",
+              "type": "...Option"
+            }
+          ],
+          "results": [
+            "bool",
+            "error"
+          ],
+          "returns_error": true,
           "context_aware": false,
           "variadic": true
         },
@@ -4094,6 +4139,48 @@
           "variadic": true
         },
         {
+          "name": "ToFloat64E",
+          "signature": "func ToFloat64E(v any) (float64, error)",
+          "synopsis": "ToFloat64E converts a value to float64 and returns an error on failure.",
+          "synopsis_source": "internal",
+          "params": [
+            {
+              "name": "v",
+              "type": "any"
+            }
+          ],
+          "results": [
+            "float64",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "ToFloat64EWithOptions",
+          "signature": "func ToFloat64EWithOptions(v any, opts ...Option) (float64, error)",
+          "synopsis": "ToFloat64EWithOptions converts a value to float64 using per-call options and returns an error on failure.",
+          "synopsis_source": "internal",
+          "params": [
+            {
+              "name": "v",
+              "type": "any"
+            },
+            {
+              "name": "opts",
+              "type": "...Option"
+            }
+          ],
+          "results": [
+            "float64",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": true
+        },
+        {
           "name": "ToFloat64WithOptions",
           "signature": "func ToFloat64WithOptions(v any, opts ...Option) float64",
           "synopsis": "ToFloat64WithOptions converts a value to float64 using per-call options and returns 0 on failure.",
@@ -4203,6 +4290,51 @@
           "variadic": true
         },
         {
+          "name": "ToInt64E",
+          "signature": "func ToInt64E(v any) (int64, error)",
+          "synopsis": "ToInt64E converts a value to int64 and returns an error on failure.",
+          "synopsis_source": "internal",
+          "params": [
+            {
+              "name": "v",
+              "type": "any"
+            }
+          ],
+          "results": [
+            "int64",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false,
+          "examples": [
+            "ExampleToInt64E"
+          ]
+        },
+        {
+          "name": "ToInt64EWithOptions",
+          "signature": "func ToInt64EWithOptions(v any, opts ...Option) (int64, error)",
+          "synopsis": "ToInt64EWithOptions converts a value to int64 using per-call options and returns an error on failure.",
+          "synopsis_source": "internal",
+          "params": [
+            {
+              "name": "v",
+              "type": "any"
+            },
+            {
+              "name": "opts",
+              "type": "...Option"
+            }
+          ],
+          "results": [
+            "int64",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": true
+        },
+        {
           "name": "ToInt64WithOptions",
           "signature": "func ToInt64WithOptions(v any, opts ...Option) int64",
           "synopsis": "ToInt64WithOptions converts a value to int64 using per-call options and returns 0 on failure.",
@@ -4272,6 +4404,48 @@
             "int"
           ],
           "returns_error": false,
+          "context_aware": false,
+          "variadic": true
+        },
+        {
+          "name": "ToIntE",
+          "signature": "func ToIntE(v any) (int, error)",
+          "synopsis": "ToIntE converts a value to int and returns an error on failure.",
+          "synopsis_source": "internal",
+          "params": [
+            {
+              "name": "v",
+              "type": "any"
+            }
+          ],
+          "results": [
+            "int",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "ToIntEWithOptions",
+          "signature": "func ToIntEWithOptions(v any, opts ...Option) (int, error)",
+          "synopsis": "ToIntEWithOptions converts a value to int using per-call options and returns an error on failure.",
+          "synopsis_source": "internal",
+          "params": [
+            {
+              "name": "v",
+              "type": "any"
+            },
+            {
+              "name": "opts",
+              "type": "...Option"
+            }
+          ],
+          "results": [
+            "int",
+            "error"
+          ],
+          "returns_error": true,
           "context_aware": false,
           "variadic": true
         },

@@ -11,13 +11,13 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Schema | 1.4 |
 | Module | `github.com/imajinyun/go-knifer` |
 | Packages | 54 |
-| Functions | 2596 |
-| Functions with examples | 306 |
+| Functions | 2604 |
+| Functions with examples | 308 |
 | Context-aware functions | 36 |
-| Functions returning error | 595 |
-| Variadic functions | 772 |
+| Functions returning error | 603 |
+| Variadic functions | 776 |
 | Synopsis source: facade | 1962 |
-| Synopsis source: internal | 634 |
+| Synopsis source: internal | 642 |
 | Synopsis source: empty | 0 |
 
 ## Packages
@@ -299,27 +299,35 @@ Import path: `github.com/imajinyun/go-knifer/vconv`
 
 Package vconv provides public APIs for permissive type conversion.
 
-Quality: 27 functions · 5 with examples · 18.5% example coverage · synopsis sources: facade=0, internal=27, empty=0
+Quality: 35 functions · 7 with examples · 20.0% example coverage · synopsis sources: facade=0, internal=35, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `ToBool` | `func ToBool(v any) bool` | ToBool converts a value to bool and returns false on failure. | internal | `ExampleToBool` |
 | `ToBoolDefault` | `func ToBoolDefault(v any, def bool) bool` | ToBoolDefault converts a value to bool and returns def on failure. | internal | — |
 | `ToBoolDefaultWithOptions` | `func ToBoolDefaultWithOptions(v any, def bool, opts ...Option) bool` | ToBoolDefaultWithOptions converts a value to bool using per-call options and returns def on failure. | internal | — |
+| `ToBoolE` | `func ToBoolE(v any) (bool, error)` | ToBoolE converts a value to bool and returns an error on failure. | internal | `ExampleToBoolE` |
+| `ToBoolEWithOptions` | `func ToBoolEWithOptions(v any, opts ...Option) (bool, error)` | ToBoolEWithOptions converts a value to bool using per-call options and returns an error on failure. | internal | — |
 | `ToBoolWithOptions` | `func ToBoolWithOptions(v any, opts ...Option) bool` | ToBoolWithOptions converts a value to bool using per-call options and returns false on failure. | internal | — |
 | `ToBytes` | `func ToBytes(v any) []byte` | ToBytes converts a value to bytes; strings are converted directly and other values use ToString. | internal | `ExampleToBytes` |
 | `ToBytesWithOptions` | `func ToBytesWithOptions(v any, opts ...Option) []byte` | ToBytesWithOptions converts a value to bytes using per-call options. | internal | — |
 | `ToFloat64` | `func ToFloat64(v any) float64` | ToFloat64 converts a value to float64 and returns 0 on failure. | internal | — |
 | `ToFloat64Default` | `func ToFloat64Default(v any, def float64) float64` | ToFloat64Default converts a value to float64 and returns def on failure. | internal | — |
 | `ToFloat64DefaultWithOptions` | `func ToFloat64DefaultWithOptions(v any, def float64, opts ...Option) float64` | ToFloat64DefaultWithOptions converts a value to float64 using per-call options and returns def on failure. | internal | — |
+| `ToFloat64E` | `func ToFloat64E(v any) (float64, error)` | ToFloat64E converts a value to float64 and returns an error on failure. | internal | — |
+| `ToFloat64EWithOptions` | `func ToFloat64EWithOptions(v any, opts ...Option) (float64, error)` | ToFloat64EWithOptions converts a value to float64 using per-call options and returns an error on failure. | internal | — |
 | `ToFloat64WithOptions` | `func ToFloat64WithOptions(v any, opts ...Option) float64` | ToFloat64WithOptions converts a value to float64 using per-call options and returns 0 on failure. | internal | — |
 | `ToInt` | `func ToInt(v any) int` | ToInt converts a value to int and returns 0 on failure. | internal | `ExampleToInt` |
 | `ToInt64` | `func ToInt64(v any) int64` | ToInt64 converts a value to int64 and returns 0 on failure. | internal | — |
 | `ToInt64Default` | `func ToInt64Default(v any, def int64) int64` | ToInt64Default converts a value to int64 and returns def on failure. | internal | — |
 | `ToInt64DefaultWithOptions` | `func ToInt64DefaultWithOptions(v any, def int64, opts ...Option) int64` | ToInt64DefaultWithOptions converts a value to int64 using per-call options and returns def on failure. | internal | — |
+| `ToInt64E` | `func ToInt64E(v any) (int64, error)` | ToInt64E converts a value to int64 and returns an error on failure. | internal | `ExampleToInt64E` |
+| `ToInt64EWithOptions` | `func ToInt64EWithOptions(v any, opts ...Option) (int64, error)` | ToInt64EWithOptions converts a value to int64 using per-call options and returns an error on failure. | internal | — |
 | `ToInt64WithOptions` | `func ToInt64WithOptions(v any, opts ...Option) int64` | ToInt64WithOptions converts a value to int64 using per-call options and returns 0 on failure. | internal | — |
 | `ToIntDefault` | `func ToIntDefault(v any, def int) int` | ToIntDefault converts a value to int and returns def on failure. | internal | `ExampleToIntDefault` |
 | `ToIntDefaultWithOptions` | `func ToIntDefaultWithOptions(v any, def int, opts ...Option) int` | ToIntDefaultWithOptions converts a value to int using per-call options and returns def on failure. | internal | — |
+| `ToIntE` | `func ToIntE(v any) (int, error)` | ToIntE converts a value to int and returns an error on failure. | internal | — |
+| `ToIntEWithOptions` | `func ToIntEWithOptions(v any, opts ...Option) (int, error)` | ToIntEWithOptions converts a value to int using per-call options and returns an error on failure. | internal | — |
 | `ToIntWithOptions` | `func ToIntWithOptions(v any, opts ...Option) int` | ToIntWithOptions converts a value to int using per-call options and returns 0 on failure. | internal | — |
 | `ToString` | `func ToString(v any) string` | ToString converts any value to a string; nil becomes an empty string. | internal | `ExampleToString` |
 | `ToStringDefault` | `func ToStringDefault(v any, def string) string` | ToStringDefault converts a value to a string and returns def when the value is nil. | internal | — |

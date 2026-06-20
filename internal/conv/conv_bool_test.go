@@ -1,6 +1,11 @@
 package conv
 
-import "testing"
+import (
+	"errors"
+	"testing"
+
+	knifer "github.com/imajinyun/go-knifer"
+)
 
 func TestToBool(t *testing.T) {
 	cases := map[string]bool{
@@ -17,5 +22,41 @@ func TestToBool(t *testing.T) {
 	}
 	if ToBoolDefault("xx", true) != true {
 		t.Fatalf("ToBool default")
+	}
+}
+
+func TestToBoolE(t *testing.T) {
+	tests := []struct {
+		name        string
+		input       any
+		expected    bool
+		expectedErr bool
+	}{
+		{name: "string token", input: "yes", expected: true},
+		{name: "int value", input: 0, expected: false},
+		{name: "bool value", input: true, expected: true},
+		{name: "nil input", input: nil, expectedErr: true},
+		{name: "invalid string", input: "disabled", expectedErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ToBoolE(tt.input)
+			if tt.expectedErr {
+				if !errors.Is(err, ErrInvalidConversion) {
+					t.Fatalf("error = %v, want ErrInvalidConversion", err)
+				}
+				if !errors.Is(err, knifer.ErrCodeInvalidInput) {
+					t.Fatalf("error = %v, want invalid input code", err)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error = %v", err)
+			}
+			if got != tt.expected {
+				t.Fatalf("got = %v, want %v", got, tt.expected)
+			}
+		})
 	}
 }

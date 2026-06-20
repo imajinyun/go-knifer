@@ -2,11 +2,17 @@
 package conv
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
+
+	knifer "github.com/imajinyun/go-knifer"
 )
+
+// ErrInvalidConversion reports that a value cannot be converted to the requested scalar type.
+var ErrInvalidConversion = errors.New("conv: invalid conversion")
 
 type config struct {
 	parseBool   func(string) (bool, error)
@@ -147,6 +153,18 @@ func ToInt(v any) int { return ToIntWithOptions(v) }
 // ToIntWithOptions converts a value to int using per-call options and returns 0 on failure.
 func ToIntWithOptions(v any, opts ...Option) int { return ToIntDefaultWithOptions(v, 0, opts...) }
 
+// ToIntE converts a value to int and returns an error on failure.
+func ToIntE(v any) (int, error) { return ToIntEWithOptions(v) }
+
+// ToIntEWithOptions converts a value to int using per-call options and returns an error on failure.
+func ToIntEWithOptions(v any, opts ...Option) (int, error) {
+	i, err := ToInt64EWithOptions(v, opts...)
+	if err != nil {
+		return 0, err
+	}
+	return int(i), nil
+}
+
 // ToIntDefault converts a value to int and returns def on failure.
 func ToIntDefault(v any, def int) int {
 	return ToIntDefaultWithOptions(v, def)
@@ -167,6 +185,19 @@ func ToInt64(v any) int64 { return ToInt64WithOptions(v) }
 
 // ToInt64WithOptions converts a value to int64 using per-call options and returns 0 on failure.
 func ToInt64WithOptions(v any, opts ...Option) int64 { return ToInt64DefaultWithOptions(v, 0, opts...) }
+
+// ToInt64E converts a value to int64 and returns an error on failure.
+func ToInt64E(v any) (int64, error) { return ToInt64EWithOptions(v) }
+
+// ToInt64EWithOptions converts a value to int64 using per-call options and returns an error on failure.
+func ToInt64EWithOptions(v any, opts ...Option) (int64, error) {
+	cfg := applyOptions(opts)
+	i, ok := toInt64(v, cfg)
+	if !ok {
+		return 0, invalidConversionError("int64")
+	}
+	return i, nil
+}
 
 // ToInt64Default converts a value to int64 and returns def on failure.
 func ToInt64Default(v any, def int64) int64 {
@@ -191,6 +222,19 @@ func ToFloat64WithOptions(v any, opts ...Option) float64 {
 	return ToFloat64DefaultWithOptions(v, 0, opts...)
 }
 
+// ToFloat64E converts a value to float64 and returns an error on failure.
+func ToFloat64E(v any) (float64, error) { return ToFloat64EWithOptions(v) }
+
+// ToFloat64EWithOptions converts a value to float64 using per-call options and returns an error on failure.
+func ToFloat64EWithOptions(v any, opts ...Option) (float64, error) {
+	cfg := applyOptions(opts)
+	f, ok := toFloat64(v, cfg)
+	if !ok {
+		return 0, invalidConversionError("float64")
+	}
+	return f, nil
+}
+
 // ToFloat64Default converts a value to float64 and returns def on failure.
 func ToFloat64Default(v any, def float64) float64 {
 	return ToFloat64DefaultWithOptions(v, def)
@@ -212,6 +256,31 @@ func ToBool(v any) bool { return ToBoolWithOptions(v) }
 // ToBoolWithOptions converts a value to bool using per-call options and returns false on failure.
 func ToBoolWithOptions(v any, opts ...Option) bool {
 	return ToBoolDefaultWithOptions(v, false, opts...)
+}
+
+// ToBoolE converts a value to bool and returns an error on failure.
+func ToBoolE(v any) (bool, error) { return ToBoolEWithOptions(v) }
+
+// ToBoolEWithOptions converts a value to bool using per-call options and returns an error on failure.
+func ToBoolEWithOptions(v any, opts ...Option) (bool, error) {
+	cfg := applyOptions(opts)
+	if v == nil {
+		return false, invalidConversionError("bool")
+	}
+	switch x := v.(type) {
+	case bool:
+		return x, nil
+	case string:
+		b, err := cfg.parseBool(x)
+		if err != nil {
+			return false, invalidConversionError("bool")
+		}
+		return b, nil
+	}
+	if i, ok := toInt64(v, cfg); ok {
+		return i != 0, nil
+	}
+	return false, invalidConversionError("bool")
 }
 
 // ToBoolDefault converts a value to bool and returns def on failure.
@@ -354,4 +423,12 @@ func defaultBoolParser(s string) (bool, error) {
 	default:
 		return false, fmt.Errorf("cannot parse bool %q", s)
 	}
+}
+
+func invalidConversionError(target string) error {
+	return knifer.WrapError(
+		knifer.ErrCodeInvalidInput,
+		"conv: invalid conversion to "+target,
+		ErrInvalidConversion,
+	)
 }
