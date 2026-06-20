@@ -26,3 +26,34 @@ func TestColorizeHonorsModes(t *testing.T) {
 		t.Fatalf("ColorAlways = %q", colored)
 	}
 }
+
+func TestColorizeReturnsPlainTextForEmptyColor(t *testing.T) {
+	got := Colorize("hello", "", WithColorMode(ColorAlways))
+	if got != "hello" {
+		t.Fatalf("Colorize empty color = %q", got)
+	}
+}
+
+func TestRenderHelpNilCommandReturnsEmptyString(t *testing.T) {
+	if got := RenderHelp(nil); got != "" {
+		t.Fatalf("RenderHelp(nil) = %q", got)
+	}
+}
+
+func TestRenderHelpUsesDefaultCommandUsage(t *testing.T) {
+	cmd := &Command{Name: "app"}
+	if got := RenderHelp(cmd); got != "Usage: app\n" {
+		t.Fatalf("RenderHelp default usage = %q", got)
+	}
+}
+
+func TestRenderHelpSkipsNilChildrenAndUsesCommandPlaceholder(t *testing.T) {
+	cmd := &Command{Name: "app"}
+	cmd.Add(nil, &Command{Name: "serve"})
+	help := RenderHelp(cmd)
+	for _, want := range []string{"Usage: app <command>", "Commands:", "serve"} {
+		if !strings.Contains(help, want) {
+			t.Fatalf("help %q does not contain %q", help, want)
+		}
+	}
+}
