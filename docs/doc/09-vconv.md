@@ -8,6 +8,8 @@
 - `ToXxxDefault` helpers return the caller-provided fallback when conversion fails.
 - `ToIntE`, `ToInt64E`, `ToFloat64E`, and `ToBoolE` return `ErrInvalidConversion` and match `knifer.ErrCodeInvalidInput` when conversion fails.
 - String-to-int conversion trims spaces, tries integer parsing first, then accepts float strings by truncating toward zero, so `"42.9"` becomes `42`.
+- `E` integer helpers reject uint, float, `NaN`, and `Inf` inputs that cannot fit in the destination integer type; the legacy zero/default helpers keep their permissive conversion behavior for backward compatibility.
+- Named string and numeric types are accepted by the same scalar conversion rules as their underlying types.
 - Bool conversion accepts `true`, `yes`, `y`, `ok`, `1`, `on`, `false`, `no`, `n`, `0`, and `off` case-insensitively after trimming spaces. Non-string numerics convert to `true` when nonzero.
 - `ToBytes` returns `nil` for `nil`, returns an existing `[]byte` as-is, converts strings directly, and stringifies other values.
 

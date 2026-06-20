@@ -2,10 +2,13 @@ package vconv
 
 import (
 	"errors"
+	"math"
 	"testing"
 
 	knifer "github.com/imajinyun/go-knifer"
 )
+
+type facadeNamedString string
 
 func TestConvFacade(t *testing.T) {
 	if ToString(12) != "12" || ToStringDefault(nil, "x") != "x" {
@@ -71,11 +74,17 @@ func TestConvFacadeErrorReturningHelpers(t *testing.T) {
 	if got, err := ToIntE("42"); err != nil || got != 42 {
 		t.Fatalf("ToIntE = %d, %v", got, err)
 	}
+	if got, err := ToInt64E(facadeNamedString("77")); err != nil || got != 77 {
+		t.Fatalf("ToInt64E named string = %d, %v", got, err)
+	}
 	if got, err := ToIntEWithOptions("ignored", WithParseIntFunc(func(string, int, int) (int64, error) { return 17, nil })); err != nil || got != 17 {
 		t.Fatalf("ToIntEWithOptions = %d, %v", got, err)
 	}
 	if got, err := ToInt64E("42.9"); err != nil || got != 42 {
 		t.Fatalf("ToInt64E = %d, %v", got, err)
+	}
+	if got, err := ToFloat64E(facadeNamedString("1.25")); err != nil || got != 1.25 {
+		t.Fatalf("ToFloat64E named string = %v, %v", got, err)
 	}
 	if got, err := ToFloat64E("3.5"); err != nil || got != 3.5 {
 		t.Fatalf("ToFloat64E = %v, %v", got, err)
@@ -86,7 +95,10 @@ func TestConvFacadeErrorReturningHelpers(t *testing.T) {
 
 	for _, err := range []error{
 		func() error { _, err := ToIntE("bad"); return err }(),
+		func() error { _, err := ToIntE(uint64(math.MaxInt64) + 1); return err }(),
 		func() error { _, err := ToInt64E(nil); return err }(),
+		func() error { _, err := ToInt64E(uint64(math.MaxInt64) + 1); return err }(),
+		func() error { _, err := ToInt64E(math.Inf(1)); return err }(),
 		func() error { _, err := ToFloat64E("bad"); return err }(),
 		func() error { _, err := ToBoolE("maybe"); return err }(),
 	} {

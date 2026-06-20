@@ -2,10 +2,17 @@ package conv
 
 import (
 	"errors"
+	"math"
 	"testing"
 
 	knifer "github.com/imajinyun/go-knifer"
 )
+
+type namedNumericString string
+
+type namedInt64 int64
+
+type namedFloat64 float64
 
 func TestToInt(t *testing.T) {
 	if ToInt("123") != 123 {
@@ -66,6 +73,21 @@ func TestErrorReturningNumberConversions(t *testing.T) {
 			expected: 3.5,
 		},
 		{
+			name:     "int64 from named string",
+			convert:  func() (any, error) { return ToInt64E(namedNumericString("77")) },
+			expected: int64(77),
+		},
+		{
+			name:     "int64 from named int64",
+			convert:  func() (any, error) { return ToInt64E(namedInt64(88)) },
+			expected: int64(88),
+		},
+		{
+			name:     "float64 from named float64",
+			convert:  func() (any, error) { return ToFloat64E(namedFloat64(1.25)) },
+			expected: 1.25,
+		},
+		{
 			name:        "int invalid string",
 			convert:     func() (any, error) { return ToIntE("bad") },
 			expectedErr: true,
@@ -78,6 +100,36 @@ func TestErrorReturningNumberConversions(t *testing.T) {
 		{
 			name:        "float64 invalid string",
 			convert:     func() (any, error) { return ToFloat64E("bad") },
+			expectedErr: true,
+		},
+		{
+			name:        "uint64 overflows int64",
+			convert:     func() (any, error) { return ToInt64E(uint64(math.MaxInt64) + 1) },
+			expectedErr: true,
+		},
+		{
+			name:        "uint64 overflows host int",
+			convert:     func() (any, error) { return ToIntE(uint64(math.MaxInt64) + 1) },
+			expectedErr: true,
+		},
+		{
+			name:        "float64 overflows int64",
+			convert:     func() (any, error) { return ToInt64E(float64(math.MaxInt64)) },
+			expectedErr: true,
+		},
+		{
+			name:        "float64 nan cannot narrow to int64",
+			convert:     func() (any, error) { return ToInt64E(math.NaN()) },
+			expectedErr: true,
+		},
+		{
+			name:        "positive infinity cannot narrow to int64",
+			convert:     func() (any, error) { return ToInt64E(math.Inf(1)) },
+			expectedErr: true,
+		},
+		{
+			name:        "negative infinity cannot narrow to int64",
+			convert:     func() (any, error) { return ToInt64E(math.Inf(-1)) },
 			expectedErr: true,
 		},
 	}
@@ -101,5 +153,15 @@ func TestErrorReturningNumberConversions(t *testing.T) {
 				t.Fatalf("got = %#v, want %#v", got, tt.expected)
 			}
 		})
+	}
+}
+
+func TestZeroAndDefaultConversionsKeepLegacyOverflowBehavior(t *testing.T) {
+	input := uint64(math.MaxInt64) + 1
+	if got := ToInt64(input); got != math.MinInt64 {
+		t.Fatalf("ToInt64 overflow legacy value = %d, want %d", got, int64(math.MinInt64))
+	}
+	if got := ToInt64Default(input, 7); got != math.MinInt64 {
+		t.Fatalf("ToInt64Default overflow legacy value = %d, want %d", got, int64(math.MinInt64))
 	}
 }

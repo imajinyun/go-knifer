@@ -4308,7 +4308,8 @@
           "context_aware": false,
           "variadic": false,
           "examples": [
-            "ExampleToInt64E"
+            "ExampleToInt64E",
+            "ExampleToInt64E_overflow"
           ]
         },
         {

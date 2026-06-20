@@ -48,6 +48,15 @@ func ExampleToInt64E() {
 	// <nil>
 }
 
+func ExampleToInt64E_overflow() {
+	value, err := vconv.ToInt64E(uint64(1) << 63)
+	fmt.Println(value)
+	fmt.Println(errors.Is(err, vconv.ErrInvalidConversion))
+	// Output:
+	// 0
+	// true
+}
+
 func ExampleToBoolE() {
 	value, err := vconv.ToBoolE("maybe")
 	fmt.Println(value)

@@ -321,7 +321,7 @@ Quality: 35 functions · 7 with examples · 20.0% example coverage · synopsis s
 | `ToInt64` | `func ToInt64(v any) int64` | ToInt64 converts a value to int64 and returns 0 on failure. | internal | — |
 | `ToInt64Default` | `func ToInt64Default(v any, def int64) int64` | ToInt64Default converts a value to int64 and returns def on failure. | internal | — |
 | `ToInt64DefaultWithOptions` | `func ToInt64DefaultWithOptions(v any, def int64, opts ...Option) int64` | ToInt64DefaultWithOptions converts a value to int64 using per-call options and returns def on failure. | internal | — |
-| `ToInt64E` | `func ToInt64E(v any) (int64, error)` | ToInt64E converts a value to int64 and returns an error on failure. | internal | `ExampleToInt64E` |
+| `ToInt64E` | `func ToInt64E(v any) (int64, error)` | ToInt64E converts a value to int64 and returns an error on failure. | internal | `ExampleToInt64E`, `ExampleToInt64E_overflow` |
 | `ToInt64EWithOptions` | `func ToInt64EWithOptions(v any, opts ...Option) (int64, error)` | ToInt64EWithOptions converts a value to int64 using per-call options and returns an error on failure. | internal | — |
 | `ToInt64WithOptions` | `func ToInt64WithOptions(v any, opts ...Option) int64` | ToInt64WithOptions converts a value to int64 using per-call options and returns 0 on failure. | internal | — |
 | `ToIntDefault` | `func ToIntDefault(v any, def int) int` | ToIntDefault converts a value to int and returns def on failure. | internal | `ExampleToIntDefault` |

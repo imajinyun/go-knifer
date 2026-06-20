@@ -4,6 +4,7 @@ package conv
 import (
 	"errors"
 	"fmt"
+	"math"
 	"reflect"
 	"strconv"
 	"strings"
@@ -158,9 +159,10 @@ func ToIntE(v any) (int, error) { return ToIntEWithOptions(v) }
 
 // ToIntEWithOptions converts a value to int using per-call options and returns an error on failure.
 func ToIntEWithOptions(v any, opts ...Option) (int, error) {
-	i, err := ToInt64EWithOptions(v, opts...)
-	if err != nil {
-		return 0, err
+	cfg := applyOptions(opts)
+	i, ok := toInt64Strict(v, cfg)
+	if !ok || i < int64(math.MinInt) || i > int64(math.MaxInt) {
+		return 0, invalidConversionError("int")
 	}
 	return int(i), nil
 }
@@ -192,7 +194,7 @@ func ToInt64E(v any) (int64, error) { return ToInt64EWithOptions(v) }
 // ToInt64EWithOptions converts a value to int64 using per-call options and returns an error on failure.
 func ToInt64EWithOptions(v any, opts ...Option) (int64, error) {
 	cfg := applyOptions(opts)
-	i, ok := toInt64(v, cfg)
+	i, ok := toInt64Strict(v, cfg)
 	if !ok {
 		return 0, invalidConversionError("int64")
 	}
@@ -277,6 +279,17 @@ func ToBoolEWithOptions(v any, opts ...Option) (bool, error) {
 		}
 		return b, nil
 	}
+	rv := reflect.ValueOf(v)
+	switch rv.Kind() {
+	case reflect.Bool:
+		return rv.Bool(), nil
+	case reflect.String:
+		b, err := cfg.parseBool(rv.String())
+		if err != nil {
+			return false, invalidConversionError("bool")
+		}
+		return b, nil
+	}
 	if i, ok := toInt64(v, cfg); ok {
 		return i != 0, nil
 	}
@@ -299,6 +312,17 @@ func ToBoolDefaultWithOptions(v any, def bool, opts ...Option) bool {
 		return x
 	case string:
 		b, err := cfg.parseBool(x)
+		if err != nil {
+			return def
+		}
+		return b
+	}
+	rv := reflect.ValueOf(v)
+	switch rv.Kind() {
+	case reflect.Bool:
+		return rv.Bool()
+	case reflect.String:
+		b, err := cfg.parseBool(rv.String())
 		if err != nil {
 			return def
 		}
@@ -363,17 +387,7 @@ func toInt64(v any, cfg config) (int64, bool) {
 		}
 		return 0, true
 	case string:
-		s := strings.TrimSpace(x)
-		if s == "" {
-			return 0, false
-		}
-		if i, err := cfg.parseInt(s, 10, 64); err == nil {
-			return i, true
-		}
-		if f, err := cfg.parseFloat(s, 64); err == nil {
-			return int64(f), true
-		}
-		return 0, false
+		return parseStringToInt64(x, cfg)
 	}
 	rv := reflect.ValueOf(v)
 	switch rv.Kind() {
@@ -383,8 +397,109 @@ func toInt64(v any, cfg config) (int64, bool) {
 		return int64(rv.Uint()), true
 	case reflect.Float32, reflect.Float64:
 		return int64(rv.Float()), true
+	case reflect.String:
+		return parseStringToInt64(rv.String(), cfg)
 	}
 	return 0, false
+}
+
+func toInt64Strict(v any, cfg config) (int64, bool) {
+	if v == nil {
+		return 0, false
+	}
+	switch x := v.(type) {
+	case int:
+		return int64(x), true
+	case int8:
+		return int64(x), true
+	case int16:
+		return int64(x), true
+	case int32:
+		return int64(x), true
+	case int64:
+		return x, true
+	case uint:
+		if uint64(x) > math.MaxInt64 {
+			return 0, false
+		}
+		return int64(x), true
+	case uint8:
+		return int64(x), true
+	case uint16:
+		return int64(x), true
+	case uint32:
+		return int64(x), true
+	case uint64:
+		if x > math.MaxInt64 {
+			return 0, false
+		}
+		return int64(x), true
+	case float32:
+		return float64ToInt64Strict(float64(x))
+	case float64:
+		return float64ToInt64Strict(x)
+	case bool:
+		if x {
+			return 1, true
+		}
+		return 0, true
+	case string:
+		return parseStringToInt64Strict(x, cfg)
+	}
+	rv := reflect.ValueOf(v)
+	switch rv.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return rv.Int(), true
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		u := rv.Uint()
+		if u > math.MaxInt64 {
+			return 0, false
+		}
+		return int64(u), true
+	case reflect.Float32, reflect.Float64:
+		return float64ToInt64Strict(rv.Float())
+	case reflect.String:
+		return parseStringToInt64Strict(rv.String(), cfg)
+	}
+	return 0, false
+}
+
+func parseStringToInt64(s string, cfg config) (int64, bool) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return 0, false
+	}
+	if i, err := cfg.parseInt(s, 10, 64); err == nil {
+		return i, true
+	}
+	if f, err := cfg.parseFloat(s, 64); err == nil {
+		return int64(f), true
+	}
+	return 0, false
+}
+
+func parseStringToInt64Strict(s string, cfg config) (int64, bool) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return 0, false
+	}
+	if i, err := cfg.parseInt(s, 10, 64); err == nil {
+		return i, true
+	}
+	if f, err := cfg.parseFloat(s, 64); err == nil {
+		return float64ToInt64Strict(f)
+	}
+	return 0, false
+}
+
+func float64ToInt64Strict(f float64) (int64, bool) {
+	if math.IsNaN(f) || math.IsInf(f, 0) {
+		return 0, false
+	}
+	if f < float64(math.MinInt64) || f >= -float64(math.MinInt64) {
+		return 0, false
+	}
+	return int64(f), true
 }
 
 func toFloat64(v any, cfg config) (float64, bool) {
@@ -398,6 +513,21 @@ func toFloat64(v any, cfg config) (float64, bool) {
 		return x, true
 	case string:
 		s := strings.TrimSpace(x)
+		if s == "" {
+			return 0, false
+		}
+		f, err := cfg.parseFloat(s, 64)
+		if err == nil {
+			return f, true
+		}
+		return 0, false
+	}
+	rv := reflect.ValueOf(v)
+	switch rv.Kind() {
+	case reflect.Float32, reflect.Float64:
+		return rv.Float(), true
+	case reflect.String:
+		s := strings.TrimSpace(rv.String())
 		if s == "" {
 			return 0, false
 		}

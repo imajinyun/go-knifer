@@ -7,6 +7,8 @@ import (
 	knifer "github.com/imajinyun/go-knifer"
 )
 
+type namedBool bool
+
 func TestToBool(t *testing.T) {
 	cases := map[string]bool{
 		"true": true, "yes": true, "y": true, "ok": true, "1": true, "on": true,
@@ -33,8 +35,10 @@ func TestToBoolE(t *testing.T) {
 		expectedErr bool
 	}{
 		{name: "string token", input: "yes", expected: true},
+		{name: "named string token", input: namedNumericString("yes"), expected: true},
 		{name: "int value", input: 0, expected: false},
 		{name: "bool value", input: true, expected: true},
+		{name: "named bool value", input: namedBool(true), expected: true},
 		{name: "nil input", input: nil, expectedErr: true},
 		{name: "invalid string", input: "disabled", expectedErr: true},
 	}
