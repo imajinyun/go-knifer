@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	knifer "github.com/imajinyun/go-knifer"
+	"github.com/makiuchi-d/gozxing"
 )
 
 func TestQRCodePNGAndDecode(t *testing.T) {
@@ -271,6 +272,23 @@ func TestQRCodeInvalidArgsClassified(t *testing.T) {
 		{"empty content", func() error { _, err := QRCodePNG(""); return err }(), knifer.ErrCodeInvalidInput},
 		{"bad size", func() error { _, err := QRCodePNG("x", WithQRCodeSize(0)); return err }(), knifer.ErrCodeInvalidInput},
 		{"bad margin", func() error { _, err := QRCodePNG("x", WithQRCodeMargin(-1)); return err }(), knifer.ErrCodeInvalidInput},
+		{"nil foreground", func() error { _, err := QRCodePNG("x", WithQRCodeForeground(nil)); return err }(), knifer.ErrCodeInvalidInput},
+		{"nil background", func() error { _, err := QRCodePNG("x", WithQRCodeBackground(nil)); return err }(), knifer.ErrCodeInvalidInput},
+		{"nil colors foreground", func() error { _, err := QRCodePNG("x", WithQRCodeColors(nil, color.White)); return err }(), knifer.ErrCodeInvalidInput},
+		{"nil colors background", func() error { _, err := QRCodePNG("x", WithQRCodeColors(color.Black, nil)); return err }(), knifer.ErrCodeInvalidInput},
+		{"empty character set", func() error { _, err := QRCodePNG("x", WithBarcodeCharacterSet(" ")); return err }(), knifer.ErrCodeInvalidInput},
+		{"bad qr version", func() error { _, err := QRCodePNG("x", WithQRCodeVersion(41)); return err }(), knifer.ErrCodeInvalidInput},
+		{"bad qr mask", func() error { _, err := QRCodePNG("x", WithQRCodeMaskPattern(8)); return err }(), knifer.ErrCodeInvalidInput},
+		{"bad force code set", func() error {
+			_, err := BarcodePNG("x", BarcodeFormatCode128, WithBarcodeForceCodeSet("D"))
+			return err
+		}(), knifer.ErrCodeInvalidInput},
+		{"nil logo", func() error { _, err := QRCodePNG("x", WithQRCodeLogo(nil)); return err }(), knifer.ErrCodeInvalidInput},
+		{"bad logo size", func() error { _, err := QRCodePNG("x", WithQRCodeLogoSize(0, 1)); return err }(), knifer.ErrCodeInvalidInput},
+		{"bad error correction", func() error {
+			_, err := QRCodePNG("x", WithQRCodeErrorCorrection(QRErrorCorrectionUnknown))
+			return err
+		}(), knifer.ErrCodeInvalidInput},
 		{"unsupported writer", func() error { _, err := BarcodePNG("x", BarcodeFormatAztec); return err }(), knifer.ErrCodeUnsupported},
 		{"non qr logo unsupported", func() error {
 			_, err := BarcodePNG("123456789012", BarcodeFormatEAN13, WithBarcodeLogo(image.NewRGBA(image.Rect(0, 0, 1, 1))))
@@ -283,6 +301,16 @@ func TestQRCodeInvalidArgsClassified(t *testing.T) {
 			_, err := DecodeBarcode(strings.NewReader("not an image"), WithDecodeFormats(BarcodeFormatPDF417))
 			return err
 		}(), knifer.ErrCodeUnsupported},
+		{"empty decode formats", func() error {
+			_, err := DecodeBarcode(strings.NewReader("not an image"), WithDecodeFormats())
+			return err
+		}(), knifer.ErrCodeInvalidInput},
+		{"empty decode character set", func() error {
+			_, err := DecodeBarcode(strings.NewReader("not an image"), WithDecodeCharacterSet(" "))
+			return err
+		}(), knifer.ErrCodeInvalidInput},
+		{"nil writer", func() error { return WriteQRCode(nil, "x") }(), knifer.ErrCodeInvalidInput},
+		{"nil image decode", func() error { _, err := DecodeQRCodeImage(nil); return err }(), knifer.ErrCodeInvalidInput},
 		{"decode invalid", func() error { _, err := DecodeQRCode(strings.NewReader("not an image")); return err }(), knifer.ErrCodeInvalidInput},
 	}
 	for _, tc := range cases {
@@ -299,6 +327,152 @@ func TestQRCodeInvalidArgsClassified(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestQRCodeAdditionalOptionsAndWrappers(t *testing.T) {
+	logo := solidTestLogo(color.RGBA{B: 255, A: 255})
+	data, err := QRCodePNG("configured payload",
+		WithQRCodeSize(96),
+		WithQRCodeColors(color.RGBA{R: 10, A: 255}, color.RGBA{G: 20, A: 255}),
+		WithBarcodeCharacterSet("UTF-8"),
+		WithQRCodeVersion(4),
+		WithQRCodeMaskPattern(2),
+		WithQRCodeLogo(logo),
+		WithQRCodeLogoSize(12, 12),
+		WithBarcodeEncodeHint(gozxing.EncodeHintType_MARGIN, 1),
+		nil,
+	)
+	if err != nil {
+		t.Fatalf("QRCodePNG with options: %v", err)
+	}
+	if len(data) == 0 {
+		t.Fatal("QRCodePNG returned empty data")
+	}
+
+	var buf bytes.Buffer
+	if err := WriteQRCode(&buf, "write qr payload", WithQRCodeSize(64)); err != nil {
+		t.Fatalf("WriteQRCode: %v", err)
+	}
+	if !bytes.HasPrefix(buf.Bytes(), []byte("\x89PNG")) {
+		t.Fatalf("WriteQRCode prefix = %q, want PNG", buf.Bytes()[:min(buf.Len(), 4)])
+	}
+
+	img, err := QRCodeImage("decode image payload", WithQRCodeSize(160), WithQRCodeMargin(2))
+	if err != nil {
+		t.Fatalf("QRCodeImage: %v", err)
+	}
+	result, err := DecodeQRCodeImage(img, WithDecodeTryHarder(true), WithDecodePureBarcode(true), WithDecodeAlsoInverted(true), WithDecodeCharacterSet("UTF-8"), WithDecodeHint(gozxing.DecodeHintType_OTHER, "ignored"))
+	if err != nil {
+		t.Fatalf("DecodeQRCodeImage: %v", err)
+	}
+	if result.Text != "decode image payload" || result.Format != BarcodeFormatQRCode {
+		t.Fatalf("DecodeQRCodeImage result = %+v", result)
+	}
+}
+
+func TestBarcodeOneDimensionalOptions(t *testing.T) {
+	pngBytes, err := BarcodePNG("123456789012", BarcodeFormatCode128,
+		WithBarcodeSize(240, 80),
+		WithBarcodeColors(color.Black, color.White),
+		WithBarcodeCharacterSet("UTF-8"),
+		WithBarcodeForceCodeSet(" b "),
+		WithBarcodeGS1Format(false),
+	)
+	if err != nil {
+		t.Fatalf("BarcodePNG: %v", err)
+	}
+	if !bytes.HasPrefix(pngBytes, []byte("\x89PNG")) {
+		t.Fatalf("BarcodePNG prefix = %q, want PNG", pngBytes[:min(len(pngBytes), 4)])
+	}
+}
+
+func TestBarcodeInternalFormatMappings(t *testing.T) {
+	formats := []BarcodeFormat{
+		BarcodeFormatAztec,
+		BarcodeFormatCodabar,
+		BarcodeFormatCode39,
+		BarcodeFormatCode93,
+		BarcodeFormatCode128,
+		BarcodeFormatDataMatrix,
+		BarcodeFormatEAN8,
+		BarcodeFormatEAN13,
+		BarcodeFormatITF,
+		BarcodeFormatMaxiCode,
+		BarcodeFormatPDF417,
+		BarcodeFormatQRCode,
+		BarcodeFormatRSS14,
+		BarcodeFormatRSSExpanded,
+		BarcodeFormatUPCA,
+		BarcodeFormatUPCE,
+	}
+	for _, format := range formats {
+		t.Run(format.String(), func(t *testing.T) {
+			goFormat, err := toGozxingBarcodeFormat(format)
+			if err != nil {
+				t.Fatalf("toGozxingBarcodeFormat: %v", err)
+			}
+			if got := fromGozxingBarcodeFormat(goFormat); got != format {
+				t.Fatalf("fromGozxingBarcodeFormat = %v, want %v", got, format)
+			}
+		})
+	}
+	if _, err := toGozxingBarcodeFormat(BarcodeFormatUnknown); !errorsIsCode(err, knifer.ErrCodeUnsupported) {
+		t.Fatalf("toGozxingBarcodeFormat unknown error = %v, want unsupported", err)
+	}
+	if got := fromGozxingBarcodeFormat(gozxing.BarcodeFormat(-1)); got != BarcodeFormatUnknown {
+		t.Fatalf("fromGozxingBarcodeFormat unknown = %v, want unknown", got)
+	}
+
+	levels := []QRErrorCorrectionLevel{
+		QRErrorCorrectionLow,
+		QRErrorCorrectionMedium,
+		QRErrorCorrectionQuartile,
+		QRErrorCorrectionHigh,
+	}
+	for _, level := range levels {
+		if _, err := toGozxingQRECLevel(level); err != nil {
+			t.Fatalf("toGozxingQRECLevel(%v): %v", level, err)
+		}
+	}
+}
+
+func TestBarcodeWriterAndReaderDispatch(t *testing.T) {
+	writerFormats := []BarcodeFormat{
+		BarcodeFormatCodabar,
+		BarcodeFormatCode39,
+		BarcodeFormatCode93,
+		BarcodeFormatCode128,
+		BarcodeFormatDataMatrix,
+		BarcodeFormatEAN8,
+		BarcodeFormatEAN13,
+		BarcodeFormatITF,
+		BarcodeFormatQRCode,
+		BarcodeFormatUPCA,
+		BarcodeFormatUPCE,
+	}
+	for _, format := range writerFormats {
+		t.Run("writer_"+format.String(), func(t *testing.T) {
+			if _, err := barcodeWriter(format); err != nil {
+				t.Fatalf("barcodeWriter(%v): %v", format, err)
+			}
+		})
+	}
+	if _, err := barcodeWriter(BarcodeFormatPDF417); !errorsIsCode(err, knifer.ErrCodeUnsupported) {
+		t.Fatalf("barcodeWriter unsupported = %v", err)
+	}
+
+	readers := barcodeReaders([]BarcodeFormat{BarcodeFormatQRCode, BarcodeFormatDataMatrix, BarcodeFormatCode128, BarcodeFormatCode39, BarcodeFormatCode93, BarcodeFormatEAN13, BarcodeFormatEAN8, BarcodeFormatUPCA, BarcodeFormatUPCE, BarcodeFormatITF, BarcodeFormatCodabar, BarcodeFormatRSS14, BarcodeFormatAztec, BarcodeFormatPDF417})
+	if got, want := len(readers), 13; got != want {
+		t.Fatalf("barcodeReaders count = %d, want %d", got, want)
+	}
+	if got := len(barcodeReaders(nil)); got != len(SupportedDecodeBarcodeFormats()) {
+		t.Fatalf("barcodeReaders(nil) = %d, want supported format count", got)
+	}
+}
+
+func errorsIsCode(err error, code knifer.ErrCode) bool {
+	got, ok := knifer.CodeOf(err)
+	return ok && got == code
 }
 
 func solidTestLogo(c color.Color) image.Image {

@@ -151,3 +151,83 @@ func TestCaptchaWriteErrorContract(t *testing.T) {
 		t.Fatalf("Write empty image error = %v, want ErrCodeInvalidInput", err)
 	}
 }
+
+func TestCaptchaAdditionalOptionsAndHelpers(t *testing.T) {
+	c := NewLineCaptchaWithOptions(100, 40,
+		nil,
+		WithFontSize(0.6),
+		WithGenerator(fixedGenerator{code: "AbCd"}),
+		WithInterfereCount(0),
+		WithRandomInt(func(max int) int { return max + 1 }),
+	)
+	if c.FontSize != 0.6 {
+		t.Fatalf("FontSize = %v, want 0.6", c.FontSize)
+	}
+	if c.Generator() == nil {
+		t.Fatal("Generator should return configured generator")
+	}
+	if got := c.randInt(5); got != 1 {
+		t.Fatalf("randInt wraps provider output = %d, want 1", got)
+	}
+	if got := (&AbstractCaptcha{}).randInt(0); got != 0 {
+		t.Fatalf("randInt(0) = %d, want 0", got)
+	}
+	c.randomInt = func(max int) int { return -3 }
+	if got := c.randInt(5); got != 0 {
+		t.Fatalf("randInt clamps negative provider output = %d, want 0", got)
+	}
+	if got := c.randIntRange(7, 7); got != 7 {
+		t.Fatalf("randIntRange equal bounds = %d, want 7", got)
+	}
+	if !VerifyIgnoreCase(" AbCd ", "abcd") || VerifyIgnoreCase("AbCd", "abce") {
+		t.Fatal("VerifyIgnoreCase should trim and compare case-insensitively")
+	}
+}
+
+func TestCaptchaWriteToFileWithOptionsSkipsParentCreation(t *testing.T) {
+	c := NewLineCaptchaWithOptions(100, 40, WithGenerator(fixedGenerator{code: "ABCD"}), WithInterfereCount(0))
+	c.CreateCode()
+
+	mkdirCalled := false
+	var openFlag int
+	var written bytes.Buffer
+	err := c.WriteToFileWithOptions("/virtual/captcha.png",
+		WithCreateParents(false),
+		WithMkdirAll(func(path string, perm fs.FileMode) error {
+			mkdirCalled = true
+			return nil
+		}),
+		WithOpenFile(func(path string, flag int, perm fs.FileMode) (io.WriteCloser, error) {
+			openFlag = flag
+			return nopWriteCloser{Writer: &written}, nil
+		}),
+		nil,
+	)
+	if err != nil {
+		t.Fatalf("WriteToFileWithOptions: %v", err)
+	}
+	if mkdirCalled {
+		t.Fatal("mkdirAll should not be called when parent creation is disabled")
+	}
+	if openFlag&os.O_EXCL != 0 || written.Len() == 0 {
+		t.Fatalf("open flag = %#x written=%d, want no O_EXCL and non-empty data", openFlag, written.Len())
+	}
+}
+
+func TestAbstractCaptchaImageBytesDefensiveCopy(t *testing.T) {
+	a := &AbstractCaptcha{}
+	if got := a.ImageBytes(); got != nil {
+		t.Fatalf("empty ImageBytes = %v, want nil", got)
+	}
+	a.setImageBytes([]byte{1, 2, 3})
+	got := a.ImageBytes()
+	got[0] = 9
+	if a.ImageBytes()[0] != 1 {
+		t.Fatal("AbstractCaptcha.ImageBytes exposed internal backing array")
+	}
+
+	path := filepath.Join(t.TempDir(), "captcha.png")
+	if err := a.WriteToFile(path); err != nil {
+		t.Fatalf("WriteToFile: %v", err)
+	}
+}
