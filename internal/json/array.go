@@ -73,6 +73,9 @@ func (a *JSONArray) AddAll(values ...any) *JSONArray {
 
 // Set writes at the given index and fills gaps with nil.
 func (a *JSONArray) Set(i int, value any) *JSONArray {
+	if i < 0 {
+		return a
+	}
 	v := wrap(value, a.cfg)
 	for len(a.values) <= i {
 		a.values = append(a.values, Null)

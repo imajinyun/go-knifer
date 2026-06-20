@@ -37,3 +37,33 @@ func TestJSONToXML(t *testing.T) {
 		t.Fatalf("xml mismatch:\n got: %s\nwant: %s", x, want)
 	}
 }
+
+func TestMapToJSONObjectOrdersKeysDeterministically(t *testing.T) {
+	obj := mapToJSONObject(map[string]any{
+		"zeta": map[string]any{"b": "bee", "a": "aye"},
+		"alpha": []any{
+			map[string]any{"d": "dee", "c": "see"},
+		},
+	})
+	if got, want := obj.String(), `{"alpha":[{"c":"see","d":"dee"}],"zeta":{"a":"aye","b":"bee"}}`; got != want {
+		t.Fatalf("mapToJSONObject output = %s, want %s", got, want)
+	}
+}
+
+func TestJSONXMLBridgePlainValueBoundaries(t *testing.T) {
+	if got := jsonValueToMap("scalar"); got["element"] != "scalar" {
+		t.Fatalf("jsonValueToMap scalar = %#v", got)
+	}
+	if got := jsonObjectToMap(nil); got != nil {
+		t.Fatalf("jsonObjectToMap(nil) = %#v", got)
+	}
+	arr := NewJSONArray().Add(NewJSONObject().Set("name", "alice")).Add(nil)
+	plain := jsonValueToPlain(arr).([]any)
+	if len(plain) != 2 || plain[1] != nil {
+		t.Fatalf("jsonValueToPlain array = %#v", plain)
+	}
+	obj := mapXMLValue(map[string]any{"nested": map[string]any{"value": "ok"}}).(*JSONObject)
+	if obj.GetJSONObject("nested").GetString("value") != "ok" {
+		t.Fatalf("mapXMLValue nested = %s", obj.String())
+	}
+}

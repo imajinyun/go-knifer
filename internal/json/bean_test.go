@@ -2,9 +2,12 @@ package json
 
 import (
 	stdjson "encoding/json"
+	"errors"
 	"io"
 	"strings"
 	"testing"
+
+	knifer "github.com/imajinyun/go-knifer"
 )
 
 func TestToBeanWithOptionsUsesDecoderFactory(t *testing.T) {
@@ -80,5 +83,25 @@ func TestToBeanWithOptionsUsesUnmarshalFunc(t *testing.T) {
 	}
 	if !called || u.Name != "provided" {
 		t.Fatalf("unmarshal provider called=%v user=%+v", called, u)
+	}
+}
+
+func TestToBeanProviderErrorsAreWrappedAsJSONError(t *testing.T) {
+	type user struct {
+		Name string `json:"name"`
+	}
+	var u user
+	sentinel := errors.New("decode failed")
+	err := ToBeanWithOptions(`{"name":"ignored"}`, &u, WithBeanUnmarshalFunc(func([]byte, any) error { return sentinel }))
+	if err == nil {
+		t.Fatal("ToBeanWithOptions provider error should fail")
+	}
+	if !errors.Is(err, sentinel) || !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("ToBeanWithOptions err = %v, want wrapped provider and invalid input", err)
+	}
+
+	err = ToBeanWithOptions(`{"name":"ignored"}`, &u, WithBeanConfig(&Config{UnmarshalFunc: func([]byte, any) error { return sentinel }}))
+	if err == nil || !errors.Is(err, sentinel) || !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("ToBeanWithOptions config unmarshal err = %v, want wrapped provider and invalid input", err)
 	}
 }

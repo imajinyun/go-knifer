@@ -2,6 +2,8 @@ package json
 
 import (
 	stdjson "encoding/json"
+	"errors"
+	"io"
 	"strconv"
 	"strings"
 	"testing"
@@ -320,5 +322,213 @@ func TestPrettyOutput(t *testing.T) {
 	}
 	if s, err := ToJSONPrettyStr(map[string]any{"x": 1}); err != nil || !strings.Contains(s, "\n") {
 		t.Fatalf("ToJSONPrettyStr = %q err=%v", s, err)
+	}
+}
+
+func TestMapSerializationIsDeterministic(t *testing.T) {
+	input := map[string]any{
+		"zeta":  1,
+		"alpha": 2,
+		"mid":   map[string]any{"b": true, "a": false},
+	}
+	const want = `{"alpha":2,"mid":{"a":false,"b":true},"zeta":1}`
+	for i := 0; i < 20; i++ {
+		got, err := ToJSONStr(input)
+		if err != nil {
+			t.Fatalf("ToJSONStr: %v", err)
+		}
+		if got != want {
+			t.Fatalf("iteration %d ToJSONStr = %s, want %s", i, got, want)
+		}
+	}
+}
+
+func TestJSONRealUserPathBeanRoundTrip(t *testing.T) {
+	obj, err := ParseObj(`{"user":{"name":"alice","tags":["go"]}}`)
+	if err != nil {
+		t.Fatalf("ParseObj: %v", err)
+	}
+	if err := obj.PutByPath("user.tags[1]", "json"); err != nil {
+		t.Fatalf("PutByPath tags: %v", err)
+	}
+	if err := obj.PutByPath("user.profile.active", true); err != nil {
+		t.Fatalf("PutByPath profile: %v", err)
+	}
+
+	type profile struct {
+		Active bool `json:"active"`
+	}
+	type user struct {
+		Name    string   `json:"name"`
+		Tags    []string `json:"tags"`
+		Profile profile  `json:"profile"`
+	}
+	type payload struct {
+		User user `json:"user"`
+	}
+	var out payload
+	if err := ToBean(obj, &out); err != nil {
+		t.Fatalf("ToBean: %v", err)
+	}
+	if out.User.Name != "alice" || len(out.User.Tags) != 2 || out.User.Tags[1] != "json" || !out.User.Profile.Active {
+		t.Fatalf("round trip payload = %#v", out)
+	}
+	encoded, err := ToJSONStr(obj)
+	if err != nil {
+		t.Fatalf("ToJSONStr: %v", err)
+	}
+	for _, want := range []string{`"name":"alice"`, `"tags":["go","json"]`, `"active":true`} {
+		if !strings.Contains(encoded, want) {
+			t.Fatalf("encoded %s missing %s", encoded, want)
+		}
+	}
+}
+
+func TestArrayAdditionalBoundaryMethods(t *testing.T) {
+	cfg := NewConfig()
+	cfg.IgnoreNullValue = true
+	arr := NewJSONArrayWithConfig(cfg)
+	arr.Add(nil).Add("kept")
+	if arr.Len() != 1 || arr.GetString(0) != "kept" {
+		t.Fatalf("IgnoreNullValue Add = %s", arr.String())
+	}
+	arr.Insert(-10, "front")
+	arr.Insert(10, "back")
+	if arr.GetString(0) != "front" || arr.GetString(2) != "back" {
+		t.Fatalf("Insert boundaries = %s", arr.String())
+	}
+	if arr.Remove(-1) || arr.Remove(99) {
+		t.Fatal("Remove out of range should return false")
+	}
+	if got := NewJSONArray().ToSlice(); got == nil || len(got) != 0 {
+		t.Fatalf("empty ToSlice = %#v", got)
+	}
+	if arr.GetStringOr(99, "def") != "def" || arr.GetBoolOr(99, true) != true {
+		t.Fatal("array getter defaults not applied")
+	}
+	if arr.GetJSONObject(0) != nil || arr.GetJSONArray(0) != nil {
+		t.Fatal("scalar array item should not be object/array")
+	}
+}
+
+func TestPathErrorAndContainerBoundaries(t *testing.T) {
+	obj := NewJSONObject()
+	for _, path := range []string{"", "items[abc]", "items[1"} {
+		if err := obj.PutByPath(path, "x"); err == nil {
+			t.Fatalf("PutByPath(%q) should fail", path)
+		}
+	}
+	if err := PutByPath(obj, "[0]", "x"); err == nil {
+		t.Fatal("object should reject root index")
+	}
+	arr := NewJSONArray().Add(NewJSONObject().Set("name", "first"))
+	if got := arr.GetByPath("0.name"); got != "first" {
+		t.Fatalf("array numeric key path = %v", got)
+	}
+	if err := arr.PutByPath("name", "x"); err == nil {
+		t.Fatal("array should reject key path")
+	}
+	if err := PutByPath("not-container", "a.b", "x"); err == nil {
+		t.Fatal("non-container root should fail")
+	}
+	if got := GetByPath(NewJSONObject().Set("leaf", "value"), "leaf.name"); got != nil {
+		t.Fatalf("path through scalar = %v", got)
+	}
+}
+
+func TestScalarConvertersAndConfigProviders(t *testing.T) {
+	if NewConfig().Clone() == nil || (*Config)(nil).Clone() == nil {
+		t.Fatal("Clone should always return config")
+	}
+	cfg := NewConfig()
+	cfg.ParseFloatFunc = func(s string, bitSize int) (float64, error) {
+		if s == "custom-float" {
+			return 12.5, nil
+		}
+		return 0, errors.New("bad float")
+	}
+	cfg.ParseBoolFunc = func(s string) (bool, error) {
+		if s == "custom-bool" {
+			return true, nil
+		}
+		return false, errors.New("bad bool")
+	}
+	cfg.FormatFloatFunc = func(float64, byte, int, int) string { return "formatted-float" }
+	obj := NewJSONObjectWithConfig(cfg).
+		Set("float", "custom-float").
+		Set("bool", "custom-bool").
+		Set("badFloat", "nope").
+		Set("badBool", "nope").
+		Set("rawFloat", 1.25)
+	if obj.GetFloat64("float") != 12.5 || !obj.GetBool("bool") {
+		t.Fatalf("custom scalar providers failed: %s", obj.String())
+	}
+	if obj.GetFloat64Or("badFloat", 7.5) != 7.5 || obj.GetBoolOr("badBool", true) != true {
+		t.Fatal("failed scalar parsing should return defaults")
+	}
+	if obj.GetString("rawFloat") != "formatted-float" {
+		t.Fatalf("custom format float = %q", obj.GetString("rawFloat"))
+	}
+	if NewJSONObject().Set("arr", NewJSONArray().Add(1)).GetString("arr") != "[1]" {
+		t.Fatal("toString should serialize nested array")
+	}
+}
+
+func TestPathRootAndInvalidContainerBoundaries(t *testing.T) {
+	obj := NewJSONObject().Set("name", "root")
+	if got := obj.GetByPath("$"); got != obj {
+		t.Fatalf("GetByPath($) = %#v, want root", got)
+	}
+	if err := obj.PutByPath("$", "bad"); err == nil {
+		t.Fatal("PutByPath($) should reject empty resolved path")
+	}
+	if got := GetByPath(NewJSONArray().Add("x"), "name"); got != nil {
+		t.Fatalf("array key lookup should fail, got %#v", got)
+	}
+	if err := obj.PutByPath("name.first", "bad"); err == nil {
+		t.Fatal("path through scalar should fail")
+	}
+	if err := obj.PutByPath("name[0]", "bad"); err == nil {
+		t.Fatal("object scalar should reject indexed continuation")
+	}
+}
+
+func TestMalformedNestedJSONErrorContracts(t *testing.T) {
+	for _, src := range []string{
+		`{"a":`,
+		`{"a":1`,
+		`[1`,
+		`[1,`,
+		`1 true`,
+	} {
+		t.Run(src, func(t *testing.T) {
+			if _, err := Parse(src); err == nil {
+				t.Fatalf("Parse(%q) should fail", src)
+			}
+		})
+	}
+}
+
+func TestEncodeProviderFallbacksForStructWrapping(t *testing.T) {
+	type tagged struct {
+		Name string `json:"name"`
+	}
+	if got, err := ToJSONStr(tagged{Name: "alice"}, WithUnmarshalFunc(func([]byte, any) error { return errors.New("decode failed") })); err != nil || got != `"{alice}"` {
+		t.Fatalf("ToJSONStr with failing unmarshal = %s err=%v", got, err)
+	}
+	if got, err := ToJSONStr(tagged{Name: "bob"}, WithMarshalFunc(func(any) ([]byte, error) { return nil, errors.New("marshal failed") })); err != nil || got != `"{bob}"` {
+		t.Fatalf("ToJSONStr with failing marshal = %s err=%v", got, err)
+	}
+	if got, err := ToJSONStr(tagged{Name: "carol"}, WithDecoderFactory(func(io.Reader) *stdjson.Decoder { return nil })); err != nil || got != `"{carol}"` {
+		t.Fatalf("ToJSONStr with nil decoder = %s err=%v", got, err)
+	}
+}
+
+func TestQuoteEscapesControlCharacters(t *testing.T) {
+	quoted := Quote("a\rb\bc\fd\x01")
+	for _, want := range []string{`\r`, `\b`, `\f`, `\u0001`} {
+		if !strings.Contains(quoted, want) {
+			t.Fatalf("Quote output %q missing %s", quoted, want)
+		}
 	}
 }

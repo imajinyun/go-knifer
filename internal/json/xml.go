@@ -1,6 +1,10 @@
 package json
 
-import xmlimpl "github.com/imajinyun/go-knifer/internal/xml"
+import (
+	"sort"
+
+	xmlimpl "github.com/imajinyun/go-knifer/internal/xml"
+)
 
 // XMLToJSON parses XML text into an ordered JSON object.
 func XMLToJSON(xmlStr string) (*JSONObject, error) {
@@ -36,6 +40,7 @@ func mapToJSONObject(m map[string]any) *JSONObject {
 	for k := range m {
 		keys = append(keys, k)
 	}
+	sort.Strings(keys)
 	for _, k := range keys {
 		obj.Set(k, mapXMLValue(m[k]))
 	}

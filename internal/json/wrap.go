@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"reflect"
+	"sort"
 	"time"
 )
 
@@ -73,10 +74,13 @@ func wrap(v any, cfg *Config) any {
 	case reflect.Map:
 		obj := NewJSONObjectWithConfig(cfg)
 		// Only string keys are supported.
-		iter := rv.MapRange()
-		for iter.Next() {
-			k := cfg.sprint(iter.Key().Interface())
-			obj.Set(k, wrap(iter.Value().Interface(), cfg))
+		keys := rv.MapKeys()
+		sort.Slice(keys, func(i, j int) bool {
+			return cfg.sprint(keys[i].Interface()) < cfg.sprint(keys[j].Interface())
+		})
+		for _, key := range keys {
+			k := cfg.sprint(key.Interface())
+			obj.Set(k, wrap(rv.MapIndex(key).Interface(), cfg))
 		}
 		return obj
 	case reflect.Slice, reflect.Array:

@@ -2,9 +2,12 @@ package json
 
 import (
 	stdjson "encoding/json"
+	"errors"
 	"io"
 	"strings"
 	"testing"
+
+	knifer "github.com/imajinyun/go-knifer"
 )
 
 func TestParseObjAndArrayWithOptionsUseUnmarshalFunc(t *testing.T) {
@@ -52,5 +55,21 @@ func TestParseWithOptionsUsesDecoderFactory(t *testing.T) {
 	}
 	if _, err := ParseWithOptions(`{"ignored":true}`, WithParseDecoderFactory(func(io.Reader) *stdjson.Decoder { return nil })); err == nil {
 		t.Fatal("nil decoder factory should fail")
+	}
+}
+
+func TestParseProviderErrorsAreWrappedAsJSONError(t *testing.T) {
+	sentinel := errors.New("provider failed")
+	_, err := ParseWithOptions(`{"ignored":true}`, WithParseUnmarshalFunc(func([]byte, any) error { return sentinel }))
+	if err == nil {
+		t.Fatal("ParseWithOptions provider error should fail")
+	}
+	if !errors.Is(err, sentinel) || !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("ParseWithOptions err = %v, want wrapped provider and invalid input", err)
+	}
+
+	_, err = ParseArrayWithOptions(`{"not":"array"}`, WithParseUnmarshalFunc(func([]byte, any) error { return nil }))
+	if err == nil || !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("ParseArrayWithOptions type mismatch err = %v, want invalid input", err)
 	}
 }
