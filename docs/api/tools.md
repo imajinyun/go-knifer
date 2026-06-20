@@ -12,7 +12,7 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Module | `github.com/imajinyun/go-knifer` |
 | Packages | 54 |
 | Functions | 2604 |
-| Functions with examples | 566 |
+| Functions with examples | 652 |
 | Context-aware functions | 36 |
 | Functions returning error | 603 |
 | Variadic functions | 776 |
@@ -1193,101 +1193,101 @@ Import path: `github.com/imajinyun/go-knifer/vimg`
 
 Package vimg provides public APIs for image utilities.
 
-Quality: 91 functions · 5 with examples · 5.5% example coverage · synopsis sources: facade=91, internal=0, empty=0
+Quality: 91 functions · 91 with examples · 100.0% example coverage · synopsis sources: facade=91, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
-| `BarcodeASCII` | `func BarcodeASCII(content string, format BarcodeFormat, opts ...BarcodeOption) (string, error)` | BarcodeASCII returns an ASCII rendering for content encoded with format. | facade | — |
-| `BarcodeASCIIWithChars` | `func BarcodeASCIIWithChars(content string, format BarcodeFormat, setString string, unsetString string, opts ...BarcodeOption) (string, error)` | BarcodeASCIIWithChars returns a text rendering using custom set and unset strings. | facade | — |
-| `BarcodeBase64Data` | `func BarcodeBase64Data(content string, format BarcodeFormat, opts ...BarcodeOption) (string, error)` | BarcodeBase64Data returns a PNG data URI for content encoded with format. | facade | — |
-| `BarcodeBytes` | `func BarcodeBytes(content string, format BarcodeFormat, output BarcodeOutputFormat, opts ...BarcodeOption) ([]byte, error)` | BarcodeBytes renders content encoded with format to the requested output bytes. | facade | — |
-| `BarcodeImage` | `func BarcodeImage(content string, format BarcodeFormat, opts ...BarcodeOption) (image.Image, error)` | BarcodeImage returns a raster image for content encoded with format. | facade | — |
-| `BarcodePNG` | `func BarcodePNG(content string, format BarcodeFormat, opts ...BarcodeOption) ([]byte, error)` | BarcodePNG returns PNG bytes for content encoded with format. | facade | — |
-| `BarcodeSVG` | `func BarcodeSVG(content string, format BarcodeFormat, opts ...BarcodeOption) (string, error)` | BarcodeSVG returns an SVG rendering for content encoded with format. | facade | — |
-| `CanDecodeBarcodeFormat` | `func CanDecodeBarcodeFormat(format BarcodeFormat) bool` | CanDecodeBarcodeFormat reports whether format is supported for decoding. | facade | — |
+| `BarcodeASCII` | `func BarcodeASCII(content string, format BarcodeFormat, opts ...BarcodeOption) (string, error)` | BarcodeASCII returns an ASCII rendering for content encoded with format. | facade | `ExampleBarcodeASCII` |
+| `BarcodeASCIIWithChars` | `func BarcodeASCIIWithChars(content string, format BarcodeFormat, setString string, unsetString string, opts ...BarcodeOption) (string, error)` | BarcodeASCIIWithChars returns a text rendering using custom set and unset strings. | facade | `ExampleBarcodeASCIIWithChars` |
+| `BarcodeBase64Data` | `func BarcodeBase64Data(content string, format BarcodeFormat, opts ...BarcodeOption) (string, error)` | BarcodeBase64Data returns a PNG data URI for content encoded with format. | facade | `ExampleBarcodeBase64Data` |
+| `BarcodeBytes` | `func BarcodeBytes(content string, format BarcodeFormat, output BarcodeOutputFormat, opts ...BarcodeOption) ([]byte, error)` | BarcodeBytes renders content encoded with format to the requested output bytes. | facade | `ExampleBarcodeBytes` |
+| `BarcodeImage` | `func BarcodeImage(content string, format BarcodeFormat, opts ...BarcodeOption) (image.Image, error)` | BarcodeImage returns a raster image for content encoded with format. | facade | `ExampleBarcodeImage` |
+| `BarcodePNG` | `func BarcodePNG(content string, format BarcodeFormat, opts ...BarcodeOption) ([]byte, error)` | BarcodePNG returns PNG bytes for content encoded with format. | facade | `ExampleBarcodePNG` |
+| `BarcodeSVG` | `func BarcodeSVG(content string, format BarcodeFormat, opts ...BarcodeOption) (string, error)` | BarcodeSVG returns an SVG rendering for content encoded with format. | facade | `ExampleBarcodeSVG` |
+| `CanDecodeBarcodeFormat` | `func CanDecodeBarcodeFormat(format BarcodeFormat) bool` | CanDecodeBarcodeFormat reports whether format is supported for decoding. | facade | `ExampleCanDecodeBarcodeFormat` |
 | `CanEncodeBarcodeFormat` | `func CanEncodeBarcodeFormat(format BarcodeFormat) bool` | CanEncodeBarcodeFormat reports whether format is supported for generation. | facade | `ExampleCanEncodeBarcodeFormat` |
-| `ConvertFormat` | `func ConvertFormat(w io.Writer, r io.Reader, format string) error` | ConvertFormat decodes r and re-encodes it into the target format. | facade | — |
-| `DecodeBarcode` | `func DecodeBarcode(r io.Reader, opts ...DecodeOption) (*DecodeResult, error)` | DecodeBarcode decodes one barcode from a raster image stream. | facade | — |
-| `DecodeBarcodeImage` | `func DecodeBarcodeImage(img image.Image, opts ...DecodeOption) (*DecodeResult, error)` | DecodeBarcodeImage decodes one barcode from img. | facade | — |
-| `DecodeQRCode` | `func DecodeQRCode(r io.Reader, opts ...DecodeOption) (*DecodeResult, error)` | DecodeQRCode decodes one QR code from a raster image stream. | facade | — |
-| `DecodeQRCodeImage` | `func DecodeQRCodeImage(img image.Image, opts ...DecodeOption) (*DecodeResult, error)` | DecodeQRCodeImage decodes one QR code from img. | facade | — |
-| `GenMathGeneratorWithOptions` | `func GenMathGeneratorWithOptions(generator *MathGenerator, opts ...GeneratorOption) string` | GenMathGeneratorWithOptions generates a math captcha string with per-call options. | facade | — |
-| `GenRandomGeneratorWithOptions` | `func GenRandomGeneratorWithOptions(generator *RandomGenerator, opts ...GeneratorOption) string` | GenRandomGeneratorWithOptions generates a random captcha string with per-call options. | facade | — |
+| `ConvertFormat` | `func ConvertFormat(w io.Writer, r io.Reader, format string) error` | ConvertFormat decodes r and re-encodes it into the target format. | facade | `ExampleConvertFormat` |
+| `DecodeBarcode` | `func DecodeBarcode(r io.Reader, opts ...DecodeOption) (*DecodeResult, error)` | DecodeBarcode decodes one barcode from a raster image stream. | facade | `ExampleDecodeBarcode` |
+| `DecodeBarcodeImage` | `func DecodeBarcodeImage(img image.Image, opts ...DecodeOption) (*DecodeResult, error)` | DecodeBarcodeImage decodes one barcode from img. | facade | `ExampleDecodeBarcodeImage` |
+| `DecodeQRCode` | `func DecodeQRCode(r io.Reader, opts ...DecodeOption) (*DecodeResult, error)` | DecodeQRCode decodes one QR code from a raster image stream. | facade | `ExampleDecodeQRCode` |
+| `DecodeQRCodeImage` | `func DecodeQRCodeImage(img image.Image, opts ...DecodeOption) (*DecodeResult, error)` | DecodeQRCodeImage decodes one QR code from img. | facade | `ExampleDecodeQRCodeImage` |
+| `GenMathGeneratorWithOptions` | `func GenMathGeneratorWithOptions(generator *MathGenerator, opts ...GeneratorOption) string` | GenMathGeneratorWithOptions generates a math captcha string with per-call options. | facade | `ExampleGenMathGeneratorWithOptions` |
+| `GenRandomGeneratorWithOptions` | `func GenRandomGeneratorWithOptions(generator *RandomGenerator, opts ...GeneratorOption) string` | GenRandomGeneratorWithOptions generates a random captcha string with per-call options. | facade | `ExampleGenRandomGeneratorWithOptions` |
 | `Info` | `func Info(r io.Reader) (width int, height int, format string, err error)` | Info returns the width, height and detected format of the raster image available from r. | facade | `ExampleInfo` |
-| `NewCircleCaptcha` | `func NewCircleCaptcha(width int, height int) *CircleCaptcha` | NewCircleCaptcha creates a circle-interference captcha. | facade | — |
-| `NewCircleCaptchaWith` | `func NewCircleCaptchaWith(width int, height int, codeCount int, circleCount int) *CircleCaptcha` | NewCircleCaptchaWith creates a circle-interference captcha with options. | facade | — |
-| `NewCircleCaptchaWithOptions` | `func NewCircleCaptchaWithOptions(width int, height int, opts ...CaptchaOption) *CircleCaptcha` | NewCircleCaptchaWithOptions creates a circle-interference captcha customized by options. | facade | — |
-| `NewGifCaptcha` | `func NewGifCaptcha(width int, height int) *GifCaptcha` | NewGifCaptcha creates a GIF captcha. | facade | — |
-| `NewGifCaptchaWith` | `func NewGifCaptchaWith(width int, height int, codeCount int) *GifCaptcha` | NewGifCaptchaWith creates a GIF captcha with options. | facade | — |
-| `NewGifCaptchaWithOptions` | `func NewGifCaptchaWithOptions(width int, height int, opts ...CaptchaOption) *GifCaptcha` | NewGifCaptchaWithOptions creates a GIF captcha customized by options. | facade | — |
-| `NewLineCaptcha` | `func NewLineCaptcha(width int, height int) *LineCaptcha` | NewLineCaptcha creates a line-interference captcha. | facade | — |
-| `NewLineCaptchaWith` | `func NewLineCaptchaWith(width int, height int, codeCount int, lineCount int) *LineCaptcha` | NewLineCaptchaWith creates a line-interference captcha with options. | facade | — |
-| `NewLineCaptchaWithOptions` | `func NewLineCaptchaWithOptions(width int, height int, opts ...CaptchaOption) *LineCaptcha` | NewLineCaptchaWithOptions creates a line-interference captcha customized by options. | facade | — |
-| `NewMathGenerator` | `func NewMathGenerator() *MathGenerator` | NewMathGenerator creates a math captcha generator. | facade | — |
+| `NewCircleCaptcha` | `func NewCircleCaptcha(width int, height int) *CircleCaptcha` | NewCircleCaptcha creates a circle-interference captcha. | facade | `ExampleNewCircleCaptcha` |
+| `NewCircleCaptchaWith` | `func NewCircleCaptchaWith(width int, height int, codeCount int, circleCount int) *CircleCaptcha` | NewCircleCaptchaWith creates a circle-interference captcha with options. | facade | `ExampleNewCircleCaptchaWith` |
+| `NewCircleCaptchaWithOptions` | `func NewCircleCaptchaWithOptions(width int, height int, opts ...CaptchaOption) *CircleCaptcha` | NewCircleCaptchaWithOptions creates a circle-interference captcha customized by options. | facade | `ExampleNewCircleCaptchaWithOptions` |
+| `NewGifCaptcha` | `func NewGifCaptcha(width int, height int) *GifCaptcha` | NewGifCaptcha creates a GIF captcha. | facade | `ExampleNewGifCaptcha` |
+| `NewGifCaptchaWith` | `func NewGifCaptchaWith(width int, height int, codeCount int) *GifCaptcha` | NewGifCaptchaWith creates a GIF captcha with options. | facade | `ExampleNewGifCaptchaWith` |
+| `NewGifCaptchaWithOptions` | `func NewGifCaptchaWithOptions(width int, height int, opts ...CaptchaOption) *GifCaptcha` | NewGifCaptchaWithOptions creates a GIF captcha customized by options. | facade | `ExampleNewGifCaptchaWithOptions` |
+| `NewLineCaptcha` | `func NewLineCaptcha(width int, height int) *LineCaptcha` | NewLineCaptcha creates a line-interference captcha. | facade | `ExampleNewLineCaptcha` |
+| `NewLineCaptchaWith` | `func NewLineCaptchaWith(width int, height int, codeCount int, lineCount int) *LineCaptcha` | NewLineCaptchaWith creates a line-interference captcha with options. | facade | `ExampleNewLineCaptchaWith` |
+| `NewLineCaptchaWithOptions` | `func NewLineCaptchaWithOptions(width int, height int, opts ...CaptchaOption) *LineCaptcha` | NewLineCaptchaWithOptions creates a line-interference captcha customized by options. | facade | `ExampleNewLineCaptchaWithOptions` |
+| `NewMathGenerator` | `func NewMathGenerator() *MathGenerator` | NewMathGenerator creates a math captcha generator. | facade | `ExampleNewMathGenerator` |
 | `NewMathGeneratorWith` | `func NewMathGeneratorWith(numberLength int, resultHasNegativeNumber bool) *MathGenerator` | NewMathGeneratorWith delegates to the internal imgx implementation. | facade | `ExampleNewMathGeneratorWith` |
-| `NewRandomGenerator` | `func NewRandomGenerator(length int) *RandomGenerator` | NewRandomGenerator creates a random captcha generator. | facade | — |
-| `NewRandomGeneratorWithBase` | `func NewRandomGeneratorWithBase(base string, length int) *RandomGenerator` | NewRandomGeneratorWithBase creates a random captcha generator using base. | facade | — |
-| `NewShearCaptcha` | `func NewShearCaptcha(width int, height int) *ShearCaptcha` | NewShearCaptcha creates a sheared captcha. | facade | — |
-| `NewShearCaptchaWith` | `func NewShearCaptchaWith(width int, height int, codeCount int, thickness int) *ShearCaptcha` | NewShearCaptchaWith creates a sheared captcha with options. | facade | — |
-| `NewShearCaptchaWithOptions` | `func NewShearCaptchaWithOptions(width int, height int, opts ...CaptchaOption) *ShearCaptcha` | NewShearCaptchaWithOptions creates a sheared captcha customized by options. | facade | — |
-| `QRCodeASCII` | `func QRCodeASCII(content string, opts ...QRCodeOption) (string, error)` | QRCodeASCII returns an ASCII rendering for a QR code. | facade | — |
-| `QRCodeASCIIWithChars` | `func QRCodeASCIIWithChars(content string, setString string, unsetString string, opts ...QRCodeOption) (string, error)` | QRCodeASCIIWithChars returns a QR text rendering using custom set and unset strings. | facade | — |
-| `QRCodeBase64Data` | `func QRCodeBase64Data(content string, opts ...QRCodeOption) (string, error)` | QRCodeBase64Data returns a PNG data URI for a QR code. | facade | — |
-| `QRCodeBytes` | `func QRCodeBytes(content string, output BarcodeOutputFormat, opts ...QRCodeOption) ([]byte, error)` | QRCodeBytes renders QR content to the requested output bytes. | facade | — |
+| `NewRandomGenerator` | `func NewRandomGenerator(length int) *RandomGenerator` | NewRandomGenerator creates a random captcha generator. | facade | `ExampleNewRandomGenerator` |
+| `NewRandomGeneratorWithBase` | `func NewRandomGeneratorWithBase(base string, length int) *RandomGenerator` | NewRandomGeneratorWithBase creates a random captcha generator using base. | facade | `ExampleNewRandomGeneratorWithBase` |
+| `NewShearCaptcha` | `func NewShearCaptcha(width int, height int) *ShearCaptcha` | NewShearCaptcha creates a sheared captcha. | facade | `ExampleNewShearCaptcha` |
+| `NewShearCaptchaWith` | `func NewShearCaptchaWith(width int, height int, codeCount int, thickness int) *ShearCaptcha` | NewShearCaptchaWith creates a sheared captcha with options. | facade | `ExampleNewShearCaptchaWith` |
+| `NewShearCaptchaWithOptions` | `func NewShearCaptchaWithOptions(width int, height int, opts ...CaptchaOption) *ShearCaptcha` | NewShearCaptchaWithOptions creates a sheared captcha customized by options. | facade | `ExampleNewShearCaptchaWithOptions` |
+| `QRCodeASCII` | `func QRCodeASCII(content string, opts ...QRCodeOption) (string, error)` | QRCodeASCII returns an ASCII rendering for a QR code. | facade | `ExampleQRCodeASCII` |
+| `QRCodeASCIIWithChars` | `func QRCodeASCIIWithChars(content string, setString string, unsetString string, opts ...QRCodeOption) (string, error)` | QRCodeASCIIWithChars returns a QR text rendering using custom set and unset strings. | facade | `ExampleQRCodeASCIIWithChars` |
+| `QRCodeBase64Data` | `func QRCodeBase64Data(content string, opts ...QRCodeOption) (string, error)` | QRCodeBase64Data returns a PNG data URI for a QR code. | facade | `ExampleQRCodeBase64Data` |
+| `QRCodeBytes` | `func QRCodeBytes(content string, output BarcodeOutputFormat, opts ...QRCodeOption) ([]byte, error)` | QRCodeBytes renders QR content to the requested output bytes. | facade | `ExampleQRCodeBytes` |
 | `QRCodeImage` | `func QRCodeImage(content string, opts ...QRCodeOption) (image.Image, error)` | QRCodeImage returns a raster QR image. | facade | `ExampleQRCodeImage` |
-| `QRCodePNG` | `func QRCodePNG(content string, opts ...QRCodeOption) ([]byte, error)` | QRCodePNG returns PNG bytes for a QR code. | facade | — |
-| `QRCodeSVG` | `func QRCodeSVG(content string, opts ...QRCodeOption) (string, error)` | QRCodeSVG returns an SVG rendering for a QR code. | facade | — |
-| `SupportedDecodeBarcodeFormats` | `func SupportedDecodeBarcodeFormats() []BarcodeFormat` | SupportedDecodeBarcodeFormats returns the barcode formats supported for decoding. | facade | — |
-| `SupportedEncodeBarcodeFormats` | `func SupportedEncodeBarcodeFormats() []BarcodeFormat` | SupportedEncodeBarcodeFormats returns the barcode formats supported for generation. | facade | — |
-| `Thumbnail` | `func Thumbnail(w io.Writer, r io.Reader, maxEdge int, format string) error` | Thumbnail decodes a raster image from r and writes a downscaled copy to w. | facade | — |
-| `VerifyCaptchaIgnoreCase` | `func VerifyCaptchaIgnoreCase(code string, input string) bool` | VerifyCaptchaIgnoreCase verifies code ignoring case. | facade | — |
+| `QRCodePNG` | `func QRCodePNG(content string, opts ...QRCodeOption) ([]byte, error)` | QRCodePNG returns PNG bytes for a QR code. | facade | `ExampleQRCodePNG` |
+| `QRCodeSVG` | `func QRCodeSVG(content string, opts ...QRCodeOption) (string, error)` | QRCodeSVG returns an SVG rendering for a QR code. | facade | `ExampleQRCodeSVG` |
+| `SupportedDecodeBarcodeFormats` | `func SupportedDecodeBarcodeFormats() []BarcodeFormat` | SupportedDecodeBarcodeFormats returns the barcode formats supported for decoding. | facade | `ExampleSupportedDecodeBarcodeFormats` |
+| `SupportedEncodeBarcodeFormats` | `func SupportedEncodeBarcodeFormats() []BarcodeFormat` | SupportedEncodeBarcodeFormats returns the barcode formats supported for generation. | facade | `ExampleSupportedEncodeBarcodeFormats` |
+| `Thumbnail` | `func Thumbnail(w io.Writer, r io.Reader, maxEdge int, format string) error` | Thumbnail decodes a raster image from r and writes a downscaled copy to w. | facade | `ExampleThumbnail` |
+| `VerifyCaptchaIgnoreCase` | `func VerifyCaptchaIgnoreCase(code string, input string) bool` | VerifyCaptchaIgnoreCase verifies code ignoring case. | facade | `ExampleVerifyCaptchaIgnoreCase` |
 | `VerifyIgnoreCase` | `func VerifyIgnoreCase(code string, input string) bool` | VerifyIgnoreCase delegates to the internal imgx implementation. | facade | `ExampleVerifyIgnoreCase` |
-| `WithBackground` | `func WithBackground(background color.Color) CaptchaOption` | WithBackground sets the captcha background color. | facade | — |
-| `WithBarcodeBackground` | `func WithBarcodeBackground(background color.Color) BarcodeOption` | WithBarcodeBackground sets the color used for light modules or spaces. | facade | — |
-| `WithBarcodeCharacterSet` | `func WithBarcodeCharacterSet(characterSet string) BarcodeOption` | WithBarcodeCharacterSet sets the encoder character set hint. | facade | — |
-| `WithBarcodeColors` | `func WithBarcodeColors(foreground color.Color, background color.Color) BarcodeOption` | WithBarcodeColors sets both foreground and background colors. | facade | — |
-| `WithBarcodeForceCodeSet` | `func WithBarcodeForceCodeSet(codeSet string) BarcodeOption` | WithBarcodeForceCodeSet forces Code 128 code set A, B or C. | facade | — |
-| `WithBarcodeForeground` | `func WithBarcodeForeground(foreground color.Color) BarcodeOption` | WithBarcodeForeground sets the color used for dark modules or bars. | facade | — |
-| `WithBarcodeGS1Format` | `func WithBarcodeGS1Format(enabled bool) BarcodeOption` | WithBarcodeGS1Format enables the GS1 format hint. | facade | — |
-| `WithBarcodeLogo` | `func WithBarcodeLogo(logo image.Image) BarcodeOption` | WithBarcodeLogo embeds logo at the center of generated PNG/raster output. | facade | — |
-| `WithBarcodeLogoSize` | `func WithBarcodeLogoSize(width int, height int) BarcodeOption` | WithBarcodeLogoSize sets the embedded logo size in pixels. | facade | — |
-| `WithBarcodeMargin` | `func WithBarcodeMargin(margin int) BarcodeOption` | WithBarcodeMargin sets the barcode quiet-zone margin. | facade | — |
-| `WithBarcodeSize` | `func WithBarcodeSize(width int, height int) BarcodeOption` | WithBarcodeSize sets the generated barcode image size in pixels. | facade | — |
-| `WithBarcodeTransparentBackground` | `func WithBarcodeTransparentBackground() BarcodeOption` | WithBarcodeTransparentBackground sets a transparent background for raster and SVG output. | facade | — |
-| `WithColorFunc` | `func WithColorFunc(colorFunc func() color.Color) CaptchaOption` | WithColorFunc sets the color function used while rendering captcha images. | facade | — |
-| `WithCreateParents` | `func WithCreateParents(create bool) WriteOption` | WithCreateParents controls whether WriteToFileWithOptions creates parent directories. | facade | — |
-| `WithDecodeAlsoInverted` | `func WithDecodeAlsoInverted(enabled bool) DecodeOption` | WithDecodeAlsoInverted tries decoding an inverted image as a fallback. | facade | — |
-| `WithDecodeCharacterSet` | `func WithDecodeCharacterSet(characterSet string) DecodeOption` | WithDecodeCharacterSet sets the decoder character set hint. | facade | — |
-| `WithDecodeFormats` | `func WithDecodeFormats(formats ...BarcodeFormat) DecodeOption` | WithDecodeFormats restricts decoding to the provided formats. | facade | — |
-| `WithDecodePureBarcode` | `func WithDecodePureBarcode(enabled bool) DecodeOption` | WithDecodePureBarcode hints that the image is a pure monochrome barcode. | facade | — |
-| `WithDecodeTryHarder` | `func WithDecodeTryHarder(enabled bool) DecodeOption` | WithDecodeTryHarder spends more time looking for a barcode. | facade | — |
-| `WithDirPerm` | `func WithDirPerm(perm fs.FileMode) WriteOption` | WithDirPerm sets the parent directory permission used by WriteToFileWithOptions. | facade | — |
-| `WithFilePerm` | `func WithFilePerm(perm fs.FileMode) WriteOption` | WithFilePerm sets the file permission used by WriteToFileWithOptions. | facade | — |
-| `WithFontSize` | `func WithFontSize(fontSize float64) CaptchaOption` | WithFontSize sets the font size ratio against captcha height. | facade | — |
-| `WithGIFDelay` | `func WithGIFDelay(delay int) CaptchaOption` | WithGIFDelay sets the animated GIF frame delay in 1/100 second units. | facade | — |
-| `WithGIFRepeat` | `func WithGIFRepeat(repeat int) CaptchaOption` | WithGIFRepeat sets the animated GIF repeat count. | facade | — |
-| `WithGenerator` | `func WithGenerator(generator CodeGenerator) CaptchaOption` | WithGenerator sets the captcha code generator. | facade | — |
-| `WithGeneratorIntParser` | `func WithGeneratorIntParser(parser func(string) (int, error)) GeneratorOption` | WithGeneratorIntParser sets the integer parser used by math captcha verification. | facade | — |
-| `WithGeneratorRandomInt` | `func WithGeneratorRandomInt(randomInt func(max int) int) GeneratorOption` | WithGeneratorRandomInt sets the random integer function used while generating captcha codes. | facade | — |
-| `WithInterfereCount` | `func WithInterfereCount(count int) CaptchaOption` | WithInterfereCount sets the number of interference elements. | facade | — |
-| `WithMkdirAll` | `func WithMkdirAll(mkdirAll func(string, fs.FileMode) error) WriteOption` | WithMkdirAll sets the directory creator used by WriteToFileWithOptions. | facade | — |
-| `WithOpenFile` | `func WithOpenFile(openFile func(string, int, fs.FileMode) (io.WriteCloser, error)) WriteOption` | WithOpenFile sets the file opener used by WriteToFileWithOptions. | facade | — |
-| `WithOverwrite` | `func WithOverwrite(overwrite bool) WriteOption` | WithOverwrite controls whether WriteToFileWithOptions may replace an existing file. | facade | — |
-| `WithQRCodeBackground` | `func WithQRCodeBackground(background color.Color) QRCodeOption` | WithQRCodeBackground sets the color used for light QR modules. | facade | — |
-| `WithQRCodeColors` | `func WithQRCodeColors(foreground color.Color, background color.Color) QRCodeOption` | WithQRCodeColors sets both QR foreground and background colors. | facade | — |
-| `WithQRCodeErrorCorrection` | `func WithQRCodeErrorCorrection(level QRErrorCorrectionLevel) QRCodeOption` | WithQRCodeErrorCorrection sets the QR error correction level. | facade | — |
-| `WithQRCodeForeground` | `func WithQRCodeForeground(foreground color.Color) QRCodeOption` | WithQRCodeForeground sets the color used for dark QR modules. | facade | — |
-| `WithQRCodeLogo` | `func WithQRCodeLogo(logo image.Image) QRCodeOption` | WithQRCodeLogo embeds logo at the center of generated QR PNG/raster output. | facade | — |
-| `WithQRCodeLogoRatio` | `func WithQRCodeLogoRatio(ratio int) QRCodeOption` | WithQRCodeLogoRatio sets the default QR logo long-edge ratio when explicit logo size is not set. | facade | — |
-| `WithQRCodeLogoSize` | `func WithQRCodeLogoSize(width int, height int) QRCodeOption` | WithQRCodeLogoSize sets the embedded QR logo size in pixels. | facade | — |
-| `WithQRCodeMargin` | `func WithQRCodeMargin(margin int) QRCodeOption` | WithQRCodeMargin sets the QR code quiet-zone margin. | facade | — |
-| `WithQRCodeMaskPattern` | `func WithQRCodeMaskPattern(mask int) QRCodeOption` | WithQRCodeMaskPattern pins the QR mask pattern from 0 to 7. | facade | — |
-| `WithQRCodeSize` | `func WithQRCodeSize(size int) QRCodeOption` | WithQRCodeSize sets a square QR code image size in pixels. | facade | — |
-| `WithQRCodeTransparentBackground` | `func WithQRCodeTransparentBackground() QRCodeOption` | WithQRCodeTransparentBackground sets a transparent background for QR raster and SVG output. | facade | — |
-| `WithQRCodeVersion` | `func WithQRCodeVersion(version int) QRCodeOption` | WithQRCodeVersion pins the QR code version from 1 to 40. | facade | — |
-| `WithRandomInt` | `func WithRandomInt(randomInt func(max int) int) CaptchaOption` | WithRandomInt sets the random integer function used while rendering captcha images. | facade | — |
-| `WriteBarcode` | `func WriteBarcode(w io.Writer, content string, format BarcodeFormat, opts ...BarcodeOption) error` | WriteBarcode writes a PNG-encoded barcode to w. | facade | — |
-| `WriteQRCode` | `func WriteQRCode(w io.Writer, content string, opts ...QRCodeOption) error` | WriteQRCode writes a PNG-encoded QR code to w. | facade | — |
+| `WithBackground` | `func WithBackground(background color.Color) CaptchaOption` | WithBackground sets the captcha background color. | facade | `ExampleWithBackground` |
+| `WithBarcodeBackground` | `func WithBarcodeBackground(background color.Color) BarcodeOption` | WithBarcodeBackground sets the color used for light modules or spaces. | facade | `ExampleWithBarcodeBackground` |
+| `WithBarcodeCharacterSet` | `func WithBarcodeCharacterSet(characterSet string) BarcodeOption` | WithBarcodeCharacterSet sets the encoder character set hint. | facade | `ExampleWithBarcodeCharacterSet` |
+| `WithBarcodeColors` | `func WithBarcodeColors(foreground color.Color, background color.Color) BarcodeOption` | WithBarcodeColors sets both foreground and background colors. | facade | `ExampleWithBarcodeColors` |
+| `WithBarcodeForceCodeSet` | `func WithBarcodeForceCodeSet(codeSet string) BarcodeOption` | WithBarcodeForceCodeSet forces Code 128 code set A, B or C. | facade | `ExampleWithBarcodeForceCodeSet` |
+| `WithBarcodeForeground` | `func WithBarcodeForeground(foreground color.Color) BarcodeOption` | WithBarcodeForeground sets the color used for dark modules or bars. | facade | `ExampleWithBarcodeForeground` |
+| `WithBarcodeGS1Format` | `func WithBarcodeGS1Format(enabled bool) BarcodeOption` | WithBarcodeGS1Format enables the GS1 format hint. | facade | `ExampleWithBarcodeGS1Format` |
+| `WithBarcodeLogo` | `func WithBarcodeLogo(logo image.Image) BarcodeOption` | WithBarcodeLogo embeds logo at the center of generated PNG/raster output. | facade | `ExampleWithBarcodeLogo` |
+| `WithBarcodeLogoSize` | `func WithBarcodeLogoSize(width int, height int) BarcodeOption` | WithBarcodeLogoSize sets the embedded logo size in pixels. | facade | `ExampleWithBarcodeLogoSize` |
+| `WithBarcodeMargin` | `func WithBarcodeMargin(margin int) BarcodeOption` | WithBarcodeMargin sets the barcode quiet-zone margin. | facade | `ExampleWithBarcodeMargin` |
+| `WithBarcodeSize` | `func WithBarcodeSize(width int, height int) BarcodeOption` | WithBarcodeSize sets the generated barcode image size in pixels. | facade | `ExampleWithBarcodeSize` |
+| `WithBarcodeTransparentBackground` | `func WithBarcodeTransparentBackground() BarcodeOption` | WithBarcodeTransparentBackground sets a transparent background for raster and SVG output. | facade | `ExampleWithBarcodeTransparentBackground` |
+| `WithColorFunc` | `func WithColorFunc(colorFunc func() color.Color) CaptchaOption` | WithColorFunc sets the color function used while rendering captcha images. | facade | `ExampleWithColorFunc` |
+| `WithCreateParents` | `func WithCreateParents(create bool) WriteOption` | WithCreateParents controls whether WriteToFileWithOptions creates parent directories. | facade | `ExampleWithCreateParents` |
+| `WithDecodeAlsoInverted` | `func WithDecodeAlsoInverted(enabled bool) DecodeOption` | WithDecodeAlsoInverted tries decoding an inverted image as a fallback. | facade | `ExampleWithDecodeAlsoInverted` |
+| `WithDecodeCharacterSet` | `func WithDecodeCharacterSet(characterSet string) DecodeOption` | WithDecodeCharacterSet sets the decoder character set hint. | facade | `ExampleWithDecodeCharacterSet` |
+| `WithDecodeFormats` | `func WithDecodeFormats(formats ...BarcodeFormat) DecodeOption` | WithDecodeFormats restricts decoding to the provided formats. | facade | `ExampleWithDecodeFormats` |
+| `WithDecodePureBarcode` | `func WithDecodePureBarcode(enabled bool) DecodeOption` | WithDecodePureBarcode hints that the image is a pure monochrome barcode. | facade | `ExampleWithDecodePureBarcode` |
+| `WithDecodeTryHarder` | `func WithDecodeTryHarder(enabled bool) DecodeOption` | WithDecodeTryHarder spends more time looking for a barcode. | facade | `ExampleWithDecodeTryHarder` |
+| `WithDirPerm` | `func WithDirPerm(perm fs.FileMode) WriteOption` | WithDirPerm sets the parent directory permission used by WriteToFileWithOptions. | facade | `ExampleWithDirPerm` |
+| `WithFilePerm` | `func WithFilePerm(perm fs.FileMode) WriteOption` | WithFilePerm sets the file permission used by WriteToFileWithOptions. | facade | `ExampleWithFilePerm` |
+| `WithFontSize` | `func WithFontSize(fontSize float64) CaptchaOption` | WithFontSize sets the font size ratio against captcha height. | facade | `ExampleWithFontSize` |
+| `WithGIFDelay` | `func WithGIFDelay(delay int) CaptchaOption` | WithGIFDelay sets the animated GIF frame delay in 1/100 second units. | facade | `ExampleWithGIFDelay` |
+| `WithGIFRepeat` | `func WithGIFRepeat(repeat int) CaptchaOption` | WithGIFRepeat sets the animated GIF repeat count. | facade | `ExampleWithGIFRepeat` |
+| `WithGenerator` | `func WithGenerator(generator CodeGenerator) CaptchaOption` | WithGenerator sets the captcha code generator. | facade | `ExampleWithGenerator` |
+| `WithGeneratorIntParser` | `func WithGeneratorIntParser(parser func(string) (int, error)) GeneratorOption` | WithGeneratorIntParser sets the integer parser used by math captcha verification. | facade | `ExampleWithGeneratorIntParser` |
+| `WithGeneratorRandomInt` | `func WithGeneratorRandomInt(randomInt func(max int) int) GeneratorOption` | WithGeneratorRandomInt sets the random integer function used while generating captcha codes. | facade | `ExampleWithGeneratorRandomInt` |
+| `WithInterfereCount` | `func WithInterfereCount(count int) CaptchaOption` | WithInterfereCount sets the number of interference elements. | facade | `ExampleWithInterfereCount` |
+| `WithMkdirAll` | `func WithMkdirAll(mkdirAll func(string, fs.FileMode) error) WriteOption` | WithMkdirAll sets the directory creator used by WriteToFileWithOptions. | facade | `ExampleWithMkdirAll` |
+| `WithOpenFile` | `func WithOpenFile(openFile func(string, int, fs.FileMode) (io.WriteCloser, error)) WriteOption` | WithOpenFile sets the file opener used by WriteToFileWithOptions. | facade | `ExampleWithOpenFile` |
+| `WithOverwrite` | `func WithOverwrite(overwrite bool) WriteOption` | WithOverwrite controls whether WriteToFileWithOptions may replace an existing file. | facade | `ExampleWithOverwrite` |
+| `WithQRCodeBackground` | `func WithQRCodeBackground(background color.Color) QRCodeOption` | WithQRCodeBackground sets the color used for light QR modules. | facade | `ExampleWithQRCodeBackground` |
+| `WithQRCodeColors` | `func WithQRCodeColors(foreground color.Color, background color.Color) QRCodeOption` | WithQRCodeColors sets both QR foreground and background colors. | facade | `ExampleWithQRCodeColors` |
+| `WithQRCodeErrorCorrection` | `func WithQRCodeErrorCorrection(level QRErrorCorrectionLevel) QRCodeOption` | WithQRCodeErrorCorrection sets the QR error correction level. | facade | `ExampleWithQRCodeErrorCorrection` |
+| `WithQRCodeForeground` | `func WithQRCodeForeground(foreground color.Color) QRCodeOption` | WithQRCodeForeground sets the color used for dark QR modules. | facade | `ExampleWithQRCodeForeground` |
+| `WithQRCodeLogo` | `func WithQRCodeLogo(logo image.Image) QRCodeOption` | WithQRCodeLogo embeds logo at the center of generated QR PNG/raster output. | facade | `ExampleWithQRCodeLogo` |
+| `WithQRCodeLogoRatio` | `func WithQRCodeLogoRatio(ratio int) QRCodeOption` | WithQRCodeLogoRatio sets the default QR logo long-edge ratio when explicit logo size is not set. | facade | `ExampleWithQRCodeLogoRatio` |
+| `WithQRCodeLogoSize` | `func WithQRCodeLogoSize(width int, height int) QRCodeOption` | WithQRCodeLogoSize sets the embedded QR logo size in pixels. | facade | `ExampleWithQRCodeLogoSize` |
+| `WithQRCodeMargin` | `func WithQRCodeMargin(margin int) QRCodeOption` | WithQRCodeMargin sets the QR code quiet-zone margin. | facade | `ExampleWithQRCodeMargin` |
+| `WithQRCodeMaskPattern` | `func WithQRCodeMaskPattern(mask int) QRCodeOption` | WithQRCodeMaskPattern pins the QR mask pattern from 0 to 7. | facade | `ExampleWithQRCodeMaskPattern` |
+| `WithQRCodeSize` | `func WithQRCodeSize(size int) QRCodeOption` | WithQRCodeSize sets a square QR code image size in pixels. | facade | `ExampleWithQRCodeSize` |
+| `WithQRCodeTransparentBackground` | `func WithQRCodeTransparentBackground() QRCodeOption` | WithQRCodeTransparentBackground sets a transparent background for QR raster and SVG output. | facade | `ExampleWithQRCodeTransparentBackground` |
+| `WithQRCodeVersion` | `func WithQRCodeVersion(version int) QRCodeOption` | WithQRCodeVersion pins the QR code version from 1 to 40. | facade | `ExampleWithQRCodeVersion` |
+| `WithRandomInt` | `func WithRandomInt(randomInt func(max int) int) CaptchaOption` | WithRandomInt sets the random integer function used while rendering captcha images. | facade | `ExampleWithRandomInt` |
+| `WriteBarcode` | `func WriteBarcode(w io.Writer, content string, format BarcodeFormat, opts ...BarcodeOption) error` | WriteBarcode writes a PNG-encoded barcode to w. | facade | `ExampleWriteBarcode` |
+| `WriteQRCode` | `func WriteQRCode(w io.Writer, content string, opts ...QRCodeOption) error` | WriteQRCode writes a PNG-encoded QR code to w. | facade | `ExampleWriteQRCode` |
 
 ### vjob
 

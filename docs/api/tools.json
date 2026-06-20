@@ -4,7 +4,7 @@
   "summary": {
     "package_count": 54,
     "function_count": 2604,
-    "functions_with_examples": 566,
+    "functions_with_examples": 652,
     "context_aware_functions": 36,
     "returns_error_functions": 603,
     "variadic_functions": 776,
@@ -18908,8 +18908,8 @@
       "synopsis": "Package vimg provides public APIs for image utilities.",
       "summary": {
         "function_count": 91,
-        "functions_with_examples": 5,
-        "example_coverage_percent": 5.5,
+        "functions_with_examples": 91,
+        "example_coverage_percent": 100,
         "synopsis_sources": {
           "empty": 0,
           "facade": 91,
@@ -18942,7 +18942,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleBarcodeASCII"
+          ]
         },
         {
           "name": "BarcodeASCIIWithChars",
@@ -18977,7 +18980,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleBarcodeASCIIWithChars"
+          ]
         },
         {
           "name": "BarcodeBase64Data",
@@ -19004,7 +19010,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleBarcodeBase64Data"
+          ]
         },
         {
           "name": "BarcodeBytes",
@@ -19035,7 +19044,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleBarcodeBytes"
+          ]
         },
         {
           "name": "BarcodeImage",
@@ -19062,7 +19074,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleBarcodeImage"
+          ]
         },
         {
           "name": "BarcodePNG",
@@ -19089,7 +19104,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleBarcodePNG"
+          ]
         },
         {
           "name": "BarcodeSVG",
@@ -19116,7 +19134,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleBarcodeSVG"
+          ]
         },
         {
           "name": "CanDecodeBarcodeFormat",
@@ -19134,7 +19155,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleCanDecodeBarcodeFormat"
+          ]
         },
         {
           "name": "CanEncodeBarcodeFormat",
@@ -19181,7 +19205,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleConvertFormat"
+          ]
         },
         {
           "name": "DecodeBarcode",
@@ -19204,7 +19231,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleDecodeBarcode"
+          ]
         },
         {
           "name": "DecodeBarcodeImage",
@@ -19227,7 +19257,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleDecodeBarcodeImage"
+          ]
         },
         {
           "name": "DecodeQRCode",
@@ -19250,7 +19283,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleDecodeQRCode"
+          ]
         },
         {
           "name": "DecodeQRCodeImage",
@@ -19273,7 +19309,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleDecodeQRCodeImage"
+          ]
         },
         {
           "name": "GenMathGeneratorWithOptions",
@@ -19295,7 +19334,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleGenMathGeneratorWithOptions"
+          ]
         },
         {
           "name": "GenRandomGeneratorWithOptions",
@@ -19317,7 +19359,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleGenRandomGeneratorWithOptions"
+          ]
         },
         {
           "name": "Info",
@@ -19363,7 +19408,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewCircleCaptcha"
+          ]
         },
         {
           "name": "NewCircleCaptchaWith",
@@ -19393,7 +19441,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewCircleCaptchaWith"
+          ]
         },
         {
           "name": "NewCircleCaptchaWithOptions",
@@ -19419,7 +19470,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleNewCircleCaptchaWithOptions"
+          ]
         },
         {
           "name": "NewGifCaptcha",
@@ -19441,7 +19495,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewGifCaptcha"
+          ]
         },
         {
           "name": "NewGifCaptchaWith",
@@ -19467,7 +19524,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewGifCaptchaWith"
+          ]
         },
         {
           "name": "NewGifCaptchaWithOptions",
@@ -19493,7 +19553,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleNewGifCaptchaWithOptions"
+          ]
         },
         {
           "name": "NewLineCaptcha",
@@ -19515,7 +19578,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewLineCaptcha"
+          ]
         },
         {
           "name": "NewLineCaptchaWith",
@@ -19545,7 +19611,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewLineCaptchaWith"
+          ]
         },
         {
           "name": "NewLineCaptchaWithOptions",
@@ -19571,7 +19640,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleNewLineCaptchaWithOptions"
+          ]
         },
         {
           "name": "NewMathGenerator",
@@ -19583,7 +19655,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewMathGenerator"
+          ]
         },
         {
           "name": "NewMathGeneratorWith",
@@ -19626,7 +19701,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewRandomGenerator"
+          ]
         },
         {
           "name": "NewRandomGeneratorWithBase",
@@ -19648,7 +19726,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewRandomGeneratorWithBase"
+          ]
         },
         {
           "name": "NewShearCaptcha",
@@ -19670,7 +19751,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewShearCaptcha"
+          ]
         },
         {
           "name": "NewShearCaptchaWith",
@@ -19700,7 +19784,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewShearCaptchaWith"
+          ]
         },
         {
           "name": "NewShearCaptchaWithOptions",
@@ -19726,7 +19813,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleNewShearCaptchaWithOptions"
+          ]
         },
         {
           "name": "QRCodeASCII",
@@ -19749,7 +19839,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleQRCodeASCII"
+          ]
         },
         {
           "name": "QRCodeASCIIWithChars",
@@ -19780,7 +19873,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleQRCodeASCIIWithChars"
+          ]
         },
         {
           "name": "QRCodeBase64Data",
@@ -19803,7 +19899,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleQRCodeBase64Data"
+          ]
         },
         {
           "name": "QRCodeBytes",
@@ -19830,7 +19929,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleQRCodeBytes"
+          ]
         },
         {
           "name": "QRCodeImage",
@@ -19879,7 +19981,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleQRCodePNG"
+          ]
         },
         {
           "name": "QRCodeSVG",
@@ -19902,7 +20007,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleQRCodeSVG"
+          ]
         },
         {
           "name": "SupportedDecodeBarcodeFormats",
@@ -19914,7 +20022,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleSupportedDecodeBarcodeFormats"
+          ]
         },
         {
           "name": "SupportedEncodeBarcodeFormats",
@@ -19926,7 +20037,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleSupportedEncodeBarcodeFormats"
+          ]
         },
         {
           "name": "Thumbnail",
@@ -19956,7 +20070,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleThumbnail"
+          ]
         },
         {
           "name": "VerifyCaptchaIgnoreCase",
@@ -19978,7 +20095,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleVerifyCaptchaIgnoreCase"
+          ]
         },
         {
           "name": "VerifyIgnoreCase",
@@ -20021,7 +20141,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithBackground"
+          ]
         },
         {
           "name": "WithBarcodeBackground",
@@ -20039,7 +20162,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithBarcodeBackground"
+          ]
         },
         {
           "name": "WithBarcodeCharacterSet",
@@ -20057,7 +20183,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithBarcodeCharacterSet"
+          ]
         },
         {
           "name": "WithBarcodeColors",
@@ -20079,7 +20208,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithBarcodeColors"
+          ]
         },
         {
           "name": "WithBarcodeForceCodeSet",
@@ -20097,7 +20229,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithBarcodeForceCodeSet"
+          ]
         },
         {
           "name": "WithBarcodeForeground",
@@ -20115,7 +20250,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithBarcodeForeground"
+          ]
         },
         {
           "name": "WithBarcodeGS1Format",
@@ -20133,7 +20271,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithBarcodeGS1Format"
+          ]
         },
         {
           "name": "WithBarcodeLogo",
@@ -20151,7 +20292,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithBarcodeLogo"
+          ]
         },
         {
           "name": "WithBarcodeLogoSize",
@@ -20173,7 +20317,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithBarcodeLogoSize"
+          ]
         },
         {
           "name": "WithBarcodeMargin",
@@ -20191,7 +20338,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithBarcodeMargin"
+          ]
         },
         {
           "name": "WithBarcodeSize",
@@ -20213,7 +20363,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithBarcodeSize"
+          ]
         },
         {
           "name": "WithBarcodeTransparentBackground",
@@ -20225,7 +20378,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithBarcodeTransparentBackground"
+          ]
         },
         {
           "name": "WithColorFunc",
@@ -20243,7 +20399,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithColorFunc"
+          ]
         },
         {
           "name": "WithCreateParents",
@@ -20261,7 +20420,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithCreateParents"
+          ]
         },
         {
           "name": "WithDecodeAlsoInverted",
@@ -20279,7 +20441,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithDecodeAlsoInverted"
+          ]
         },
         {
           "name": "WithDecodeCharacterSet",
@@ -20297,7 +20462,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithDecodeCharacterSet"
+          ]
         },
         {
           "name": "WithDecodeFormats",
@@ -20315,7 +20483,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleWithDecodeFormats"
+          ]
         },
         {
           "name": "WithDecodePureBarcode",
@@ -20333,7 +20504,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithDecodePureBarcode"
+          ]
         },
         {
           "name": "WithDecodeTryHarder",
@@ -20351,7 +20525,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithDecodeTryHarder"
+          ]
         },
         {
           "name": "WithDirPerm",
@@ -20369,7 +20546,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithDirPerm"
+          ]
         },
         {
           "name": "WithFilePerm",
@@ -20387,7 +20567,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithFilePerm"
+          ]
         },
         {
           "name": "WithFontSize",
@@ -20405,7 +20588,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithFontSize"
+          ]
         },
         {
           "name": "WithGIFDelay",
@@ -20423,7 +20609,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithGIFDelay"
+          ]
         },
         {
           "name": "WithGIFRepeat",
@@ -20441,7 +20630,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithGIFRepeat"
+          ]
         },
         {
           "name": "WithGenerator",
@@ -20459,7 +20651,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithGenerator"
+          ]
         },
         {
           "name": "WithGeneratorIntParser",
@@ -20477,7 +20672,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithGeneratorIntParser"
+          ]
         },
         {
           "name": "WithGeneratorRandomInt",
@@ -20495,7 +20693,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithGeneratorRandomInt"
+          ]
         },
         {
           "name": "WithInterfereCount",
@@ -20513,7 +20714,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithInterfereCount"
+          ]
         },
         {
           "name": "WithMkdirAll",
@@ -20531,7 +20735,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithMkdirAll"
+          ]
         },
         {
           "name": "WithOpenFile",
@@ -20549,7 +20756,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithOpenFile"
+          ]
         },
         {
           "name": "WithOverwrite",
@@ -20567,7 +20777,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithOverwrite"
+          ]
         },
         {
           "name": "WithQRCodeBackground",
@@ -20585,7 +20798,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithQRCodeBackground"
+          ]
         },
         {
           "name": "WithQRCodeColors",
@@ -20607,7 +20823,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithQRCodeColors"
+          ]
         },
         {
           "name": "WithQRCodeErrorCorrection",
@@ -20625,7 +20844,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithQRCodeErrorCorrection"
+          ]
         },
         {
           "name": "WithQRCodeForeground",
@@ -20643,7 +20865,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithQRCodeForeground"
+          ]
         },
         {
           "name": "WithQRCodeLogo",
@@ -20661,7 +20886,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithQRCodeLogo"
+          ]
         },
         {
           "name": "WithQRCodeLogoRatio",
@@ -20679,7 +20907,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithQRCodeLogoRatio"
+          ]
         },
         {
           "name": "WithQRCodeLogoSize",
@@ -20701,7 +20932,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithQRCodeLogoSize"
+          ]
         },
         {
           "name": "WithQRCodeMargin",
@@ -20719,7 +20953,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithQRCodeMargin"
+          ]
         },
         {
           "name": "WithQRCodeMaskPattern",
@@ -20737,7 +20974,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithQRCodeMaskPattern"
+          ]
         },
         {
           "name": "WithQRCodeSize",
@@ -20755,7 +20995,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithQRCodeSize"
+          ]
         },
         {
           "name": "WithQRCodeTransparentBackground",
@@ -20767,7 +21010,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithQRCodeTransparentBackground"
+          ]
         },
         {
           "name": "WithQRCodeVersion",
@@ -20785,7 +21031,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithQRCodeVersion"
+          ]
         },
         {
           "name": "WithRandomInt",
@@ -20803,7 +21052,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithRandomInt"
+          ]
         },
         {
           "name": "WriteBarcode",
@@ -20833,7 +21085,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleWriteBarcode"
+          ]
         },
         {
           "name": "WriteQRCode",
@@ -20859,7 +21114,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleWriteQRCode"
+          ]
         }
       ]
     },
