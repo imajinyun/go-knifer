@@ -314,6 +314,49 @@ github.com/imajinyun/go-knifer/vcache
   type TimedCache[K comparable, V any] struct{ *github.com/imajinyun/go-knifer/internal/cache.TimedCache[K, V] *github.com/imajinyun/go-knifer/internal/cache.TimedCache[K, V] }
   type WeakCache[K comparable, V any] struct{ *github.com/imajinyun/go-knifer/internal/cache.WeakCache[K, V] *github.com/imajinyun/go-knifer/internal/cache.WeakCache[K, V] }
 
+github.com/imajinyun/go-knifer/vcli
+  const Blue github.com/imajinyun/go-knifer/internal/cli.Color = "34"
+  const Bold github.com/imajinyun/go-knifer/internal/cli.Color = "1"
+  const ColorAlways github.com/imajinyun/go-knifer/internal/cli.ColorMode = 1
+  const ColorAuto github.com/imajinyun/go-knifer/internal/cli.ColorMode = 0
+  const ColorNever github.com/imajinyun/go-knifer/internal/cli.ColorMode = 2
+  const Green github.com/imajinyun/go-knifer/internal/cli.Color = "32"
+  const Red github.com/imajinyun/go-knifer/internal/cli.Color = "31"
+  const Yellow github.com/imajinyun/go-knifer/internal/cli.Color = "33"
+  func Colorize(text string, color Color, opts ...ColorOption) string
+  func NewFlagParser(name string, opts ...FlagParserOption) *FlagParser
+  func Output(ctx context.Context, name string, args []string, opts ...ExecOption) (string, error)
+  func RenderHelp(cmd *Command, opts ...ColorOption) string
+  func Run(ctx context.Context, name string, args []string, opts ...ExecOption) (ExecResult, error)
+  func WithColorMode(mode ColorMode) ColorOption
+  func WithDir(dir string) ExecOption
+  func WithEnv(env []string) ExecOption
+  func WithFlagOutput(w io.Writer) FlagParserOption
+  func WithMaxOutputBytes(n int64) ExecOption
+  func WithRunner(r Runner) ExecOption
+  func WithStderr(w io.Writer) ExecuteOption
+  func WithStdin(r io.Reader) ExecOption
+  func WithStdout(w io.Writer) ExecuteOption
+  func WithTimeout(d time.Duration) ExecOption
+  type Color = github.com/imajinyun/go-knifer/internal/cli.Color
+  type ColorMode = github.com/imajinyun/go-knifer/internal/cli.ColorMode
+  type ColorOption = github.com/imajinyun/go-knifer/internal/cli.ColorOption
+  type Command = github.com/imajinyun/go-knifer/internal/cli.Command
+  type ExecOption = github.com/imajinyun/go-knifer/internal/cli.ExecOption
+  type ExecRequest = github.com/imajinyun/go-knifer/internal/cli.ExecRequest
+  type ExecResult = github.com/imajinyun/go-knifer/internal/cli.ExecResult
+  type ExecuteOption = github.com/imajinyun/go-knifer/internal/cli.ExecuteOption
+  type FlagParseResult = github.com/imajinyun/go-knifer/internal/cli.FlagParseResult
+  type FlagParser = github.com/imajinyun/go-knifer/internal/cli.FlagParser
+  type FlagParserOption = github.com/imajinyun/go-knifer/internal/cli.FlagParserOption
+  type Handler = github.com/imajinyun/go-knifer/internal/cli.Handler
+  type Invocation = github.com/imajinyun/go-knifer/internal/cli.Invocation
+  type Runner = github.com/imajinyun/go-knifer/internal/cli.Runner
+  type RunnerFunc = github.com/imajinyun/go-knifer/internal/cli.RunnerFunc
+  var ErrEmptyCommand error
+  var ErrOutputLimitExceeded error
+  var ErrUsage error
+
 github.com/imajinyun/go-knifer/vcodec
   func Base64Decode(s string) ([]byte, error)
   func Base64DecodeStr(s string) (string, error)

@@ -2,15 +2,15 @@
   "schema": "1.4",
   "module": "github.com/imajinyun/go-knifer",
   "summary": {
-    "package_count": 48,
-    "function_count": 2547,
-    "functions_with_examples": 270,
-    "context_aware_functions": 20,
-    "returns_error_functions": 578,
-    "variadic_functions": 760,
+    "package_count": 49,
+    "function_count": 2562,
+    "functions_with_examples": 275,
+    "context_aware_functions": 22,
+    "returns_error_functions": 580,
+    "variadic_functions": 765,
     "synopsis_sources": {
       "empty": 0,
-      "facade": 1910,
+      "facade": 1925,
       "internal": 637
     }
   },
@@ -2270,6 +2270,350 @@
           "returns_error": false,
           "context_aware": false,
           "variadic": false
+        }
+      ]
+    },
+    {
+      "import_path": "github.com/imajinyun/go-knifer/vcli",
+      "name": "vcli",
+      "synopsis": "Package vcli provides public APIs for lightweight command-line helpers.",
+      "summary": {
+        "function_count": 15,
+        "functions_with_examples": 5,
+        "example_coverage_percent": 33.3,
+        "synopsis_sources": {
+          "empty": 0,
+          "facade": 15,
+          "internal": 0
+        }
+      },
+      "functions": [
+        {
+          "name": "Colorize",
+          "signature": "func Colorize(text string, color Color, opts ...ColorOption) string",
+          "synopsis": "Colorize wraps text in ANSI escape codes when enabled.",
+          "synopsis_source": "facade",
+          "params": [
+            {
+              "name": "text",
+              "type": "string"
+            },
+            {
+              "name": "color",
+              "type": "Color"
+            },
+            {
+              "name": "opts",
+              "type": "...ColorOption"
+            }
+          ],
+          "results": [
+            "string"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": true,
+          "examples": [
+            "ExampleColorize"
+          ]
+        },
+        {
+          "name": "NewFlagParser",
+          "signature": "func NewFlagParser(name string, opts ...FlagParserOption) *FlagParser",
+          "synopsis": "NewFlagParser creates a flag parser for one command.",
+          "synopsis_source": "facade",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "opts",
+              "type": "...FlagParserOption"
+            }
+          ],
+          "results": [
+            "*FlagParser"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": true,
+          "examples": [
+            "ExampleNewFlagParser"
+          ]
+        },
+        {
+          "name": "Output",
+          "signature": "func Output(ctx context.Context, name string, args []string, opts ...ExecOption) (string, error)",
+          "synopsis": "Output executes name with args and returns stdout.",
+          "synopsis_source": "facade",
+          "params": [
+            {
+              "name": "ctx",
+              "type": "context.Context"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "args",
+              "type": "[]string"
+            },
+            {
+              "name": "opts",
+              "type": "...ExecOption"
+            }
+          ],
+          "results": [
+            "string",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": true,
+          "variadic": true
+        },
+        {
+          "name": "RenderHelp",
+          "signature": "func RenderHelp(cmd *Command, opts ...ColorOption) string",
+          "synopsis": "RenderHelp returns deterministic help text for cmd.",
+          "synopsis_source": "facade",
+          "params": [
+            {
+              "name": "cmd",
+              "type": "*Command"
+            },
+            {
+              "name": "opts",
+              "type": "...ColorOption"
+            }
+          ],
+          "results": [
+            "string"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": true,
+          "examples": [
+            "ExampleRenderHelp"
+          ]
+        },
+        {
+          "name": "Run",
+          "signature": "func Run(ctx context.Context, name string, args []string, opts ...ExecOption) (ExecResult, error)",
+          "synopsis": "Run executes name with args using context-aware process handling.",
+          "synopsis_source": "facade",
+          "params": [
+            {
+              "name": "ctx",
+              "type": "context.Context"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "args",
+              "type": "[]string"
+            },
+            {
+              "name": "opts",
+              "type": "...ExecOption"
+            }
+          ],
+          "results": [
+            "ExecResult",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": true,
+          "variadic": true,
+          "examples": [
+            "ExampleRun"
+          ]
+        },
+        {
+          "name": "WithColorMode",
+          "signature": "func WithColorMode(mode ColorMode) ColorOption",
+          "synopsis": "WithColorMode sets ANSI color behavior.",
+          "synopsis_source": "facade",
+          "params": [
+            {
+              "name": "mode",
+              "type": "ColorMode"
+            }
+          ],
+          "results": [
+            "ColorOption"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "WithDir",
+          "signature": "func WithDir(dir string) ExecOption",
+          "synopsis": "WithDir sets the working directory for the command.",
+          "synopsis_source": "facade",
+          "params": [
+            {
+              "name": "dir",
+              "type": "string"
+            }
+          ],
+          "results": [
+            "ExecOption"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "WithEnv",
+          "signature": "func WithEnv(env []string) ExecOption",
+          "synopsis": "WithEnv appends environment entries for the command.",
+          "synopsis_source": "facade",
+          "params": [
+            {
+              "name": "env",
+              "type": "[]string"
+            }
+          ],
+          "results": [
+            "ExecOption"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "WithFlagOutput",
+          "signature": "func WithFlagOutput(w io.Writer) FlagParserOption",
+          "synopsis": "WithFlagOutput sets where parser usage text is written.",
+          "synopsis_source": "facade",
+          "params": [
+            {
+              "name": "w",
+              "type": "io.Writer"
+            }
+          ],
+          "results": [
+            "FlagParserOption"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "WithMaxOutputBytes",
+          "signature": "func WithMaxOutputBytes(n int64) ExecOption",
+          "synopsis": "WithMaxOutputBytes limits captured stdout and stderr bytes.",
+          "synopsis_source": "facade",
+          "params": [
+            {
+              "name": "n",
+              "type": "int64"
+            }
+          ],
+          "results": [
+            "ExecOption"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "WithRunner",
+          "signature": "func WithRunner(r Runner) ExecOption",
+          "synopsis": "WithRunner sets the process runner used by Run and Output.",
+          "synopsis_source": "facade",
+          "params": [
+            {
+              "name": "r",
+              "type": "Runner"
+            }
+          ],
+          "results": [
+            "ExecOption"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "WithStderr",
+          "signature": "func WithStderr(w io.Writer) ExecuteOption",
+          "synopsis": "WithStderr sets command stderr.",
+          "synopsis_source": "facade",
+          "params": [
+            {
+              "name": "w",
+              "type": "io.Writer"
+            }
+          ],
+          "results": [
+            "ExecuteOption"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "WithStdin",
+          "signature": "func WithStdin(r io.Reader) ExecOption",
+          "synopsis": "WithStdin sets the stdin reader for the command.",
+          "synopsis_source": "facade",
+          "params": [
+            {
+              "name": "r",
+              "type": "io.Reader"
+            }
+          ],
+          "results": [
+            "ExecOption"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "WithStdout",
+          "signature": "func WithStdout(w io.Writer) ExecuteOption",
+          "synopsis": "WithStdout sets command stdout.",
+          "synopsis_source": "facade",
+          "params": [
+            {
+              "name": "w",
+              "type": "io.Writer"
+            }
+          ],
+          "results": [
+            "ExecuteOption"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "WithTimeout",
+          "signature": "func WithTimeout(d time.Duration) ExecOption",
+          "synopsis": "WithTimeout applies a child context timeout around command execution.",
+          "synopsis_source": "facade",
+          "params": [
+            {
+              "name": "d",
+              "type": "time.Duration"
+            }
+          ],
+          "results": [
+            "ExecOption"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false,
+          "examples": [
+            "ExampleWithTimeout"
+          ]
         }
       ]
     },

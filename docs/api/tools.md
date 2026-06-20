@@ -10,13 +10,13 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | --- | ---: |
 | Schema | 1.4 |
 | Module | `github.com/imajinyun/go-knifer` |
-| Packages | 48 |
-| Functions | 2547 |
-| Functions with examples | 270 |
-| Context-aware functions | 20 |
-| Functions returning error | 578 |
-| Variadic functions | 760 |
-| Synopsis source: facade | 1910 |
+| Packages | 49 |
+| Functions | 2562 |
+| Functions with examples | 275 |
+| Context-aware functions | 22 |
+| Functions returning error | 580 |
+| Variadic functions | 765 |
+| Synopsis source: facade | 1925 |
 | Synopsis source: internal | 637 |
 | Synopsis source: empty | 0 |
 
@@ -175,6 +175,32 @@ Quality: 24 functions · 5 with examples · 20.8% example coverage · synopsis s
 | `WithTimeout` | `func WithTimeout[K comparable, V any](timeout time.Duration) Option[K, V]` | WithTimeout sets the default entry expiration duration; 0 means no expiration. | facade | — |
 | `WithWeakFinalizerEnabled` | `func WithWeakFinalizerEnabled[K comparable, V any](enabled bool) Option[K, *V]` | WithWeakFinalizerEnabled controls whether WeakCache registers GC finalizers. | facade | — |
 | `WithWeakFinalizerFunc` | `func WithWeakFinalizerFunc[K comparable, V any](finalizer func(*V, func(*V))) Option[K, *V]` | WithWeakFinalizerFunc sets the finalizer provider used by WeakCache. | facade | — |
+
+### vcli
+
+Import path: `github.com/imajinyun/go-knifer/vcli`
+
+Package vcli provides public APIs for lightweight command-line helpers.
+
+Quality: 15 functions · 5 with examples · 33.3% example coverage · synopsis sources: facade=15, internal=0, empty=0
+
+| Function | Signature | Synopsis | Source | Examples |
+| --- | --- | --- | --- | --- |
+| `Colorize` | `func Colorize(text string, color Color, opts ...ColorOption) string` | Colorize wraps text in ANSI escape codes when enabled. | facade | `ExampleColorize` |
+| `NewFlagParser` | `func NewFlagParser(name string, opts ...FlagParserOption) *FlagParser` | NewFlagParser creates a flag parser for one command. | facade | `ExampleNewFlagParser` |
+| `Output` | `func Output(ctx context.Context, name string, args []string, opts ...ExecOption) (string, error)` | Output executes name with args and returns stdout. | facade | — |
+| `RenderHelp` | `func RenderHelp(cmd *Command, opts ...ColorOption) string` | RenderHelp returns deterministic help text for cmd. | facade | `ExampleRenderHelp` |
+| `Run` | `func Run(ctx context.Context, name string, args []string, opts ...ExecOption) (ExecResult, error)` | Run executes name with args using context-aware process handling. | facade | `ExampleRun` |
+| `WithColorMode` | `func WithColorMode(mode ColorMode) ColorOption` | WithColorMode sets ANSI color behavior. | facade | — |
+| `WithDir` | `func WithDir(dir string) ExecOption` | WithDir sets the working directory for the command. | facade | — |
+| `WithEnv` | `func WithEnv(env []string) ExecOption` | WithEnv appends environment entries for the command. | facade | — |
+| `WithFlagOutput` | `func WithFlagOutput(w io.Writer) FlagParserOption` | WithFlagOutput sets where parser usage text is written. | facade | — |
+| `WithMaxOutputBytes` | `func WithMaxOutputBytes(n int64) ExecOption` | WithMaxOutputBytes limits captured stdout and stderr bytes. | facade | — |
+| `WithRunner` | `func WithRunner(r Runner) ExecOption` | WithRunner sets the process runner used by Run and Output. | facade | — |
+| `WithStderr` | `func WithStderr(w io.Writer) ExecuteOption` | WithStderr sets command stderr. | facade | — |
+| `WithStdin` | `func WithStdin(r io.Reader) ExecOption` | WithStdin sets the stdin reader for the command. | facade | — |
+| `WithStdout` | `func WithStdout(w io.Writer) ExecuteOption` | WithStdout sets command stdout. | facade | — |
+| `WithTimeout` | `func WithTimeout(d time.Duration) ExecOption` | WithTimeout applies a child context timeout around command execution. | facade | `ExampleWithTimeout` |
 
 ### vcodec
 

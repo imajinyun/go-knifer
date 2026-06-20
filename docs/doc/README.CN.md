@@ -84,6 +84,7 @@
 | [`vver`](46-vver.md) | `github.com/imajinyun/go-knifer/vver` | 版本工具：版本比较、大小关系判断、表达式匹配、闭区间范围和自定义表达式分隔符。 |
 | [`vxml`](47-vxml.md) | `github.com/imajinyun/go-knifer/vxml` | XML 工具：解析/读取/写出/格式化、树访问、XPath-style 查询、转义、map/bean 转换、transform options 和 namespace 辅助。 |
 | [`vzip`](48-vzip.md) | `github.com/imajinyun/go-knifer/vzip` | ZIP、gzip、zlib 工具：归档创建/解压、条目读取、遍历、追加、内存条目、流式压缩、有边界解压/解压缩、路径穿越检查和符号链接逃逸检查。 |
+| [`vcli`](49-vcli.md) | `github.com/imajinyun/go-knifer/vcli` | CLI 工具：context-aware 命令执行、可注入 runner、类型化 flag 解析、子命令路由、确定性 help 渲染和 ANSI color 控制。 |
 
 <a id="quickstart-documents"></a>
 

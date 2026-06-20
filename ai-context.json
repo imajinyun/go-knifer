@@ -433,6 +433,7 @@
     { "package": "vblf", "domain": "bloom filter", "internal": "internal/bloomfilter" },
     { "package": "vbool", "domain": "booleans", "internal": "internal/boolean" },
     { "package": "vcache", "domain": "caches", "internal": "internal/cache" },
+    { "package": "vcli", "domain": "CLI helpers", "internal": "internal/cli" },
     { "package": "vcodec", "domain": "Base64/Hex encoding", "internal": "internal/codec" },
     { "package": "vconf", "domain": "configuration", "internal": "internal/conf" },
     { "package": "vconv", "domain": "type conversion", "internal": "internal/conv" },
@@ -489,6 +490,7 @@
     "vjwt",
     "vrand",
     "vid",
-    "vdb"
+    "vdb",
+    "vcli"
   ]
 }

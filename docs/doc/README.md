@@ -84,6 +84,7 @@ The project follows an “internal implementation + public facade” layout: `in
 | [`vver`](46-vver.md) | `github.com/imajinyun/go-knifer/vver` | Version helpers: comparison, greater/less predicates, expression matching, inclusive ranges, and custom expression delimiters. |
 | [`vxml`](47-vxml.md) | `github.com/imajinyun/go-knifer/vxml` | XML helpers: parse/read/write/format, tree navigation, XPath-style lookup, escaping, map/bean conversion, transform options, and namespace utilities. |
 | [`vzip`](48-vzip.md) | `github.com/imajinyun/go-knifer/vzip` | ZIP, gzip, and zlib helpers: archive creation/extraction, entry lookup, traversal, append, in-memory entries, stream compression, bounded extraction/decompression, traversal checks, and symlink escape checks. |
+| [`vcli`](49-vcli.md) | `github.com/imajinyun/go-knifer/vcli` | CLI helpers: context-aware command execution, injected runners, typed flag parsing, subcommand routing, deterministic help rendering, and ANSI color controls. |
 
 <a id="quickstart-documents"></a>
 
