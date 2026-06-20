@@ -4,7 +4,7 @@
   "summary": {
     "package_count": 54,
     "function_count": 2604,
-    "functions_with_examples": 891,
+    "functions_with_examples": 969,
     "context_aware_functions": 36,
     "returns_error_functions": 603,
     "variadic_functions": 776,
@@ -50781,8 +50781,8 @@
       "synopsis": "Package vurl provides URL and URI utilities.",
       "summary": {
         "function_count": 83,
-        "functions_with_examples": 5,
-        "example_coverage_percent": 6,
+        "functions_with_examples": 83,
+        "example_coverage_percent": 100,
         "synopsis_sources": {
           "empty": 0,
           "facade": 83,
@@ -50810,7 +50810,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleAppendQuery"
+          ]
         },
         {
           "name": "BuildQuery",
@@ -50828,7 +50831,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleBuildQuery"
+          ]
         },
         {
           "name": "Complete",
@@ -50873,7 +50879,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleContentLength"
+          ]
         },
         {
           "name": "ContentLengthSafe",
@@ -50892,7 +50901,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleContentLengthSafe"
+          ]
         },
         {
           "name": "ContentLengthSafeWithOptions",
@@ -50915,7 +50927,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleContentLengthSafeWithOptions"
+          ]
         },
         {
           "name": "ContentLengthWithOptions",
@@ -50938,7 +50953,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleContentLengthWithOptions"
+          ]
         },
         {
           "name": "DataURI",
@@ -50968,7 +50986,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleDataURI"
+          ]
         },
         {
           "name": "DataURIBase64",
@@ -50990,7 +51011,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleDataURIBase64"
+          ]
         },
         {
           "name": "Decode",
@@ -51031,7 +51055,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleDecodeForPath"
+          ]
         },
         {
           "name": "DecodePlus",
@@ -51054,7 +51081,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleDecodePlus"
+          ]
         },
         {
           "name": "DecodeQuery",
@@ -51072,7 +51102,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleDecodeQuery"
+          ]
         },
         {
           "name": "DecodeQueryFirst",
@@ -51090,7 +51123,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleDecodeQueryFirst"
+          ]
         },
         {
           "name": "DecodeWithOptions",
@@ -51113,7 +51149,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleDecodeWithOptions"
+          ]
         },
         {
           "name": "DecodedPath",
@@ -51131,7 +51170,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleDecodedPath"
+          ]
         },
         {
           "name": "Encode",
@@ -51170,7 +51212,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleEncodeAll"
+          ]
         },
         {
           "name": "EncodeBlank",
@@ -51188,7 +51233,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleEncodeBlank"
+          ]
         },
         {
           "name": "EncodeFragment",
@@ -51206,7 +51254,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleEncodeFragment"
+          ]
         },
         {
           "name": "EncodeParams",
@@ -51224,7 +51275,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleEncodeParams"
+          ]
         },
         {
           "name": "EncodePath",
@@ -51242,7 +51296,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleEncodePath"
+          ]
         },
         {
           "name": "EncodePathSegment",
@@ -51260,7 +51317,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleEncodePathSegment"
+          ]
         },
         {
           "name": "EncodePathSegmentWithOptions",
@@ -51282,7 +51342,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleEncodePathSegmentWithOptions"
+          ]
         },
         {
           "name": "EncodeQuery",
@@ -51300,7 +51363,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleEncodeQuery"
+          ]
         },
         {
           "name": "EncodeQueryMap",
@@ -51343,7 +51409,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleEncodeQueryWithOptions"
+          ]
         },
         {
           "name": "EncodeWithOptions",
@@ -51365,7 +51434,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleEncodeWithOptions"
+          ]
         },
         {
           "name": "FileURL",
@@ -51384,7 +51456,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleFileURL"
+          ]
         },
         {
           "name": "FileURLs",
@@ -51403,7 +51478,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleFileURLs"
+          ]
         },
         {
           "name": "FormURLEncode",
@@ -51421,7 +51499,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleFormURLEncode"
+          ]
         },
         {
           "name": "FormURLEncodeWithOptions",
@@ -51443,7 +51524,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleFormURLEncodeWithOptions"
+          ]
         },
         {
           "name": "Host",
@@ -51461,7 +51545,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleHost"
+          ]
         },
         {
           "name": "IsAbsoluteURL",
@@ -51479,7 +51566,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsAbsoluteURL"
+          ]
         },
         {
           "name": "IsFileURL",
@@ -51497,7 +51587,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsFileURL"
+          ]
         },
         {
           "name": "IsHTTP",
@@ -51515,7 +51608,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsHTTP"
+          ]
         },
         {
           "name": "IsHTTPS",
@@ -51533,7 +51629,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsHTTPS"
+          ]
         },
         {
           "name": "IsHTTPSURL",
@@ -51551,7 +51650,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsHTTPSURL"
+          ]
         },
         {
           "name": "IsHTTPURL",
@@ -51590,7 +51692,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsJarFileURL"
+          ]
         },
         {
           "name": "IsJarURL",
@@ -51608,7 +51713,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsJarURL"
+          ]
         },
         {
           "name": "IsWebURL",
@@ -51626,7 +51734,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsWebURL"
+          ]
         },
         {
           "name": "NewHTTPURLBuilder",
@@ -51644,7 +51755,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewHTTPURLBuilder"
+          ]
         },
         {
           "name": "NewURLBuilder",
@@ -51656,7 +51770,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewURLBuilder"
+          ]
         },
         {
           "name": "Normalize",
@@ -51682,7 +51799,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNormalize"
+          ]
         },
         {
           "name": "NormalizeUsingOptions",
@@ -51704,7 +51824,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleNormalizeUsingOptions"
+          ]
         },
         {
           "name": "NormalizeWithOptions",
@@ -51734,7 +51857,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleNormalizeWithOptions"
+          ]
         },
         {
           "name": "Open",
@@ -51753,7 +51879,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleOpen"
+          ]
         },
         {
           "name": "OpenSafe",
@@ -51772,7 +51901,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleOpenSafe"
+          ]
         },
         {
           "name": "OpenSafeWithOptions",
@@ -51795,7 +51927,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleOpenSafeWithOptions"
+          ]
         },
         {
           "name": "OpenWithOptions",
@@ -51818,7 +51953,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleOpenWithOptions"
+          ]
         },
         {
           "name": "Parse",
@@ -51837,7 +51975,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleParse"
+          ]
         },
         {
           "name": "ParseHTTP",
@@ -51856,7 +51997,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleParseHTTP"
+          ]
         },
         {
           "name": "ParseURLBuilder",
@@ -51875,7 +52019,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleParseURLBuilder"
+          ]
         },
         {
           "name": "Path",
@@ -51894,7 +52041,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExamplePath"
+          ]
         },
         {
           "name": "Size",
@@ -51913,7 +52063,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleSize"
+          ]
         },
         {
           "name": "SizeWithOptions",
@@ -51936,7 +52089,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleSizeWithOptions"
+          ]
         },
         {
           "name": "StringURI",
@@ -51954,7 +52110,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleStringURI"
+          ]
         },
         {
           "name": "ToURI",
@@ -51977,7 +52136,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleToURI"
+          ]
         },
         {
           "name": "URLDecode",
@@ -51996,7 +52158,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleURLDecode"
+          ]
         },
         {
           "name": "URLEncode",
@@ -52014,7 +52179,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleURLEncode"
+          ]
         },
         {
           "name": "URLEncodeWithOptions",
@@ -52036,7 +52204,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleURLEncodeWithOptions"
+          ]
         },
         {
           "name": "WithAllowLocalFiles",
@@ -52054,7 +52225,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithAllowLocalFiles"
+          ]
         },
         {
           "name": "WithAllowedHosts",
@@ -52072,7 +52246,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleWithAllowedHosts"
+          ]
         },
         {
           "name": "WithAllowedSchemes",
@@ -52090,7 +52267,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleWithAllowedSchemes"
+          ]
         },
         {
           "name": "WithCheckStatus",
@@ -52108,7 +52288,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithCheckStatus"
+          ]
         },
         {
           "name": "WithContext",
@@ -52126,7 +52309,10 @@
           ],
           "returns_error": false,
           "context_aware": true,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithContext"
+          ]
         },
         {
           "name": "WithDefaultScheme",
@@ -52144,7 +52330,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithDefaultScheme"
+          ]
         },
         {
           "name": "WithEncodePath",
@@ -52162,7 +52351,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithEncodePath"
+          ]
         },
         {
           "name": "WithHTTPClient",
@@ -52180,7 +52372,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithHTTPClient"
+          ]
         },
         {
           "name": "WithHeader",
@@ -52202,7 +52397,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithHeader"
+          ]
         },
         {
           "name": "WithHeaders",
@@ -52220,7 +52418,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithHeaders"
+          ]
         },
         {
           "name": "WithLookupIP",
@@ -52238,7 +52439,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithLookupIP"
+          ]
         },
         {
           "name": "WithMaxBytes",
@@ -52256,7 +52460,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithMaxBytes"
+          ]
         },
         {
           "name": "WithOpenFile",
@@ -52274,7 +52481,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithOpenFile"
+          ]
         },
         {
           "name": "WithPathEscapeFunc",
@@ -52292,7 +52502,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithPathEscapeFunc"
+          ]
         },
         {
           "name": "WithPlusAsSpace",
@@ -52310,7 +52523,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithPlusAsSpace"
+          ]
         },
         {
           "name": "WithQueryEscapeFunc",
@@ -52328,7 +52544,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithQueryEscapeFunc"
+          ]
         },
         {
           "name": "WithRejectPrivateHosts",
@@ -52346,7 +52565,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithRejectPrivateHosts"
+          ]
         },
         {
           "name": "WithReplaceSlash",
@@ -52364,7 +52586,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithReplaceSlash"
+          ]
         },
         {
           "name": "WithRequestFactory",
@@ -52382,7 +52607,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithRequestFactory"
+          ]
         },
         {
           "name": "WithStat",
@@ -52400,7 +52628,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithStat"
+          ]
         },
         {
           "name": "WithTimeout",
@@ -52418,7 +52649,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithTimeout"
+          ]
         }
       ]
     },

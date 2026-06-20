@@ -12,7 +12,7 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Module | `github.com/imajinyun/go-knifer` |
 | Packages | 54 |
 | Functions | 2604 |
-| Functions with examples | 891 |
+| Functions with examples | 969 |
 | Context-aware functions | 36 |
 | Functions returning error | 603 |
 | Variadic functions | 776 |
@@ -2910,93 +2910,93 @@ Import path: `github.com/imajinyun/go-knifer/vurl`
 
 Package vurl provides URL and URI utilities.
 
-Quality: 83 functions · 5 with examples · 6.0% example coverage · synopsis sources: facade=83, internal=0, empty=0
+Quality: 83 functions · 83 with examples · 100.0% example coverage · synopsis sources: facade=83, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
-| `AppendQuery` | `func AppendQuery(rawURL string, form map[string]any) string` | AppendQuery appends form values to rawURL. | facade | — |
-| `BuildQuery` | `func BuildQuery(paramMap map[string]any) string` | BuildQuery converts a map to a URL query string. | facade | — |
+| `AppendQuery` | `func AppendQuery(rawURL string, form map[string]any) string` | AppendQuery appends form values to rawURL. | facade | `ExampleAppendQuery` |
+| `BuildQuery` | `func BuildQuery(paramMap map[string]any) string` | BuildQuery converts a map to a URL query string. | facade | `ExampleBuildQuery` |
 | `Complete` | `func Complete(baseURL string, relativePath string) (string, error)` | Complete resolves relativePath against baseURL and returns the absolute URL string. | facade | `ExampleComplete` |
-| `ContentLength` | `func ContentLength(raw string) (int64, error)` | ContentLength returns the resource content length. | facade | — |
-| `ContentLengthSafe` | `func ContentLengthSafe(raw string) (int64, error)` | ContentLengthSafe returns an HTTP(S) resource content length with secure defaults for untrusted input. | facade | — |
-| `ContentLengthSafeWithOptions` | `func ContentLengthSafeWithOptions(raw string, opts ...ResourceOption) (int64, error)` | ContentLengthSafeWithOptions returns an HTTP(S) resource content length with secure defaults for untrusted input. | facade | — |
-| `ContentLengthWithOptions` | `func ContentLengthWithOptions(raw string, opts ...ResourceOption) (int64, error)` | ContentLengthWithOptions returns the resource content length with per-call options. | facade | — |
-| `DataURI` | `func DataURI(mimeType string, charset string, encoding string, data string) string` | DataURI builds a Data URI string. | facade | — |
-| `DataURIBase64` | `func DataURIBase64(mimeType string, data string) string` | DataURIBase64 builds a base64 Data URI string. | facade | — |
+| `ContentLength` | `func ContentLength(raw string) (int64, error)` | ContentLength returns the resource content length. | facade | `ExampleContentLength` |
+| `ContentLengthSafe` | `func ContentLengthSafe(raw string) (int64, error)` | ContentLengthSafe returns an HTTP(S) resource content length with secure defaults for untrusted input. | facade | `ExampleContentLengthSafe` |
+| `ContentLengthSafeWithOptions` | `func ContentLengthSafeWithOptions(raw string, opts ...ResourceOption) (int64, error)` | ContentLengthSafeWithOptions returns an HTTP(S) resource content length with secure defaults for untrusted input. | facade | `ExampleContentLengthSafeWithOptions` |
+| `ContentLengthWithOptions` | `func ContentLengthWithOptions(raw string, opts ...ResourceOption) (int64, error)` | ContentLengthWithOptions returns the resource content length with per-call options. | facade | `ExampleContentLengthWithOptions` |
+| `DataURI` | `func DataURI(mimeType string, charset string, encoding string, data string) string` | DataURI builds a Data URI string. | facade | `ExampleDataURI` |
+| `DataURIBase64` | `func DataURIBase64(mimeType string, data string) string` | DataURIBase64 builds a base64 Data URI string. | facade | `ExampleDataURIBase64` |
 | `Decode` | `func Decode(s string) (string, error)` | Decode unescapes a URL query component and converts plus signs to spaces. | facade | `ExampleDecode` |
-| `DecodeForPath` | `func DecodeForPath(s string) (string, error)` | DecodeForPath unescapes percent-encoded path text without converting plus signs to spaces. | facade | — |
-| `DecodePlus` | `func DecodePlus(s string, plusToSpace bool) (string, error)` | DecodePlus unescapes percent-encoded text and controls whether plus signs become spaces. | facade | — |
-| `DecodeQuery` | `func DecodeQuery(paramsStr string) map[string][]string` | DecodeQuery parses a query string into a multi-value map. | facade | — |
-| `DecodeQueryFirst` | `func DecodeQueryFirst(paramsStr string) map[string]string` | DecodeQueryFirst parses a query string into a single-value map. | facade | — |
-| `DecodeWithOptions` | `func DecodeWithOptions(s string, opts ...DecodeOption) (string, error)` | DecodeWithOptions unescapes percent-encoded text with custom decoding behavior. | facade | — |
-| `DecodedPath` | `func DecodedPath(u *url.URL) string` | DecodedPath returns u's path after percent-decoding. | facade | — |
+| `DecodeForPath` | `func DecodeForPath(s string) (string, error)` | DecodeForPath unescapes percent-encoded path text without converting plus signs to spaces. | facade | `ExampleDecodeForPath` |
+| `DecodePlus` | `func DecodePlus(s string, plusToSpace bool) (string, error)` | DecodePlus unescapes percent-encoded text and controls whether plus signs become spaces. | facade | `ExampleDecodePlus` |
+| `DecodeQuery` | `func DecodeQuery(paramsStr string) map[string][]string` | DecodeQuery parses a query string into a multi-value map. | facade | `ExampleDecodeQuery` |
+| `DecodeQueryFirst` | `func DecodeQueryFirst(paramsStr string) map[string]string` | DecodeQueryFirst parses a query string into a single-value map. | facade | `ExampleDecodeQueryFirst` |
+| `DecodeWithOptions` | `func DecodeWithOptions(s string, opts ...DecodeOption) (string, error)` | DecodeWithOptions unescapes percent-encoded text with custom decoding behavior. | facade | `ExampleDecodeWithOptions` |
+| `DecodedPath` | `func DecodedPath(u *url.URL) string` | DecodedPath returns u's path after percent-decoding. | facade | `ExampleDecodedPath` |
 | `Encode` | `func Encode(s string) string` | Encode escapes a string for URL query components. | facade | `ExampleEncode` |
-| `EncodeAll` | `func EncodeAll(s string) string` | EncodeAll percent-encodes every non-unreserved character. | facade | — |
-| `EncodeBlank` | `func EncodeBlank(raw string) string` | EncodeBlank encodes all Unicode blank characters as %20. | facade | — |
-| `EncodeFragment` | `func EncodeFragment(s string) string` | EncodeFragment escapes URL fragment text. | facade | — |
-| `EncodeParams` | `func EncodeParams(rawURL string) string` | EncodeParams encodes the query part of rawURL and leaves URLs without query unchanged. | facade | — |
-| `EncodePath` | `func EncodePath(s string) string` | EncodePath escapes each path segment and keeps slash separators. | facade | — |
-| `EncodePathSegment` | `func EncodePathSegment(s string) string` | EncodePathSegment escapes one path segment, including slash characters. | facade | — |
-| `EncodePathSegmentWithOptions` | `func EncodePathSegmentWithOptions(s string, opts ...EncodeOption) string` | EncodePathSegmentWithOptions escapes one path segment with custom providers. | facade | — |
-| `EncodeQuery` | `func EncodeQuery(s string) string` | EncodeQuery escapes text for query/form usage. | facade | — |
+| `EncodeAll` | `func EncodeAll(s string) string` | EncodeAll percent-encodes every non-unreserved character. | facade | `ExampleEncodeAll` |
+| `EncodeBlank` | `func EncodeBlank(raw string) string` | EncodeBlank encodes all Unicode blank characters as %20. | facade | `ExampleEncodeBlank` |
+| `EncodeFragment` | `func EncodeFragment(s string) string` | EncodeFragment escapes URL fragment text. | facade | `ExampleEncodeFragment` |
+| `EncodeParams` | `func EncodeParams(rawURL string) string` | EncodeParams encodes the query part of rawURL and leaves URLs without query unchanged. | facade | `ExampleEncodeParams` |
+| `EncodePath` | `func EncodePath(s string) string` | EncodePath escapes each path segment and keeps slash separators. | facade | `ExampleEncodePath` |
+| `EncodePathSegment` | `func EncodePathSegment(s string) string` | EncodePathSegment escapes one path segment, including slash characters. | facade | `ExampleEncodePathSegment` |
+| `EncodePathSegmentWithOptions` | `func EncodePathSegmentWithOptions(s string, opts ...EncodeOption) string` | EncodePathSegmentWithOptions escapes one path segment with custom providers. | facade | `ExampleEncodePathSegmentWithOptions` |
+| `EncodeQuery` | `func EncodeQuery(s string) string` | EncodeQuery escapes text for query/form usage. | facade | `ExampleEncodeQuery` |
 | `EncodeQueryMap` | `func EncodeQueryMap(m map[string]any) string` | EncodeQueryMap converts a map to a URL query string. | facade | `ExampleEncodeQueryMap` |
-| `EncodeQueryWithOptions` | `func EncodeQueryWithOptions(s string, opts ...EncodeOption) string` | EncodeQueryWithOptions escapes text for query/form usage with custom providers. | facade | — |
-| `EncodeWithOptions` | `func EncodeWithOptions(s string, opts ...EncodeOption) string` | EncodeWithOptions escapes a string for URL query components with custom providers. | facade | — |
-| `FileURL` | `func FileURL(path string) (*url.URL, error)` | FileURL converts a filesystem path to a file URL. | facade | — |
-| `FileURLs` | `func FileURLs(paths ...string) ([]*url.URL, error)` | FileURLs converts filesystem paths to file URLs. | facade | — |
-| `FormURLEncode` | `func FormURLEncode(s string) string` | FormURLEncode escapes text for application/x-www-form-urlencoded usage. | facade | — |
-| `FormURLEncodeWithOptions` | `func FormURLEncodeWithOptions(s string, opts ...EncodeOption) string` | FormURLEncodeWithOptions escapes text for application/x-www-form-urlencoded usage with custom providers. | facade | — |
-| `Host` | `func Host(u *url.URL) *url.URL` | Host returns a URL that keeps only scheme and host. | facade | — |
-| `IsAbsoluteURL` | `func IsAbsoluteURL(raw string) bool` | IsAbsoluteURL reports whether raw is an absolute URL with scheme and host. | facade | — |
-| `IsFileURL` | `func IsFileURL(u *url.URL) bool` | IsFileURL reports whether u uses a file-like scheme. | facade | — |
-| `IsHTTP` | `func IsHTTP(raw string) bool` | IsHTTP reports whether raw uses the http scheme prefix. | facade | — |
-| `IsHTTPS` | `func IsHTTPS(raw string) bool` | IsHTTPS reports whether raw uses the https scheme prefix. | facade | — |
-| `IsHTTPSURL` | `func IsHTTPSURL(raw string) bool` | IsHTTPSURL reports whether raw is an absolute https URL with a host. | facade | — |
+| `EncodeQueryWithOptions` | `func EncodeQueryWithOptions(s string, opts ...EncodeOption) string` | EncodeQueryWithOptions escapes text for query/form usage with custom providers. | facade | `ExampleEncodeQueryWithOptions` |
+| `EncodeWithOptions` | `func EncodeWithOptions(s string, opts ...EncodeOption) string` | EncodeWithOptions escapes a string for URL query components with custom providers. | facade | `ExampleEncodeWithOptions` |
+| `FileURL` | `func FileURL(path string) (*url.URL, error)` | FileURL converts a filesystem path to a file URL. | facade | `ExampleFileURL` |
+| `FileURLs` | `func FileURLs(paths ...string) ([]*url.URL, error)` | FileURLs converts filesystem paths to file URLs. | facade | `ExampleFileURLs` |
+| `FormURLEncode` | `func FormURLEncode(s string) string` | FormURLEncode escapes text for application/x-www-form-urlencoded usage. | facade | `ExampleFormURLEncode` |
+| `FormURLEncodeWithOptions` | `func FormURLEncodeWithOptions(s string, opts ...EncodeOption) string` | FormURLEncodeWithOptions escapes text for application/x-www-form-urlencoded usage with custom providers. | facade | `ExampleFormURLEncodeWithOptions` |
+| `Host` | `func Host(u *url.URL) *url.URL` | Host returns a URL that keeps only scheme and host. | facade | `ExampleHost` |
+| `IsAbsoluteURL` | `func IsAbsoluteURL(raw string) bool` | IsAbsoluteURL reports whether raw is an absolute URL with scheme and host. | facade | `ExampleIsAbsoluteURL` |
+| `IsFileURL` | `func IsFileURL(u *url.URL) bool` | IsFileURL reports whether u uses a file-like scheme. | facade | `ExampleIsFileURL` |
+| `IsHTTP` | `func IsHTTP(raw string) bool` | IsHTTP reports whether raw uses the http scheme prefix. | facade | `ExampleIsHTTP` |
+| `IsHTTPS` | `func IsHTTPS(raw string) bool` | IsHTTPS reports whether raw uses the https scheme prefix. | facade | `ExampleIsHTTPS` |
+| `IsHTTPSURL` | `func IsHTTPSURL(raw string) bool` | IsHTTPSURL reports whether raw is an absolute https URL with a host. | facade | `ExampleIsHTTPSURL` |
 | `IsHTTPURL` | `func IsHTTPURL(raw string) bool` | IsHTTPURL reports whether raw is an absolute http URL with a host. | facade | `ExampleIsHTTPURL` |
-| `IsJarFileURL` | `func IsJarFileURL(u *url.URL) bool` | IsJarFileURL reports whether u is a file URL ending with .jar. | facade | — |
-| `IsJarURL` | `func IsJarURL(u *url.URL) bool` | IsJarURL reports whether u uses an archive-like scheme. | facade | — |
-| `IsWebURL` | `func IsWebURL(raw string) bool` | IsWebURL reports whether raw is an absolute http or https URL with a host. | facade | — |
-| `NewHTTPURLBuilder` | `func NewHTTPURLBuilder(host string) *URLBuilder` | NewHTTPURLBuilder creates an HTTP URL builder. | facade | — |
-| `NewURLBuilder` | `func NewURLBuilder() *URLBuilder` | NewURLBuilder creates an empty URL builder. | facade | — |
-| `Normalize` | `func Normalize(raw string, encodePath bool, replaceSlash bool) string` | Normalize normalizes a URL string by adding a default scheme and cleaning slashes. | facade | — |
-| `NormalizeUsingOptions` | `func NormalizeUsingOptions(raw string, opts ...NormalizeOption) string` | NormalizeUsingOptions normalizes a URL string using only functional options for optional behavior. | facade | — |
-| `NormalizeWithOptions` | `func NormalizeWithOptions(raw string, encodePath bool, replaceSlash bool, opts ...NormalizeOption) string` | NormalizeWithOptions normalizes a URL string with per-call options. | facade | — |
-| `Open` | `func Open(raw string) (io.ReadCloser, error)` | Open opens a URL resource. | facade | — |
-| `OpenSafe` | `func OpenSafe(raw string) (io.ReadCloser, error)` | OpenSafe opens an HTTP(S) URL with secure defaults for untrusted input. | facade | — |
-| `OpenSafeWithOptions` | `func OpenSafeWithOptions(raw string, opts ...ResourceOption) (io.ReadCloser, error)` | OpenSafeWithOptions opens an HTTP(S) URL with secure defaults for untrusted input. | facade | — |
-| `OpenWithOptions` | `func OpenWithOptions(raw string, opts ...ResourceOption) (io.ReadCloser, error)` | OpenWithOptions opens a URL resource with per-call options. | facade | — |
-| `Parse` | `func Parse(raw string) (*url.URL, error)` | Parse parses raw into a URL. | facade | — |
-| `ParseHTTP` | `func ParseHTTP(raw string) (*url.URL, error)` | ParseHTTP parses raw after encoding blank characters. | facade | — |
-| `ParseURLBuilder` | `func ParseURLBuilder(raw string) (*URLBuilder, error)` | ParseURLBuilder parses raw into a URL builder. | facade | — |
-| `Path` | `func Path(raw string) (string, error)` | Path returns the decoded path part of raw. | facade | — |
-| `Size` | `func Size(raw string) (int64, error)` | Size returns the resource size. | facade | — |
-| `SizeWithOptions` | `func SizeWithOptions(raw string, opts ...ResourceOption) (int64, error)` | SizeWithOptions returns the resource size with per-call options. | facade | — |
-| `StringURI` | `func StringURI(content string) string` | StringURI returns a string-scheme URI for content. | facade | — |
-| `ToURI` | `func ToURI(location string, encode bool) (*url.URL, error)` | ToURI parses location as a URI. | facade | — |
-| `URLDecode` | `func URLDecode(s string) (string, error)` | URLDecode unescapes a URL query component and converts plus signs to spaces. | facade | — |
-| `URLEncode` | `func URLEncode(s string) string` | URLEncode escapes a string for URL query components. | facade | — |
-| `URLEncodeWithOptions` | `func URLEncodeWithOptions(s string, opts ...EncodeOption) string` | URLEncodeWithOptions escapes a string for URL query components with custom providers. | facade | — |
-| `WithAllowLocalFiles` | `func WithAllowLocalFiles(allow bool) ResourceOption` | WithAllowLocalFiles controls whether file URLs and plain filesystem paths are allowed. | facade | — |
-| `WithAllowedHosts` | `func WithAllowedHosts(hosts ...string) ResourceOption` | WithAllowedHosts restricts HTTP(S) resource helpers to the provided host names. | facade | — |
-| `WithAllowedSchemes` | `func WithAllowedSchemes(schemes ...string) ResourceOption` | WithAllowedSchemes restricts resource helpers to the provided URL schemes. | facade | — |
-| `WithCheckStatus` | `func WithCheckStatus(check bool) ResourceOption` | WithCheckStatus makes HTTP resource helpers reject non-2xx responses. | facade | — |
-| `WithContext` | `func WithContext(ctx context.Context) ResourceOption` | WithContext sets the context used by HTTP resource requests. | facade | — |
-| `WithDefaultScheme` | `func WithDefaultScheme(scheme string) NormalizeOption` | WithDefaultScheme sets the scheme used when NormalizeWithOptions receives a URL without scheme. | facade | — |
-| `WithEncodePath` | `func WithEncodePath(encode bool) NormalizeOption` | WithEncodePath controls whether NormalizeUsingOptions escapes the normalized path. | facade | — |
-| `WithHTTPClient` | `func WithHTTPClient(client *http.Client) ResourceOption` | WithHTTPClient sets the HTTP client used by HTTP resource requests. | facade | — |
-| `WithHeader` | `func WithHeader(name string, value string) ResourceOption` | WithHeader adds an HTTP header to HTTP resource requests. | facade | — |
-| `WithHeaders` | `func WithHeaders(headers http.Header) ResourceOption` | WithHeaders adds HTTP headers to HTTP resource requests. | facade | — |
-| `WithLookupIP` | `func WithLookupIP(lookupIP func(context.Context, string) ([]net.IP, error)) ResourceOption` | WithLookupIP sets the host resolver used by SSRF-oriented URL validation and safe dialing. | facade | — |
-| `WithMaxBytes` | `func WithMaxBytes(n int64) ResourceOption` | WithMaxBytes limits how many response body bytes OpenWithOptions may read. | facade | — |
-| `WithOpenFile` | `func WithOpenFile(openFile func(string) (io.ReadCloser, error)) ResourceOption` | WithOpenFile sets the file opener used by local file resource helpers. | facade | — |
-| `WithPathEscapeFunc` | `func WithPathEscapeFunc(escape func(string) string) EncodeOption` | WithPathEscapeFunc sets the path segment escaping provider. | facade | — |
-| `WithPlusAsSpace` | `func WithPlusAsSpace(plusToSpace bool) DecodeOption` | WithPlusAsSpace controls whether plus signs are decoded as spaces. | facade | — |
-| `WithQueryEscapeFunc` | `func WithQueryEscapeFunc(escape func(string) string) EncodeOption` | WithQueryEscapeFunc sets the query/form escaping provider. | facade | — |
-| `WithRejectPrivateHosts` | `func WithRejectPrivateHosts(reject bool) ResourceOption` | WithRejectPrivateHosts rejects localhost, loopback, private, and link-local HTTP(S) hosts unless explicitly allowed. | facade | — |
-| `WithReplaceSlash` | `func WithReplaceSlash(replace bool) NormalizeOption` | WithReplaceSlash controls whether NormalizeUsingOptions collapses repeated slashes in the path. | facade | — |
-| `WithRequestFactory` | `func WithRequestFactory(factory func(context.Context, string, string) (*http.Request, error)) ResourceOption` | WithRequestFactory sets the HTTP request factory used by resource helpers. | facade | — |
-| `WithStat` | `func WithStat(stat func(string) (os.FileInfo, error)) ResourceOption` | WithStat sets the stat provider used by local file resource helpers. | facade | — |
-| `WithTimeout` | `func WithTimeout(timeout time.Duration) ResourceOption` | WithTimeout bounds HTTP resource requests. | facade | — |
+| `IsJarFileURL` | `func IsJarFileURL(u *url.URL) bool` | IsJarFileURL reports whether u is a file URL ending with .jar. | facade | `ExampleIsJarFileURL` |
+| `IsJarURL` | `func IsJarURL(u *url.URL) bool` | IsJarURL reports whether u uses an archive-like scheme. | facade | `ExampleIsJarURL` |
+| `IsWebURL` | `func IsWebURL(raw string) bool` | IsWebURL reports whether raw is an absolute http or https URL with a host. | facade | `ExampleIsWebURL` |
+| `NewHTTPURLBuilder` | `func NewHTTPURLBuilder(host string) *URLBuilder` | NewHTTPURLBuilder creates an HTTP URL builder. | facade | `ExampleNewHTTPURLBuilder` |
+| `NewURLBuilder` | `func NewURLBuilder() *URLBuilder` | NewURLBuilder creates an empty URL builder. | facade | `ExampleNewURLBuilder` |
+| `Normalize` | `func Normalize(raw string, encodePath bool, replaceSlash bool) string` | Normalize normalizes a URL string by adding a default scheme and cleaning slashes. | facade | `ExampleNormalize` |
+| `NormalizeUsingOptions` | `func NormalizeUsingOptions(raw string, opts ...NormalizeOption) string` | NormalizeUsingOptions normalizes a URL string using only functional options for optional behavior. | facade | `ExampleNormalizeUsingOptions` |
+| `NormalizeWithOptions` | `func NormalizeWithOptions(raw string, encodePath bool, replaceSlash bool, opts ...NormalizeOption) string` | NormalizeWithOptions normalizes a URL string with per-call options. | facade | `ExampleNormalizeWithOptions` |
+| `Open` | `func Open(raw string) (io.ReadCloser, error)` | Open opens a URL resource. | facade | `ExampleOpen` |
+| `OpenSafe` | `func OpenSafe(raw string) (io.ReadCloser, error)` | OpenSafe opens an HTTP(S) URL with secure defaults for untrusted input. | facade | `ExampleOpenSafe` |
+| `OpenSafeWithOptions` | `func OpenSafeWithOptions(raw string, opts ...ResourceOption) (io.ReadCloser, error)` | OpenSafeWithOptions opens an HTTP(S) URL with secure defaults for untrusted input. | facade | `ExampleOpenSafeWithOptions` |
+| `OpenWithOptions` | `func OpenWithOptions(raw string, opts ...ResourceOption) (io.ReadCloser, error)` | OpenWithOptions opens a URL resource with per-call options. | facade | `ExampleOpenWithOptions` |
+| `Parse` | `func Parse(raw string) (*url.URL, error)` | Parse parses raw into a URL. | facade | `ExampleParse` |
+| `ParseHTTP` | `func ParseHTTP(raw string) (*url.URL, error)` | ParseHTTP parses raw after encoding blank characters. | facade | `ExampleParseHTTP` |
+| `ParseURLBuilder` | `func ParseURLBuilder(raw string) (*URLBuilder, error)` | ParseURLBuilder parses raw into a URL builder. | facade | `ExampleParseURLBuilder` |
+| `Path` | `func Path(raw string) (string, error)` | Path returns the decoded path part of raw. | facade | `ExamplePath` |
+| `Size` | `func Size(raw string) (int64, error)` | Size returns the resource size. | facade | `ExampleSize` |
+| `SizeWithOptions` | `func SizeWithOptions(raw string, opts ...ResourceOption) (int64, error)` | SizeWithOptions returns the resource size with per-call options. | facade | `ExampleSizeWithOptions` |
+| `StringURI` | `func StringURI(content string) string` | StringURI returns a string-scheme URI for content. | facade | `ExampleStringURI` |
+| `ToURI` | `func ToURI(location string, encode bool) (*url.URL, error)` | ToURI parses location as a URI. | facade | `ExampleToURI` |
+| `URLDecode` | `func URLDecode(s string) (string, error)` | URLDecode unescapes a URL query component and converts plus signs to spaces. | facade | `ExampleURLDecode` |
+| `URLEncode` | `func URLEncode(s string) string` | URLEncode escapes a string for URL query components. | facade | `ExampleURLEncode` |
+| `URLEncodeWithOptions` | `func URLEncodeWithOptions(s string, opts ...EncodeOption) string` | URLEncodeWithOptions escapes a string for URL query components with custom providers. | facade | `ExampleURLEncodeWithOptions` |
+| `WithAllowLocalFiles` | `func WithAllowLocalFiles(allow bool) ResourceOption` | WithAllowLocalFiles controls whether file URLs and plain filesystem paths are allowed. | facade | `ExampleWithAllowLocalFiles` |
+| `WithAllowedHosts` | `func WithAllowedHosts(hosts ...string) ResourceOption` | WithAllowedHosts restricts HTTP(S) resource helpers to the provided host names. | facade | `ExampleWithAllowedHosts` |
+| `WithAllowedSchemes` | `func WithAllowedSchemes(schemes ...string) ResourceOption` | WithAllowedSchemes restricts resource helpers to the provided URL schemes. | facade | `ExampleWithAllowedSchemes` |
+| `WithCheckStatus` | `func WithCheckStatus(check bool) ResourceOption` | WithCheckStatus makes HTTP resource helpers reject non-2xx responses. | facade | `ExampleWithCheckStatus` |
+| `WithContext` | `func WithContext(ctx context.Context) ResourceOption` | WithContext sets the context used by HTTP resource requests. | facade | `ExampleWithContext` |
+| `WithDefaultScheme` | `func WithDefaultScheme(scheme string) NormalizeOption` | WithDefaultScheme sets the scheme used when NormalizeWithOptions receives a URL without scheme. | facade | `ExampleWithDefaultScheme` |
+| `WithEncodePath` | `func WithEncodePath(encode bool) NormalizeOption` | WithEncodePath controls whether NormalizeUsingOptions escapes the normalized path. | facade | `ExampleWithEncodePath` |
+| `WithHTTPClient` | `func WithHTTPClient(client *http.Client) ResourceOption` | WithHTTPClient sets the HTTP client used by HTTP resource requests. | facade | `ExampleWithHTTPClient` |
+| `WithHeader` | `func WithHeader(name string, value string) ResourceOption` | WithHeader adds an HTTP header to HTTP resource requests. | facade | `ExampleWithHeader` |
+| `WithHeaders` | `func WithHeaders(headers http.Header) ResourceOption` | WithHeaders adds HTTP headers to HTTP resource requests. | facade | `ExampleWithHeaders` |
+| `WithLookupIP` | `func WithLookupIP(lookupIP func(context.Context, string) ([]net.IP, error)) ResourceOption` | WithLookupIP sets the host resolver used by SSRF-oriented URL validation and safe dialing. | facade | `ExampleWithLookupIP` |
+| `WithMaxBytes` | `func WithMaxBytes(n int64) ResourceOption` | WithMaxBytes limits how many response body bytes OpenWithOptions may read. | facade | `ExampleWithMaxBytes` |
+| `WithOpenFile` | `func WithOpenFile(openFile func(string) (io.ReadCloser, error)) ResourceOption` | WithOpenFile sets the file opener used by local file resource helpers. | facade | `ExampleWithOpenFile` |
+| `WithPathEscapeFunc` | `func WithPathEscapeFunc(escape func(string) string) EncodeOption` | WithPathEscapeFunc sets the path segment escaping provider. | facade | `ExampleWithPathEscapeFunc` |
+| `WithPlusAsSpace` | `func WithPlusAsSpace(plusToSpace bool) DecodeOption` | WithPlusAsSpace controls whether plus signs are decoded as spaces. | facade | `ExampleWithPlusAsSpace` |
+| `WithQueryEscapeFunc` | `func WithQueryEscapeFunc(escape func(string) string) EncodeOption` | WithQueryEscapeFunc sets the query/form escaping provider. | facade | `ExampleWithQueryEscapeFunc` |
+| `WithRejectPrivateHosts` | `func WithRejectPrivateHosts(reject bool) ResourceOption` | WithRejectPrivateHosts rejects localhost, loopback, private, and link-local HTTP(S) hosts unless explicitly allowed. | facade | `ExampleWithRejectPrivateHosts` |
+| `WithReplaceSlash` | `func WithReplaceSlash(replace bool) NormalizeOption` | WithReplaceSlash controls whether NormalizeUsingOptions collapses repeated slashes in the path. | facade | `ExampleWithReplaceSlash` |
+| `WithRequestFactory` | `func WithRequestFactory(factory func(context.Context, string, string) (*http.Request, error)) ResourceOption` | WithRequestFactory sets the HTTP request factory used by resource helpers. | facade | `ExampleWithRequestFactory` |
+| `WithStat` | `func WithStat(stat func(string) (os.FileInfo, error)) ResourceOption` | WithStat sets the stat provider used by local file resource helpers. | facade | `ExampleWithStat` |
+| `WithTimeout` | `func WithTimeout(timeout time.Duration) ResourceOption` | WithTimeout bounds HTTP resource requests. | facade | `ExampleWithTimeout` |
 
 ### vver
 
