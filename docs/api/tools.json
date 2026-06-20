@@ -4,7 +4,7 @@
   "summary": {
     "package_count": 54,
     "function_count": 2604,
-    "functions_with_examples": 348,
+    "functions_with_examples": 373,
     "context_aware_functions": 36,
     "returns_error_functions": 603,
     "variadic_functions": 776,
@@ -38228,8 +38228,8 @@
       "synopsis": "Package vregex provides public APIs for regular-expression utilities.",
       "summary": {
         "function_count": 89,
-        "functions_with_examples": 5,
-        "example_coverage_percent": 5.6,
+        "functions_with_examples": 30,
+        "example_coverage_percent": 33.7,
         "synopsis_sources": {
           "empty": 0,
           "facade": 89,
@@ -38257,7 +38257,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleContains"
+          ]
         },
         {
           "name": "ContainsRe",
@@ -38327,7 +38330,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleCount"
+          ]
         },
         {
           "name": "CountRe",
@@ -38397,7 +38403,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleDelAll"
+          ]
         },
         {
           "name": "DelAllRe",
@@ -38467,7 +38476,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleDelFirst"
+          ]
         },
         {
           "name": "DelFirstRe",
@@ -38537,7 +38549,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleDelLast"
+          ]
         },
         {
           "name": "DelLastRe",
@@ -38607,7 +38622,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleDelPre"
+          ]
         },
         {
           "name": "DelPreRe",
@@ -38678,7 +38696,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleEach"
+          ]
         },
         {
           "name": "Escape",
@@ -38696,7 +38717,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleEscape"
+          ]
         },
         {
           "name": "EscapeChar",
@@ -38714,7 +38738,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleEscapeChar"
+          ]
         },
         {
           "name": "ExtractMulti",
@@ -38769,7 +38796,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleExtractMultiAndDelPre"
+          ]
         },
         {
           "name": "ExtractMultiAndDelPreRe",
@@ -38928,7 +38958,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleFindAll"
+          ]
         },
         {
           "name": "FindAllGroup",
@@ -39024,7 +39057,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleFindAllGroup1"
+          ]
         },
         {
           "name": "FindAllGroup1WithOptions",
@@ -39181,7 +39217,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleFirst"
+          ]
         },
         {
           "name": "Get",
@@ -39229,7 +39268,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleGetAllGroupNames"
+          ]
         },
         {
           "name": "GetAllGroupNamesRe",
@@ -39307,7 +39349,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleGetAllGroups"
+          ]
         },
         {
           "name": "GetAllGroupsRe",
@@ -39475,7 +39520,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleGetFirstNumber"
+          ]
         },
         {
           "name": "GetFirstNumberWithOptions",
@@ -39568,7 +39616,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleGetGroup1"
+          ]
         },
         {
           "name": "GetGroup1WithOptions",
@@ -39621,7 +39672,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleGetOK"
+          ]
         },
         {
           "name": "GetOKWithOptions",
@@ -39730,7 +39784,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIndexOf"
+          ]
         },
         {
           "name": "IndexOfRe",
@@ -39800,7 +39857,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsMatch"
+          ]
         },
         {
           "name": "IsMatchRe",
@@ -39870,7 +39930,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleLastIndexOf"
+          ]
         },
         {
           "name": "LastIndexOfRe",
@@ -40024,7 +40087,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleReplaceAll"
+          ]
         },
         {
           "name": "ReplaceAllFunc",
@@ -40050,7 +40116,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleReplaceAllFunc"
+          ]
         },
         {
           "name": "ReplaceAllFuncRe",
@@ -40188,7 +40257,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleReplaceFirst"
+          ]
         },
         {
           "name": "ReplaceFirstRe",
@@ -40292,7 +40364,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleTemplateVars"
+          ]
         },
         {
           "name": "TemplateVarsWithOptions",

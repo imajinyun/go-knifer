@@ -12,7 +12,7 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Module | `github.com/imajinyun/go-knifer` |
 | Packages | 54 |
 | Functions | 2604 |
-| Functions with examples | 348 |
+| Functions with examples | 373 |
 | Context-aware functions | 36 |
 | Functions returning error | 603 |
 | Variadic functions | 776 |
@@ -2275,92 +2275,92 @@ Import path: `github.com/imajinyun/go-knifer/vregex`
 
 Package vregex provides public APIs for regular-expression utilities.
 
-Quality: 89 functions · 5 with examples · 5.6% example coverage · synopsis sources: facade=89, internal=0, empty=0
+Quality: 89 functions · 30 with examples · 33.7% example coverage · synopsis sources: facade=89, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
-| `Contains` | `func Contains(pattern string, content string) bool` | Contains reports whether content contains a match. | facade | — |
+| `Contains` | `func Contains(pattern string, content string) bool` | Contains reports whether content contains a match. | facade | `ExampleContains` |
 | `ContainsRe` | `func ContainsRe(re *regexp.Regexp, content string) bool` | ContainsRe reports whether content contains a match for a compiled expression. | facade | — |
 | `ContainsWithOptions` | `func ContainsWithOptions(pattern string, content string, opts ...Option) bool` | ContainsWithOptions reports whether content contains a match with options. | facade | — |
-| `Count` | `func Count(pattern string, content string) int` | Count returns the number of matches. | facade | — |
+| `Count` | `func Count(pattern string, content string) int` | Count returns the number of matches. | facade | `ExampleCount` |
 | `CountRe` | `func CountRe(re *regexp.Regexp, content string) int` | CountRe returns the number of matches for a compiled expression. | facade | — |
 | `CountWithOptions` | `func CountWithOptions(pattern string, content string, opts ...Option) int` | CountWithOptions returns the number of matches with options. | facade | — |
-| `DelAll` | `func DelAll(pattern string, content string) string` | DelAll deletes every match. | facade | — |
+| `DelAll` | `func DelAll(pattern string, content string) string` | DelAll deletes every match. | facade | `ExampleDelAll` |
 | `DelAllRe` | `func DelAllRe(re *regexp.Regexp, content string) string` | DelAllRe deletes every match of a compiled expression. | facade | — |
 | `DelAllWithOptions` | `func DelAllWithOptions(pattern string, content string, opts ...Option) string` | DelAllWithOptions deletes every match with options. | facade | — |
-| `DelFirst` | `func DelFirst(pattern string, content string) string` | DelFirst deletes the first match. | facade | — |
+| `DelFirst` | `func DelFirst(pattern string, content string) string` | DelFirst deletes the first match. | facade | `ExampleDelFirst` |
 | `DelFirstRe` | `func DelFirstRe(re *regexp.Regexp, content string) string` | DelFirstRe deletes the first match of a compiled expression. | facade | — |
 | `DelFirstWithOptions` | `func DelFirstWithOptions(pattern string, content string, opts ...Option) string` | DelFirstWithOptions deletes the first match with options. | facade | — |
-| `DelLast` | `func DelLast(pattern string, content string) string` | DelLast deletes the last match. | facade | — |
+| `DelLast` | `func DelLast(pattern string, content string) string` | DelLast deletes the last match. | facade | `ExampleDelLast` |
 | `DelLastRe` | `func DelLastRe(re *regexp.Regexp, content string) string` | DelLastRe deletes the last match of a compiled expression. | facade | — |
 | `DelLastWithOptions` | `func DelLastWithOptions(pattern string, content string, opts ...Option) string` | DelLastWithOptions deletes the last match with options. | facade | — |
-| `DelPre` | `func DelPre(pattern string, content string) string` | DelPre deletes everything through the first match. | facade | — |
+| `DelPre` | `func DelPre(pattern string, content string) string` | DelPre deletes everything through the first match. | facade | `ExampleDelPre` |
 | `DelPreRe` | `func DelPreRe(re *regexp.Regexp, content string) string` | DelPreRe deletes everything through the first match of a compiled expression. | facade | — |
 | `DelPreWithOptions` | `func DelPreWithOptions(pattern string, content string, opts ...Option) string` | DelPreWithOptions deletes everything through the first match with options. | facade | — |
-| `Each` | `func Each(re *regexp.Regexp, content string, consumer func(MatchResult))` | Each calls consumer for every match. | facade | — |
-| `Escape` | `func Escape(content string) string` | Escape escapes regular-expression keyword characters in content. | facade | — |
-| `EscapeChar` | `func EscapeChar(c rune) string` | EscapeChar escapes a single regular-expression keyword character. | facade | — |
+| `Each` | `func Each(re *regexp.Regexp, content string, consumer func(MatchResult))` | Each calls consumer for every match. | facade | `ExampleEach` |
+| `Escape` | `func Escape(content string) string` | Escape escapes regular-expression keyword characters in content. | facade | `ExampleEscape` |
+| `EscapeChar` | `func EscapeChar(c rune) string` | EscapeChar escapes a single regular-expression keyword character. | facade | `ExampleEscapeChar` |
 | `ExtractMulti` | `func ExtractMulti(pattern string, content string, template string) string` | ExtractMulti builds a string from the first match using $1, $2, ... | facade | `ExampleExtractMulti` |
-| `ExtractMultiAndDelPre` | `func ExtractMultiAndDelPre(pattern string, contentHolder *string, template string) string` | ExtractMultiAndDelPre extracts with a template and removes the consumed prefix from contentHolder. | facade | — |
+| `ExtractMultiAndDelPre` | `func ExtractMultiAndDelPre(pattern string, contentHolder *string, template string) string` | ExtractMultiAndDelPre extracts with a template and removes the consumed prefix from contentHolder. | facade | `ExampleExtractMultiAndDelPre` |
 | `ExtractMultiAndDelPreRe` | `func ExtractMultiAndDelPreRe(re *regexp.Regexp, contentHolder *string, template string) string` | ExtractMultiAndDelPreRe extracts with a template and removes the consumed prefix from contentHolder. | facade | — |
 | `ExtractMultiAndDelPreWithOptions` | `func ExtractMultiAndDelPreWithOptions(pattern string, contentHolder *string, template string, opts ...Option) string` | ExtractMultiAndDelPreWithOptions extracts with a template and removes the consumed prefix with options. | facade | — |
 | `ExtractMultiRe` | `func ExtractMultiRe(re *regexp.Regexp, content string, template string) string` | ExtractMultiRe builds a string from the first match of a compiled expression. | facade | — |
 | `ExtractMultiWithOptions` | `func ExtractMultiWithOptions(pattern string, content string, template string, opts ...Option) string` | ExtractMultiWithOptions builds a string from the first match using $1, $2, ... | facade | — |
 | `Find` | `func Find(pattern string, s string) string` | Find returns the first whole-match result. | facade | `ExampleFind` |
-| `FindAll` | `func FindAll(pattern string, s string) []string` | FindAll returns all whole-match results. | facade | — |
+| `FindAll` | `func FindAll(pattern string, s string) []string` | FindAll returns all whole-match results. | facade | `ExampleFindAll` |
 | `FindAllGroup` | `func FindAllGroup(pattern string, content string, group int) []string` | FindAllGroup returns all values for a capture group. | facade | — |
 | `FindAllGroup0` | `func FindAllGroup0(pattern string, content string) []string` | FindAllGroup0 returns all full-match strings. | facade | — |
 | `FindAllGroup0WithOptions` | `func FindAllGroup0WithOptions(pattern string, content string, opts ...Option) []string` | FindAllGroup0WithOptions returns all full-match strings with options. | facade | — |
-| `FindAllGroup1` | `func FindAllGroup1(pattern string, content string) []string` | FindAllGroup1 returns all first capture groups. | facade | — |
+| `FindAllGroup1` | `func FindAllGroup1(pattern string, content string) []string` | FindAllGroup1 returns all first capture groups. | facade | `ExampleFindAllGroup1` |
 | `FindAllGroup1WithOptions` | `func FindAllGroup1WithOptions(pattern string, content string, opts ...Option) []string` | FindAllGroup1WithOptions returns all first capture groups with options. | facade | — |
 | `FindAllGroupRe` | `func FindAllGroupRe(re *regexp.Regexp, content string, group int) []string` | FindAllGroupRe returns all values for a capture group of a compiled expression. | facade | — |
 | `FindAllGroupWithOptions` | `func FindAllGroupWithOptions(pattern string, content string, group int, opts ...Option) []string` | FindAllGroupWithOptions returns all values for a capture group with options. | facade | — |
 | `FindAllWithOptions` | `func FindAllWithOptions(pattern string, s string, opts ...Option) []string` | FindAllWithOptions returns all whole-match results with options. | facade | — |
 | `FindWithOptions` | `func FindWithOptions(pattern string, s string, opts ...Option) string` | FindWithOptions returns the first whole-match result with options. | facade | — |
-| `First` | `func First(re *regexp.Regexp, content string, consumer func(MatchResult))` | First calls consumer with the first match of re. | facade | — |
+| `First` | `func First(re *regexp.Regexp, content string, consumer func(MatchResult))` | First calls consumer with the first match of re. | facade | `ExampleFirst` |
 | `Get` | `func Get(pattern string, content string, groupIndex int) string` | Get returns a capture group from the first match. | facade | — |
-| `GetAllGroupNames` | `func GetAllGroupNames(pattern string, content string) map[string]string` | GetAllGroupNames returns named capture groups from the first match. | facade | — |
+| `GetAllGroupNames` | `func GetAllGroupNames(pattern string, content string) map[string]string` | GetAllGroupNames returns named capture groups from the first match. | facade | `ExampleGetAllGroupNames` |
 | `GetAllGroupNamesRe` | `func GetAllGroupNamesRe(re *regexp.Regexp, content string) map[string]string` | GetAllGroupNamesRe returns named capture groups from the first match of a compiled expression. | facade | — |
 | `GetAllGroupNamesWithOptions` | `func GetAllGroupNamesWithOptions(pattern string, content string, opts ...Option) map[string]string` | GetAllGroupNamesWithOptions returns named capture groups from the first match with options. | facade | — |
-| `GetAllGroups` | `func GetAllGroups(pattern string, content string, withGroup0 bool, findAll bool) []string` | GetAllGroups returns capture groups from matches. | facade | — |
+| `GetAllGroups` | `func GetAllGroups(pattern string, content string, withGroup0 bool, findAll bool) []string` | GetAllGroups returns capture groups from matches. | facade | `ExampleGetAllGroups` |
 | `GetAllGroupsRe` | `func GetAllGroupsRe(re *regexp.Regexp, content string, withGroup0 bool, findAll bool) []string` | GetAllGroupsRe returns capture groups from matches of a compiled expression. | facade | — |
 | `GetAllGroupsWithOptions` | `func GetAllGroupsWithOptions(pattern string, content string, withGroup0 bool, findAll bool, opts ...Option) []string` | GetAllGroupsWithOptions returns capture groups from matches with options. | facade | — |
 | `GetByName` | `func GetByName(pattern string, content string, groupName string) string` | GetByName returns a named capture group from the first match. | facade | `ExampleGetByName` |
 | `GetByNameRe` | `func GetByNameRe(re *regexp.Regexp, content string, groupName string) string` | GetByNameRe returns a named capture group from the first match of a compiled expression. | facade | — |
 | `GetByNameWithOptions` | `func GetByNameWithOptions(pattern string, content string, groupName string, opts ...Option) string` | GetByNameWithOptions returns a named capture group from the first match with options. | facade | — |
-| `GetFirstNumber` | `func GetFirstNumber(content string) (int, bool)` | GetFirstNumber returns the first integer in content. | facade | — |
+| `GetFirstNumber` | `func GetFirstNumber(content string) (int, bool)` | GetFirstNumber returns the first integer in content. | facade | `ExampleGetFirstNumber` |
 | `GetFirstNumberWithOptions` | `func GetFirstNumberWithOptions(content string, opts ...Option) (int, bool)` | GetFirstNumberWithOptions returns the first integer in content with options. | facade | — |
 | `GetGroup0` | `func GetGroup0(pattern string, content string) string` | GetGroup0 returns the full text of the first match. | facade | — |
 | `GetGroup0WithOptions` | `func GetGroup0WithOptions(pattern string, content string, opts ...Option) string` | GetGroup0WithOptions returns the full text of the first match with options. | facade | — |
-| `GetGroup1` | `func GetGroup1(pattern string, content string) string` | GetGroup1 returns the first capture group of the first match. | facade | — |
+| `GetGroup1` | `func GetGroup1(pattern string, content string) string` | GetGroup1 returns the first capture group of the first match. | facade | `ExampleGetGroup1` |
 | `GetGroup1WithOptions` | `func GetGroup1WithOptions(pattern string, content string, opts ...Option) string` | GetGroup1WithOptions returns the first capture group of the first match with options. | facade | — |
-| `GetOK` | `func GetOK(pattern string, content string, groupIndex int) (string, bool)` | GetOK returns a capture group from the first match and reports whether it exists. | facade | — |
+| `GetOK` | `func GetOK(pattern string, content string, groupIndex int) (string, bool)` | GetOK returns a capture group from the first match and reports whether it exists. | facade | `ExampleGetOK` |
 | `GetOKWithOptions` | `func GetOKWithOptions(pattern string, content string, groupIndex int, opts ...Option) (string, bool)` | GetOKWithOptions returns a capture group from the first match with options and reports whether it exists. | facade | — |
 | `GetRe` | `func GetRe(re *regexp.Regexp, content string, groupIndex int) string` | GetRe returns a capture group from the first match of a compiled expression. | facade | — |
 | `GetWithOptions` | `func GetWithOptions(pattern string, content string, groupIndex int, opts ...Option) string` | GetWithOptions returns a capture group from the first match with options. | facade | — |
-| `IndexOf` | `func IndexOf(pattern string, content string) *MatchResult` | IndexOf returns the first match result. | facade | — |
+| `IndexOf` | `func IndexOf(pattern string, content string) *MatchResult` | IndexOf returns the first match result. | facade | `ExampleIndexOf` |
 | `IndexOfRe` | `func IndexOfRe(re *regexp.Regexp, content string) *MatchResult` | IndexOfRe returns the first match result for a compiled expression. | facade | — |
 | `IndexOfWithOptions` | `func IndexOfWithOptions(pattern string, content string, opts ...Option) *MatchResult` | IndexOfWithOptions returns the first match result with options. | facade | — |
-| `IsMatch` | `func IsMatch(pattern string, content string) bool` | IsMatch reports whether the whole content matches pattern. | facade | — |
+| `IsMatch` | `func IsMatch(pattern string, content string) bool` | IsMatch reports whether the whole content matches pattern. | facade | `ExampleIsMatch` |
 | `IsMatchRe` | `func IsMatchRe(re *regexp.Regexp, content string) bool` | IsMatchRe reports whether the whole content matches a compiled expression. | facade | — |
 | `IsMatchWithOptions` | `func IsMatchWithOptions(pattern string, content string, opts ...Option) bool` | IsMatchWithOptions reports whether the whole content matches pattern with options. | facade | — |
-| `LastIndexOf` | `func LastIndexOf(pattern string, content string) *MatchResult` | LastIndexOf returns the last match result. | facade | — |
+| `LastIndexOf` | `func LastIndexOf(pattern string, content string) *MatchResult` | LastIndexOf returns the last match result. | facade | `ExampleLastIndexOf` |
 | `LastIndexOfRe` | `func LastIndexOfRe(re *regexp.Regexp, content string) *MatchResult` | LastIndexOfRe returns the last match result for a compiled expression. | facade | — |
 | `LastIndexOfWithOptions` | `func LastIndexOfWithOptions(pattern string, content string, opts ...Option) *MatchResult` | LastIndexOfWithOptions returns the last match result with options. | facade | — |
 | `Match` | `func Match(pattern string, s string) bool` | Match reports whether s contains a match for pattern. | facade | `ExampleMatch` |
 | `MatchWithOptions` | `func MatchWithOptions(pattern string, s string, opts ...Option) bool` | MatchWithOptions reports whether s contains a match for pattern with options. | facade | — |
 | `Replace` | `func Replace(pattern string, s string, replacement string) string` | Replace replaces all matches with replacement. | facade | `ExampleReplace` |
-| `ReplaceAll` | `func ReplaceAll(content string, pattern string, replacementTemplate string) string` | ReplaceAll replaces all matches using a template with $1, $2, ... | facade | — |
-| `ReplaceAllFunc` | `func ReplaceAllFunc(content string, pattern string, replaceFunc func(MatchResult) string) string` | ReplaceAllFunc replaces all matches using a custom function. | facade | — |
+| `ReplaceAll` | `func ReplaceAll(content string, pattern string, replacementTemplate string) string` | ReplaceAll replaces all matches using a template with $1, $2, ... | facade | `ExampleReplaceAll` |
+| `ReplaceAllFunc` | `func ReplaceAllFunc(content string, pattern string, replaceFunc func(MatchResult) string) string` | ReplaceAllFunc replaces all matches using a custom function. | facade | `ExampleReplaceAllFunc` |
 | `ReplaceAllFuncRe` | `func ReplaceAllFuncRe(content string, re *regexp.Regexp, replaceFunc func(MatchResult) string) string` | ReplaceAllFuncRe replaces all matches of a compiled expression using a custom function. | facade | — |
 | `ReplaceAllFuncWithOptions` | `func ReplaceAllFuncWithOptions(content string, pattern string, replaceFunc func(MatchResult) string, opts ...Option) string` | ReplaceAllFuncWithOptions replaces all matches using a custom function with options. | facade | — |
 | `ReplaceAllRe` | `func ReplaceAllRe(content string, re *regexp.Regexp, replacementTemplate string) string` | ReplaceAllRe replaces all matches of a compiled expression using a template. | facade | — |
 | `ReplaceAllWithOptions` | `func ReplaceAllWithOptions(content string, pattern string, replacementTemplate string, opts ...Option) string` | ReplaceAllWithOptions replaces all matches using a template with options. | facade | — |
-| `ReplaceFirst` | `func ReplaceFirst(pattern string, content string, replacement string) string` | ReplaceFirst replaces the first match. | facade | — |
+| `ReplaceFirst` | `func ReplaceFirst(pattern string, content string, replacement string) string` | ReplaceFirst replaces the first match. | facade | `ExampleReplaceFirst` |
 | `ReplaceFirstRe` | `func ReplaceFirstRe(re *regexp.Regexp, content string, replacement string) string` | ReplaceFirstRe replaces the first match of a compiled expression. | facade | — |
 | `ReplaceFirstWithOptions` | `func ReplaceFirstWithOptions(pattern string, content string, replacement string, opts ...Option) string` | ReplaceFirstWithOptions replaces the first match with options. | facade | — |
 | `ReplaceWithOptions` | `func ReplaceWithOptions(pattern string, s string, replacement string, opts ...Option) string` | ReplaceWithOptions replaces all matches with replacement using options. | facade | — |
-| `TemplateVars` | `func TemplateVars(template string) []int` | TemplateVars returns numeric placeholders referenced by a replacement template, longest first. | facade | — |
+| `TemplateVars` | `func TemplateVars(template string) []int` | TemplateVars returns numeric placeholders referenced by a replacement template, longest first. | facade | `ExampleTemplateVars` |
 | `TemplateVarsWithOptions` | `func TemplateVarsWithOptions(template string, opts ...Option) []int` | TemplateVarsWithOptions returns numeric placeholders referenced by a replacement template with options. | facade | — |
 | `WithCompileFunc` | `func WithCompileFunc(compile func(string) (*regexp.Regexp, error)) Option` | WithCompileFunc sets the compiler used by pattern-string regex helpers. | facade | — |
 | `WithDotAll` | `func WithDotAll(dotAll bool) Option` | WithDotAll controls whether pattern-string helpers wrap patterns with (?s:...). | facade | — |
