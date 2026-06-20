@@ -2,6 +2,7 @@ package vnum_test
 
 import (
 	"fmt"
+	"math/big"
 
 	"github.com/imajinyun/go-knifer/vnum"
 )
@@ -29,6 +30,39 @@ func ExampleAddStr() {
 	// Output: 0.3
 }
 
+func ExampleDiv() {
+	fmt.Println(vnum.Div(10, 3, 2))
+	fmt.Println(vnum.Div(10, 3))
+	// Output:
+	// 3.33
+	// 3.3333333333
+}
+
+func ExampleSumNumber() {
+	fmt.Println(vnum.SumNumber(1, 2, 3))
+	fmt.Println(vnum.SumNumber(1.25, 2.5, -0.75))
+	// Output:
+	// 6
+	// 3
+}
+
+func ExampleAvgNumber() {
+	fmt.Println(vnum.AvgNumber(2, 4, 6))
+	fmt.Println(vnum.AvgNumber[int]())
+	// Output:
+	// 4
+	// 0
+}
+
+func ExampleAbsIntegerE() {
+	value, err := vnum.AbsIntegerE[int8](-128)
+	fmt.Println(value)
+	fmt.Println(err != nil)
+	// Output:
+	// 0
+	// true
+}
+
 func ExampleIsPrimes() {
 	fmt.Println(vnum.IsPrimes(7))
 	fmt.Println(vnum.IsPrimes(8))
@@ -48,9 +82,33 @@ func ExampleCalculate() {
 	// Output: 7
 }
 
+func ExampleParseIntDefault() {
+	fmt.Println(vnum.ParseIntDefault("1,234", -1))
+	fmt.Println(vnum.ParseIntDefault("bad", -1))
+	// Output:
+	// 1234
+	// -1
+}
+
 func ExampleDecimalFormatMoney() {
 	fmt.Println(vnum.DecimalFormatMoney(12345.6))
 	// Output: 12,345.60
+}
+
+func ExampleFormatPercent() {
+	fmt.Println(vnum.FormatPercent(0.1234, 2))
+	fmt.Println(vnum.FormatPercent(0.1, -3))
+	// Output:
+	// 12.34%
+	// 10%
+}
+
+func ExampleRoundMode() {
+	fmt.Println(vnum.RoundMode(2.5, 0, vnum.RoundHalfEven))
+	fmt.Println(vnum.RoundMode(2.5, 0, vnum.RoundHalfUp))
+	// Output:
+	// 2
+	// 3
 }
 
 func ExampleRangeClosed() {
@@ -65,4 +123,22 @@ func ExampleGenRandomNumberWithOptions() {
 	numbers := vnum.GenRandomNumberWithOptions(0, 5, 3, vnum.WithRandomReader(&sequenceReader{}))
 	fmt.Println(numbers)
 	// Output: [0 1 2]
+}
+
+func ExampleBinaryToInt() {
+	value, err := vnum.BinaryToInt("1010")
+	fmt.Println(value)
+	fmt.Println(err)
+	// Output:
+	// 10
+	// <nil>
+}
+
+func ExampleToUnsignedByteArrayLen() {
+	bytes, err := vnum.ToUnsignedByteArrayLen(4, big.NewInt(255))
+	fmt.Printf("%v\n", bytes)
+	fmt.Println(err)
+	// Output:
+	// [0 0 0 255]
+	// <nil>
 }

@@ -5,10 +5,27 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"sort"
 
 	"github.com/imajinyun/go-knifer/vzip"
 )
+
+func writeExampleArchive(entries ...vzip.EntryData) (string, func(), error) {
+	dir, err := os.MkdirTemp("", "go-knifer-vzip-example-")
+	if err != nil {
+		return "", nil, err
+	}
+	cleanup := func() { _ = os.RemoveAll(dir) }
+
+	archivePath := filepath.Join(dir, "example.zip")
+	if err := vzip.ZipEntries(archivePath, entries...); err != nil {
+		cleanup()
+		return "", nil, err
+	}
+	return archivePath, cleanup, nil
+}
 
 func ExampleZipEntriesToWriter() {
 	var archive bytes.Buffer
@@ -43,6 +60,285 @@ func ExampleZipEntriesToWriter() {
 	sort.Strings(names)
 	fmt.Println(names)
 	// Output: [app.setting]
+}
+
+func ExampleZipEntriesToWriterWithOptions() {
+	var archive bytes.Buffer
+	if err := vzip.ZipEntriesToWriterWithOptions(&archive, []vzip.EntryData{
+		{Name: "stored.txt", Data: []byte("stored")},
+	}, vzip.WithCompressionMethod(archivezip.Store)); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	reader, err := archivezip.NewReader(bytes.NewReader(archive.Bytes()), int64(archive.Len()))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(reader.File[0].Name, reader.File[0].Method == archivezip.Store)
+	// Output: stored.txt true
+}
+
+func ExampleNewWriter() {
+	var archive bytes.Buffer
+	writer := vzip.NewWriter(&archive)
+	entry, err := writer.Create("manual.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	if _, err := entry.Write([]byte("manual")); err != nil {
+		fmt.Println(err)
+		return
+	}
+	if err := writer.Close(); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	reader, err := archivezip.NewReader(bytes.NewReader(archive.Bytes()), int64(archive.Len()))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	stream, err := reader.File[0].Open()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer stream.Close()
+	data, _ := io.ReadAll(stream)
+	fmt.Println(reader.File[0].Name, string(data))
+	// Output: manual.txt manual
+}
+
+func ExampleZipEntries() {
+	archivePath, cleanup, err := writeExampleArchive(
+		vzip.EntryData{Name: "config/app.yml", Data: []byte("name: go-knifer")},
+		vzip.EntryData{Name: "README.md", Data: []byte("docs")},
+	)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer cleanup()
+
+	reader, err := vzip.Open(archivePath)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer reader.Close()
+
+	names := make([]string, 0, len(reader.File))
+	for _, file := range reader.File {
+		names = append(names, file.Name)
+	}
+	sort.Strings(names)
+	fmt.Println(names)
+	// Output: [README.md config/app.yml]
+}
+
+func ExampleZipData() {
+	archivePath, cleanup, err := writeExampleArchive(vzip.EntryData{Name: "placeholder", Data: []byte("ignored")})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer cleanup()
+
+	if err := vzip.ZipData(archivePath, "config/app.env", "enabled=true"); err != nil {
+		fmt.Println(err)
+		return
+	}
+	data, err := vzip.GetBytes(archivePath, "config/app.env")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(string(data))
+	// Output: enabled=true
+}
+
+func ExampleZipBytes() {
+	archivePath, cleanup, err := writeExampleArchive(vzip.EntryData{Name: "placeholder", Data: []byte("ignored")})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer cleanup()
+
+	if err := vzip.ZipBytes(archivePath, "payload.bin", []byte{1, 2, 3}); err != nil {
+		fmt.Println(err)
+		return
+	}
+	data, err := vzip.GetBytes(archivePath, "payload.bin")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Printf("% x\n", data)
+	// Output: 01 02 03
+}
+
+func ExampleOpen() {
+	archivePath, cleanup, err := writeExampleArchive(vzip.EntryData{Name: "docs/readme.txt", Data: []byte("docs")})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer cleanup()
+
+	reader, err := vzip.Open(archivePath)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer reader.Close()
+
+	fmt.Println(len(reader.File), reader.File[0].Name)
+	// Output: 1 docs/readme.txt
+}
+
+func ExampleGet() {
+	archivePath, cleanup, err := writeExampleArchive(vzip.EntryData{Name: "data.txt", Data: []byte("payload")})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer cleanup()
+
+	reader, err := vzip.Get(archivePath, "data.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer reader.Close()
+	data, _ := io.ReadAll(reader)
+	fmt.Println(string(data))
+	// Output: payload
+}
+
+func ExampleGetBytes() {
+	archivePath, cleanup, err := writeExampleArchive(vzip.EntryData{Name: "data.txt", Data: []byte("payload")})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer cleanup()
+
+	data, err := vzip.GetBytes(archivePath, "data.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(string(data))
+	// Output: payload
+}
+
+func ExampleRead() {
+	archivePath, cleanup, err := writeExampleArchive(
+		vzip.EntryData{Name: "config/app.yml", Data: []byte("name: go-knifer")},
+		vzip.EntryData{Name: "data.txt", Data: []byte("payload")},
+	)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer cleanup()
+
+	names := make([]string, 0)
+	if err := vzip.Read(archivePath, func(file *archivezip.File) error {
+		names = append(names, file.Name)
+		return nil
+	}); err != nil {
+		fmt.Println(err)
+		return
+	}
+	sort.Strings(names)
+	fmt.Println(names)
+	// Output: [config/app.yml data.txt]
+}
+
+func ExampleListFileNames() {
+	archivePath, cleanup, err := writeExampleArchive(
+		vzip.EntryData{Name: "config/app.yml", Data: []byte("app")},
+		vzip.EntryData{Name: "config/db.yml", Data: []byte("db")},
+		vzip.EntryData{Name: "config/nested/secret.yml", Data: []byte("secret")},
+	)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer cleanup()
+
+	names, err := vzip.ListFileNames(archivePath, "config")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	sort.Strings(names)
+	fmt.Println(names)
+	// Output: [app.yml db.yml]
+}
+
+func ExampleUnzipReaderTo() {
+	var archive bytes.Buffer
+	if err := vzip.ZipEntriesToWriter(&archive, vzip.EntryData{Name: "docs/readme.txt", Data: []byte("docs")}); err != nil {
+		fmt.Println(err)
+		return
+	}
+	reader, err := archivezip.NewReader(bytes.NewReader(archive.Bytes()), int64(archive.Len()))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	dir, err := os.MkdirTemp("", "go-knifer-vzip-unzip-reader-")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer os.RemoveAll(dir)
+	if err := vzip.UnzipReaderTo(reader, dir); err != nil {
+		fmt.Println(err)
+		return
+	}
+	data, err := os.ReadFile(filepath.Join(dir, "docs", "readme.txt"))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(string(data))
+	// Output: docs
+}
+
+func ExampleUnzipTo() {
+	archivePath, cleanup, err := writeExampleArchive(vzip.EntryData{Name: "hello.txt", Data: []byte("hello")})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer cleanup()
+
+	dir, err := os.MkdirTemp("", "go-knifer-vzip-unzip-to-")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer os.RemoveAll(dir)
+	if err := vzip.UnzipTo(archivePath, dir); err != nil {
+		fmt.Println(err)
+		return
+	}
+	data, err := os.ReadFile(filepath.Join(dir, "hello.txt"))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(string(data))
+	// Output: hello
 }
 
 func ExampleGzipString() {

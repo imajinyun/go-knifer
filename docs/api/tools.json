@@ -4,7 +4,7 @@
   "summary": {
     "package_count": 54,
     "function_count": 2604,
-    "functions_with_examples": 308,
+    "functions_with_examples": 348,
     "context_aware_functions": 36,
     "returns_error_functions": 603,
     "variadic_functions": 776,
@@ -31317,8 +31317,8 @@
       "synopsis": "Package vnum provides public APIs for numeric utilities.",
       "summary": {
         "function_count": 146,
-        "functions_with_examples": 8,
-        "example_coverage_percent": 5.5,
+        "functions_with_examples": 17,
+        "example_coverage_percent": 11.6,
         "synopsis_sources": {
           "empty": 0,
           "facade": 15,
@@ -31397,7 +31397,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleAbsIntegerE"
+          ]
         },
         {
           "name": "Add",
@@ -31502,7 +31505,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleAvgNumber"
+          ]
         },
         {
           "name": "BinaryToInt",
@@ -31521,7 +31527,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleBinaryToInt"
+          ]
         },
         {
           "name": "BinaryToIntWithOptions",
@@ -31814,7 +31823,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleDiv"
+          ]
         },
         {
           "name": "DivWithMode",
@@ -32106,7 +32118,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleFormatPercent"
+          ]
         },
         {
           "name": "FormatPercentWithOptions",
@@ -33402,7 +33417,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleParseIntDefault"
+          ]
         },
         {
           "name": "ParseIntDefaultWithOptions",
@@ -33852,7 +33870,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleRoundMode"
+          ]
         },
         {
           "name": "RoundStr",
@@ -33990,7 +34011,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleSumNumber"
+          ]
         },
         {
           "name": "ToBigDecimal",
@@ -34301,7 +34325,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleToUnsignedByteArrayLen"
+          ]
         },
         {
           "name": "WithDoubleFormatFloatFunc",
@@ -51055,8 +51082,8 @@
       "synopsis": "Package vxml provides public APIs for XML utilities.",
       "summary": {
         "function_count": 86,
-        "functions_with_examples": 5,
-        "example_coverage_percent": 5.8,
+        "functions_with_examples": 24,
+        "example_coverage_percent": 27.9,
         "synopsis_sources": {
           "empty": 0,
           "facade": 86,
@@ -51081,7 +51108,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleAppend"
+          ]
         },
         {
           "name": "AppendChild",
@@ -51190,7 +51220,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleCleanInvalid"
+          ]
         },
         {
           "name": "CleanInvalidWithOptions",
@@ -51242,7 +51275,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleCreateXMLWithRoot"
+          ]
         },
         {
           "name": "CreateXMLWithRootNS",
@@ -51264,7 +51300,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleCreateXMLWithRootNS"
+          ]
         },
         {
           "name": "ElementText",
@@ -51290,7 +51329,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleElementText"
+          ]
         },
         {
           "name": "Escape",
@@ -51382,7 +51424,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleGetByXPath"
+          ]
         },
         {
           "name": "GetElement",
@@ -51448,7 +51493,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleGetElements"
+          ]
         },
         {
           "name": "GetNodeByXPath",
@@ -51569,7 +51617,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleMarshalBean"
+          ]
         },
         {
           "name": "MarshalMap",
@@ -51618,7 +51669,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleMarshalString"
+          ]
         },
         {
           "name": "NewNamespaceCache",
@@ -51659,7 +51713,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleParseXML"
+          ]
         },
         {
           "name": "ReadBySAX",
@@ -51681,7 +51738,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleReadBySAX"
+          ]
         },
         {
           "name": "ReadBySAXFile",
@@ -51801,7 +51861,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleReadXMLBytes"
+          ]
         },
         {
           "name": "ReadXMLFile",
@@ -51824,7 +51887,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleReadXMLFile"
+          ]
         },
         {
           "name": "ReadXMLReader",
@@ -51847,7 +51913,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleReadXMLReader"
+          ]
         },
         {
           "name": "TransElements",
@@ -51891,7 +51960,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleTransformWith"
+          ]
         },
         {
           "name": "TransformWithOptions",
@@ -51935,7 +52007,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleUnescape"
+          ]
         },
         {
           "name": "WithBeanMarshalFunc",
@@ -52521,7 +52596,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleWriteTo"
+          ]
         },
         {
           "name": "XMLName",
@@ -52727,7 +52805,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleXMLToBean"
+          ]
         },
         {
           "name": "XMLToBeanWithOptions",
@@ -52798,7 +52879,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleXMLToMapInto"
+          ]
         },
         {
           "name": "XMLToMapIntoWithOptions",
@@ -52858,8 +52942,8 @@
       "synopsis": "Package vzip provides ZIP, gzip, and zlib utilities.",
       "summary": {
         "function_count": 92,
-        "functions_with_examples": 8,
-        "example_coverage_percent": 8.7,
+        "functions_with_examples": 20,
+        "example_coverage_percent": 21.7,
         "synopsis_sources": {
           "empty": 0,
           "facade": 92,
@@ -52936,7 +53020,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleGet"
+          ]
         },
         {
           "name": "GetBytes",
@@ -52959,7 +53046,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleGetBytes"
+          ]
         },
         {
           "name": "GetBytesWithOptions",
@@ -53236,7 +53326,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleListFileNames"
+          ]
         },
         {
           "name": "ListFileNamesWithOptions",
@@ -53281,7 +53374,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewWriter"
+          ]
         },
         {
           "name": "Open",
@@ -53300,7 +53396,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleOpen"
+          ]
         },
         {
           "name": "OpenWithOptions",
@@ -53345,7 +53444,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleRead"
+          ]
         },
         {
           "name": "ReadFile",
@@ -53682,7 +53784,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleUnzipReaderTo"
+          ]
         },
         {
           "name": "UnzipReaderToLimit",
@@ -53756,7 +53861,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleUnzipTo"
+          ]
         },
         {
           "name": "UnzipToLimit",
@@ -54268,7 +54376,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleZipBytes"
+          ]
         },
         {
           "name": "ZipData",
@@ -54294,7 +54405,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleZipData"
+          ]
         },
         {
           "name": "ZipEntries",
@@ -54316,7 +54430,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleZipEntries"
+          ]
         },
         {
           "name": "ZipEntriesToWriter",
@@ -54367,7 +54484,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleZipEntriesToWriterWithOptions"
+          ]
         },
         {
           "name": "ZipEntriesWithOptions",

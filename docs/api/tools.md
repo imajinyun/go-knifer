@@ -12,7 +12,7 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Module | `github.com/imajinyun/go-knifer` |
 | Packages | 54 |
 | Functions | 2604 |
-| Functions with examples | 308 |
+| Functions with examples | 348 |
 | Context-aware functions | 36 |
 | Functions returning error | 603 |
 | Variadic functions | 776 |
@@ -1885,20 +1885,20 @@ Import path: `github.com/imajinyun/go-knifer/vnum`
 
 Package vnum provides public APIs for numeric utilities.
 
-Quality: 146 functions · 8 with examples · 5.5% example coverage · synopsis sources: facade=15, internal=131, empty=0
+Quality: 146 functions · 17 with examples · 11.6% example coverage · synopsis sources: facade=15, internal=131, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `AbsFloat32` | `func AbsFloat32(x float32) float32` | AbsFloat32 returns the absolute value of x without widening to float64. | facade | — |
 | `AbsFloat64` | `func AbsFloat64(x float64) float64` | AbsFloat64 returns the absolute value of x. | facade | — |
 | `AbsInteger` | `func AbsInteger[T integer](v T) T` | AbsInteger returns the absolute value of v, or zero on signed-min overflow. | facade | — |
-| `AbsIntegerE` | `func AbsIntegerE[T integer](v T) (T, error)` | AbsIntegerE returns the absolute value of v, reporting signed-min overflow. | facade | — |
+| `AbsIntegerE` | `func AbsIntegerE[T integer](v T) (T, error)` | AbsIntegerE returns the absolute value of v, reporting signed-min overflow. | facade | `ExampleAbsIntegerE` |
 | `Add` | `func Add(values ...float64) float64` | Add returns the sum of all values using decimal strings as the intermediate form. | internal | — |
 | `AddStr` | `func AddStr(values ...string) *big.Rat` | AddStr returns the exact decimal sum of all numeric strings. | internal | `ExampleAddStr` |
 | `AppendRange` | `func AppendRange(start int, stop int, step int, values []int) []int` | AppendRange appends an inclusive range to values and returns the result. | internal | — |
 | `Avg` | `func Avg[T Number](nums ...T) float64` | Avg returns the arithmetic mean as float64, or 0 for empty input. | internal | — |
-| `AvgNumber` | `func AvgNumber[T number](values ...T) float64` | AvgNumber returns the arithmetic mean of all values, or 0 for empty input. | facade | — |
-| `BinaryToInt` | `func BinaryToInt(binaryStr string) (int, error)` | BinaryToInt parses a binary string into int. | internal | — |
+| `AvgNumber` | `func AvgNumber[T number](values ...T) float64` | AvgNumber returns the arithmetic mean of all values, or 0 for empty input. | facade | `ExampleAvgNumber` |
+| `BinaryToInt` | `func BinaryToInt(binaryStr string) (int, error)` | BinaryToInt parses a binary string into int. | internal | `ExampleBinaryToInt` |
 | `BinaryToIntWithOptions` | `func BinaryToIntWithOptions(binaryStr string, opts ...ParseOption) (int, error)` | BinaryToIntWithOptions parses a binary string into int using per-call parser options. | internal | — |
 | `BinaryToLong` | `func BinaryToLong(binaryStr string) (int64, error)` | BinaryToLong parses a binary string into int64. | internal | — |
 | `BinaryToLongWithOptions` | `func BinaryToLongWithOptions(binaryStr string, opts ...ParseOption) (int64, error)` | BinaryToLongWithOptions parses a binary string into int64 using per-call parser options. | internal | — |
@@ -1911,7 +1911,7 @@ Quality: 146 functions · 8 with examples · 5.5% example coverage · synopsis s
 | `DecimalFormatMoney` | `func DecimalFormatMoney(v float64) string` | DecimalFormatMoney formats money with comma grouping and two decimal places. | internal | `ExampleDecimalFormatMoney` |
 | `DecimalFormatMoneyWithOptions` | `func DecimalFormatMoneyWithOptions(v float64, opts ...FormatOption) string` | DecimalFormatMoneyWithOptions formats money with comma grouping and two decimal places using custom providers. | internal | — |
 | `DecimalFormatWithOptions` | `func DecimalFormatWithOptions(format string, v float64, opts ...FormatOption) string` | DecimalFormatWithOptions formats v with common decimal patterns using custom providers. | internal | — |
-| `Div` | `func Div(a float64, b float64, scale ...int) float64` | Div divides a by b, optionally rounding the result to scale decimal places. | facade | — |
+| `Div` | `func Div(a float64, b float64, scale ...int) float64` | Div divides a by b, optionally rounding the result to scale decimal places. | facade | `ExampleDiv` |
 | `DivWithMode` | `func DivWithMode(a float64, b float64, scale int, mode RoundingMode) float64` | DivWithMode divides a by b and rounds using the requested mode. | internal | — |
 | `Divisor` | `func Divisor(m int, n int) int` | Divisor returns the greatest common divisor. | internal | — |
 | `Equals` | `func Equals(a float64, b float64) bool` | Equals compares two floats using a fixed 1e-9 tolerance. | internal | — |
@@ -1924,7 +1924,7 @@ Quality: 146 functions · 8 with examples · 5.5% example coverage · synopsis s
 | `FactorialBig` | `func FactorialBig(n *big.Int) *big.Int` | FactorialBig returns n! as a big integer. | internal | — |
 | `FactorialBigRange` | `func FactorialBigRange(start *big.Int, end *big.Int) *big.Int` | FactorialBigRange returns start * (start-1) * ... | internal | — |
 | `FactorialRange` | `func FactorialRange(start uint64, end uint64) (uint64, error)` | FactorialRange returns start * (start-1) * ... | internal | — |
-| `FormatPercent` | `func FormatPercent(number float64, scale int) string` | FormatPercent formats number as a percentage with scale fraction digits. | internal | — |
+| `FormatPercent` | `func FormatPercent(number float64, scale int) string` | FormatPercent formats number as a percentage with scale fraction digits. | internal | `ExampleFormatPercent` |
 | `FormatPercentWithOptions` | `func FormatPercentWithOptions(number float64, scale int, opts ...FormatOption) string` | FormatPercentWithOptions formats number as a percentage with scale fraction digits using custom providers. | internal | — |
 | `FromUnsignedByteArray` | `func FromUnsignedByteArray(buf []byte) *big.Int` | FromUnsignedByteArray converts unsigned big-endian bytes to a big integer. | internal | — |
 | `FromUnsignedByteArrayRange` | `func FromUnsignedByteArrayRange(buf []byte, off int, length int) *big.Int` | FromUnsignedByteArrayRange converts a sub-slice of unsigned big-endian bytes to a big integer. | internal | — |
@@ -1985,7 +1985,7 @@ Quality: 146 functions · 8 with examples · 5.5% example coverage · synopsis s
 | `ParseFloatDefaultWithOptions` | `func ParseFloatDefaultWithOptions(numberStr string, defaultValue float32, opts ...ParseOption) float32` | ParseFloatDefaultWithOptions parses a float32 or returns defaultValue on failure using per-call parser options. | internal | — |
 | `ParseFloatWithOptions` | `func ParseFloatWithOptions(number string, opts ...ParseOption) float32` | ParseFloatWithOptions parses a float32 using per-call parser options. | internal | — |
 | `ParseInt` | `func ParseInt(number string) int` | ParseInt parses an int with tolerant handling for blank, hex, and decimal fractions. | internal | — |
-| `ParseIntDefault` | `func ParseIntDefault(numberStr string, defaultValue int) int` | ParseIntDefault parses an int or returns defaultValue on failure. | internal | — |
+| `ParseIntDefault` | `func ParseIntDefault(numberStr string, defaultValue int) int` | ParseIntDefault parses an int or returns defaultValue on failure. | internal | `ExampleParseIntDefault` |
 | `ParseIntDefaultWithOptions` | `func ParseIntDefaultWithOptions(numberStr string, defaultValue int, opts ...ParseOption) int` | ParseIntDefaultWithOptions parses an int or returns defaultValue on failure using per-call parser options. | internal | — |
 | `ParseIntWithOptions` | `func ParseIntWithOptions(number string, opts ...ParseOption) int` | ParseIntWithOptions parses an int using per-call parser options. | internal | — |
 | `ParseLong` | `func ParseLong(number string) int64` | ParseLong parses an int64 with tolerant handling for blank, hex, and decimal fractions. | internal | — |
@@ -2004,14 +2004,14 @@ Quality: 146 functions · 8 with examples · 5.5% example coverage · synopsis s
 | `Round` | `func Round(v float64, scale int) float64` | Round rounds v to scale decimal places with HALF_UP semantics. | internal | `ExampleRound` |
 | `RoundDownFloat` | `func RoundDownFloat(v float64, scale int) float64` | RoundDownFloat truncates extra decimal places. | internal | — |
 | `RoundHalfEvenFloat` | `func RoundHalfEvenFloat(v float64, scale int) float64` | RoundHalfEvenFloat rounds with banker rounding. | internal | — |
-| `RoundMode` | `func RoundMode(v float64, scale int, mode RoundingMode) float64` | RoundMode rounds v to scale decimal places using mode. | internal | — |
+| `RoundMode` | `func RoundMode(v float64, scale int, mode RoundingMode) float64` | RoundMode rounds v to scale decimal places using mode. | internal | `ExampleRoundMode` |
 | `RoundStr` | `func RoundStr(v float64, scale int) string` | RoundStr returns Round formatted with fixed scale digits. | internal | — |
 | `RoundStrWithOptions` | `func RoundStrWithOptions(v float64, scale int, opts ...FormatOption) string` | RoundStrWithOptions returns Round formatted with fixed scale digits using custom providers. | internal | — |
 | `Sqrt` | `func Sqrt(x uint64) uint64` | Sqrt returns the integer square root of x. | internal | — |
 | `Sub` | `func Sub(values ...float64) float64` | Sub subtracts all following values from the first value. | internal | — |
 | `SubStr` | `func SubStr(values ...string) *big.Rat` | SubStr subtracts all following numeric strings from the first value. | internal | — |
 | `Sum` | `func Sum[T Number](nums ...T) T` | Sum returns the sum of all values. | internal | — |
-| `SumNumber` | `func SumNumber[T number](values ...T) float64` | SumNumber returns the sum of all integer or floating-point values as float64. | facade | — |
+| `SumNumber` | `func SumNumber[T number](values ...T) float64` | SumNumber returns the sum of all integer or floating-point values as float64. | facade | `ExampleSumNumber` |
 | `ToBigDecimal` | `func ToBigDecimal(numberStr string) *big.Rat` | ToBigDecimal parses a decimal string into a rational number. | internal | — |
 | `ToBigDecimalWithOptions` | `func ToBigDecimalWithOptions(numberStr string, opts ...ParseOption) *big.Rat` | ToBigDecimalWithOptions parses a decimal string using per-call parser options for fallback parsing. | internal | — |
 | `ToBigInteger` | `func ToBigInteger(number string) *big.Int` | ToBigInteger parses an integer string. | internal | — |
@@ -2026,7 +2026,7 @@ Quality: 146 functions · 8 with examples · 5.5% example coverage · synopsis s
 | `ToStrStripWithOptions` | `func ToStrStripWithOptions(number float64, stripTrailingZeros bool, opts ...FormatOption) string` | ToStrStripWithOptions converts number to string using custom providers and optionally strips trailing zeros. | internal | — |
 | `ToStrWithOptions` | `func ToStrWithOptions(number float64, opts ...FormatOption) string` | ToStrWithOptions converts a float64 to string and strips trailing fractional zeros using custom providers. | internal | — |
 | `ToUnsignedByteArray` | `func ToUnsignedByteArray(value *big.Int) []byte` | ToUnsignedByteArray returns the unsigned big-endian byte representation of value. | internal | — |
-| `ToUnsignedByteArrayLen` | `func ToUnsignedByteArrayLen(length int, value *big.Int) ([]byte, error)` | ToUnsignedByteArrayLen returns value padded to length bytes. | internal | — |
+| `ToUnsignedByteArrayLen` | `func ToUnsignedByteArrayLen(length int, value *big.Int) ([]byte, error)` | ToUnsignedByteArrayLen returns value padded to length bytes. | internal | `ExampleToUnsignedByteArrayLen` |
 | `WithDoubleFormatFloatFunc` | `func WithDoubleFormatFloatFunc(formatter func(float64, byte, int, int) string) DoubleOption` | WithDoubleFormatFloatFunc sets the formatter used by ToDoubleWithOptions. | internal | — |
 | `WithDoubleParseFloatFunc` | `func WithDoubleParseFloatFunc(parser func(string, int) (float64, error)) DoubleOption` | WithDoubleParseFloatFunc sets the parser used by ToDoubleWithOptions. | internal | — |
 | `WithFormatFloatFunc` | `func WithFormatFloatFunc(formatter func(float64, byte, int, int) string) FormatOption` | WithFormatFloatFunc sets the floating-point formatter used by formatting helpers. | internal | — |
@@ -3026,50 +3026,50 @@ Import path: `github.com/imajinyun/go-knifer/vxml`
 
 Package vxml provides public APIs for XML utilities.
 
-Quality: 86 functions · 5 with examples · 5.8% example coverage · synopsis sources: facade=86, internal=0, empty=0
+Quality: 86 functions · 24 with examples · 27.9% example coverage · synopsis sources: facade=86, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
-| `Append` | `func Append(node *Element, data any)` | Append appends map, slice, struct, or scalar data to node. | facade | — |
+| `Append` | `func Append(node *Element, data any)` | Append appends map, slice, struct, or scalar data to node. | facade | `ExampleAppend` |
 | `AppendChild` | `func AppendChild(node *Element, tagName string, namespace ...string) *Element` | AppendChild appends and returns a child element. | facade | — |
 | `AppendText` | `func AppendText(node *Element, text any) *Element` | AppendText appends text to an element. | facade | — |
 | `CleanComment` | `func CleanComment(xmlContent string) string` | CleanComment removes XML comments. | facade | `ExampleCleanComment` |
 | `CleanCommentWithOptions` | `func CleanCommentWithOptions(xmlContent string, opts ...CleanOption) string` | CleanCommentWithOptions removes XML comments with options. | facade | — |
-| `CleanInvalid` | `func CleanInvalid(xmlContent string) string` | CleanInvalid removes XML 1.0 invalid control characters. | facade | — |
+| `CleanInvalid` | `func CleanInvalid(xmlContent string) string` | CleanInvalid removes XML 1.0 invalid control characters. | facade | `ExampleCleanInvalid` |
 | `CleanInvalidWithOptions` | `func CleanInvalidWithOptions(xmlContent string, opts ...CleanOption) string` | CleanInvalidWithOptions removes XML 1.0 invalid control characters with options. | facade | — |
 | `CreateXML` | `func CreateXML() *Document` | CreateXML creates an empty XML document. | facade | — |
-| `CreateXMLWithRoot` | `func CreateXMLWithRoot(rootElementName string) *Document` | CreateXMLWithRoot creates an XML document with root element. | facade | — |
-| `CreateXMLWithRootNS` | `func CreateXMLWithRootNS(rootElementName string, namespace string) *Document` | CreateXMLWithRootNS creates an XML document with root element and namespace URI. | facade | — |
-| `ElementText` | `func ElementText(element *Element, tagName string, defaultValue ...string) string` | ElementText returns child text or defaultValue when missing. | facade | — |
+| `CreateXMLWithRoot` | `func CreateXMLWithRoot(rootElementName string) *Document` | CreateXMLWithRoot creates an XML document with root element. | facade | `ExampleCreateXMLWithRoot` |
+| `CreateXMLWithRootNS` | `func CreateXMLWithRootNS(rootElementName string, namespace string) *Document` | CreateXMLWithRootNS creates an XML document with root element and namespace URI. | facade | `ExampleCreateXMLWithRootNS` |
+| `ElementText` | `func ElementText(element *Element, tagName string, defaultValue ...string) string` | ElementText returns child text or defaultValue when missing. | facade | `ExampleElementText` |
 | `Escape` | `func Escape(s string) string` | Escape escapes XML text. | facade | `ExampleEscape` |
 | `Format` | `func Format(xmlStr string) (string, error)` | Format pretty prints XML content. | facade | — |
 | `FormatWithOptions` | `func FormatWithOptions(xmlStr string, opts ...FormatOption) (string, error)` | FormatWithOptions pretty prints XML content with parser and writer options. | facade | `ExampleFormatWithOptions` |
-| `GetByXPath` | `func GetByXPath(expression string, source any, returnType string) any` | GetByXPath returns matched text, element, or list based on returnType. | facade | — |
+| `GetByXPath` | `func GetByXPath(expression string, source any, returnType string) any` | GetByXPath returns matched text, element, or list based on returnType. | facade | `ExampleGetByXPath` |
 | `GetElement` | `func GetElement(element *Element, tagName string) *Element` | GetElement returns the first child element with tag name. | facade | — |
 | `GetElementByXPath` | `func GetElementByXPath(expression string, source any) *Element` | GetElementByXPath returns the first element matched by a simple expression. | facade | — |
-| `GetElements` | `func GetElements(element *Element, tagName string) []*Element` | GetElements returns child elements with tag name. | facade | — |
+| `GetElements` | `func GetElements(element *Element, tagName string) []*Element` | GetElements returns child elements with tag name. | facade | `ExampleGetElements` |
 | `GetNodeByXPath` | `func GetNodeByXPath(expression string, source any) *Element` | GetNodeByXPath returns the first node matched by a simple expression. | facade | — |
 | `GetNodeListByXPath` | `func GetNodeListByXPath(expression string, source any) []*Element` | GetNodeListByXPath returns all elements matched by a simple expression. | facade | — |
 | `GetOwnerDocument` | `func GetOwnerDocument(node *Element) *Document` | GetOwnerDocument returns the document that owns node by walking to the root. | facade | — |
 | `GetRootElement` | `func GetRootElement(doc *Document) *Element` | GetRootElement returns the document root element. | facade | — |
 | `IsElement` | `func IsElement(node *Element) bool` | IsElement reports whether node is not nil. | facade | — |
-| `MarshalBean` | `func MarshalBean(bean any, opts ...WriteOption) (string, error)` | MarshalBean serializes a struct or map-like value to an XML string. | facade | — |
+| `MarshalBean` | `func MarshalBean(bean any, opts ...WriteOption) (string, error)` | MarshalBean serializes a struct or map-like value to an XML string. | facade | `ExampleMarshalBean` |
 | `MarshalMap` | `func MarshalMap(data map[string]any, opts ...WriteOption) (string, error)` | MarshalMap serializes map data to an XML string. | facade | `ExampleMarshalMap` |
-| `MarshalString` | `func MarshalString(v any, opts ...WriteOption) (string, error)` | MarshalString serializes a document or element to string. | facade | — |
+| `MarshalString` | `func MarshalString(v any, opts ...WriteOption) (string, error)` | MarshalString serializes a document or element to string. | facade | `ExampleMarshalString` |
 | `NewNamespaceCache` | `func NewNamespaceCache(doc *Document) *NamespaceCache` | NewNamespaceCache collects namespace declarations from doc. | facade | — |
-| `ParseXML` | `func ParseXML(xmlStr string, opts ...ParseOption) (*Document, error)` | ParseXML parses an XML string. | facade | — |
-| `ReadBySAX` | `func ReadBySAX(r io.Reader, handler TokenHandler) error` | ReadBySAX streams XML tokens from reader to handler. | facade | — |
+| `ParseXML` | `func ParseXML(xmlStr string, opts ...ParseOption) (*Document, error)` | ParseXML parses an XML string. | facade | `ExampleParseXML` |
+| `ReadBySAX` | `func ReadBySAX(r io.Reader, handler TokenHandler) error` | ReadBySAX streams XML tokens from reader to handler. | facade | `ExampleReadBySAX` |
 | `ReadBySAXFile` | `func ReadBySAXFile(path string, handler TokenHandler) error` | ReadBySAXFile streams XML tokens from file. | facade | — |
 | `ReadBySAXFileWithOptions` | `func ReadBySAXFileWithOptions(path string, handler TokenHandler, opts ...ParseOption) error` | ReadBySAXFileWithOptions streams XML tokens from file with custom parse options. | facade | — |
 | `ReadBySAXWithOptions` | `func ReadBySAXWithOptions(r io.Reader, handler TokenHandler, opts ...ParseOption) error` | ReadBySAXWithOptions streams XML tokens from reader to handler with custom parse options. | facade | — |
 | `ReadXML` | `func ReadXML(pathOrContent string, opts ...ParseOption) (*Document, error)` | ReadXML parses XML content directly, or treats the input as a file path when it does not start with '<'. | facade | — |
-| `ReadXMLBytes` | `func ReadXMLBytes(data []byte, opts ...ParseOption) (*Document, error)` | ReadXMLBytes parses XML bytes. | facade | — |
-| `ReadXMLFile` | `func ReadXMLFile(path string, opts ...ParseOption) (*Document, error)` | ReadXMLFile parses an XML file. | facade | — |
-| `ReadXMLReader` | `func ReadXMLReader(r io.Reader, opts ...ParseOption) (*Document, error)` | ReadXMLReader parses XML from reader. | facade | — |
+| `ReadXMLBytes` | `func ReadXMLBytes(data []byte, opts ...ParseOption) (*Document, error)` | ReadXMLBytes parses XML bytes. | facade | `ExampleReadXMLBytes` |
+| `ReadXMLFile` | `func ReadXMLFile(path string, opts ...ParseOption) (*Document, error)` | ReadXMLFile parses an XML file. | facade | `ExampleReadXMLFile` |
+| `ReadXMLReader` | `func ReadXMLReader(r io.Reader, opts ...ParseOption) (*Document, error)` | ReadXMLReader parses XML from reader. | facade | `ExampleReadXMLReader` |
 | `TransElements` | `func TransElements(nodes []*Element) []*Element` | TransElements returns the input list without nil elements. | facade | — |
-| `TransformWith` | `func TransformWith(source io.Reader, result io.Writer, opts ...WriteOption) error` | TransformWith copies XML from source to result with per-call options. | facade | — |
+| `TransformWith` | `func TransformWith(source io.Reader, result io.Writer, opts ...WriteOption) error` | TransformWith copies XML from source to result with per-call options. | facade | `ExampleTransformWith` |
 | `TransformWithOptions` | `func TransformWithOptions(source io.Reader, result io.Writer, opts ...TransformOption) error` | TransformWithOptions copies XML from source to result with parser and writer options. | facade | — |
-| `Unescape` | `func Unescape(s string) string` | Unescape unescapes XML/HTML entities. | facade | — |
+| `Unescape` | `func Unescape(s string) string` | Unescape unescapes XML/HTML entities. | facade | `ExampleUnescape` |
 | `WithBeanMarshalFunc` | `func WithBeanMarshalFunc(marshal func(any) ([]byte, error)) BeanOption` | WithBeanMarshalFunc sets the marshal provider used by XML bean conversion helpers. | facade | — |
 | `WithBeanUnmarshalFunc` | `func WithBeanUnmarshalFunc(unmarshal func([]byte, any) error) BeanOption` | WithBeanUnmarshalFunc sets the unmarshal provider used by XML bean conversion helpers. | facade | — |
 | `WithCharset` | `func WithCharset(s string) WriteOption` | WithCharset sets the XML declaration charset. | facade | — |
@@ -3101,7 +3101,7 @@ Quality: 86 functions · 5 with examples · 5.8% example coverage · synopsis so
 | `WithTransformParseOptions` | `func WithTransformParseOptions(opts ...ParseOption) TransformOption` | WithTransformParseOptions sets parser options used by TransformWithOptions. | facade | — |
 | `WithTransformWriteOptions` | `func WithTransformWriteOptions(opts ...WriteOption) TransformOption` | WithTransformWriteOptions sets writer options used by TransformWithOptions. | facade | — |
 | `WriteFile` | `func WriteFile(path string, v any, opts ...WriteOption) error` | WriteFile writes a document or element to path. | facade | — |
-| `WriteTo` | `func WriteTo(w io.Writer, v any, opts ...WriteOption) error` | WriteTo serializes a document or element to writer. | facade | — |
+| `WriteTo` | `func WriteTo(w io.Writer, v any, opts ...WriteOption) error` | WriteTo serializes a document or element to writer. | facade | `ExampleWriteTo` |
 | `XMLName` | `func XMLName(local string) xml.Name` | XMLName builds a stdxml.Name from local name. | facade | — |
 | `XMLNodeToBean` | `func XMLNodeToBean(node *Element, dst any) error` | XMLNodeToBean converts an element tree to a map and decodes it into dst. | facade | — |
 | `XMLNodeToBeanWithOptions` | `func XMLNodeToBeanWithOptions(node *Element, dst any, opts ...BeanOption) error` | XMLNodeToBeanWithOptions converts an element tree to a map and decodes it into dst with bean options. | facade | — |
@@ -3110,10 +3110,10 @@ Quality: 86 functions · 5 with examples · 5.8% example coverage · synopsis so
 | `XMLNodeToMapInto` | `func XMLNodeToMapInto(node *Element, result map[string]any) map[string]any` | XMLNodeToMapInto converts an element to map and merges values into result. | facade | — |
 | `XMLNodeToMapIntoWithOptions` | `func XMLNodeToMapIntoWithOptions(node *Element, result map[string]any, opts ...ParseOption) map[string]any` | XMLNodeToMapIntoWithOptions converts an element to map and merges values into result with parser options. | facade | — |
 | `XMLNodeToMapWithOptions` | `func XMLNodeToMapWithOptions(node *Element, opts ...ParseOption) map[string]any` | XMLNodeToMapWithOptions converts an element into a nested map value with parser options. | facade | — |
-| `XMLToBean` | `func XMLToBean(xmlStr string, dst any) error` | XMLToBean parses XML and decodes the generated map into dst. | facade | — |
+| `XMLToBean` | `func XMLToBean(xmlStr string, dst any) error` | XMLToBean parses XML and decodes the generated map into dst. | facade | `ExampleXMLToBean` |
 | `XMLToBeanWithOptions` | `func XMLToBeanWithOptions(xmlStr string, dst any, opts ...ParseOption) error` | XMLToBeanWithOptions parses XML and decodes the generated map into dst with parser options. | facade | — |
 | `XMLToMap` | `func XMLToMap(xmlStr string) (map[string]any, error)` | XMLToMap parses XML into a nested map. | facade | `ExampleXMLToMap` |
-| `XMLToMapInto` | `func XMLToMapInto(xmlStr string, result map[string]any) (map[string]any, error)` | XMLToMapInto parses XML and merges values into result. | facade | — |
+| `XMLToMapInto` | `func XMLToMapInto(xmlStr string, result map[string]any) (map[string]any, error)` | XMLToMapInto parses XML and merges values into result. | facade | `ExampleXMLToMapInto` |
 | `XMLToMapIntoWithOptions` | `func XMLToMapIntoWithOptions(xmlStr string, result map[string]any, opts ...ParseOption) (map[string]any, error)` | XMLToMapIntoWithOptions parses XML and merges values into result with parser options. | facade | — |
 | `XMLToMapWithOptions` | `func XMLToMapWithOptions(xmlStr string, opts ...ParseOption) (map[string]any, error)` | XMLToMapWithOptions parses XML into a nested map with parser options. | facade | — |
 
@@ -3123,14 +3123,14 @@ Import path: `github.com/imajinyun/go-knifer/vzip`
 
 Package vzip provides ZIP, gzip, and zlib utilities.
 
-Quality: 92 functions · 8 with examples · 8.7% example coverage · synopsis sources: facade=92, internal=0, empty=0
+Quality: 92 functions · 20 with examples · 21.7% example coverage · synopsis sources: facade=92, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `Append` | `func Append(zipPath string, srcPath string) error` | Append appends srcPath into zipPath by rewriting the archive. | facade | — |
 | `AppendWithOptions` | `func AppendWithOptions(zipPath string, srcPath string, opts ...ArchiveOption) error` | AppendWithOptions appends srcPath into zipPath by rewriting the archive with per-call options. | facade | — |
-| `Get` | `func Get(zipFile string, name string) (io.ReadCloser, error)` | Get returns a reader for the named entry in zipFile. | facade | — |
-| `GetBytes` | `func GetBytes(zipFile string, name string) ([]byte, error)` | GetBytes returns the content of the named entry in zipFile. | facade | — |
+| `Get` | `func Get(zipFile string, name string) (io.ReadCloser, error)` | Get returns a reader for the named entry in zipFile. | facade | `ExampleGet` |
+| `GetBytes` | `func GetBytes(zipFile string, name string) ([]byte, error)` | GetBytes returns the content of the named entry in zipFile. | facade | `ExampleGetBytes` |
 | `GetBytesWithOptions` | `func GetBytesWithOptions(zipFile string, name string, opts ...ArchiveOption) ([]byte, error)` | GetBytesWithOptions returns the content of the named entry in zipFile with per-call options. | facade | — |
 | `GetStream` | `func GetStream(entry *zip.File) (io.ReadCloser, error)` | GetStream returns a reader for entry. | facade | `ExampleGetStream` |
 | `GetWithOptions` | `func GetWithOptions(zipFile string, name string, opts ...ArchiveOption) (io.ReadCloser, error)` | GetWithOptions returns a reader for the named entry in zipFile with per-call options. | facade | — |
@@ -3142,12 +3142,12 @@ Quality: 92 functions · 8 with examples · 8.7% example coverage · synopsis so
 | `GzipReaderWithOptions` | `func GzipReaderWithOptions(r io.Reader, estimatedLength int, opts ...ArchiveOption) ([]byte, error)` | GzipReaderWithOptions compresses all bytes from r using gzip with per-call options. | facade | — |
 | `GzipString` | `func GzipString(content string) ([]byte, error)` | GzipString compresses text using gzip. | facade | `ExampleGzipString` |
 | `GzipWithOptions` | `func GzipWithOptions(data []byte, opts ...ArchiveOption) ([]byte, error)` | GzipWithOptions compresses data using gzip with per-call options. | facade | — |
-| `ListFileNames` | `func ListFileNames(zipFile string, dir string) ([]string, error)` | ListFileNames returns direct file names under dir inside zipFile. | facade | — |
+| `ListFileNames` | `func ListFileNames(zipFile string, dir string) ([]string, error)` | ListFileNames returns direct file names under dir inside zipFile. | facade | `ExampleListFileNames` |
 | `ListFileNamesWithOptions` | `func ListFileNamesWithOptions(zipFile string, dir string, opts ...ArchiveOption) ([]string, error)` | ListFileNamesWithOptions returns direct file names under dir inside zipFile using per-call options. | facade | — |
-| `NewWriter` | `func NewWriter(out io.Writer) *zip.Writer` | NewWriter returns a ZIP writer for out. | facade | — |
-| `Open` | `func Open(path string) (*zip.ReadCloser, error)` | Open opens a ZIP file for reading. | facade | — |
+| `NewWriter` | `func NewWriter(out io.Writer) *zip.Writer` | NewWriter returns a ZIP writer for out. | facade | `ExampleNewWriter` |
+| `Open` | `func Open(path string) (*zip.ReadCloser, error)` | Open opens a ZIP file for reading. | facade | `ExampleOpen` |
 | `OpenWithOptions` | `func OpenWithOptions(path string, opts ...ArchiveOption) (*zip.ReadCloser, error)` | OpenWithOptions opens a ZIP file for reading with per-call options. | facade | — |
-| `Read` | `func Read(zipFile string, consumer func(*zip.File) error) error` | Read walks every archive entry and calls consumer. | facade | — |
+| `Read` | `func Read(zipFile string, consumer func(*zip.File) error) error` | Read walks every archive entry and calls consumer. | facade | `ExampleRead` |
 | `ReadFile` | `func ReadFile(path string) ([]byte, error)` | ReadFile reads a file from disk. | facade | — |
 | `ReadFileWithOptions` | `func ReadFileWithOptions(path string, opts ...ArchiveOption) ([]byte, error)` | ReadFileWithOptions reads a file using per-call archive options. | facade | — |
 | `ReadWithOptions` | `func ReadWithOptions(zipFile string, consumer func(*zip.File) error, opts ...ArchiveOption) error` | ReadWithOptions walks every archive entry and calls consumer using per-call options. | facade | — |
@@ -3162,10 +3162,10 @@ Quality: 92 functions · 8 with examples · 8.7% example coverage · synopsis so
 | `UnZlibString` | `func UnZlibString(data []byte) (string, error)` | UnZlibString decompresses zlib data and returns text. | facade | `ExampleUnZlibString` |
 | `UnZlibWithOptions` | `func UnZlibWithOptions(data []byte, opts ...ArchiveOption) ([]byte, error)` | UnZlibWithOptions decompresses zlib data with per-call options. | facade | — |
 | `Unzip` | `func Unzip(zipFile string) (string, error)` | Unzip extracts zipFile into a sibling directory named after the archive. | facade | — |
-| `UnzipReaderTo` | `func UnzipReaderTo(r *zip.Reader, destDir string) error` | UnzipReaderTo extracts archive reader contents into destDir. | facade | — |
+| `UnzipReaderTo` | `func UnzipReaderTo(r *zip.Reader, destDir string) error` | UnzipReaderTo extracts archive reader contents into destDir. | facade | `ExampleUnzipReaderTo` |
 | `UnzipReaderToLimit` | `func UnzipReaderToLimit(r *zip.Reader, destDir string, limit int64) error` | UnzipReaderToLimit extracts archive reader contents into destDir and optionally limits total size. | facade | — |
 | `UnzipReaderToWithOptions` | `func UnzipReaderToWithOptions(r *zip.Reader, destDir string, opts ...ArchiveOption) error` | UnzipReaderToWithOptions extracts archive reader contents into destDir with per-call options. | facade | — |
-| `UnzipTo` | `func UnzipTo(zipFile string, destDir string) error` | UnzipTo extracts zipFile into destDir. | facade | — |
+| `UnzipTo` | `func UnzipTo(zipFile string, destDir string) error` | UnzipTo extracts zipFile into destDir. | facade | `ExampleUnzipTo` |
 | `UnzipToLimit` | `func UnzipToLimit(zipFile string, destDir string, limit int64) error` | UnzipToLimit extracts zipFile into destDir and optionally limits total uncompressed size. | facade | — |
 | `UnzipToWithOptions` | `func UnzipToWithOptions(zipFile string, destDir string, opts ...ArchiveOption) error` | UnzipToWithOptions extracts zipFile into destDir with per-call options. | facade | — |
 | `Unzlib` | `func Unzlib(data []byte) ([]byte, error)` | Unzlib decompresses zlib data. | facade | — |
@@ -3192,11 +3192,11 @@ Quality: 92 functions · 8 with examples · 8.7% example coverage · synopsis so
 | `WithSourceDir` | `func WithSourceDir(withSrcDir bool) ArchiveOption` | WithSourceDir controls whether source directory names are included in newly created ZIP archives. | facade | — |
 | `WithStat` | `func WithStat(stat StatFunc) ArchiveOption` | WithStat sets the function used to inspect existing archive paths. | facade | — |
 | `Zip` | `func Zip(srcPath string) (string, error)` | Zip creates an archive next to srcPath and returns the archive path. | facade | — |
-| `ZipBytes` | `func ZipBytes(zipFile string, path string, data []byte) error` | ZipBytes creates or overwrites zipFile and adds one byte entry. | facade | — |
-| `ZipData` | `func ZipData(zipFile string, path string, data string) error` | ZipData creates or overwrites zipFile and adds one text entry. | facade | — |
-| `ZipEntries` | `func ZipEntries(zipFile string, entries ...EntryData) error` | ZipEntries creates or overwrites zipFile and adds in-memory entries. | facade | — |
+| `ZipBytes` | `func ZipBytes(zipFile string, path string, data []byte) error` | ZipBytes creates or overwrites zipFile and adds one byte entry. | facade | `ExampleZipBytes` |
+| `ZipData` | `func ZipData(zipFile string, path string, data string) error` | ZipData creates or overwrites zipFile and adds one text entry. | facade | `ExampleZipData` |
+| `ZipEntries` | `func ZipEntries(zipFile string, entries ...EntryData) error` | ZipEntries creates or overwrites zipFile and adds in-memory entries. | facade | `ExampleZipEntries` |
 | `ZipEntriesToWriter` | `func ZipEntriesToWriter(out io.Writer, entries ...EntryData) error` | ZipEntriesToWriter writes in-memory entries into out as a ZIP archive. | facade | `ExampleZipEntriesToWriter` |
-| `ZipEntriesToWriterWithOptions` | `func ZipEntriesToWriterWithOptions(out io.Writer, entries []EntryData, opts ...ArchiveOption) error` | ZipEntriesToWriterWithOptions writes in-memory entries into out as a ZIP archive with per-call options. | facade | — |
+| `ZipEntriesToWriterWithOptions` | `func ZipEntriesToWriterWithOptions(out io.Writer, entries []EntryData, opts ...ArchiveOption) error` | ZipEntriesToWriterWithOptions writes in-memory entries into out as a ZIP archive with per-call options. | facade | `ExampleZipEntriesToWriterWithOptions` |
 | `ZipEntriesWithOptions` | `func ZipEntriesWithOptions(zipFile string, entries []EntryData, opts ...ArchiveOption) error` | ZipEntriesWithOptions creates or overwrites zipFile and adds in-memory entries with per-call options. | facade | — |
 | `ZipFiles` | `func ZipFiles(dest string, withSrcDir bool, srcFiles ...string) error` | ZipFiles creates a ZIP archive from source files or directories. | facade | — |
 | `ZipFilesFilter` | `func ZipFilesFilter(dest string, withSrcDir bool, filter FileFilter, srcFiles ...string) error` | ZipFilesFilter creates a ZIP archive and filters source paths. | facade | — |
