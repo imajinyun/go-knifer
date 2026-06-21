@@ -90,13 +90,30 @@ func TestCopyPropertiesMapConversionErrors(t *testing.T) {
 			src:  map[string]any{"labels": map[string]any{"1": "bad"}},
 			want: "map value",
 		},
+		{
+			name: "int64 float string overflow",
+			src:  map[string]any{"age64": "1e100"},
+			want: "integer overflow",
+		},
+		{
+			name: "uint64 float string overflow",
+			src:  map[string]any{"quota64": "1e100"},
+			want: "unsigned integer overflow",
+		},
+		{
+			name: "uint64 negative float string",
+			src:  map[string]any{"quota64": "-1.5"},
+			want: "invalid syntax",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			type target struct {
-				Ages   []int
-				Labels map[int]uint
+				Ages    []int
+				Labels  map[int]uint
+				Age64   int64
+				Quota64 uint64
 			}
 			var dst target
 			err := CopyProperties(tt.src, &dst)

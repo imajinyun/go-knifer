@@ -2,6 +2,7 @@ package bean
 
 import (
 	"fmt"
+	"math"
 	"reflect"
 	"slices"
 	"strconv"
@@ -704,7 +705,11 @@ func valueInt(v reflect.Value, bits int, cfg Options) (int64, error) {
 		}
 		n = int64(u)
 	case reflect.Float32, reflect.Float64:
-		n = int64(v.Float())
+		f := v.Float()
+		if !floatFitsIntBits(f, bits) {
+			return 0, fmt.Errorf("integer overflow")
+		}
+		n = int64(f)
 	case reflect.Bool:
 		if v.Bool() {
 			n = 1
@@ -721,6 +726,9 @@ func valueInt(v reflect.Value, bits int, cfg Options) (int64, error) {
 		f, ferr := cfg.ParseFloat(s, 64)
 		if ferr != nil {
 			return 0, err
+		}
+		if !floatFitsIntBits(f, bits) {
+			return 0, fmt.Errorf("integer overflow")
 		}
 		n = int64(f)
 	default:
@@ -753,8 +761,11 @@ func valueUint(v reflect.Value, bits int, cfg Options) (uint64, error) {
 		n = uint64(i)
 	case reflect.Float32, reflect.Float64:
 		f := v.Float()
-		if f < 0 {
-			return 0, fmt.Errorf("negative value %v", f)
+		if !floatFitsUintBits(f, bits) {
+			if f < 0 {
+				return 0, fmt.Errorf("negative value %v", f)
+			}
+			return 0, fmt.Errorf("unsigned integer overflow")
 		}
 		n = uint64(f)
 	case reflect.Bool:
@@ -773,6 +784,9 @@ func valueUint(v reflect.Value, bits int, cfg Options) (uint64, error) {
 		f, ferr := cfg.ParseFloat(s, 64)
 		if ferr != nil || f < 0 {
 			return 0, err
+		}
+		if !floatFitsUintBits(f, bits) {
+			return 0, fmt.Errorf("unsigned integer overflow")
 		}
 		n = uint64(f)
 	default:
@@ -810,6 +824,28 @@ func valueFloat(v reflect.Value, bits int, cfg Options) (float64, error) {
 	default:
 		return 0, fmt.Errorf("cannot convert %s to float", v.Type())
 	}
+}
+
+func floatFitsIntBits(f float64, bits int) bool {
+	if math.IsNaN(f) || math.IsInf(f, 0) {
+		return false
+	}
+	if bits <= 0 || bits > 64 {
+		bits = 64
+	}
+	min := -math.Ldexp(1, bits-1)
+	maxExclusive := math.Ldexp(1, bits-1)
+	return f >= min && f < maxExclusive
+}
+
+func floatFitsUintBits(f float64, bits int) bool {
+	if math.IsNaN(f) || math.IsInf(f, 0) || f < 0 {
+		return false
+	}
+	if bits <= 0 || bits > 64 {
+		bits = 64
+	}
+	return f < math.Ldexp(1, bits)
 }
 
 func defaultBoolParser(s string) (bool, error) {

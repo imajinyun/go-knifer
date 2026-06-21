@@ -1,8 +1,10 @@
 package regex
 
 import (
+	"math"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -87,5 +89,41 @@ func TestSpecializedRegexOptions(t *testing.T) {
 		return strings.ReplaceAll(pattern, `(?<`, `(?P<`)
 	})); got != "abc" {
 		t.Fatalf("GetByNameWithOptions custom normalizer = %q", got)
+	}
+}
+
+func TestRegexOptionFallbacksAndNumberBoundaries(t *testing.T) {
+	clearProviders := func(c *regexConfig) {
+		c.compile = nil
+		c.groupVarRegexp = nil
+		c.numbersRegexp = nil
+		c.namedGroupRegexp = nil
+	}
+
+	if !ReMatchWithOptions(`\d+`, "123", clearProviders) {
+		t.Fatal("nil compile provider should fall back to regexp.Compile")
+	}
+	if got := TemplateVarsWithOptions("$2 $1", clearProviders); !reflect.DeepEqual(got, []int{2, 1}) {
+		t.Fatalf("TemplateVarsWithOptions fallback = %#v", got)
+	}
+	if n, ok := GetFirstNumberWithOptions("v42", clearProviders); !ok || n != 42 {
+		t.Fatalf("GetFirstNumberWithOptions fallback = %d %v", n, ok)
+	}
+	if got := GetByNameWithOptions(`(?<word>\w+)`, "abc", "word", clearProviders); got != "abc" {
+		t.Fatalf("GetByNameWithOptions fallback = %q", got)
+	}
+
+	tooLarge := regexp.MustCompile(regexp.QuoteMeta(strconv.Itoa(math.MaxInt)) + `\d`)
+	if n, ok := GetFirstNumberWithOptions(strconv.Itoa(math.MaxInt)+"9", WithNumbersRegexp(tooLarge)); ok || n != 0 {
+		t.Fatalf("GetFirstNumberWithOptions overflow = %d %v", n, ok)
+	}
+}
+
+func TestIsMatchEmptyPatternContract(t *testing.T) {
+	if IsMatch("", "") {
+		t.Fatal("empty pattern should not match empty content")
+	}
+	if !IsMatch("", "non-empty") {
+		t.Fatal("empty pattern should match non-empty content")
 	}
 }

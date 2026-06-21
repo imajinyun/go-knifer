@@ -2,6 +2,7 @@ package conv
 
 import (
 	"errors"
+	"math"
 	"strconv"
 	"testing"
 )
@@ -182,5 +183,144 @@ func TestAllOptionSettersApplied(t *testing.T) {
 	// nil options are ignored and defaults are retained.
 	if got := ToInt64WithOptions("3", nil, WithParseIntFunc(nil)); got != 3 {
 		t.Fatalf("nil options should keep defaults, got %d", got)
+	}
+}
+
+func TestApplyOptionsFallsBackWhenCustomOptionClearsProviders(t *testing.T) {
+	clearProviders := func(c *config) {
+		c.parseBool = nil
+		c.parseInt = nil
+		c.parseFloat = nil
+		c.formatBool = nil
+		c.formatFloat = nil
+	}
+
+	if got := ToBoolWithOptions("on", clearProviders); !got {
+		t.Fatal("nil parseBool provider should fall back to default")
+	}
+	if got := ToInt64WithOptions("12", clearProviders); got != 12 {
+		t.Fatalf("nil parseInt provider should fall back to default, got %d", got)
+	}
+	if got := ToFloat64WithOptions("1.25", clearProviders); got != 1.25 {
+		t.Fatalf("nil parseFloat provider should fall back to default, got %v", got)
+	}
+	if got := ToStringWithOptions(true, clearProviders); got != "true" {
+		t.Fatalf("nil formatBool provider should fall back to default, got %q", got)
+	}
+	if got := ToStringWithOptions(1.25, clearProviders); got != "1.25" {
+		t.Fatalf("nil formatFloat provider should fall back to default, got %q", got)
+	}
+}
+
+func TestStrictIntegerConversionsCoverConcreteKinds(t *testing.T) {
+	tests := []struct {
+		name string
+		in   any
+		want int64
+	}{
+		{name: "int", in: int(1), want: 1},
+		{name: "int8", in: int8(2), want: 2},
+		{name: "int16", in: int16(3), want: 3},
+		{name: "int32", in: int32(4), want: 4},
+		{name: "int64", in: int64(5), want: 5},
+		{name: "uint", in: uint(6), want: 6},
+		{name: "uint8", in: uint8(7), want: 7},
+		{name: "uint16", in: uint16(8), want: 8},
+		{name: "uint32", in: uint32(9), want: 9},
+		{name: "uint64", in: uint64(10), want: 10},
+		{name: "float32", in: float32(11), want: 11},
+		{name: "float64", in: float64(12), want: 12},
+		{name: "bool true", in: true, want: 1},
+		{name: "bool false", in: false, want: 0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ToInt64E(tt.in)
+			if err != nil {
+				t.Fatalf("ToInt64E(%T) unexpected error = %v", tt.in, err)
+			}
+			if got != tt.want {
+				t.Fatalf("ToInt64E(%T) = %d, want %d", tt.in, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestStrictIntegerConversionsCoverReflectAndStringFallbacks(t *testing.T) {
+	type myUint uint
+	type myUint64 uint64
+	type myFloat float64
+	type myString string
+
+	tests := []struct {
+		name    string
+		in      any
+		want    int64
+		wantErr bool
+	}{
+		{name: "named uint", in: myUint(13), want: 13},
+		{name: "named uint64 overflow", in: myUint64(uint64(math.MaxInt64) + 1), wantErr: true},
+		{name: "named float", in: myFloat(14), want: 14},
+		{name: "named string int", in: myString("15"), want: 15},
+		{name: "strict float string truncates integral value", in: "16.0", want: 16},
+		{name: "strict float string truncates fractional value", in: "16.5", want: 16},
+		{name: "unsupported kind", in: []int{1}, wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ToInt64E(tt.in)
+			if tt.wantErr {
+				if !errors.Is(err, ErrInvalidConversion) {
+					t.Fatalf("ToInt64E(%T) error = %v, want ErrInvalidConversion", tt.in, err)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("ToInt64E(%T) unexpected error = %v", tt.in, err)
+			}
+			if got != tt.want {
+				t.Fatalf("ToInt64E(%T) = %d, want %d", tt.in, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestToBoolDefaultReflectAndProviderErrorPaths(t *testing.T) {
+	type myBool bool
+	type myString string
+
+	if got := ToBoolDefaultWithOptions(myBool(true), false); !got {
+		t.Fatal("named bool should use reflect bool branch")
+	}
+	if got := ToBoolDefaultWithOptions(myString("yes"), false); !got {
+		t.Fatal("named string should parse through reflect string branch")
+	}
+	if got := ToBoolDefaultWithOptions(myString("bad"), true, WithBoolParser(func(string) (bool, error) {
+		return false, errors.New("bad bool")
+	})); !got {
+		t.Fatal("named string parser errors should return default")
+	}
+	if got := ToBoolDefaultWithOptions(nil, true); !got {
+		t.Fatal("nil input should return default")
+	}
+}
+
+func TestToFloat64ReflectStringAndFallbackErrors(t *testing.T) {
+	type myFloat float64
+	type myString string
+
+	if got := ToFloat64WithOptions(myFloat(2.5)); got != 2.5 {
+		t.Fatalf("named float = %v, want 2.5", got)
+	}
+	if got := ToFloat64WithOptions(myString("3.5")); got != 3.5 {
+		t.Fatalf("named string = %v, want 3.5", got)
+	}
+	if got := ToFloat64DefaultWithOptions(myString("   "), -1); got != -1 {
+		t.Fatalf("blank named string = %v, want default", got)
+	}
+	if got := ToFloat64DefaultWithOptions(myString("bad"), -1); got != -1 {
+		t.Fatalf("invalid named string = %v, want default", got)
 	}
 }

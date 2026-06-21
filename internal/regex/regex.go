@@ -662,7 +662,7 @@ func IsMatch(pattern, content string) bool {
 // IsMatchWithOptions reports whether the whole content matches pattern with options.
 func IsMatchWithOptions(pattern, content string, opts ...Option) bool {
 	if pattern == "" {
-		return true
+		return content != ""
 	}
 	re, err := compile(pattern, opts...)
 	if err != nil {
