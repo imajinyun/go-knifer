@@ -28,6 +28,14 @@ Choose helpers by whether the value is security-sensitive or only needs pseudo-r
 - Check secure-random errors and fail closed if the operating system randomness source is unavailable.
 - Consider entropy length explicitly: 16 bytes can be enough for many identifiers, while long-lived keys or tokens often need 32 bytes or more.
 
+## When not to use vrand
+
+- Use `SecureBytes` rather than pseudo-random string or number helpers for secrets, credentials, bearer tokens, nonces, salts, and keys.
+- Use a domain-specific statistical or simulation library when the distribution, seeding, reproducibility, or sampling method must be controlled precisely.
+- Use `crypto/rand` or cryptographic protocols directly when interoperability requires exact byte generation or encoding behavior.
+- Avoid deterministic `WithRandomSource` outside tests, examples, simulations, and non-security reproducibility workflows.
+- Avoid shrinking secure random bytes into a small custom alphabet unless the entropy budget has been reviewed.
+
 ## Benchmarks and trade-offs
 
 Measure secure random generation locally with the focused benchmark suite:

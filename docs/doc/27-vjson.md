@@ -28,6 +28,14 @@ Start with `encoding/json` when you need decoder-level control. Use `vjson` when
 - Validate XML inputs before XML/JSON conversion when the XML crosses a trust boundary.
 - Keep custom decoder factories local to tests or narrow integration points so parsing behavior remains predictable.
 
+## When not to use vjson
+
+- Use `encoding/json.Decoder` directly for streaming, token-level parsing, multiple JSON values from one stream, `DisallowUnknownFields`, or `UseNumber` behavior.
+- Use schema validation or typed request structs when the payload must satisfy strict business rules before use.
+- Use specialized high-performance JSON libraries only after benchmarking and documenting their compatibility trade-offs.
+- Avoid whole-document helpers for very large or unbounded payloads; stream and bound input size first.
+- Use XML-specific parsers and validators when XML semantics, namespaces, attributes, or entity policy matter beyond a small JSON bridge.
+
 ## Benchmarks and trade-offs
 
 Use the JSON benchmark suite to measure helper overhead and conversion cost on your machine:

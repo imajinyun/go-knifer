@@ -24,6 +24,14 @@
 - Keep keys outside source code and rotate them according to application policy.
 - Separate hashing, message authentication, encryption, password derivation, and signing decisions; they solve different problems.
 
+## When not to use vcrypto
+
+- Use Go's `crypto/*` packages directly when you need low-level control, streaming primitives, custom cipher modes, protocol-specific parameters, or audited interoperability code.
+- Use dedicated password-hashing packages such as bcrypt, scrypt, or Argon2id for password storage instead of plain digests or generic key derivation helpers.
+- Avoid legacy primitives such as MD5, SHA-1, or unauthenticated encryption for new security-sensitive designs.
+- Use a key-management service, HSM, or secret manager when key generation, storage, rotation, and audit must be centrally controlled.
+- Do not use encryption helpers as a substitute for authentication, authorization, replay protection, or access-control policy.
+
 ## Benchmarks and trade-offs
 
 Measure crypto helper overhead locally with the focused benchmark suite:

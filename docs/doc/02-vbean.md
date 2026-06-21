@@ -24,6 +24,14 @@ Choose the helper by the mapping direction and how much conversion metadata the 
 - Be deliberate with `WithIgnoreEmpty` and `WithIgnoreZero`; they can preserve existing values but can also hide intentional zero-value updates.
 - Treat map inputs from users or config files as untrusted until required fields, unused fields, and type conversions have been checked.
 
+## When not to use vbean
+
+- Use hand-written mappers when source and destination types are stable, business rules are complex, or reviewers need explicit field-by-field behavior.
+- Use strict decoders or validators before mapping when input must reject unknown fields, malformed values, or policy-specific combinations.
+- Avoid weak conversion for authorization, billing, quota, or compliance decisions unless invalid and unused fields are surfaced and tested.
+- Use typed constructors instead of generic map-to-struct mapping for library APIs and domain objects with invariants.
+- Avoid reflection-based mapping in hot paths until it has been benchmarked against direct typed code.
+
 ## Benchmarks and trade-offs
 
 Use the bean benchmark suite to measure reflection and conversion overhead on your machine:

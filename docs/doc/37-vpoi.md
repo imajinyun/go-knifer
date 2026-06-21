@@ -27,6 +27,14 @@ Choose helpers by where the workbook lives and whether you need one sheet, multi
 - Avoid logging raw spreadsheet cells when they may contain personal data, credentials, or customer content.
 - Prefer in-memory buffer helpers for HTTP export paths where no durable file is needed.
 
+## When not to use vpoi
+
+- Use the underlying Excel library directly when you need formulas, charts, styles, merged cells, data validation, images, comments, or advanced workbook features.
+- Use CSV helpers when the workflow is plain tabular text and does not require XLSX worksheets or workbook metadata.
+- Use a streaming spreadsheet writer for very large exports that cannot fit comfortably in memory.
+- Use domain-specific import validation before trusting uploaded workbook rows or binding them into application records.
+- Avoid file helpers when an in-memory buffer is safer for short-lived HTTP responses or tests.
+
 ## Benchmarks and trade-offs
 
 Use the POI benchmark suite to measure workbook export overhead on your machine:

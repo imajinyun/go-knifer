@@ -24,6 +24,14 @@ Choose helpers based on whether you need a boolean, a match list, captured data,
 - Benchmark or bound inputs for hot paths and large text. Even safe Go regexes can still consume CPU on broad scans.
 - Use `WithDotAll` only when matching across newlines is intended; it can greatly widen what a pattern matches.
 
+## When not to use vregex
+
+- Use compiled `regexp.Regexp` values directly when the same pattern runs repeatedly in a hot loop.
+- Use dedicated parsers for structured formats such as URLs, JSON, XML, HTML, SQL, or programming languages.
+- Use exact string helpers from `strings` when the pattern is a simple prefix, suffix, contains, split, or replacement operation.
+- Avoid composing unescaped user input into regex patterns; use `Escape` for literal fragments or choose a non-regex API.
+- Avoid broad regex scans over unbounded text without input limits, time budgeting, or workload benchmarks.
+
 ## Benchmarks and trade-offs
 
 Benchmark with representative pattern complexity, input length, capture groups, and replacement behavior:

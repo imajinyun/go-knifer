@@ -25,6 +25,14 @@ Start with the smallest helper that matches the text task: normalization, extrac
 - Keep naming-style conversion close to the protocol or schema that requires it so casing rules remain reviewable.
 - Be explicit about trimming and separator rules; subtle whitespace assumptions are a common source of bugs.
 
+## When not to use vstr
+
+- Use the standard `strings`, `unicode`, or `html` packages directly when they express the operation clearly and no facade helper improves readability.
+- Use exact comparisons for authentication, authorization, deduplication keys, and correctness-critical identity checks; similarity helpers are only heuristics.
+- Use a parser or validator for structured formats instead of substring helpers when syntax, escaping, or nesting matters.
+- Use output-context-specific escaping rather than treating `EscapeHTML` as general input validation.
+- Avoid naming-style conversion for persisted identifiers unless the casing rules are part of the data contract and covered by tests.
+
 ## Benchmarks and trade-offs
 
 Use the string benchmark suite to compare helper overhead on your machine:

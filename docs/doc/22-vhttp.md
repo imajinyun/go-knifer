@@ -50,6 +50,14 @@ The suite uses `httptest.Server` and temporary files only. It covers simple GET 
 
 Safe APIs may add validation overhead. Use the benchmark commands in this document to measure the trade-off on your workload.
 
+## When not to use vhttp
+
+- Use `net/http` directly when you need full transport tuning, custom redirect behavior, streaming request/response bodies, connection pooling details, or middleware integration.
+- Use `vresty` when the project already depends on Resty or fluent Resty request/client behavior is the expected abstraction.
+- Use `vurl` when the task is URL normalization, validation, query construction, or resource probing without sending an HTTP request.
+- Avoid non-safe shortcut helpers for URLs from users, config, webhooks, queues, or service discovery; use `Safe` APIs and explicit URL policy instead.
+- Use a dedicated downloader for very large files, resume support, checksums, bandwidth limiting, or backpressure.
+
 ## FAQ
 
 ### Why not use only `net/http`?
