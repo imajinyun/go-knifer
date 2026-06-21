@@ -11,6 +11,29 @@
 | Untrusted URL | `vhttp`/`vresty` plus safe APIs | `Safe`/`E` variants | Applies validation and explicit errors before network access. |
 | File download | `vhttp`/`vresty` safe download helpers | `DownloadFileSafe` family | Keeps path and transfer risks visible. |
 
+## Which helper should I use?
+
+Start with the smallest helper that expresses the trust boundary. Prefer `E` or chained response APIs when the caller must inspect errors, and prefer `Safe` APIs whenever the URL comes from configuration, user input, a webhook, or another service.
+
+| Need | Use | Notes |
+| --- | --- | --- |
+| One-off GET body as a string | `GetStringE`, `GetWithTimeoutE` | Use for trusted URLs when a full `net/http` request would be boilerplate. |
+| Chained request with headers, query, or timeout | `Get(...).Header(...).Query(...).Execute()` | The response object keeps status, headers, body helpers, and error state together. |
+| JSON or form POST | `PostJSONE`, `PostFormE`, `Post(...).BodyString(...).Execute()` | Choose shortcut helpers for simple payloads and chained requests for custom headers or timeout policy. |
+| Bounded response copy | `DownloadWithOptions`, `DownloadBytesE` | Set `WithMaxResponseBytes` when the remote body size is not tightly controlled. |
+| Untrusted URL fetch | `GetStringSafeE`, `GetSafe`, `PostSafe` | Combine with `WithAllowedHosts`, `WithURLPolicy`, and resolver injection in tests. |
+| Untrusted file download | `DownloadSafe`, `DownloadFileSafe` | Keep URL validation and destination-path decisions explicit at the call site. |
+| URL parsing, normalization, or resource probing before HTTP | `vurl` | Use `vurl` when you need URL-only helpers without issuing a full request through `vhttp`. |
+
+## Safe URL policy checklist
+
+- Use `Safe` helpers for any URL that is not a compile-time constant owned by the application.
+- Restrict schemes with `WithURLPolicy` or `WithAllowedSchemes`; most HTTP clients should allow only `http` and `https`.
+- Prefer `WithAllowedHosts` for partner APIs and fixed upstreams. Host allow-lists are easier to audit than broad resolver rules.
+- Keep `RejectPrivate` enabled for internet-facing inputs unless the caller is intentionally reaching a private test server or internal endpoint.
+- Inject `WithLookupIP` in examples and tests when you need deterministic host classification without depending on external DNS.
+- Keep response-size limits visible with `WithMaxResponseBytes` for downloads or other unbounded bodies.
+
 ## Benchmarks and trade-offs
 
 Use the HTTP benchmark suite to measure the convenience and safety overhead on your machine:

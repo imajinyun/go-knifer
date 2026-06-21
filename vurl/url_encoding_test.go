@@ -74,3 +74,12 @@ func TestFacadeAdditionalEncodingAndQueryHelpers(t *testing.T) {
 		t.Fatalf("AppendQuery = %q", got)
 	}
 }
+
+func BenchmarkEncodeQueryMap(b *testing.B) {
+	values := map[string]any{"page": 2, "q": "go knifer", "tag": "safe url"}
+	var out string
+	for b.Loop() {
+		out = vurl.EncodeQueryMap(values)
+	}
+	_ = out
+}

@@ -196,6 +196,35 @@ func TestFacadeContentLengthSafeStatusAndLimit(t *testing.T) {
 	}
 }
 
+func BenchmarkOpenSafeWithOptions(b *testing.B) {
+	client := &http.Client{Transport: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode:    http.StatusOK,
+			ContentLength: 7,
+			Body:          io.NopCloser(strings.NewReader("payload")),
+			Request:       req,
+		}, nil
+	})}
+	lookup := func(context.Context, string) ([]net.IP, error) {
+		return []net.IP{net.ParseIP("93.184.216.34")}, nil
+	}
+	opts := []vurl.ResourceOption{
+		vurl.WithHTTPClient(client),
+		vurl.WithAllowedHosts("example.com"),
+		vurl.WithLookupIP(lookup),
+		vurl.WithMaxBytes(64),
+	}
+
+	for b.Loop() {
+		rc, err := vurl.OpenSafeWithOptions("http://example.com/resource", opts...)
+		if err != nil {
+			b.Fatal(err)
+		}
+		_, _ = io.Copy(io.Discard, rc)
+		_ = rc.Close()
+	}
+}
+
 type roundTripperFunc func(*http.Request) (*http.Response, error)
 
 func (f roundTripperFunc) RoundTrip(req *http.Request) (*http.Response, error) { return f(req) }

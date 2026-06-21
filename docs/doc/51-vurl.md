@@ -2,6 +2,38 @@
 
 `vurl` provides URL building, parsing, encoding/decoding, query handling, normalization, resource opening, and safe HTTP(S) resource access helpers.
 
+## When to use `vurl`
+
+Use `vurl` when the task is about URL shape or safe resource access rather than a full HTTP request workflow. Use `vhttp` or `vresty` when you need request headers, methods, response status handling, downloads, or client configuration.
+
+| Scenario | Recommended helper family | Related package |
+| --- | --- | --- |
+| Build a URL from host, path, query, and fragment | `NewHTTPURLBuilder`, `AppendQuery`, `BuildQuery` | Use before passing the URL to `vhttp` or `vresty`. |
+| Encode or decode path, query, or fragment data | `Encode*`, `Decode*`, `EncodeQueryMap`, `DecodeQueryFirst` | Keeps escaping rules explicit before an HTTP request is built. |
+| Parse, inspect, or normalize URL strings | `ParseHTTP`, `Host`, `Path`, `NormalizeUsingOptions` | Normalize first, then apply package-specific HTTP policy. |
+| Safely open or inspect HTTP(S) resources | `OpenSafeWithOptions`, `ContentLengthSafeWithOptions` | Use `vhttp`/`vresty` for richer request and download flows. |
+| Enforce URL trust policy | `WithAllowedSchemes`, `WithAllowedHosts`, `WithRejectPrivateHosts`, `WithLookupIP` | Mirrors the safe URL policy concepts used by `vhttp` and `vresty`. |
+
+## URL safety checklist
+
+- Treat URLs from users, configuration files, webhooks, and upstream services as untrusted.
+- Allow only the schemes the caller needs. Most remote resource reads should use `WithAllowedSchemes("http", "https")`.
+- Use `WithAllowedHosts` for known partner domains or fixed upstream hosts.
+- Keep private-host rejection enabled for internet-facing inputs; disable it only for controlled tests or documented internal calls.
+- Inject `WithLookupIP` in deterministic tests so host validation does not depend on external DNS.
+- Set `WithTimeout` and `WithMaxBytes` for remote reads to avoid hanging calls and unbounded response bodies.
+- Use `vhttp` or `vresty` safe helpers when you need method-specific requests, headers, or download helpers after URL validation.
+
+## Benchmarks and trade-offs
+
+Measure URL parsing, normalization, query encoding, and safe resource access overhead locally:
+
+```bash
+go test -bench=. -benchmem -run=^$ ./internal/url ./vurl
+```
+
+Use benchmark output as a local baseline. Do not treat results as universal throughput claims; options such as safe host validation, DNS lookup injection, timeouts, and byte limits change the work performed by each helper.
+
 ## Build URLs
 
 ```go

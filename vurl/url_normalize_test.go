@@ -76,3 +76,11 @@ func TestFacadePathAndSchemeHelpers(t *testing.T) {
 		t.Fatalf("DataURIBase64 = %q", got)
 	}
 }
+
+func BenchmarkNormalizeUsingOptions(b *testing.B) {
+	var out string
+	for b.Loop() {
+		out = vurl.NormalizeUsingOptions("example.com//a b", vurl.WithDefaultScheme("https"), vurl.WithEncodePath(true), vurl.WithReplaceSlash(true))
+	}
+	_ = out
+}

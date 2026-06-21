@@ -11,6 +11,36 @@
 | Untrusted URL | `vhttp`/`vresty` plus safe APIs | `Safe`/`E` variants | Applies validation and explicit errors before network access. |
 | File download | `vhttp`/`vresty` safe download helpers | `DownloadFileSafe` family | Keeps path and transfer risks visible. |
 
+## When to use `vresty` instead of `vhttp`
+
+`vresty` is the right facade when the codebase already depends on Resty or when fluent request construction is more readable than passing option lists through standard-library style helpers. If the request flow is simple and you do not need Resty features, `vhttp` is usually the smaller dependency surface.
+
+| Decision point | Prefer `vresty` | Prefer `vhttp` |
+| --- | --- | --- |
+| Client model | Existing Resty client conventions, middleware, or fluent request style. | Standard-library-style helpers and minimal dependency expectations. |
+| Request shape | Many per-request headers, query params, body mutations, or chained options. | Small GET/POST/download helpers with explicit option arguments. |
+| Team familiarity | Callers already read Resty request chains. | Callers expect `net/http` semantics and explicit response closing. |
+| Safety boundary | Use `GetSafe`, `PostSafe`, `DownloadSafe`, and `WithURLPolicy` while keeping Resty ergonomics. | Use the same safe policy concepts through `vhttp` helpers. |
+| URL-only work | Use `vurl` first if no HTTP request should be sent yet. | Use `vurl` first if no HTTP request should be sent yet. |
+
+The chained API keeps request construction close to execution:
+
+```go
+resp := vresty.Get("https://example.com/api").
+	Header("X-Trace", "quickstart").
+	Query("page", 1).
+	Timeout(3 * time.Second).
+	Execute()
+```
+
+For untrusted URLs, use the same shape with safe constructors and an explicit policy:
+
+```go
+resp := vresty.GetSafe("https://api.example.com/users",
+	vresty.WithAllowedHosts("api.example.com"),
+).Execute()
+```
+
 ## Benchmarks and trade-offs
 
 Use the HTTP benchmark suite to measure the convenience and safety overhead on your machine:
@@ -40,6 +70,10 @@ Choose `vhttp` for lightweight standard-library style helpers. Choose `vresty` w
 ### Are safe APIs free?
 
 No. Safe APIs perform validation before work that can touch untrusted network or filesystem boundaries. Measure with the documented benchmark commands.
+
+### How does `vresty` relate to `vurl`?
+
+Use `vurl` for URL construction, normalization, query encoding, content-length probing, and safe resource opening. Use `vresty` once the caller needs an HTTP request/response workflow with Resty-style chaining.
 
 ## Send simple GET requests
 
