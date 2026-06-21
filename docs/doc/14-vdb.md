@@ -2,6 +2,38 @@
 
 `vdb` provides lightweight SQL builders, condition composition, pagination, entity mapping, and `database/sql` session wrappers, with emphasis on parameterized SQL and dialect placeholders.
 
+## Which helper should I use?
+
+| Need | Use | Notes |
+| --- | --- | --- |
+| Build SELECT/INSERT/UPDATE/DELETE SQL | `Select`, `Insert`, `Update`, `Delete`, `NewBuilder` | Builders return SQL plus args so callers can execute parameterized statements. |
+| Compose WHERE fragments | `Eq`, `Ne`, `Gt`, `Gte`, `Lt`, `Lte`, `Like`, `In`, `Between`, `AndGroup`, `OrGroup`, `BuildConditions` | Values become placeholders; identifiers still need to be trusted or validated. |
+| Generate LIKE values | `BuildLikeValue` | Escape user search terms at the application boundary if wildcards should not be user-controlled. |
+| Build write payloads | `NewEntity`, `Insert`, `Update`, `ConditionsFromEntity` | Entity table and column names are identifiers, not data values. |
+| Apply pagination | `NewPage`, `NewPageResult`, `Page`, `Asc`, `Desc` | Always include a stable order when paging mutable tables. |
+| Use dialect placeholders and wrappers | `WithDialect`, `WithWrapper`, `WrapperForDialect`, dialect constants | Match placeholder style to the target driver. |
+| Parse named parameters | `ParseNamed`, `ExecNamed` | Named args are converted to dialect-specific placeholders. |
+| Open or wrap database/sql handles | `Open`, `Use`, `WithMaxOpenConns`, `WithMaxIdleConns`, `WithConnMaxLifetime`, `WithConnMaxIdleTime` | Configure pools before production use. |
+| Execute through sessions | `Exec`, `Session` methods, transaction helpers on `DB` | Pass `context.Context` through every database call. |
+| Validate identifier escape hatches | `IsSafeIdentifier`, `Raw` | `Raw` is for trusted SQL fragments only. |
+
+## SQL safety checklist
+
+- Never concatenate user input into SQL. Put data values in builder conditions, named args, or `Exec` args so they become placeholders.
+- Treat table names, column names, sort fields, and raw fragments as identifiers. Validate them with an allow-list; `IsSafeIdentifier` is only a guardrail, not authorization.
+- Use `Raw` only for trusted static fragments. Prefer builder APIs for dynamic conditions and values.
+- Always propagate caller contexts into `Exec`, query, and transaction operations so cancellations and deadlines reach the driver.
+- Configure connection pools with explicit max open, max idle, lifetime, and idle-time values before production use.
+- Handle `sql.ErrNoRows` or domain-level “not found” cases separately from infrastructure errors.
+- Close database handles you open, and keep transaction boundaries small and explicit.
+- Use stable `ORDER BY` fields for pagination to avoid missing or duplicated rows when data changes between pages.
+
+## When not to use vdb
+
+- Use `database/sql`, `sqlx`, or `pgx` directly when you need advanced scanning, COPY/bulk APIs, driver-specific features, or fine-grained transaction isolation options.
+- Use a reviewed migration tool for schema creation and changes. `vdb` builders are application-query helpers, not migration generators.
+- Use explicit handwritten SQL when the query is complex enough that a fluent builder hides optimizer-relevant structure.
+
 ## Build SELECT SQL
 
 ```go
@@ -132,3 +164,31 @@ func main() {
 ```
 
 Use `IsSafeIdentifier` only for guardrails around trusted identifier inputs. Values should still go through placeholders instead of string concatenation.
+
+## Benchmarks and trade-offs
+
+Run the focused SQL builder benchmarks when changing query construction behavior:
+
+```bash
+go test -bench=. -benchmem -run=^$ ./internal/db ./vdb
+```
+
+The benchmark suite covers paged-order query generation. Builder overhead is usually small compared with database round trips, but it still allocates strings and argument slices. For hot paths, measure the exact query shape and keep raw SQL fragments static and reviewed.
+
+## FAQ
+
+### Are builder-generated queries safe from SQL injection?
+
+Values passed through conditions and args are parameterized. Identifiers such as table names, column names, and sort fields are not data values; validate them with an allow-list before passing them to builders.
+
+### Can I pass user-selected sort columns to `OrderBy`?
+
+Only after mapping user choices to known column constants. Do not pass arbitrary request strings as identifiers.
+
+### Should I use `Raw` for dynamic SQL?
+
+Use `Raw` only for trusted static fragments. If dynamic data is needed, keep the SQL fragment fixed and pass values as args.
+
+### Does `vdb` manage migrations?
+
+No. Use external migration tooling and human-reviewed migration SQL for schema changes.

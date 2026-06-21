@@ -2,6 +2,26 @@
 
 `vftp` provides provider-neutral list, download, and upload helpers for FTP-style remote file transfer workflows. It defines small interfaces for callers to inject their own FTP providers while keeping `go-knifer` free of network-client and credential dependencies.
 
+## Which helper should I use?
+
+| Goal | Start with | Notes |
+| --- | --- | --- |
+| Keep a reusable injected adapter | `New` with `WithProvider` | Use when a workflow performs multiple FTP-style operations through one provider. |
+| List a remote directory once | `List` | Validates `ListRequest.RemoteDir`, rejects NUL bytes, then delegates to the provider. |
+| Download small in-memory content | `Download` | Uses `DownloadRequest.MaxBytes` to bound provider-returned content. |
+| Upload small in-memory content | `Upload` | Validates content size before provider delegation and provider-reported size after upload. |
+| Classify entries | `EntryTypeFile`, `EntryTypeDirectory`, `EntryTypeUnknown` | Keeps directory metadata provider-neutral. |
+| Handle stable errors | `ErrInvalidListRequest`, `ErrInvalidDownloadRequest`, `ErrInvalidUploadRequest`, `ErrTransferLimitExceeded`, `ErrMissingProvider` | Use `errors.Is` when branching on validation or limit failures. |
+
+## FTP safety checklist
+
+- Always provide a `Provider`; the facade does not open sockets, read credentials, or configure FTP/FTPS sessions.
+- Pass cancellable contexts so provider dials, listings, downloads, and uploads can stop on timeout or shutdown.
+- Set `MaxBytes` for downloads and uploads to keep in-memory transfer size bounded.
+- Validate remote path policy in the provider or application; `vftp` rejects blank/NUL values but does not normalize server paths.
+- Keep TLS mode, passive/active mode, authentication, retries, logging, and metrics in the provider where server details are known.
+- Do not log transfer content or credentials in provider error handling.
+
 ## When to use
 
 Use `vftp` when application code needs a stable internal contract for FTP listing or in-memory transfer operations, but connection setup, authentication, retries, TLS mode, and provider-specific behavior belong to the application boundary.
@@ -97,6 +117,13 @@ fmt.Println(response.RemotePath, response.Size)
 
 Requests and responses are defensively copied around provider calls so callers and providers can mutate their own values without sharing slices or maps unexpectedly.
 
+## When not to use vftp
+
+- Use a concrete FTP/FTPS client directly when you need real network sessions, passive/active mode controls, TLS negotiation, streaming, or provider extensions.
+- Use `vssh` or an SFTP client when the server exposes SSH/SFTP rather than FTP/FTPS.
+- Avoid this facade for large transfers because download and upload content is represented in memory.
+- Use local file helpers when the source or destination path is local; `vftp` does not read or write local files.
+
 ## Out of scope
 
 - Built-in FTP, FTPS, SSH, or SFTP clients.
@@ -125,3 +152,27 @@ make agent-check
 make agent-security-check
 ```
 
+## Benchmarks and trade-offs
+
+- Request validation and defensive copying make provider boundaries safer and more testable, with small overhead compared with real network calls.
+- The one-off helpers create short-lived clients for concise call sites. Reuse `New(WithProvider(...))` when a workflow shares provider setup.
+- In-memory transfers make limit checks straightforward but move streaming and backpressure out of scope.
+- Provider neutrality keeps go-knifer dependency-light while requiring applications to document their own FTP security and retry behavior.
+
+## FAQ
+
+### Does `vftp` include an FTP client?
+
+No. It only defines provider-neutral request/response types and delegates to an injected provider.
+
+### Where should credentials and TLS settings live?
+
+In the provider or application configuration. The facade deliberately does not discover credentials, configure TLS, or open network connections.
+
+### Why does `Download` return bytes instead of a stream?
+
+The current facade is optimized for small, deterministic transfer adapters. Use a concrete FTP client directly for streaming large files.
+
+### What path validation does `vftp` perform?
+
+It rejects blank and NUL-containing remote paths. Provider-specific normalization, chroot rules, and path allowlists belong to the provider/application boundary.

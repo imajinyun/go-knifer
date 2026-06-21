@@ -4,6 +4,31 @@
 
 Captcha image bytes are returned as defensive copies, so callers can inspect or transform the returned slice without mutating the captcha's cached image. File overwrite failures from captcha writers preserve `fs.ErrExist` and carry the go-knifer invalid-input error code for consistent error inspection.
 
+## Which helper should I use?
+
+| Goal | Start with | Notes |
+| --- | --- | --- |
+| Read dimensions and format | `Info` | Decodes image configuration without transforming pixels. |
+| Convert image format | `ConvertFormat` | Use when the original dimensions should be preserved and only encoding changes. |
+| Generate thumbnails | `Thumbnail` | Resizes to a maximum edge and writes in the requested format. |
+| Generate QR codes | `QRCodePNG`, `QRCodeSVG`, `QRCodeBytes`, `QRCodeImage` | QR helpers wrap barcode helpers with `BarcodeFormatQRCode`. |
+| Generate non-QR barcodes | `BarcodePNG`, `BarcodeSVG`, `BarcodeASCII`, `BarcodeBytes` | Check `CanEncodeBarcodeFormat` before exposing user-selected formats. |
+| Add a QR logo | `WithQRCodeLogo`, `WithQRCodeLogoSize`, `WithQRCodeLogoRatio` | Use high error correction and test scanability after adding logos. |
+| Decode QR only | `DecodeQRCode`, `DecodeQRCodeImage` | Restricts decode results to QR content. |
+| Decode selected formats | `DecodeBarcode`, `DecodeBarcodeImage`, `WithDecodeFormats` | Restrict accepted formats when image input is untrusted or ambiguous. |
+| Generate captchas | `NewLineCaptchaWithOptions`, `NewCircleCaptchaWithOptions`, `NewShearCaptchaWithOptions`, `NewGifCaptchaWithOptions` | Inject generators and random functions for deterministic tests. |
+| Write captcha files safely | `WriteToFileWithOptions` with `WithCreateParents`, `WithOverwrite`, `WithOpenFile` | Use file and directory permission options for local storage contracts. |
+
+## Image safety checklist
+
+- Bound uploaded image size before passing readers to decoders; image decoding can allocate based on dimensions and format.
+- Validate barcode formats with `CanEncodeBarcodeFormat` and `CanDecodeBarcodeFormat` before accepting user configuration.
+- Keep QR logo size conservative and use `QRErrorCorrectionHigh` when embedding logos, then verify with real scanners.
+- Use `WithDecodeFormats` to limit barcode decoding to expected symbologies instead of accepting every supported reader.
+- Inject `WithRandomInt`, `WithGeneratorRandomInt`, and `WithOpenFile` in tests to avoid nondeterministic captchas or filesystem writes.
+- Review `WithOverwrite`, `WithCreateParents`, `WithFilePerm`, and `WithDirPerm` before writing files from user-controlled paths.
+- Treat captcha verification as a UX friction layer, not as a replacement for rate limiting or abuse detection.
+
 ## Read image information
 
 ```go
@@ -66,7 +91,7 @@ func main() {
 	if err := vimg.Thumbnail(&thumb, bytes.NewReader(src.Bytes()), 64, "png"); err != nil {
 		panic(err)
 	}
-fmt.Println(jpegOut.Len() > 0, thumb.Len() > 0)
+	fmt.Println(jpegOut.Len() > 0, thumb.Len() > 0)
 }
 ```
 
@@ -288,3 +313,36 @@ func main() {
 	)
 }
 ```
+
+## When not to use vimg
+
+- Use a dedicated image pipeline when you need streaming transforms, EXIF preservation, color management, or advanced resampling controls.
+- Use external services or libraries when barcode requirements include formats or GS1 variants not supported by the facade.
+- Use server-side session/rate-limit controls for abuse prevention; captchas alone are not an authorization or anti-fraud system.
+- Avoid QR logo embedding when the code must be read under poor lighting, damaged print, or very small display sizes.
+
+## Benchmarks and trade-offs
+
+- `Info` is cheaper than full decode/encode paths because it only reads metadata. Use it for validation before expensive work.
+- `Thumbnail` and `ConvertFormat` decode and re-encode images, so CPU and memory scale with pixel count and output format.
+- SVG and ASCII barcode outputs are useful for text or vector contexts; PNG and image outputs are better for raster workflows.
+- `DecodeBarcode` tries multiple binarizers for robustness, which costs more than reading a clean, known-format QR image.
+- Captcha image byte access returns defensive copies, trading allocation for protection against callers mutating cached captcha output.
+
+## FAQ
+
+### Why can QR logos make codes unreadable?
+
+The logo covers modules that scanners need. Use high error correction, keep the logo small with `WithQRCodeLogoRatio` or `WithQRCodeLogoSize`, and test the generated code on target devices.
+
+### Why are encode and decode format lists different?
+
+The underlying ZXing-backed readers and writers do not support identical format sets. Use `SupportedEncodeBarcodeFormats` and `SupportedDecodeBarcodeFormats` separately.
+
+### How do I make captcha tests deterministic?
+
+Pass a fixed generator with `WithGenerator`, or inject randomness through `WithRandomInt` and `WithGeneratorRandomInt`. For file writes, inject `WithOpenFile` or `WithMkdirAll`.
+
+### Should I use `BarcodeBytes` or format-specific helpers?
+
+Use format-specific helpers when the output type is fixed at compile time. Use `BarcodeBytes` or `QRCodeBytes` when output format comes from configuration.

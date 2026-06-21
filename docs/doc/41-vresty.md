@@ -2,14 +2,28 @@
 
 `vresty` is a resty-based HTTP client facade that provides chained requests, shortcut GET/POST helpers, response reads, downloads, safe URL validation, and global configuration.
 
-## Recommended HTTP entry points
+## Which helper should I use?
 
-| Scenario | Recommended package | Recommended API family | Why |
-| --- | --- | --- | --- |
-| Standard-library style request | `vhttp` | `Get`, `Post`, request builders | Keeps dependencies light and behavior explicit. |
-| Resty-based fluent client | `vresty` | client/request helpers | Uses Resty ergonomics while keeping go-knifer safety docs. |
-| Untrusted URL | `vhttp`/`vresty` plus safe APIs | `Safe`/`E` variants | Applies validation and explicit errors before network access. |
-| File download | `vhttp`/`vresty` safe download helpers | `DownloadFileSafe` family | Keeps path and transfer risks visible. |
+| Scenario | Start with | Why |
+| --- | --- | --- |
+| Standard-library style request | `vhttp` `Get`, `Post`, request builders | Keeps dependencies light and behavior explicit. |
+| Resty-based fluent request | `Get`, `Post`, `Put`, `Delete`, `NewRequest` | Uses Resty ergonomics while keeping go-knifer safety docs. |
+| Untrusted URL | `GetSafe`, `PostSafe`, `NewSafeRequest`, `GetStringSafeE` | Applies URL validation before network access. |
+| Simple response body as text | `GetStringE`, `PostStringE`, `PostJSONE`, `PostFormE` | Returns explicit errors instead of hiding failure in a response wrapper. |
+| Bounded body reads | `WithMaxResponseBytes`, `WithMaxDecodeBytes` | Prevents unbounded memory growth when reading or decoding responses. |
+| File download | `DownloadSafe`, `DownloadFileSafe`, `DownloadFileSafeWithOptions` | Keeps URL and filesystem risks visible. |
+| Per-call HTTP client injection | `WithRestyClient`, `WithRestyClientFactory`, `NewIsolatedClient` | Keeps tests hermetic and avoids mutating global defaults. |
+| Global application defaults | `SetGlobalTimeout`, `ConfigureGlobalConfig`, `WithScopedGlobalConfig` | Configure once at application startup or scope carefully in tests. |
+
+## HTTP safety checklist
+
+- Use safe helpers for untrusted URLs and pair them with `WithAllowedHosts`, `WithURLPolicy`, and `WithLookupIP` when SSRF matters.
+- Set timeouts with `WithTimeout` or global configuration; avoid unbounded request waits.
+- Bound response and decode sizes with `WithMaxResponseBytes`, `WithMaxDecodeBytes`, and safe download helpers.
+- Use `NewIsolatedClient`, `WithRestyClient`, or `WithRestyClientFactory` in tests to avoid real network calls and global state leakage.
+- Review redirect policy with `WithFollowRedirects` and `WithMaxRedirects`, especially for untrusted URLs.
+- Treat `DownloadFile*` destinations as filesystem boundaries; configure overwrite, parent creation, permissions, and fake file providers in tests.
+- Avoid logging request bodies, authorization headers, cookies, or downloaded data.
 
 ## When to use `vresty` instead of `vhttp`
 
@@ -56,6 +70,14 @@ The suite uses `httptest.Server` and temporary files only. It covers simple GET 
 `vresty` does not replace Resty; it keeps Resty ergonomics while documenting go-knifer's safety boundaries and generated examples.
 
 Safe APIs may add validation overhead. Use the benchmark commands in this document to measure the trade-off on your workload.
+
+## When not to use vresty
+
+- Use `vhttp` or `net/http` directly when the dependency surface should stay standard-library-only.
+- Use Resty directly when your code depends on advanced Resty features that the facade does not expose.
+- Use `vurl` when the task is only URL construction, normalization, validation, or safe opening without an HTTP request workflow.
+- Use a dedicated downloader or streaming pipeline for very large files, resume support, checksums, or backpressure.
+- Avoid global configuration mutation in reusable libraries; pass request/client options instead.
 
 ## FAQ
 

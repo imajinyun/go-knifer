@@ -2,6 +2,27 @@
 
 `vai` provides provider-neutral chat and embedding helpers. It defines small interfaces for callers to inject their own AI providers while keeping `go-knifer` free of provider SDK dependencies.
 
+## Which helper should I use?
+
+| Goal | Start with | Notes |
+| --- | --- | --- |
+| Keep a reusable AI adapter | `New` with `WithChatProvider` and/or `WithEmbeddingProvider` | Use when application code sends multiple requests through the same provider boundary. |
+| Send one chat request | `Chat` | Validates model and messages, then delegates to the injected chat provider. |
+| Generate embeddings once | `Embed` | Validates model and non-blank input strings, then delegates to the injected embedding provider. |
+| Represent chat roles | `RoleSystem`, `RoleUser`, `RoleAssistant` | Keeps provider-specific role strings out of callers. |
+| Carry provider metadata | `Usage`, `ProviderMetadata` | Use for token accounting and low-cardinality provider details when available. |
+| Redact diagnostic text | `Redact` | Small helper for examples and logs; not a full DLP system. |
+| Handle stable errors | `ErrInvalidChatRequest`, `ErrInvalidEmbeddingRequest`, `ErrMissingChatProvider`, `ErrMissingEmbeddingProvider` | Use `errors.Is` for request-validation or missing-provider branches. |
+
+## AI adapter safety checklist
+
+- Always inject providers; `vai` does not read API keys, create HTTP clients, or call external services by itself.
+- Pass contexts with deadlines for provider calls so request paths can cancel expensive model work.
+- Validate and redact prompts, metadata, and outputs before logging. `Redact` only catches obvious secret-like tokens.
+- Keep retry, rate limiting, tracing, billing controls, and provider-specific safety settings in the provider layer.
+- Bound prompt and embedding input sizes before calling providers when costs or latency matter.
+- Do not treat provider output as trusted code, SQL, shell, HTML, or policy decisions without downstream validation.
+
 ## When to use
 
 Use `vai` when application code needs a stable internal contract for chat or embedding calls, but provider selection belongs to the application boundary.
@@ -90,6 +111,13 @@ fmt.Println(vai.Redact("api key sk-test secret"))
 
 The redaction helper is intentionally small. It is not a substitute for a full data-loss-prevention policy.
 
+## When not to use vai
+
+- Use a provider SDK directly when you need streaming, tool/function calling, structured-output schemas, multimodal inputs, retries, or provider-specific request fields.
+- Use a RAG/vector-store library when the task includes retrieval, chunking, indexing, or vector database operations.
+- Use a policy/safety gateway when prompts and outputs require centralized moderation, audit, or data-loss-prevention controls.
+- Avoid provider-neutral wrappers when provider-specific features are the main requirement and hiding them would make behavior unclear.
+
 ## Out of scope
 
 - Provider SDKs and network clients.
@@ -118,3 +146,28 @@ make tools-check
 make agent-check
 make agent-security-check
 ```
+
+## Benchmarks and trade-offs
+
+- Provider-neutral validation and defensive request shape checks are tiny compared with real model latency, but they keep tests and adapter contracts stable.
+- The short `Chat` and `Embed` helpers are concise for one-off calls. Reuse `New(...)` when a service shares provider configuration.
+- Keeping SDKs out of go-knifer avoids dependency bloat, but applications must implement provider adapters and document provider-specific behavior.
+- Redaction is intentionally conservative and lightweight; comprehensive DLP belongs outside the facade.
+
+## FAQ
+
+### Does `vai` call OpenAI, Doubao, or another provider directly?
+
+No. It has no built-in provider SDK or network client. Applications inject `ChatProvider` and `EmbeddingProvider` implementations.
+
+### Where should API keys be loaded?
+
+At the application/provider boundary. `vai` does not read environment variables or credentials.
+
+### Is `Redact` enough for production logging?
+
+No. It is a small helper for obvious secret-like tokens. Production systems should use a project-specific redaction and DLP policy.
+
+### Can I use `vai` for streaming or tool calls?
+
+Not through the current facade. Use the provider SDK directly or build an application adapter with a richer contract.

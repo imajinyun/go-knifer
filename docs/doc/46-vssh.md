@@ -2,6 +2,28 @@
 
 `vssh` provides provider-neutral SSH command and SFTP-style transfer helpers. It defines a small interface for callers to inject their own SSH/SFTP providers while keeping `go-knifer` free of network-client, key-parsing, and credential dependencies.
 
+## Which helper should I use?
+
+| Goal | Start with | Notes |
+| --- | --- | --- |
+| Keep a reusable injected adapter | `New` with `WithProvider` | Use when application code performs multiple SSH/SFTP-style operations through one provider. |
+| Run a one-off remote command | `Run` | Validates `CommandRequest`, enforces `MaxOutputBytes`, then delegates to the provider. |
+| List a remote directory | `List` | Validates `ListRequest.RemoteDir` before provider delegation. |
+| Download small in-memory content | `Download` | Uses `DownloadRequest.MaxBytes` to bound provider-returned content. |
+| Upload small in-memory content | `Upload` | Validates request content size before calling the provider and validates provider-reported size after upload. |
+| Classify remote entries | `EntryTypeFile`, `EntryTypeDirectory`, `EntryTypeSymlink` | Entry types are provider-neutral metadata; provider-specific fields stay outside the facade. |
+| Check invalid requests and limits | `ErrInvalid*`, `ErrOutputLimitExceeded`, `ErrTransferLimitExceeded`, `ErrMissingProvider` | Use `errors.Is` when callers need a stable error contract. |
+
+## SSH/SFTP safety checklist
+
+- Always inject a provider; the facade intentionally has no built-in SSH client, socket, credential, or key-loading behavior.
+- Pass cancellable contexts to every operation so providers can stop dials, commands, and transfers during shutdown or timeout.
+- Set `MaxOutputBytes` for commands that could produce unbounded stdout/stderr.
+- Set `MaxBytes` for transfers and keep this facade for small in-memory payloads rather than streaming large files.
+- Treat command strings and args as provider inputs, not shell-quoted safe strings. The provider decides whether and how a shell is used.
+- Validate remote paths at the application/provider boundary; `vssh` rejects blank/NUL paths but does not normalize server paths.
+- Keep host-key verification, authentication, retry policy, logging, and metrics in the provider where connection details are known.
+
 ## When to use
 
 Use `vssh` when application code needs a stable internal contract for remote command execution or in-memory SFTP-style transfer operations, but connection setup, authentication, host-key verification, retries, and provider-specific behavior belong to the application boundary.
@@ -117,6 +139,13 @@ fmt.Println(response.RemotePath, response.Size)
 
 Requests and responses are defensively copied around provider calls so callers and providers can mutate their own values without sharing slices or maps unexpectedly.
 
+## When not to use vssh
+
+- Use a concrete SSH/SFTP library directly when you need real network connections, host-key stores, private-key parsing, PTY/session controls, port forwarding, SCP, or streaming transfers.
+- Use a job runner or orchestration tool when command execution needs scheduling, retries, audit logs, or fleet-level state.
+- Use local filesystem helpers when paths are local; `vssh` does not join, clean, or open local paths.
+- Avoid this facade for large file transfers because download and upload payloads are represented in memory.
+
 ## Out of scope
 
 - Built-in SSH, SFTP, SCP, or FTP clients.
@@ -146,3 +175,27 @@ make agent-check
 make agent-security-check
 ```
 
+## Benchmarks and trade-offs
+
+- The facade adds request validation, defensive copying, and limit checks around provider calls. That overhead is small for network-bound operations but visible in microbenchmarks.
+- In-memory transfers simplify testing and provider contracts, but they are not appropriate for multi-gigabyte streams.
+- `Run`, `List`, `Download`, and `Upload` create short-lived clients for convenience. Reuse `New(WithProvider(...))` when multiple calls share one provider.
+- Provider-neutral structs keep go-knifer dependency-light while shifting connection lifecycle and protocol-specific tuning to the application.
+
+## FAQ
+
+### Does `vssh` open SSH connections?
+
+No. It validates provider-neutral requests and delegates to an injected provider. The application owns real SSH/SFTP clients, credentials, and host-key verification.
+
+### Does `CommandRequest` protect me from shell injection?
+
+No. The facade rejects malformed command text such as blank or NUL-containing values, but quoting and shell selection are provider responsibilities.
+
+### Why are transfers in memory?
+
+The MVP contract favors deterministic tests and simple adapters. Use a concrete SFTP client directly when streaming or local file paths are required.
+
+### Why does the facade defensively copy data?
+
+Copies prevent callers and providers from accidentally sharing mutable slices or maps after validation and limit checks.

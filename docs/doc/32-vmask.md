@@ -2,6 +2,27 @@
 
 `vmask` provides masking helpers for common sensitive data, including names, ID numbers, phones, addresses, email, passwords, bank cards, IPs, license plates, and custom ranges.
 
+## Which helper should I use?
+
+| Goal | Start with | Notes |
+| --- | --- | --- |
+| Mask with a known data type | `ChineseName`, `MobilePhone`, `Email`, `Password`, `BankCard`, `IPv4`, `IPv6` | Prefer explicit helpers when the data category is known at compile time. |
+| Dispatch by runtime type | `Masked` | Use when masking type comes from configuration or metadata. |
+| Return nil for cleared values | `MaskedPtr` with `ClearToNullType`, or `ClearToNil` | Useful for pointer-oriented DTOs that distinguish empty from absent. |
+| Clear to empty string | `Clear` or `Masked(..., ClearToEmptyType)` | Use when downstream systems require a string value. |
+| Keep only the first character | `FirstMask` | Works on rune-based strings. |
+| Mask a custom range | `Hide` | Uses rune indexes in `[start, end)` and replaces with `*`. |
+| Mask IDs with visible edges | `IDCardNum`, `Passport`, `CreditCode` | Choose visible prefix/suffix based on product and compliance requirements. |
+
+## Masking safety checklist
+
+- Mask as close to the display/logging boundary as possible; do not replace encrypted or hashed storage with masked plaintext.
+- Treat masking as presentation redaction, not anonymization. Masked values may still be linkable or reversible with context.
+- Prefer explicit helpers over runtime dispatch when the data category is known, so code review can verify the policy.
+- Use `Hide` carefully with rune indexes, especially for mixed-width Unicode strings.
+- Avoid logging original values before masking, including error messages and structured fields.
+- Document how many leading/trailing characters remain visible for identifiers, cards, and addresses.
+
 ## Mask by specific data type
 
 ```go
@@ -79,3 +100,36 @@ func main() {
 	fmt.Println(vmask.ClearToNil() == nil)
 }
 ```
+
+## When not to use vmask
+
+- Use encryption, hashing, tokenization, or access-control systems when sensitive data must be protected at rest or across services.
+- Use irreversible anonymization or aggregation when privacy requirements prohibit re-identification.
+- Avoid generic runtime masking when a field has a regulated format with a specific redaction policy.
+- Do not use masked values as stable security identifiers unless collision and linkability risks are acceptable.
+
+## Benchmarks and trade-offs
+
+- Explicit helpers are simple and cheap string transformations suitable for logs and UI rendering.
+- Runtime `Masked` dispatch is flexible but hides policy selection behind a `Type` value, so it is less transparent in reviews.
+- Rune-based masking handles Unicode better than byte offsets, with small extra iteration cost.
+- Keeping visible prefixes/suffixes improves usability but increases re-identification risk.
+- `MaskedPtr` and `ClearToNil` make absent-value semantics explicit, but callers must handle nil pointers.
+
+## FAQ
+
+### Is masking the same as anonymization?
+
+No. Masking hides part of a value for display. It may still reveal enough information to identify a person or account when combined with other data.
+
+### Should I store masked values?
+
+Usually no. Store protected canonical data using encryption, hashing, or tokenization as appropriate, then mask only for presentation or logs.
+
+### Are `Hide` indexes byte-based?
+
+No. `Hide` uses rune indexes, so it is safer for Unicode text than byte slicing.
+
+### When should I use `MaskedPtr`?
+
+Use it when a downstream DTO needs `nil` to represent cleared data, especially with `ClearToNullType`.

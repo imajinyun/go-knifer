@@ -2,6 +2,28 @@
 
 `vform` validates common form fields such as email, mobile numbers, URLs, IPs, ID cards, Chinese text, and numeric strings, and also supports injecting matchers for selected rules.
 
+## Which helper should I use?
+
+| Goal | Start with | Notes |
+| --- | --- | --- |
+| Validate one email string | `IsEmail` | Lightweight predicate for form/query/CSV values. |
+| Validate one mainland China mobile number | `IsMobile` | Use a custom matcher when product rules differ from the built-in pattern. |
+| Validate a URL-shaped string | `IsURL` | Checks shape, not network reachability or SSRF safety. |
+| Validate IP strings | `IsIPv4`, `IsIPv6` | Use when the value must be specifically v4 or v6. |
+| Validate Chinese text | `IsChinese` | Predicate-style check for string content. |
+| Validate numeric strings | `IsNumberStr` | Use for string-level checks before parsing or conversion. |
+| Validate ID cards | `IsIDCard`, `IsIDCardWithOptions` | Built-in rule is for common ID-card format checks; inject custom matcher for product-specific identifiers. |
+| Override selected rules | `WithEmailMatcher`, `WithMobileMatcher`, `WithIDCardMatcher`, `WithChineseMatcher`, `WithNumberMatcher` | Options are per call and keep tests deterministic. |
+
+## Form validation checklist
+
+- Treat `vform` predicates as input-shape checks, not full business authorization or identity verification.
+- Use struct validation libraries for DTO-wide requirements, cross-field checks, localization, and nested data.
+- Use custom matchers for product-specific mobile, ID, or internal identifier rules instead of widening global assumptions.
+- Validate URLs for scheme, host allowlist, DNS/IP policy, and reachability separately when they will be fetched by the server.
+- Parse numeric strings after `IsNumberStr` when range, precision, or overflow matters.
+- Keep matcher functions pure and fast; predicates may be called in request validation loops.
+
 ## Scope and struct validation direction
 
 `vform` is intentionally a string-level validation facade. It validates individual values that commonly arrive from forms, query parameters, CSV files, and decoded maps. It does not implement struct-tag validation.
@@ -91,6 +113,38 @@ func main() {
 	))
 }
 ```
+
+## When not to use vform
+
+- Use `go-playground/validator/v10` or similar libraries for struct tags, translations, nested structs, and cross-field validation.
+- Use `net/url`, URL policies, DNS/IP checks, and SSRF guards when a URL will be requested by backend code.
+- Use authoritative external services when email, phone, or identity ownership must be verified.
+- Use numeric parsers such as `vnum` when the task is converting values and reporting parse errors rather than checking string shape.
+
+## Benchmarks and trade-offs
+
+- Predicate helpers are cheap and dependency-light, which fits per-field validation in handlers and import pipelines.
+- Regex-style shape checks can reject obvious bad input quickly but cannot prove that an email, phone, URL, or ID belongs to a real user.
+- Custom matcher injection improves product fit and testability, but matcher behavior is caller-owned and should be documented near the call site.
+- Keeping struct validation out of `vform` avoids pulling a large dependency graph into users who only need simple predicates.
+
+## FAQ
+
+### Does `IsURL` make a URL safe to fetch?
+
+No. It only validates URL shape. Server-side fetches still need allowed schemes, host allowlists, private-IP rejection, redirect policy, and timeouts.
+
+### Why does `vform` not support struct tags?
+
+Struct-tag validation is already well served by `go-playground/validator/v10`. `vform` intentionally stays focused on lightweight string predicates.
+
+### When should I inject a matcher?
+
+Inject a matcher when the built-in shape differs from product policy, such as internal email domains, nonstandard IDs, or test-only values.
+
+### Is ID-card validation proof of identity?
+
+No. It is a format/checksum-style predicate. Ownership and authenticity require separate authoritative verification.
 
 ## Inject custom matchers
 

@@ -2,6 +2,35 @@
 
 `vjob` provides sliceable task scheduling helpers that split slices, ranges, or map keys into batches and run merge callbacks in order after shards succeed.
 
+## Which helper should I use?
+
+| Need | Use | Notes |
+| --- | --- | --- |
+| Split an index range | `NewSlice`, `NewSliceSingle` | Use for work addressed by integer offsets or pages. |
+| Split a typed slice | `NewBatch`, `NewBatchSingle` | Use when callers already have values in memory. |
+| Split map keys | `NewMapKeys`, `NewMapE`, `NewMap` | Prefer typed `NewMapKeys`; use `NewMapE` for dynamic input to avoid panics. |
+| Execute with embedded options | `Run` | Uses job-provided options when the job carries them. |
+| Execute with explicit options | `RunWith`, `Options{BatchSize, MaxConcurrency}` | Use when callers own the scheduling policy. |
+| Merge results serially | returned `Merge` callbacks | Merge callbacks run after successful shards and should apply ordered side effects. |
+| Control concurrency | `WithMaxConcurrency`, `Options.MaxConcurrency` | Keep concurrency bounded to protect downstream services. |
+| Control shard size | `WithBatchSize`, `Options.BatchSize` | Tune for memory, latency, and backend round-trip cost. |
+
+## Job safety checklist
+
+- Pass a non-nil context and honor cancellation in worker functions. `RunWith` returns early when the context is canceled.
+- Treat worker functions as concurrent when `MaxConcurrency` is greater than 1. Protect shared mutable state or move mutations into merge callbacks.
+- Keep merge callbacks small and deterministic. They run serially, so slow merges reduce total throughput.
+- Bound `MaxConcurrency` based on downstream capacity, not CPU count alone. Database, HTTP, and file systems can be overloaded by too many shards.
+- Choose `BatchSize` deliberately. Very small batches add scheduling overhead; very large batches reduce cancellation responsiveness and load balancing.
+- Prefer `NewMapKeys` or `NewMapE` over `NewMap` for dynamic input. `NewMap` panics on invalid input for compatibility.
+- Do not rely on Go map iteration order for deterministic processing. Sort keys before creating a slice-based job when order matters.
+
+## When not to use vjob
+
+- Use `vcron` when work should recur on a wall-clock schedule rather than process one finite collection.
+- Use a durable queue or workflow engine when work must survive process crashes, coordinate across nodes, retry persistently, or provide audit trails.
+- Use a simple loop when the workload is small, must be strictly sequential, or does not benefit from batching.
+
 ## Run range tasks
 
 ```go
@@ -125,3 +154,31 @@ func main() {
 	}
 }
 ```
+
+## Benchmarks and trade-offs
+
+Run focused job tests before changing scheduler behavior:
+
+```bash
+go test ./internal/job ./vjob
+```
+
+Throughput depends on batch size, merge cost, worker cost, and downstream limits. Increasing concurrency can reduce wall-clock time for I/O-bound shards but can also overload dependencies. Larger batches reduce scheduler overhead but delay cancellation and serial merge progress.
+
+## FAQ
+
+### Are workers run concurrently?
+
+They may be when `MaxConcurrency` is greater than 1. Write worker functions as if they can run in parallel, and use merge callbacks for ordered side effects.
+
+### Are merge callbacks concurrent?
+
+No. Merge callbacks are replayed serially after shards succeed. Keep them short because they become the ordered commit phase.
+
+### What happens on worker errors or panics?
+
+`RunWith` returns an error and does not treat partial success as complete. Design worker side effects so retries are safe or commit through merge callbacks only after success.
+
+### How do I process map keys deterministically?
+
+Extract keys, sort them, then use `NewBatch` or `NewBatchSingle` over the sorted slice. Map iteration order is intentionally unstable.
