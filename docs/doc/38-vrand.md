@@ -2,6 +2,10 @@
 
 `vrand` provides random integer, float, bool, string, slice element, and byte generators, with support for per-call random source injection.
 
+## Security boundary
+
+Use `SecureBytes` or `SecureBytesWithOptions` for tokens, keys, salts, and nonces. Encode those bytes with `hex`, `base64`, or an application-specific alphabet when a string representation is required. The string and number helpers are pseudo-random convenience APIs and must not be used for secrets.
+
 ## Generate numbers and booleans
 
 ```go

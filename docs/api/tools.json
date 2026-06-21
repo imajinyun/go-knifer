@@ -4,7 +4,7 @@
   "summary": {
     "package_count": 54,
     "function_count": 2604,
-    "functions_with_examples": 971,
+    "functions_with_examples": 972,
     "context_aware_functions": 36,
     "returns_error_functions": 603,
     "variadic_functions": 776,
@@ -37486,8 +37486,8 @@
       "synopsis": "Package vrand provides public APIs for random value utilities.",
       "summary": {
         "function_count": 29,
-        "functions_with_examples": 5,
-        "example_coverage_percent": 17.2,
+        "functions_with_examples": 6,
+        "example_coverage_percent": 20.7,
         "synopsis_sources": {
           "empty": 0,
           "facade": 18,
@@ -37849,7 +37849,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleSecureBytesWithOptions"
+          ]
         },
         {
           "name": "SetSeed",

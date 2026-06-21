@@ -20,6 +20,36 @@ import (
 	"github.com/imajinyun/go-knifer/vcrypto"
 )
 
+func Example_recommendedDigestAndHMAC() {
+	digest := vcrypto.SHA256Hex("message")
+	mac := vcrypto.HMACBytes(sha256.New, []byte("public-demo-key"), []byte("message"))
+
+	fmt.Println(digest[:16])
+	fmt.Println(vcrypto.HMACEqual(mac, append([]byte(nil), mac...)))
+	// Output:
+	// ab530a13e4591498
+	// true
+}
+
+func Example_recommendedAESGCM() {
+	key := exampleAESKey()
+	nonce := exampleGCMNonce()
+	cipherText, err := vcrypto.AESEncryptGCM([]byte("message"), key, nonce, []byte("public-aad"))
+	plain, openErr := vcrypto.AESOpenGCM(cipherText, key, nonce, []byte("public-aad"))
+
+	fmt.Println(err == nil, openErr == nil, string(plain))
+	// Output: true true message
+}
+
+func Example_recommendedRSAPSS() {
+	digest := sha256.Sum256([]byte("message"))
+	sig, err := vcrypto.RSASignPSS(exampleRSAPrivateKey, stdcrypto.SHA256, digest[:])
+	verifyErr := vcrypto.RSAVerifyPSS(&exampleRSAPrivateKey.PublicKey, stdcrypto.SHA256, digest[:], sig)
+
+	fmt.Println(err == nil, verifyErr == nil)
+	// Output: true true
+}
+
 func ExampleAESDecryptGCM() {
 	key := exampleAESKey()
 	nonce := exampleGCMNonce()

@@ -12,7 +12,7 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Module | `github.com/imajinyun/go-knifer` |
 | Packages | 54 |
 | Functions | 2604 |
-| Functions with examples | 971 |
+| Functions with examples | 972 |
 | Context-aware functions | 36 |
 | Functions returning error | 603 |
 | Variadic functions | 776 |
@@ -2157,7 +2157,7 @@ Import path: `github.com/imajinyun/go-knifer/vrand`
 
 Package vrand provides public APIs for random value utilities.
 
-Quality: 29 functions · 5 with examples · 17.2% example coverage · synopsis sources: facade=18, internal=11, empty=0
+Quality: 29 functions · 6 with examples · 20.7% example coverage · synopsis sources: facade=18, internal=11, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -2179,7 +2179,7 @@ Quality: 29 functions · 5 with examples · 17.2% example coverage · synopsis s
 | `NumbersWithOptions` | `func NumbersWithOptions(n int, opts ...RandomOption) string` | RandomNumbersWithOptions returns a random numeric string with per-call options. | internal | — |
 | `ResetDefaultRandomSource` | `func ResetDefaultRandomSource()` | ResetDefaultRandomSource restores the time-seeded default source provider and clears cached state. | facade | — |
 | `SecureBytes` | `func SecureBytes(n int) ([]byte, error)` | SecureBytes returns n cryptographically secure random bytes and fails closed on entropy errors. | facade | `ExampleSecureBytes` |
-| `SecureBytesWithOptions` | `func SecureBytesWithOptions(n int, opts ...RandomOption) ([]byte, error)` | SecureBytesWithOptions returns n cryptographically secure random bytes with per-call options. | facade | — |
+| `SecureBytesWithOptions` | `func SecureBytesWithOptions(n int, opts ...RandomOption) ([]byte, error)` | SecureBytesWithOptions returns n cryptographically secure random bytes with per-call options. | facade | `ExampleSecureBytesWithOptions` |
 | `SetSeed` | `func SetSeed(seed int64)` | SetSeed resets the package-level pseudo-random source seed for reproducible non-security helpers. | facade | — |
 | `String` | `func String(n int) string` | String returns a pseudo-random lowercase alphanumeric string of length n. | facade | `ExampleString` |
 | `StringFrom` | `func StringFrom(charset string, n int) string` | StringFrom builds a pseudo-random string by sampling runes from charset. | facade | `ExampleStringFrom` |

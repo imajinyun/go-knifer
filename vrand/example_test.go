@@ -1,7 +1,9 @@
 package vrand_test
 
 import (
+	"encoding/hex"
 	"fmt"
+	"strings"
 
 	"github.com/imajinyun/go-knifer/vrand"
 )
@@ -13,6 +15,15 @@ func ExampleSecureBytes() {
 	}
 	fmt.Println(len(b))
 	// Output: 16
+}
+
+func ExampleSecureBytesWithOptions() {
+	b, err := vrand.SecureBytesWithOptions(8, vrand.WithRandomReader(strings.NewReader("nonce123")))
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(hex.EncodeToString(b))
+	// Output: 6e6f6e6365313233
 }
 
 func ExampleIntRange() {

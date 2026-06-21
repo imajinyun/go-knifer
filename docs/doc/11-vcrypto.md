@@ -2,6 +2,23 @@
 
 `vcrypto` provides common cryptographic helpers, including digests, HMAC, AES-GCM, random bytes, PBKDF2, RSA encryption/decryption/signing, and PEM conversion.
 
+## Recommended API families
+
+| Need | Recommended API family | Notes |
+| --- | --- | --- |
+| Hash non-secret data | SHA-256/SHA-512 helpers | Do not use plain hashes as authentication codes. |
+| Authenticate a message | HMAC helpers | Compare outputs using constant-time checks where exposed. |
+| Encrypt bytes | AES-GCM helpers | Use fresh nonces and authenticated encryption. |
+| Generate secrets | `vrand` secure helpers | Do not use `math/rand` for secrets. |
+
+## Misuse checklist
+
+- Do not use MD5 or SHA-1 for new security-sensitive designs.
+- Do not reuse AES-GCM nonces with the same key.
+- Do not generate keys, tokens, nonces, or salts with `math/rand`.
+- Do not log secret bytes, private keys, raw tokens, or derived credentials.
+- Do not ignore crypto errors; treat them as security-relevant failures.
+
 ## SHA and HMAC
 
 ```go
