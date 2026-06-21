@@ -113,6 +113,10 @@ func defaultSaveAs(f *excelize.File, path string, opts ...excelize.Options) erro
 	return f.SaveAs(path, opts...)
 }
 
+func invalidWorkbookError() error {
+	return knifer.NewError(knifer.ErrCodeInvalidInput, "poi: workbook is nil")
+}
+
 func defaultReadConfig() readConfig {
 	return readConfig{openFile: defaultOpenFile, openReader: defaultOpenReader}
 }
@@ -288,6 +292,9 @@ func SheetNamesWithOptions(path string, opts ...ReadOption) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+	if f == nil {
+		return nil, invalidWorkbookError()
+	}
 	defer func() { _ = f.Close() }()
 	return f.GetSheetList(), nil
 }
@@ -303,6 +310,9 @@ func ReadRows(path string, opts ...ReadOption) ([][]string, error) {
 	f, err := cfg.openFile(path, cfg.openOptions...)
 	if err != nil {
 		return nil, err
+	}
+	if f == nil {
+		return nil, invalidWorkbookError()
 	}
 	defer func() { _ = f.Close() }()
 	return readRowsWithConfig(f, cfg)
@@ -323,6 +333,9 @@ func ReadSheetRowsWithOptions(path, sheet string, opts ...ReadOption) ([][]strin
 	if err != nil {
 		return nil, err
 	}
+	if f == nil {
+		return nil, invalidWorkbookError()
+	}
 	defer func() { _ = f.Close() }()
 	return readSheetRows(f, sheet)
 }
@@ -338,6 +351,9 @@ func ReadRowsFromReader(r io.Reader, opts ...ReadOption) ([][]string, error) {
 	f, err := cfg.openReader(r, cfg.openOptions...)
 	if err != nil {
 		return nil, err
+	}
+	if f == nil {
+		return nil, invalidWorkbookError()
 	}
 	defer func() { _ = f.Close() }()
 	return readRowsWithConfig(f, cfg)
@@ -360,6 +376,9 @@ func writeRows(path string, rows [][]string, cfg writeConfig) error {
 		return err
 	}
 	f := cfg.newFile()
+	if f == nil {
+		return invalidWorkbookError()
+	}
 	defer func() { _ = f.Close() }()
 	if err := replaceDefaultSheet(f, sheet); err != nil {
 		return err
@@ -379,6 +398,9 @@ func writeRows(path string, rows [][]string, cfg writeConfig) error {
 func WriteSheets(path string, sheets map[string][][]string, opts ...WriteOption) error {
 	cfg := applyWriteOptions(opts)
 	f := cfg.newFile()
+	if f == nil {
+		return invalidWorkbookError()
+	}
 	defer func() { _ = f.Close() }()
 
 	if len(sheets) == 0 {
@@ -431,6 +453,9 @@ func WriteRowsToBuffer(sheet string, rows [][]string, opts ...WriteOption) (*byt
 		return nil, err
 	}
 	f := cfg.newFile()
+	if f == nil {
+		return nil, invalidWorkbookError()
+	}
 	defer func() { _ = f.Close() }()
 	if err := replaceDefaultSheet(f, sheet); err != nil {
 		return nil, err
@@ -442,6 +467,9 @@ func WriteRowsToBuffer(sheet string, rows [][]string, opts ...WriteOption) (*byt
 }
 
 func readFirstSheetRows(f *excelize.File) ([][]string, error) {
+	if f == nil {
+		return nil, invalidWorkbookError()
+	}
 	sheets := f.GetSheetList()
 	if len(sheets) == 0 {
 		return nil, ErrNoSheet
@@ -450,6 +478,9 @@ func readFirstSheetRows(f *excelize.File) ([][]string, error) {
 }
 
 func readRowsWithConfig(f *excelize.File, cfg readConfig) ([][]string, error) {
+	if f == nil {
+		return nil, invalidWorkbookError()
+	}
 	if cfg.sheet != "" {
 		return readSheetRows(f, cfg.sheet)
 	}
@@ -457,6 +488,9 @@ func readRowsWithConfig(f *excelize.File, cfg readConfig) ([][]string, error) {
 }
 
 func readSheetRows(f *excelize.File, sheet string) ([][]string, error) {
+	if f == nil {
+		return nil, invalidWorkbookError()
+	}
 	if err := ValidateSheetName(sheet); err != nil {
 		return nil, err
 	}
@@ -464,6 +498,9 @@ func readSheetRows(f *excelize.File, sheet string) ([][]string, error) {
 }
 
 func replaceDefaultSheet(f *excelize.File, sheet string) error {
+	if f == nil {
+		return invalidWorkbookError()
+	}
 	if sheet == DefaultSheetName {
 		return nil
 	}
@@ -474,6 +511,9 @@ func replaceDefaultSheet(f *excelize.File, sheet string) error {
 }
 
 func setRows(f *excelize.File, sheet string, rows [][]string, startRow, startCol int) error {
+	if f == nil {
+		return invalidWorkbookError()
+	}
 	if startRow <= 0 {
 		startRow = 1
 	}
@@ -503,6 +543,9 @@ func ensureParentDir(path string, cfg writeConfig) error {
 }
 
 func saveWorkbook(f *excelize.File, path string, cfg writeConfig) error {
+	if f == nil {
+		return invalidWorkbookError()
+	}
 	if !cfg.overwrite {
 		if _, err := cfg.stat(path); err == nil {
 			return knifer.WrapError(knifer.ErrCodeInvalidInput, "poi: file already exists", fs.ErrExist)

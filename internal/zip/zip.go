@@ -478,6 +478,9 @@ func ZipToWriter(out io.Writer, withSrcDir bool, filter FileFilter, srcFiles ...
 
 // ZipToWriterWithOptions writes source files or directories into out as a ZIP archive with per-call options.
 func ZipToWriterWithOptions(out io.Writer, srcFiles []string, opts ...ArchiveOption) (err error) {
+	if out == nil {
+		return invalidInputf("zip writer output is nil")
+	}
 	cfg := applyArchiveOptions(opts)
 	withSrcDir := cfg.withSrcDir
 	filter := cfg.filter
@@ -602,6 +605,9 @@ func ZipStreamsToWriter(out io.Writer, entries ...StreamEntry) (err error) {
 
 // ZipStreamsToWriterWithOptions writes stream entries into out as a ZIP archive with per-call options.
 func ZipStreamsToWriterWithOptions(out io.Writer, entries []StreamEntry, opts ...ArchiveOption) (err error) {
+	if out == nil {
+		return invalidInputf("zip writer output is nil")
+	}
 	cfg := applyArchiveOptions(opts)
 	zw := archivezip.NewWriter(out)
 	if cfg.compressionMethod == archivezip.Deflate && cfg.compressionLevel != flate.DefaultCompression {
@@ -618,6 +624,9 @@ func ZipStreamsToWriterWithOptions(out io.Writer, entries []StreamEntry, opts ..
 		name, err := cleanEntryName(entry.Name)
 		if err != nil {
 			return err
+		}
+		if entry.Reader == nil {
+			return invalidInputf("zip stream reader is nil")
 		}
 		header := &archivezip.FileHeader{Name: name, Method: cfg.compressionMethod}
 		header.SetMode(cfg.filePerm)
@@ -753,6 +762,9 @@ func Read(zipFile string, consumer func(*archivezip.File) error) error {
 
 // ReadWithOptions walks every archive entry and calls consumer using per-call options.
 func ReadWithOptions(zipFile string, consumer func(*archivezip.File) error, opts ...ArchiveOption) error {
+	if consumer == nil {
+		return invalidInputf("zip entry consumer is nil")
+	}
 	r, err := applyArchiveOptions(opts).openZipReader(zipFile)
 	if err != nil {
 		return err
@@ -1221,6 +1233,9 @@ func validateNoSymlinkEscape(cfg archiveConfig, destDir, targetParent string) er
 }
 
 func readAllLimit(r io.Reader, maxBytes int64) ([]byte, error) {
+	if r == nil {
+		return nil, invalidInputf("reader is nil")
+	}
 	if maxBytes <= 0 {
 		return io.ReadAll(r)
 	}
@@ -1236,6 +1251,12 @@ func readAllLimit(r io.Reader, maxBytes int64) ([]byte, error) {
 }
 
 func copyLimit(dst io.Writer, src io.Reader, maxBytes int64) (int64, error) {
+	if dst == nil {
+		return 0, invalidInputf("writer is nil")
+	}
+	if src == nil {
+		return 0, invalidInputf("reader is nil")
+	}
 	if maxBytes <= 0 {
 		return io.Copy(dst, src)
 	}

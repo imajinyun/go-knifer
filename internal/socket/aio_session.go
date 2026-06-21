@@ -102,6 +102,13 @@ func (s *AioSession) doRead() bool {
 	if !s.IsOpen() {
 		return false
 	}
+	if s.conn == nil {
+		if s.ioAction != nil {
+			s.ioAction.Failed(NewSocketErrorMsg("connection is nil"), s)
+		}
+		_ = s.Close()
+		return false
+	}
 	if s.readTimeout > 0 {
 		_ = s.conn.SetReadDeadline(s.now().Add(s.readTimeout))
 	} else {
@@ -162,6 +169,9 @@ func (s *AioSession) IsOpen() bool {
 
 // CloseIn closes the read side.
 func (s *AioSession) CloseIn() error {
+	if s.conn == nil {
+		return nil
+	}
 	if tc, ok := s.conn.(*net.TCPConn); ok {
 		if err := tc.CloseRead(); err != nil {
 			return NewSocketError(err)
@@ -172,6 +182,9 @@ func (s *AioSession) CloseIn() error {
 
 // CloseOut closes the write side.
 func (s *AioSession) CloseOut() error {
+	if s.conn == nil {
+		return nil
+	}
 	if tc, ok := s.conn.(*net.TCPConn); ok {
 		if err := tc.CloseWrite(); err != nil {
 			return NewSocketError(err)

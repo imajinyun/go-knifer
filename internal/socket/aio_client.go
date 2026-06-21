@@ -56,7 +56,9 @@ func NewAioClientWithConn(conn net.Conn, action IoAction[*bytes.Buffer], cfg *So
 	}
 	session := NewAioSession(conn, action, cfg)
 	c := &AioClient{session: session}
-	action.Accept(session)
+	if action != nil {
+		action.Accept(session)
+	}
 	return c
 }
 

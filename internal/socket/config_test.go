@@ -3,7 +3,9 @@ package socket
 import (
 	"net"
 	"runtime"
+	"sync/atomic"
 	"testing"
+	"time"
 )
 
 func TestSocketConfigDefaults(t *testing.T) {
@@ -59,5 +61,67 @@ func TestSocketConfigThreadPoolSizeFunc(t *testing.T) {
 	}))
 	if calls != 1 || cfg.ThreadPoolSize != 7 {
 		t.Fatalf("WithThreadPoolSizeFunc calls=%d size=%d, want 1/7", calls, cfg.ThreadPoolSize)
+	}
+}
+
+func TestSocketConfigProviderFallbacks(t *testing.T) {
+	cfg := NewSocketConfigWithOptions(
+		nil,
+		WithThreadPoolSizeFunc(nil),
+		WithClock(nil),
+		WithRunner(nil),
+		WithListenerFactory(nil),
+		WithConnFactory(nil),
+		WithSocketIPParser(nil),
+	)
+	if cfg.ThreadPoolSize != runtime.NumCPU() || cfg.Clock != nil || cfg.Runner != nil || cfg.ListenerFactory != nil || cfg.ConnFactory != nil || cfg.IPParser != nil {
+		t.Fatalf("nil provider options should preserve defaults: %+v", cfg)
+	}
+	if got := parseIPWithConfig(cfg, "127.0.0.1"); !got.Equal(net.ParseIP("127.0.0.1")) {
+		t.Fatalf("parseIPWithConfig default = %v", got)
+	}
+	customIP := net.ParseIP("127.0.0.9")
+	cfg.SetSocketIPParser(func(string) net.IP { return customIP })
+	if got := parseIPWithConfig(cfg, "example.test"); !got.Equal(customIP) {
+		t.Fatalf("parseIPWithConfig custom = %v", got)
+	}
+
+	var ran atomic.Bool
+	runWithConfig(nil, func() { ran.Store(true) })
+	waitForBool(t, ran.Load)
+	ran.Store(false)
+	runWithConfig(&SocketConfig{Runner: func(fn func()) { fn() }}, func() { ran.Store(true) })
+	if !ran.Load() {
+		t.Fatal("runWithConfig custom runner did not run")
+	}
+}
+
+func TestConcurrencyLimiterBoundaries(t *testing.T) {
+	if limiter := newConcurrencyLimiter(nil); limiter != nil {
+		t.Fatalf("newConcurrencyLimiter(nil) = %#v, want nil", limiter)
+	}
+	if limiter := newConcurrencyLimiter(&SocketConfig{ThreadPoolSize: 0}); limiter != nil {
+		t.Fatalf("newConcurrencyLimiter(0) = %#v, want nil", limiter)
+	}
+	if !acquireConcurrencySlot(nil, make(chan struct{})) {
+		t.Fatal("nil limiter should always acquire")
+	}
+	releaseConcurrencySlot(nil)
+
+	limiter := newConcurrencyLimiter(&SocketConfig{ThreadPoolSize: 1})
+	done := make(chan struct{})
+	if !acquireConcurrencySlot(limiter, done) {
+		t.Fatal("first acquire should succeed")
+	}
+	close(done)
+	if acquireConcurrencySlot(limiter, done) {
+		t.Fatal("acquire should fail when limiter is full and done is closed")
+	}
+	releaseConcurrencySlot(limiter)
+	select {
+	case limiter <- struct{}{}:
+		releaseConcurrencySlot(limiter)
+	case <-time.After(time.Second):
+		t.Fatal("releaseConcurrencySlot did not release limiter capacity")
 	}
 }

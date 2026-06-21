@@ -2,9 +2,12 @@ package socket
 
 import (
 	"context"
+	"errors"
 	"net"
 	"testing"
 	"time"
+
+	knifer "github.com/imajinyun/go-knifer"
 )
 
 func TestSocketUtilConnect(t *testing.T) {
@@ -86,4 +89,34 @@ func TestSocketConnectAddrWithOptionsUsesDialer(t *testing.T) {
 	}
 	closeAndReport(t, conn.Close)
 	closeAndReport(t, dialer.server.Close)
+}
+
+func TestSocketConnectErrorAndFallbackBoundaries(t *testing.T) {
+	if _, err := ConnectAddrWithOptions(nil); !errors.Is(err, knifer.ErrCodeInternal) {
+		t.Fatalf("ConnectAddrWithOptions(nil) err = %v, want internal socket error", err)
+	}
+
+	dialer := &fakeDialer{}
+	var nilCtx context.Context
+	conn, err := ConnectWithOptions("example.com", 443,
+		nil,
+		WithConnectContext(nilCtx),
+		WithConnectNetwork(""),
+		WithConnectDialer(dialer),
+	)
+	if err != nil {
+		t.Fatalf("ConnectWithOptions fallback dialer err = %v", err)
+	}
+	closeAndReport(t, conn.Close)
+	closeAndReport(t, dialer.server.Close)
+	if dialer.network != "tcp" || dialer.address != "example.com:443" {
+		t.Fatalf("fallback dialer got network=%q address=%q", dialer.network, dialer.address)
+	}
+
+	if addr := GetRemoteAddress(nil); addr != nil {
+		t.Fatalf("GetRemoteAddress(nil) = %#v, want nil", addr)
+	}
+	if IsConnected(nil) {
+		t.Fatal("IsConnected(nil) should be false")
+	}
 }

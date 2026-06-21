@@ -27,6 +27,18 @@ func waitForInt32(t *testing.T, get func() int32, want int32) {
 	t.Fatalf("value = %d, want %d", get(), want)
 }
 
+func waitForBool(t *testing.T, get func() bool) {
+	t.Helper()
+	deadline := time.Now().Add(time.Second)
+	for time.Now().Before(deadline) {
+		if get() {
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	t.Fatal("condition was not met before timeout")
+}
+
 type fakeDialer struct {
 	calls   atomic.Int32
 	network string

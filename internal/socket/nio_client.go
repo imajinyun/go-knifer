@@ -98,6 +98,12 @@ func (c *NioClient) Listen() {
 func (c *NioClient) Write(datas ...[]byte) (*NioClient, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if c.closed.Load() {
+		return c, NewSocketErrorMsg("client is closed")
+	}
+	if c.conn == nil {
+		return c, NewSocketErrorMsg("connection is nil")
+	}
 	for _, d := range datas {
 		if len(d) == 0 {
 			continue

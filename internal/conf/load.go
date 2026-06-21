@@ -324,6 +324,12 @@ func loadRemote(rawURL string, opts LoadOptions) (*Conf, error) {
 	if err != nil {
 		return nil, wrapConfigIO("fetch remote config "+rawURL, err)
 	}
+	if resp == nil {
+		return nil, invalidInputf("fetch remote config %s: response is nil", rawURL)
+	}
+	if resp.Body == nil {
+		return nil, invalidInputf("fetch remote config %s: response body is nil", rawURL)
+	}
 	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return nil, invalidInputf("fetch remote config %s: unexpected status %d", rawURL, resp.StatusCode)
@@ -533,6 +539,9 @@ func enforceMaxBytes(b []byte, maxBytes int64) ([]byte, error) {
 }
 
 func readAllLimit(r io.Reader, maxBytes int64) ([]byte, error) {
+	if r == nil {
+		return nil, invalidInputf("reader is nil")
+	}
 	if maxBytes <= 0 {
 		return io.ReadAll(r)
 	}

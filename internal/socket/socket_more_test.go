@@ -2,9 +2,12 @@ package socket
 
 import (
 	"bytes"
+	"errors"
 	"net"
 	"testing"
 	"time"
+
+	knifer "github.com/imajinyun/go-knifer"
 )
 
 func TestFuncDecoderAndEncoder(t *testing.T) {
@@ -35,6 +38,32 @@ func TestAioClientNilSession(t *testing.T) {
 	}
 	if act := c.IoAction(); act != nil {
 		t.Fatalf("IoAction = %v, want nil", act)
+	}
+	if _, err := c.Write([]byte("x")); !errors.Is(err, knifer.ErrCodeInternal) {
+		t.Fatalf("Write with nil session err = %v, want internal socket error", err)
+	}
+	if err := c.Close(); err != nil {
+		t.Fatalf("Close with nil session err = %v", err)
+	}
+}
+
+func TestAioClientWithConnNilActionAndClosedWrite(t *testing.T) {
+	client, server := net.Pipe()
+	defer closeAndReport(t, client.Close)
+	defer closeAndReport(t, server.Close)
+
+	c := NewAioClientWithConn(client, nil, nil)
+	if c.Session() == nil {
+		t.Fatal("NewAioClientWithConn should create a session even when action is nil")
+	}
+	if c.IoAction() != nil {
+		t.Fatal("IoAction should be nil when action provider is nil")
+	}
+	if err := c.Close(); err != nil {
+		t.Fatalf("Close err = %v", err)
+	}
+	if _, err := c.Write([]byte("after-close")); !errors.Is(err, knifer.ErrCodeInternal) {
+		t.Fatalf("Write after Close err = %v, want internal socket error", err)
 	}
 }
 
@@ -96,6 +125,28 @@ func TestAioSessionCloseInAndCloseOut(t *testing.T) {
 	}
 }
 
+func TestAioSessionNilConnectionBoundaries(t *testing.T) {
+	session := NewAioSession(nil, &SimpleIoAction{}, NewSocketConfigWithOptions(WithReadBufferSize(0), WithWriteBufferSize(0)))
+	if session.IsOpen() {
+		t.Fatal("nil connection session should not be open")
+	}
+	if session.Read() != session {
+		t.Fatal("Read should return the session itself")
+	}
+	if err := session.CloseIn(); err != nil {
+		t.Fatalf("CloseIn nil connection err = %v", err)
+	}
+	if err := session.CloseOut(); err != nil {
+		t.Fatalf("CloseOut nil connection err = %v", err)
+	}
+	if _, err := session.Write([]byte("x")); !errors.Is(err, knifer.ErrCodeInternal) {
+		t.Fatalf("Write nil connection err = %v, want internal socket error", err)
+	}
+	if err := session.Close(); err != nil {
+		t.Fatalf("Close nil connection err = %v", err)
+	}
+}
+
 func TestAioServerGetters(t *testing.T) {
 	cfg := NewSocketConfig()
 	cfg.ListenerFactory = func(addr *net.TCPAddr) (net.Listener, error) {
@@ -124,6 +175,30 @@ func TestAioServerGetters(t *testing.T) {
 	}
 }
 
+func TestAioServerConstructorsAndDeterministicStart(t *testing.T) {
+	runs := 0
+	server, err := NewAioServerWithOptions(0,
+		WithRunner(func(fn func()) { runs++; fn() }),
+		WithListenerFactory(func(*net.TCPAddr) (net.Listener, error) {
+			return &fakeListener{addr: factoryFakeAddr("aio-start")}, nil
+		}),
+	)
+	if err != nil {
+		t.Fatalf("NewAioServerWithOptions = %v", err)
+	}
+	server.Start(false)
+	if runs != 1 {
+		t.Fatalf("Start(false) runner calls = %d, want 1", runs)
+	}
+	closeAndReport(t, server.Close)
+
+	syncServer, err := NewAioServer(0)
+	if err != nil {
+		t.Fatalf("NewAioServer = %v", err)
+	}
+	closeAndReport(t, syncServer.Close)
+}
+
 func TestNioServerGetters(t *testing.T) {
 	cfg := NewSocketConfig()
 	cfg.ListenerFactory = func(addr *net.TCPAddr) (net.Listener, error) {
@@ -144,6 +219,65 @@ func TestNioServerGetters(t *testing.T) {
 	if server.IsOpen() {
 		t.Fatal("IsOpen should be false after Close")
 	}
+}
+
+func TestNioClientWriteBoundaries(t *testing.T) {
+	client, server := net.Pipe()
+	defer closeAndReport(t, server.Close)
+	nio := &NioClient{conn: client, config: NewSocketConfig()}
+	if got, err := nio.Write(nil, []byte("")); err != nil || got != nio {
+		t.Fatalf("Write empty fragments = (%v, %v), want self nil", got, err)
+	}
+	readDone := make(chan string, 1)
+	go func() {
+		buf := make([]byte, 8)
+		n, _ := server.Read(buf)
+		readDone <- string(buf[:n])
+	}()
+	if got, err := nio.Write([]byte("hello")); err != nil || got != nio {
+		t.Fatalf("Write data = (%v, %v), want self nil", got, err)
+	}
+	select {
+	case got := <-readDone:
+		if got != "hello" {
+			t.Fatalf("server read = %q", got)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("server did not receive Write data")
+	}
+	closeAndReport(t, nio.Close)
+	if _, err := nio.Write([]byte("closed")); !errors.Is(err, knifer.ErrCodeInternal) {
+		t.Fatalf("Write after Close err = %v, want internal socket error", err)
+	}
+	if _, err := (&NioClient{}).Write([]byte("nil")); !errors.Is(err, knifer.ErrCodeInternal) {
+		t.Fatalf("Write nil connection err = %v, want internal socket error", err)
+	}
+}
+
+func TestNioServerConstructorsAndStart(t *testing.T) {
+	runs := 0
+	server, err := NewNioServerWithOptions(0,
+		WithRunner(func(fn func()) { runs++; fn() }),
+		WithListenerFactory(func(*net.TCPAddr) (net.Listener, error) {
+			return &fakeListener{addr: factoryFakeAddr("nio-start")}, nil
+		}),
+	)
+	if err != nil {
+		t.Fatalf("NewNioServerWithOptions = %v", err)
+	}
+	done := server.ListenAsync()
+	<-done
+	if runs != 1 {
+		t.Fatalf("ListenAsync runner calls = %d, want 1", runs)
+	}
+	server.Start()
+	closeAndReport(t, server.Close)
+
+	realServer, err := NewNioServer(0)
+	if err != nil {
+		t.Fatalf("NewNioServer = %v", err)
+	}
+	closeAndReport(t, realServer.Close)
 }
 
 func TestConnectAddr(t *testing.T) {

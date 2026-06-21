@@ -3,11 +3,13 @@ package poi
 import (
 	"bytes"
 	"errors"
+	"io"
 	"path/filepath"
 	"reflect"
 	"testing"
 
 	knifer "github.com/imajinyun/go-knifer"
+	"github.com/xuri/excelize/v2"
 )
 
 func TestEmptySheetName(t *testing.T) {
@@ -110,5 +112,33 @@ func TestSentinelError(t *testing.T) {
 	}
 	if got := ErrInvalidSheetName.Error(); got == "" {
 		t.Fatal("ErrInvalidSheetName.Error() should not be empty")
+	}
+}
+
+func TestNilWorkbookProviderBoundaries(t *testing.T) {
+	openFileNil := WithOpenFileFunc(func(string, ...excelize.Options) (*excelize.File, error) { return nil, nil })
+	openReaderNil := WithOpenReaderFunc(func(io.Reader, ...excelize.Options) (*excelize.File, error) { return nil, nil })
+	newFileNil := WithNewFileFunc(func() *excelize.File { return nil })
+
+	if _, err := SheetNamesWithOptions("virtual.xlsx", openFileNil); !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("SheetNamesWithOptions nil workbook err = %v", err)
+	}
+	if _, err := ReadRows("virtual.xlsx", openFileNil); !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("ReadRows nil workbook err = %v", err)
+	}
+	if _, err := ReadSheetRowsWithOptions("virtual.xlsx", "Data", openFileNil); !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("ReadSheetRowsWithOptions nil workbook err = %v", err)
+	}
+	if _, err := ReadRowsFromReader(bytes.NewReader(nil), openReaderNil); !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("ReadRowsFromReader nil workbook err = %v", err)
+	}
+	if err := WriteRows("virtual.xlsx", nil, newFileNil); !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("WriteRows nil workbook err = %v", err)
+	}
+	if err := WriteSheets("virtual.xlsx", nil, newFileNil); !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("WriteSheets nil workbook err = %v", err)
+	}
+	if _, err := WriteRowsToBuffer("Data", nil, newFileNil); !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("WriteRowsToBuffer nil workbook err = %v", err)
 	}
 }

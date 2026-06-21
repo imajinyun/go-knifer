@@ -1,11 +1,15 @@
 package conf
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	knifer "github.com/imajinyun/go-knifer"
 )
 
 func TestLoadRemoteWithOptions(t *testing.T) {
@@ -38,4 +42,24 @@ func TestLoadRemoteWithOptions(t *testing.T) {
 	if _, err := LoadRemoteWithOptions(server.URL+"/app.yaml", LoadOptions{MaxBytes: 3, Headers: http.Header{"X-Config-Token": []string{"secret"}}}); err == nil {
 		t.Fatal("LoadRemoteWithOptions max bytes error = nil")
 	}
+}
+
+func TestLoadRemoteWithOptionsRejectsInvalidProviderResponses(t *testing.T) {
+	_, err := LoadRemoteWithOptions("https://config.example/app.yaml", LoadOptions{
+		RemoteClient: &http.Client{Transport: confRoundTripperFunc(func(*http.Request) (*http.Response, error) {
+			return nil, nil
+		})},
+	})
+	assertConfCode(t, err, knifer.ErrCodeInternal)
+
+	_, err = LoadRemoteWithOptions("https://config.example/app.yaml", LoadOptions{
+		RemoteClient: &http.Client{Transport: confRoundTripperFunc(func(*http.Request) (*http.Response, error) {
+			return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString("app:\n  name: remote"))}, nil
+		})},
+		RequestFactory: func(context.Context, string) (*http.Request, error) { return nil, nil },
+	})
+	assertConfCode(t, err, knifer.ErrCodeInvalidInput)
+
+	_, err = readAllLimit(nil, 1)
+	assertConfCode(t, err, knifer.ErrCodeInvalidInput)
 }
