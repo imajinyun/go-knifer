@@ -24,6 +24,26 @@ Choose ID helpers by the property you need: randomness, compactness, sortability
 - Remember that time-bearing IDs can reveal creation time or ordering; avoid them where metadata disclosure matters.
 - Keep deterministic random sources and clocks limited to tests so production IDs remain unique and appropriately unpredictable.
 
+## When not to use vid
+
+- Use `vrand.SecureBytes`, a token package, or an authentication service for bearer secrets, reset links, API keys, and session tokens.
+- Use database sequences or transactionally allocated IDs when the database must be the source of ordering and uniqueness.
+- Use application-specific key formats when IDs must embed tenant, type, checksum, or migration metadata.
+- Avoid time-bearing IDs when creation-time or ordering metadata would disclose sensitive business information.
+- Avoid package-level Snowflake defaults in multi-tenant libraries; construct and pass explicit generators instead.
+
+## Benchmarks and trade-offs
+
+Benchmark ID generation under representative concurrency and collision requirements:
+
+```bash
+go test -bench=. -benchmem -run=^$ ./internal/id ./vid
+```
+
+Random UUID and NanoID helpers are easy to distribute, but collision probability depends on entropy, alphabet, and length. Snowflake IDs are compact and sortable, but require unique worker/datacenter configuration and careful clock behavior.
+
+Fast pseudo-random helpers can be useful for non-security identifiers in hot paths, but unpredictability is not their contract. Prefer secure randomness for any ID that grants access or hides resources.
+
 ## FAQ
 
 ### Can I use vid IDs as login or reset tokens?

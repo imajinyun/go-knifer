@@ -22,6 +22,25 @@ Choose helpers by the business rule you are expressing: formatting/parsing, cale
 - Preserve the input location when calculating day, month, or year boundaries unless you intentionally normalize to UTC.
 - Treat parse errors as validation failures and surface them to the caller instead of falling back to zero time silently.
 
+## When not to use vdate
+
+- Use `time` directly for timers, deadlines, monotonic-clock comparisons, and low-level duration arithmetic.
+- Use a domain calendar library when business days, holidays, fiscal calendars, or locale-specific week rules matter.
+- Use strict protocol parsers when input must follow RFC3339, Unix timestamps, or another externally defined format exactly.
+- Avoid calendar helpers for elapsed-time measurement; use `time.Since`, `Sub`, or monotonic-aware `time.Time` values.
+
+## Benchmarks and trade-offs
+
+Most date helpers are thin wrappers around `time`, but parsing, formatting, and location lookup can still matter in batch jobs:
+
+```bash
+go test -bench=. -benchmem -run=^$ ./internal/date ./vdate
+```
+
+Convenience helpers make business-date intent clearer than repeated layout strings and manual boundary calculations. The trade-off is that callers still need to decide storage timezone, display location, and whether the rule is calendar-based or duration-based.
+
+Parsing with explicit locations improves correctness for local date strings, but it should be scoped to inputs that truly lack offsets. For cross-service timestamps, prefer explicit offsets or UTC.
+
 ## FAQ
 
 ### Does vdate replace the time package?

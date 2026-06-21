@@ -33,6 +33,26 @@ Choose the helper that matches the archive operation you are performing: create,
 - Prefer temporary directories in tests and intermediate workflows so extraction side effects are easy to clean up.
 - Use whole-entry helpers like `GetBytes` only when entry size is already bounded or trusted.
 
+## When not to use vzip
+
+- Use `archive/zip` directly when you need custom headers, per-entry metadata, streaming internals, or nonstandard ZIP behavior that the facade does not expose.
+- Use a dedicated archive scanner or quarantine pipeline for hostile uploads that require malware scanning, content-type enforcement, or policy decisions before extraction.
+- Use `compress/gzip` or `compress/zlib` directly for long-running streaming compression with backpressure instead of collecting the compressed payload in memory.
+- Avoid extracting archives into application-owned directories that also contain unrelated state; use a temporary or dedicated destination first.
+- Avoid whole-entry reads for unbounded entries; stream with `Get` or inspect metadata before loading content into memory.
+
+## Benchmarks and trade-offs
+
+Use package benchmarks and examples as local baselines for archive convenience overhead:
+
+```bash
+go test -bench=. -benchmem -run=^$ ./internal/zip ./vzip
+```
+
+ZIP helpers trade low-level control for repeatable defaults: call sites can show overwrite, size, permission, compression, and provider policies without repeating archive plumbing. That readability matters most for common create, inspect, and extract flows.
+
+Safety options are not free. Entry walking, path checks, size accounting, compression level choices, and whole-entry reads affect CPU, allocations, and I/O. Measure with representative archive sizes instead of assuming one compression level or helper is universally fastest.
+
 ## FAQ
 
 ### Does vzip make archive extraction completely safe?
@@ -82,6 +102,7 @@ func main() {
 package main
 
 import (
+	archivezip "archive/zip"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -139,7 +160,7 @@ func main() {
 		panic(err)
 	}
 
-	if err := vzip.Read(zipFile, func(file *vzip.Entry) error {
+	if err := vzip.Read(zipFile, func(file *archivezip.File) error {
 		fmt.Println(file.Name)
 		return nil
 	}); err != nil {

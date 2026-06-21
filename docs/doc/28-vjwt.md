@@ -24,6 +24,26 @@ Choose helpers by the trust boundary: token creation, signature verification, cl
 - Treat JWT payloads as readable metadata, not encrypted secrets. Do not store credentials or sensitive personal data in plain JWT claims.
 - Rotate and scope signing keys outside source code. Prefer asymmetric signers when many services only need verification.
 
+## When not to use vjwt
+
+- Use an opaque server-side session token when claims should not be readable by clients or when immediate revocation is required.
+- Use a full identity provider or OAuth/OIDC library when you need discovery documents, JWKS rotation, authorization-code flows, refresh tokens, or token introspection.
+- Use `CreateSignerStrict` or key-management code outside this facade when HMAC key length, rotation, and policy enforcement need to be centralized.
+- Do not use JWT payloads as encrypted storage. Add encryption separately or keep sensitive state server-side.
+- Do not accept tokens from unknown issuers just because the signature verifies; application claim policy still belongs at the boundary.
+
+## Benchmarks and trade-offs
+
+Measure signing, parsing, verification, and date validation with the JWT benchmarks before choosing an algorithm for a hot path:
+
+```bash
+go test -bench=. -benchmem -run=^$ ./internal/jwt ./vjwt
+```
+
+HMAC signers are usually cheaper and easier to operate for a small trusted service set, but every verifier that can validate can also sign. RSA-PSS and ECDSA separate signing from verification, at the cost of larger keys, more CPU, and more key-distribution work.
+
+Validation options such as deterministic clocks and leeway improve correctness and testability. Keep the leeway small: broad windows make replay and stale-token behavior harder to reason about.
+
 ## FAQ
 
 ### Is a JWT encrypted?

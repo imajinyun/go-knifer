@@ -8,6 +8,27 @@ Use `vhan` when application code needs a stable internal contract for pinyin con
 
 Use a dedicated NLP or pinyin library directly when you need built-in dictionaries, word segmentation, polyphone disambiguation, locale-specific romanization, or streaming text processing that is not part of the `vhan` MVP.
 
+## Which helper should I use?
+
+Choose helpers by whether you want a reusable client, a one-off provider call, or request validation.
+
+| Need | Use | Notes |
+| --- | --- | --- |
+| Configure a reusable pinyin adapter | `New`, `WithProvider`, `Client.Convert`, `Client.Initials` | Good for application services that share one provider instance. |
+| Convert Chinese text to pinyin once | `Convert` with a `Provider` | Keeps provider choice explicit at the call site. |
+| Extract initials once | `Initials` with a `Provider` | Use for search keys, short labels, or display helpers when provider behavior is acceptable. |
+| Validate request shape | `ConvertRequest.Validate`, `InitialsRequest.Validate` | Enforces non-blank text, NUL rejection, tone style, and optional input limits before provider work. |
+| Control output shape | `Separator`, `ToneStyleDefault`, `ToneStylePlain`, `ToneStyleNumber`, `ToneStyleMark` | Provider remains responsible for dictionary, segmentation, and polyphone behavior. |
+
+## Han adapter safety checklist
+
+- Treat input text as potentially sensitive; do not log raw names, addresses, or free-form user text unless policy permits it.
+- Set `MaxInputRunes` for user-controlled text so providers cannot receive unbounded payloads.
+- Keep provider choice, dictionary version, and polyphone behavior outside the facade and visible in application wiring.
+- Use context cancellation for providers that may call remote services or expensive local NLP libraries.
+- Test with fake providers to keep examples deterministic and avoid hidden dictionary or network dependencies.
+- Preserve defensive-copy expectations: callers and providers should not rely on shared slices or maps.
+
 ## Provider injection
 
 `vhan` has no built-in pinyin provider. It does not import dictionaries, read environment variables, open network connections, or read local files. Tests and applications provide behavior by implementing `Provider`.
@@ -86,6 +107,32 @@ fmt.Println(response.Output)
 
 Requests and responses are defensively copied around provider calls so callers and providers can mutate their own values without sharing slices or maps unexpectedly.
 
+## Benchmarks and trade-offs
+
+Benchmark the facade with fake providers and benchmark real providers separately:
+
+```bash
+go test -bench=. -benchmem -run=^$ ./internal/pinyin ./vhan
+```
+
+`vhan` measures only validation, defensive copying, client dispatch, and provider-interface overhead. Real pinyin quality and cost depend on the injected provider's dictionaries, segmentation, caching, and polyphone logic.
+
+Provider neutrality keeps `go-knifer` small and deterministic, but it means applications own provider lifecycle, privacy controls, dictionary updates, and observability.
+
+## FAQ
+
+### Does vhan include a pinyin dictionary?
+
+No. `vhan` defines the adapter contract and validation rules. Applications inject a provider that implements dictionary and conversion behavior.
+
+### How should I test code using vhan?
+
+Inject a fake `Provider` that returns deterministic `ConvertResponse` and `InitialsResponse` values. This avoids network, dictionary, locale, and model-version dependencies.
+
+### Where should privacy controls live?
+
+At the provider and application boundary. `vhan` validates and copies requests, but providers own logging, tracing, caching, and any external service calls.
+
 ## Out of scope
 
 - Built-in pinyin dictionaries or NLP libraries.
@@ -100,7 +147,6 @@ Focused checks:
 
 ```bash
 go test ./internal/pinyin ./vhan
-go test -bench=. -benchmem -run=^$ ./internal/pinyin ./vhan
 ```
 
 Governance checks for public API and catalog changes:

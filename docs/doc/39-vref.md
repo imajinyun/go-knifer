@@ -31,6 +31,18 @@ Start with type/value inspection helpers, then move to field, method, constructi
 - Treat dynamic invocation errors as caller-visible validation failures; do not panic on mismatched argument counts or types.
 - Keep reflection helpers close to the adapter or framework boundary so ordinary business logic remains typed and easy to refactor.
 
+## Benchmarks and trade-offs
+
+Benchmark reflection-heavy adapters with the same struct shapes, field counts, and method signatures used in production:
+
+```bash
+go test -bench=. -benchmem -run=^$ ./internal/ref ./vref
+```
+
+Reflection helpers reduce repeated `reflect` boilerplate and centralize error handling, but they cannot restore compile-time type safety. Field lookup, dynamic invocation, and unsafe access are all slower and harder to refactor than typed code.
+
+Cache reflection metadata in higher-level code when the same type is inspected repeatedly. Keep `WithUnsafeAccess(true)` limited to tests, migration tools, or documented adapter boundaries.
+
 ## FAQ
 
 ### Does vref make reflection type-safe?

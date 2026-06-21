@@ -8,6 +8,28 @@ Use `vtok` when application code needs a stable internal contract for text token
 
 Use a dedicated NLP or tokenizer library directly when you need built-in dictionaries, language detection, model loading, synonym expansion, stop-word management, or streaming text processing that is not part of the `vtok` MVP.
 
+## Which helper should I use?
+
+Choose helpers by whether you want a reusable client, a one-off provider call, tokenization, keyword extraction, or request validation.
+
+| Need | Use | Notes |
+| --- | --- | --- |
+| Configure a reusable tokenizer adapter | `New`, `WithProvider`, `Client.Tokenize`, `Client.Keywords` | Good for application services that share one provider instance. |
+| Tokenize text once | `Tokenize` with a `Provider` | Keeps dictionary and segmentation provider explicit at the call site. |
+| Extract keywords once | `Keywords` with a `Provider` | Provider owns ranking, stop-word handling, and score meaning. |
+| Validate tokenization requests | `TokenizeRequest.Validate` | Enforces non-blank text, NUL rejection, valid mode, input limits, and token limits. |
+| Validate keyword requests | `KeywordsRequest.Validate` | Enforces non-blank text, NUL rejection, keyword limit, and input limits. |
+| Select tokenization mode | `ModeDefault`, `ModePrecise`, `ModeSearch`, `ModeFull` | Mode semantics are provider-defined beyond request validation. |
+
+## Tokenization adapter safety checklist
+
+- Treat source text as potentially sensitive; avoid logging raw user input, documents, messages, or queries.
+- Set `MaxInputRunes`, `MaxTokens`, and `Limit` for user-controlled or large text.
+- Keep provider choice, dictionary version, stop-word policy, and ranking behavior visible in application wiring.
+- Use context cancellation for providers that call remote services, load models, or perform expensive local NLP work.
+- Test with fake providers to keep examples deterministic and independent of dictionary/model versions.
+- Do not treat keyword scores as comparable across providers unless the provider contract guarantees it.
+
 ## Provider injection
 
 `vtok` has no built-in tokenizer provider. It does not import dictionaries, read environment variables, open network connections, or read local files. Tests and applications provide behavior by implementing `Provider`.
@@ -92,6 +114,32 @@ fmt.Println(response.Keywords[0].Text)
 
 Requests and responses are defensively copied around provider calls so callers and providers can mutate their own values without sharing slices or maps unexpectedly.
 
+## Benchmarks and trade-offs
+
+Benchmark facade overhead with fake providers and benchmark real tokenizers separately:
+
+```bash
+go test -bench=. -benchmem -run=^$ ./internal/tokenize ./vtok
+```
+
+`vtok` measures validation, defensive copying, client dispatch, and provider-interface overhead. Real tokenization and keyword extraction cost depends on the injected provider's dictionaries, ranking algorithms, model lifecycle, and caching.
+
+Provider neutrality keeps `go-knifer` free of heavy NLP dependencies, but applications own provider lifecycle, privacy controls, dictionary/model updates, and observability.
+
+## FAQ
+
+### Does vtok include a tokenizer dictionary?
+
+No. `vtok` defines the adapter contract and validation rules. Applications inject a provider for segmentation, ranking, stop words, and model behavior.
+
+### How should I test code using vtok?
+
+Inject a fake `Provider` that returns deterministic token and keyword responses. This keeps tests independent of local dictionaries, remote services, and model versions.
+
+### Are keyword scores portable across providers?
+
+Not necessarily. Treat scores as provider-defined unless your application owns and documents a normalized scoring contract.
+
 ## Out of scope
 
 - Built-in tokenizer dictionaries, ranking algorithms, or NLP libraries.
@@ -105,7 +153,6 @@ Focused checks:
 
 ```bash
 go test ./internal/tokenize ./vtok
-go test -bench=. -benchmem -run=^$ ./internal/tokenize ./vtok
 ```
 
 Governance checks for public API and catalog changes:

@@ -34,6 +34,18 @@ Start with the helper that matches the boundary you are crossing: process execut
 - Treat `ExecResult.Stderr` as diagnostic output. Keep machine-readable output on stdout and errors/logs on stderr.
 - Capture flag and command output with `WithFlagOutput`, `WithStdout`, and `WithStderr` instead of writing directly to process-global streams.
 
+## Benchmarks and trade-offs
+
+Use focused benchmarks to compare command routing, flag parsing, output capture, and injected-runner overhead:
+
+```bash
+go test -bench=. -benchmem -run=^$ ./internal/cli ./vcli
+```
+
+`vcli` keeps small tools dependency-free and easy to test, but it intentionally does not provide shell semantics, completions, config binding, or a large CLI framework. For hot command-routing paths, measure help rendering and flag parsing separately from external process execution; starting a process will dominate helper overhead.
+
+Output capture and `WithMaxOutputBytes` add buffering and bounds checks. Keep them enabled when command output can be large or untrusted, and inject `RunnerFunc` in tests to avoid measuring host binaries or PATH behavior.
+
 ## FAQ
 
 ### Does vcli replace Cobra?

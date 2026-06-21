@@ -21,6 +21,25 @@ Choose the codec based on the transport or representation requirement, not just 
 - Prefer URL-safe variants when encoded data will be embedded in URLs, query strings, cookies, or filesystem-safe tokens.
 - Prefer hex when readability and deterministic byte-to-text mapping matter more than compactness.
 
+## When not to use vcodec
+
+- Use `encoding/base64` or `encoding/hex` directly when a hot path needs streaming encoders, preallocated destination buffers, or lower-level control.
+- Use cryptographic helpers when confidentiality, integrity, signatures, or password hashing are required; encoding is reversible.
+- Use URL escaping, JSON encoding, or form encoding when the problem is syntax escaping rather than byte-to-text representation.
+- Avoid repeatedly encoding large payloads into strings when byte slices or streaming APIs would avoid extra allocations.
+
+## Benchmarks and trade-offs
+
+Benchmark with representative payload sizes and output forms before choosing helpers in hot paths:
+
+```bash
+go test -bench=. -benchmem -run=^$ ./internal/codec ./vcodec
+```
+
+String helpers are convenient for examples and text protocols, but they allocate strings in addition to encoded bytes. Byte helpers are better when the next step already works with `[]byte`.
+
+Base64 is more compact than hex, while hex is easier to inspect and compare manually. URL-safe variants avoid `+` and `/`, and raw URL variants omit padding for compact token formats.
+
 ## FAQ
 
 ### Is Base64 a security feature?

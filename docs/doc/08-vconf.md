@@ -27,6 +27,26 @@ Choose the helper by source format, layering needs, and how strictly configurati
 - Treat decrypted or expanded values as secrets when they contain credentials; do not log raw configuration maps.
 - Make file watchers resilient: callbacks should tolerate partial writes, repeated events, and invalid intermediate config.
 
+## When not to use vconf
+
+- Use Viper, Cobra integration, or a larger configuration framework when you need many providers, live precedence stacks, or CLI flag binding across a large application.
+- Use typed constructor parameters instead of configuration maps for library APIs; libraries should not read process-wide config implicitly.
+- Use a secrets manager instead of `Base64Decrypt` or environment expansion for production credentials that require rotation, audit, and access control.
+- Avoid remote loading for untrusted URLs unless `LoadRemoteSafeWithOptions` and an explicit URL policy cover the boundary.
+- Avoid file watching when reload callbacks cannot be made idempotent or when partial writes would leave the application in an unsafe state.
+
+## Benchmarks and trade-offs
+
+Use local benchmarks to compare parsing, binding, schema validation, environment expansion, and safe remote-loading overhead:
+
+```bash
+go test -bench=. -benchmem -run=^$ ./internal/conf/... ./vconf
+```
+
+Direct typed constructors are the simplest and fastest option for small programs. `vconf` is useful when configuration needs grouping, profile overlays, schema validation, and repeatable parsing across multiple formats.
+
+Safety and flexibility add work. Full YAML parsing, schema reflection, remote URL validation, and file watch loops are easier to review when centralized, but they should still be measured and scoped to startup or explicit reload paths.
+
 ## FAQ
 
 ### Does vconf replace Viper?

@@ -14,7 +14,7 @@ Choose the helper that makes the filesystem side effect explicit. Use temporary 
 | Read lines or stream chunks | `ReadLines`, `ReadChunksWithOptions` | Prefer chunked reads when the input size is not tightly bounded. Set `WithBufferSize` deliberately. |
 | Append to an existing log-like file | `AppendFileString` | Use when preserving existing content matters. Decide whether missing files should be created or rejected. |
 | Create parent directories or touch a file | `Mkdir`, `Touch` | Set permissions explicitly with options when defaults are not appropriate. |
-| Check file state before optional work | `Exists`, `IsFile`, `IsDir`, `Size` | Treat checks as hints, not synchronization; another process can change the path after the check. |
+| Check file state before optional work | `Exists`, `IsFile`, `IsDirectory`, `Size` | Treat checks as hints, not synchronization; another process can change the path after the check. |
 | Copy, move, or delete files | `CopyFile`, `Del` | Keep overwrite and deletion behavior visible at the call site. Do not ignore cleanup errors in production code. |
 | Inspect names and extensions | `MainName`, `Extension` | These are string/path helpers; they do not validate whether the path is safe to open. |
 
@@ -26,6 +26,26 @@ Choose the helper that makes the filesystem side effect explicit. Use temporary 
 - Check every returned error. A failed write, partial copy, or cleanup failure can leave stale data behind.
 - Be explicit about overwrite and permission policy. Defaults are convenient, but reviewers should be able to see destructive behavior.
 - Do not rely on `Exists` as an authorization or locking mechanism. It is useful for optional work, not for race-free decisions.
+
+## When not to use vfile
+
+- Use `os`, `io`, or `fs` directly when you need platform-specific flags, file descriptors, memory mapping, or precise syscall behavior.
+- Use `os.Root` on Go 1.24+ or a dedicated sandbox when untrusted names need a hardened filesystem boundary rather than convenience path helpers.
+- Use archive-specific helpers such as `vzip` when the path is coming from an archive entry and extraction policy matters.
+- Use streaming APIs instead of whole-file helpers for large, remote, or attacker-controlled content.
+- Avoid mutating package-level or shared filesystem locations in reusable libraries; accept explicit paths or injected provider functions.
+
+## Benchmarks and trade-offs
+
+Use the focused file benchmarks to compare whole-file, chunked, copy, and option-provider paths on your machine:
+
+```bash
+go test -bench=. -benchmem -run=^$ ./internal/file ./vfile
+```
+
+Whole-file helpers are concise and easy to review, but they allocate enough memory for the content. Chunked reads and `CopyWithOptions` are better for large inputs and for call sites that need bounded memory use.
+
+Provider options such as `WithOpen`, `WithOpenFile`, `WithStat`, `WithMkdirAll`, and `WithRemoveAll` make tests hermetic and reviewable. They add indirection, so keep production call sites simple unless injection is needed for policy, testing, or observability.
 
 ## FAQ
 

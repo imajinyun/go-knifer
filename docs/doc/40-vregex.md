@@ -24,6 +24,18 @@ Choose helpers based on whether you need a boolean, a match list, captured data,
 - Benchmark or bound inputs for hot paths and large text. Even safe Go regexes can still consume CPU on broad scans.
 - Use `WithDotAll` only when matching across newlines is intended; it can greatly widen what a pattern matches.
 
+## Benchmarks and trade-offs
+
+Benchmark with representative pattern complexity, input length, capture groups, and replacement behavior:
+
+```bash
+go test -bench=. -benchmem -run=^$ ./internal/regex ./vregex
+```
+
+`vregex` helpers are concise for one-off matching and extraction. Repeated hot-path matching should usually compile patterns with `regexp` and reuse the compiled value to avoid repeated parse work.
+
+Capture groups, named groups, DotAll behavior, and replacement callbacks add clarity but can increase CPU and allocation costs. Keep broad scans bounded when inputs are large or user-controlled.
+
 ## FAQ
 
 ### Does vregex replace regexp?
