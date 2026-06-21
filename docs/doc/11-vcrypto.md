@@ -19,6 +19,30 @@
 - Do not log secret bytes, private keys, raw tokens, or derived credentials.
 - Do not ignore crypto errors; treat them as security-relevant failures.
 
+## Benchmarks
+
+Measure crypto helper overhead locally with the focused benchmark suite:
+
+```bash
+go test -bench=. -benchmem -run=^$ ./internal/crypto ./vcrypto ./internal/rand ./vrand
+```
+
+The suite covers SHA-256 digest, HMAC-SHA256 signing, AES-GCM encrypt/decrypt, and secure random byte generation. Treat benchmark output as a local baseline, not a universal performance claim.
+
+## FAQ
+
+### Does go-knifer replace Go's `crypto/*` standard library packages?
+
+No. It provides focused helper entry points and documents safe defaults for common workflows. Use the standard library directly when you need low-level control.
+
+### Which APIs should I avoid for security-sensitive code?
+
+Avoid legacy digest algorithms such as MD5 or SHA-1 for new security-sensitive designs. Prefer documented recommended APIs.
+
+### Are secrets ever logged?
+
+Security-sensitive helpers must not log raw secrets, tokens, keys, nonces, or salts. Treat any such behavior as a security bug.
+
 ## SHA and HMAC
 
 ```go

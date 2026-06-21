@@ -56,3 +56,10 @@ Security linter suppressions in `.golangci.yml` must stay narrow and documented.
 Prefer adding a regression test over broadening a suppression. New `#nosec` or
 `//nolint:gosec` comments must name the specific operation, explain why it is
 safe for that trust boundary, and stay next to the suppressed line.
+
+## Secret handling
+
+Security-sensitive helpers must not log raw secrets, private keys, tokens,
+nonces, salts, or derived credentials. Use `vrand.SecureBytes` or
+`vcrypto.RandomBytes` for keys, tokens, salts, and nonces, and treat unexpected
+crypto errors as fail-closed security failures rather than recoverable defaults.
