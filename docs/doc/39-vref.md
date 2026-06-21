@@ -2,6 +2,49 @@
 
 `vref` provides `reflect`-based helpers for type checks, field reads/writes, method lookup, dynamic construction, and function calls.
 
+## When to use vref
+
+| Scenario | Use `vref` when | Prefer direct Go code when |
+| --- | --- | --- |
+| Framework or adapter code needs dynamic field access | Field names, tags, or methods are discovered at runtime. | Types are known at compile time and ordinary method calls or field access are available. |
+| Tests need compact reflection assertions | You are checking generic behavior across multiple struct shapes. | A table-driven test over typed functions is clearer. |
+| Dynamic invocation is part of the API | Plugin, binding, or mapping code receives arbitrary functions or methods. | The call target is fixed; reflection would hide compile-time type errors. |
+
+## Which helper should I use?
+
+Start with type/value inspection helpers, then move to field, method, construction, or invocation helpers only when dynamic behavior is required.
+
+| Need | Use | Notes |
+| --- | --- | --- |
+| Inspect dynamic type and nil-ness | `TypeOf`, `IndirectType`, `IsNil` | Useful before reflection calls that would panic on invalid or nil values. |
+| Check or read struct fields | `HasField`, `GetFieldValue`, `GetFieldValueWithOptions` | Prefer exported fields. Unsafe access should stay rare and documented at the call site. |
+| Modify struct fields | `SetFieldValue` | Pass a pointer to a settable value and handle errors explicitly. |
+| Find and invoke methods | `GetMethod`, `InvokeMethod`, `Invoke` | Check method existence and argument compatibility before calling. |
+| Construct values dynamically | `NewInstance` | Useful for factories or binding layers; validate the constructor signature first. |
+| Call arbitrary functions | `InvokeFunc` | Prefer typed function calls when the function is known at compile time. |
+
+## Reflection safety checklist
+
+- Prefer typed Go code first. Reflection removes compile-time guarantees and should be limited to boundaries that truly need dynamic behavior.
+- Guard nil, invalid, and non-pointer values before field writes. A set operation requires an addressable, settable value.
+- Keep `WithUnsafeAccess(true)` out of normal application paths unless there is a documented reason to read unexported fields.
+- Treat dynamic invocation errors as caller-visible validation failures; do not panic on mismatched argument counts or types.
+- Keep reflection helpers close to the adapter or framework boundary so ordinary business logic remains typed and easy to refactor.
+
+## FAQ
+
+### Does vref make reflection type-safe?
+
+No. It wraps common reflection operations with helper APIs and errors, but callers still need to validate dynamic inputs and handle failures.
+
+### When is unsafe field access acceptable?
+
+Use unsafe access only for narrow tooling, migration, or test scenarios where exported access is unavailable and the trade-off is documented. Prefer exported fields or methods in normal application code.
+
+### Why not use reflection everywhere for flexibility?
+
+Reflection hides compiler checks, can be slower, and makes refactors harder. Use it at dynamic boundaries; keep core logic typed.
+
 ## Get type and value information
 
 ```go

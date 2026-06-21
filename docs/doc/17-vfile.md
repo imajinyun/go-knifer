@@ -4,6 +4,43 @@
 
 Prefer temporary directories in tests. Keep user-controlled paths separate from trusted base directories. Use safe extraction or safe path helpers when dealing with archives or untrusted filenames. Do not ignore file I/O errors.
 
+## Which helper should I use?
+
+Choose the helper that makes the filesystem side effect explicit. Use temporary directories in tests and keep trusted base directories separate from user-controlled relative names.
+
+| Need | Use | Notes |
+| --- | --- | --- |
+| Read or write a whole text file | `ReadFileString`, `WriteFileString` | Good for small configuration, fixtures, or generated text. Check the returned error. |
+| Read lines or stream chunks | `ReadLines`, `ReadChunksWithOptions` | Prefer chunked reads when the input size is not tightly bounded. Set `WithBufferSize` deliberately. |
+| Append to an existing log-like file | `AppendFileString` | Use when preserving existing content matters. Decide whether missing files should be created or rejected. |
+| Create parent directories or touch a file | `Mkdir`, `Touch` | Set permissions explicitly with options when defaults are not appropriate. |
+| Check file state before optional work | `Exists`, `IsFile`, `IsDir`, `Size` | Treat checks as hints, not synchronization; another process can change the path after the check. |
+| Copy, move, or delete files | `CopyFile`, `Del` | Keep overwrite and deletion behavior visible at the call site. Do not ignore cleanup errors in production code. |
+| Inspect names and extensions | `MainName`, `Extension` | These are string/path helpers; they do not validate whether the path is safe to open. |
+
+## Filesystem safety checklist
+
+- Use `t.TempDir` or another temporary directory for tests and examples that write files.
+- Keep untrusted path fragments relative to a trusted root; do not let callers provide arbitrary absolute paths for writes or deletes.
+- Prefer bounded or chunked reads for content whose size is not controlled by your process.
+- Check every returned error. A failed write, partial copy, or cleanup failure can leave stale data behind.
+- Be explicit about overwrite and permission policy. Defaults are convenient, but reviewers should be able to see destructive behavior.
+- Do not rely on `Exists` as an authorization or locking mechanism. It is useful for optional work, not for race-free decisions.
+
+## FAQ
+
+### Does vfile make arbitrary user paths safe?
+
+No. `vfile` reduces common I/O boilerplate; callers still own trust boundaries. Join user-provided names under a trusted directory, reject path traversal where applicable, and use archive-safe helpers when extracting files.
+
+### Should I use whole-file or chunked reads?
+
+Use whole-file helpers for small, trusted inputs. Use `ReadChunksWithOptions` when input may be large, streamed, or controlled by another system.
+
+### Why not ignore cleanup errors?
+
+Cleanup errors can hide permission issues, stale files, or partial deletion. Tests may use best-effort cleanup, but production paths should decide whether cleanup failure is observable or fatal.
+
 ## Cookbook
 
 ### Read and write a text file

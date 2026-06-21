@@ -2,6 +2,52 @@
 
 `vcli` provides lightweight command-line helpers for command execution, flag parsing, subcommand routing, and deterministic help text. It is dependency-free and intended for small tools or library code that needs CLI behavior without adopting a full framework.
 
+## When to use vcli
+
+| Scenario | Use `vcli` when | Prefer another tool when |
+| --- | --- | --- |
+| Run an external command | You need `context.Context`, separated args, captured output, optional timeout, and injectable runners for tests. | You need shell features such as pipes, glob expansion, or command substitution. Build those explicitly rather than passing user input to a shell. |
+| Parse a few flags | A small utility needs deterministic `flag`-style parsing without a framework dependency. | You need completion generation, persistent flags, config-file binding, or large command trees; use Cobra/Viper instead. |
+| Route subcommands | A library example or small binary needs predictable subcommand dispatch and captured stdout/stderr. | The command surface is user-facing and large enough to require rich help, aliases, completion, or plugin support. |
+| Render help or color text | Tests need stable help text and explicit color policy. | Terminal styling is a core feature; use a dedicated color/table library. |
+
+## Which helper should I use?
+
+Start with the helper that matches the boundary you are crossing: process execution, flag parsing, command routing, or presentation.
+
+| Need | Use | Notes |
+| --- | --- | --- |
+| Execute a command and inspect stdout, stderr, exit code, or duration | `Run` | Pass args as `[]string`; `vcli` does not invoke a shell. Use `WithRunner` in tests. |
+| Execute a command and only need stdout | `Output` | It is a thin wrapper over `Run`; errors still include command execution failures. |
+| Avoid real process execution in tests | `WithRunner` with `RunnerFunc` | Assert the received `ExecRequest` instead of depending on host binaries. |
+| Set command working directory, environment, stdin, timeout, or output cap | `WithDir`, `WithEnv`, `WithStdin`, `WithTimeout`, `WithMaxOutputBytes` | Keep these options visible at the call site so resource and environment boundaries are reviewable. |
+| Parse command flags | `NewFlagParser` plus `String`, `Int`, `Bool`, `Duration` | Use `WithFlagOutput` to capture parse diagnostics and usage text. |
+| Route a small subcommand tree | `Command.Execute` and `Command.Add` | Pass `WithStdout` and `WithStderr` to keep command output testable. |
+| Render deterministic help or disable ANSI escapes | `RenderHelp`, `Colorize`, `WithColorMode` | Prefer `ColorNever` in generated examples and snapshot tests. |
+
+## CLI safety checklist
+
+- Pass command arguments as separate slice elements. Do not concatenate untrusted input into `sh -c` or another shell command.
+- Use `WithRunner` for examples and tests so they do not depend on local binaries, PATH, locale, or operating-system behavior.
+- Use `WithTimeout` for commands that may hang, especially wrappers around network, package-manager, or user-provided tools.
+- Use `WithMaxOutputBytes` when stdout or stderr can be large or attacker-controlled.
+- Treat `ExecResult.Stderr` as diagnostic output. Keep machine-readable output on stdout and errors/logs on stderr.
+- Capture flag and command output with `WithFlagOutput`, `WithStdout`, and `WithStderr` instead of writing directly to process-global streams.
+
+## FAQ
+
+### Does vcli replace Cobra?
+
+No. `vcli` is intentionally small. Use it for small utilities, library examples, and deterministic tests. Use Cobra/Viper for large user-facing CLIs that need completions, persistent flags, config layering, aliases, or generated command docs.
+
+### Does Run invoke a shell?
+
+No. `Run` passes the command name and argument slice to the runner. The default runner uses `exec.CommandContext`, so shell metacharacters are not expanded unless you explicitly choose to execute a shell.
+
+### How should I test code that uses vcli?
+
+Inject a `RunnerFunc` with `WithRunner`, and capture command I/O with in-memory buffers. This keeps tests hermetic and avoids depending on installed tools or platform-specific command output.
+
 ## Run a command with an injected runner
 
 ```go
@@ -96,4 +142,3 @@ func main() {
 	fmt.Print(vcli.RenderHelp(root, vcli.WithColorMode(vcli.ColorNever)))
 }
 ```
-

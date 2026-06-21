@@ -2,6 +2,53 @@
 
 `vstr` provides string helpers for blank checks, trimming, substring extraction, splitting, naming-style conversion, emoji/HTML handling, and text similarity calculation.
 
+## Which helper should I use?
+
+Start with the smallest helper that matches the text task: normalization, extraction, naming conversion, safe rendering, or similarity.
+
+| Need | Use | Notes |
+| --- | --- | --- |
+| Check blank or provide fallback text | `IsBlank`, `HasBlank`, `DefaultIfBlank`, `Trim` | Useful at request, config, and template boundaries where empty strings need normalization. |
+| Extract a substring by rune-aware positions or separators | `Sub`, `SubBefore`, `SubAfter` | Keep index assumptions local to the schema or protocol you are parsing. |
+| Split, trim, or pad user-facing text | `SplitTrim`, `PadLeft`, `PadRight` | Prefer helpers that make trimming and padding rules explicit. |
+| Convert naming styles | `ToCamelCase`, `ToPascalCase`, `ToUnderlineCase` | Good for config keys, generated names, and UI-friendly rewrites. |
+| Add or remove prefixes/suffixes safely | `AddPrefixIfNot`, `RemoveSuffix`, similar helpers | Prefer these over open-coded concatenation when idempotence matters. |
+| Escape or clean rendered text | `EscapeHTML`, emoji helpers | Use escaping at output boundaries, not as a substitute for broader input validation. |
+| Compare text similarity | `LevenshteinDistance`, `JaccardSimilarity` | Useful for fuzzy matching, ranking, or heuristics, not strict identity checks. |
+
+## Text handling checklist
+
+- Normalize blank input at the boundary so downstream code does not need to repeatedly guess whether `""`, whitespace, or tabs are meaningful.
+- Prefer rune-aware substring helpers for human text; byte indexing can split multi-byte characters.
+- Escape HTML at render time when content is inserted into HTML output.
+- Treat similarity helpers as heuristics. Keep exact authorization, deduplication, and identity checks on strict comparisons.
+- Keep naming-style conversion close to the protocol or schema that requires it so casing rules remain reviewable.
+- Be explicit about trimming and separator rules; subtle whitespace assumptions are a common source of bugs.
+
+## Benchmarks and trade-offs
+
+Use the string benchmark suite to compare helper overhead on your machine:
+
+```bash
+go test -bench=. -benchmem -run=^$ ./vstr
+```
+
+The suite covers representative string transformations such as reverse, camel-case conversion, and contains checks. Treat the output as a local baseline rather than a universal performance claim. For hot paths, benchmark the specific helper and input distribution you expect in production.
+
+## FAQ
+
+### Does vstr replace the standard library strings package?
+
+No. `vstr` complements `strings` with convenience helpers for common application workflows. Use the standard library directly when it already expresses the operation clearly.
+
+### Are similarity helpers suitable for security or identity checks?
+
+No. Similarity scores are heuristic ranking signals. Use exact comparisons for authentication, authorization, cache keys, or other correctness-critical checks.
+
+### When should I escape HTML?
+
+Escape when writing text into HTML output or snippets. Do it at the rendering boundary so the context stays obvious and the original text remains available for non-HTML use.
+
 ## Blank checks and defaults
 
 ```go

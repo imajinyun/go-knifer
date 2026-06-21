@@ -2,6 +2,40 @@
 
 `vdate` provides common date/time formatting, parsing, boundary calculation, offset, and comparison helpers for concise `time.Time` business logic.
 
+## Which helper should I use?
+
+Choose helpers by the business rule you are expressing: formatting/parsing, calendar boundary, offset, or comparison.
+
+| Need | Use | Notes |
+| --- | --- | --- |
+| Format a time with common layouts | `FormatNorm`, `FormatDateOnly`, `FormatTimeOnly`, `Format` | Use named helpers for project-wide conventional layouts; use `Format` when a specific layout is part of the protocol. |
+| Parse common date/time strings | `Parse`, `ParseLayoutWithOptions` | Use options such as `WithLocation` when local time semantics matter. |
+| Calculate calendar boundaries | `BeginOfDay`, `EndOfDay`, `BeginOfMonth`, `EndOfYear` | Boundaries follow the `time.Time` location carried by the input. |
+| Move by calendar units | `OffsetDay`, `OffsetMonth`, related offset helpers | Calendar offsets are not always fixed durations because months and daylight-saving transitions vary. |
+| Compare business dates | `BetweenDays`, `IsSameDay`, related comparison helpers | Prefer semantic helpers over manual duration division when calendar days are intended. |
+
+## Date/time correctness checklist
+
+- Keep time zone decisions explicit. Parse with `WithLocation` when input strings do not include an offset but the business rule requires a specific location.
+- Do not assume a day is always `24*time.Hour` for calendar logic; daylight-saving and location rules can change elapsed duration.
+- Use calendar offset helpers for dates, and duration arithmetic for elapsed time. Mixing the two can produce off-by-one-day bugs.
+- Preserve the input location when calculating day, month, or year boundaries unless you intentionally normalize to UTC.
+- Treat parse errors as validation failures and surface them to the caller instead of falling back to zero time silently.
+
+## FAQ
+
+### Does vdate replace the time package?
+
+No. `vdate` wraps common business-date operations. Use `time` directly for timers, monotonic-clock behavior, low-level layouts, and duration arithmetic.
+
+### Should I use UTC everywhere?
+
+Use UTC for storage and cross-service timestamps when possible. Use an explicit business location for parsing, display, calendar boundaries, and reports that are defined by local dates.
+
+### Why prefer calendar helpers over duration math?
+
+Calendar operations depend on location, month length, leap days, and daylight-saving rules. Helpers make that intent clearer than dividing elapsed hours by 24.
+
 ## Format and parse common dates
 
 ```go

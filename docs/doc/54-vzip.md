@@ -2,6 +2,51 @@
 
 `vzip` provides ZIP archive creation, reading, extraction, in-memory/streaming entry writes, and gzip/zlib compression helpers, with overwrite, permission, and size-limit options.
 
+## When to use vzip
+
+| Scenario | Use `vzip` when | Prefer another tool when |
+| --- | --- | --- |
+| Build a ZIP archive in application code | You need a small helper around common ZIP entry creation, file packing, extraction, or content reads. | You need a fully custom archive pipeline with low-level `archive/zip` control over headers, methods, or streaming internals. |
+| Extract archives from another system | You want explicit overwrite, permission, and size-limit options at the call site. | The input is untrusted and you still need deeper validation or quarantine logic beyond path and size controls. |
+| Compress or decompress string/byte payloads | You need convenience wrappers for gzip/zlib round trips in tests, fixtures, or transport helpers. | You need streaming compression control, custom dictionaries, or direct interoperability tuning. |
+
+## Which helper should I use?
+
+Choose the helper that matches the archive operation you are performing: create, inspect, extract, or compress payloads.
+
+| Need | Use | Notes |
+| --- | --- | --- |
+| Create a ZIP from in-memory files | `ZipEntriesWithOptions`, `ZipData` | Good for generated reports, fixtures, and small synthetic archives. |
+| Create a ZIP from existing files or directories | `ZipFilesWithOptions` | Keep overwrite behavior explicit with options. |
+| List entry names or inspect entries | `ListFileNames`, `Read` | Use `Read` when you need to inspect each entry before deciding whether to extract or decode it. |
+| Read one entry as bytes | `GetBytes` | Prefer for small known entries; avoid whole-entry reads for uncontrolled large content. |
+| Extract an archive to disk | `UnzipToWithOptions` | Set `WithOverwrite`, `WithMaxBytes`, and related options deliberately for safety. |
+| gzip / ungzip short payloads | `GzipString`, `UnGzipString`, `Gzip`, `UnGzip` | Good for fixtures and small transport payload helpers. |
+| zlib / unzlib short payloads | `ZlibString`, `UnZlibString`, `Zlib`, `UnZlib` | Choose when the downstream protocol expects zlib rather than gzip framing. |
+
+## Archive safety checklist
+
+- Treat archive extraction as a trust boundary. Keep destination directories explicit and isolated from unrelated application data.
+- Use size-limiting options such as `WithMaxBytes` when archive contents come from another system or user input.
+- Be explicit about overwrite behavior during extraction and archive creation; silent replacement is easy to miss in review.
+- Inspect entries with `Read` or `ListFileNames` before extraction when you need policy checks or allow-lists.
+- Prefer temporary directories in tests and intermediate workflows so extraction side effects are easy to clean up.
+- Use whole-entry helpers like `GetBytes` only when entry size is already bounded or trusted.
+
+## FAQ
+
+### Does vzip make archive extraction completely safe?
+
+No. `vzip` helps make extraction policy visible with options, but callers still own destination selection, trust-boundary checks, and any additional filtering required by the application.
+
+### Should I read entries into memory or extract to disk?
+
+Read into memory for small, known entries that you immediately inspect or parse. Extract to disk when files are larger, need to be consumed by other tools, or should remain on disk after the operation.
+
+### When should I use gzip/zlib helpers instead of ZIP helpers?
+
+Use gzip/zlib helpers for single payload compression. Use ZIP helpers when you need multiple named entries, archive metadata, or extraction to a directory.
+
 ## Create ZIP files from in-memory entries
 
 ```go

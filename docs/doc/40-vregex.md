@@ -2,6 +2,42 @@
 
 `vregex` provides regex matching, finding, capture-group extraction, replacement, deletion, template-variable extraction, and special-character escaping helpers.
 
+## Which helper should I use?
+
+Choose helpers based on whether you need a boolean, a match list, captured data, replacement, or escaped literal text.
+
+| Need | Use | Notes |
+| --- | --- | --- |
+| Boolean match check | `Match`, `IsMatch` | Good for validation and branch decisions when the pattern is simple and bounded. |
+| Find matches or count occurrences | `FindAll`, `Count`, `FindWithOptions` | Use options such as `WithDotAll` when multiline behavior is intentional. |
+| Extract capture groups | `GetGroup1`, `Get`, `GetByName`, `FindAllGroup` | Prefer named groups when the pattern is maintained by humans and group positions may change. |
+| Replace or delete matched text | `Replace`, `ReplaceFirst`, `ReplaceAllFunc`, `DelAll` | Use function replacement when the output depends on each match. |
+| Extract template variables | `ExtractMulti`, `TemplateVars` | Keep replacement templates close to the regex that defines their group meanings. |
+| Treat user text as a literal pattern fragment | `Escape` | Escape user-controlled literals before composing larger regex patterns. |
+
+## Regex safety checklist
+
+- Keep patterns small, reviewed, and close to their expected input shape. Regexes are easy to over-generalize.
+- Escape user-controlled literal fragments with `Escape` before combining them into a regex pattern.
+- Prefer named capture groups for long-lived patterns so later edits do not silently change group indexes.
+- Treat regex validation as one layer, not a complete parser, for structured formats such as URLs, JSON, XML, or programming languages.
+- Benchmark or bound inputs for hot paths and large text. Even safe Go regexes can still consume CPU on broad scans.
+- Use `WithDotAll` only when matching across newlines is intended; it can greatly widen what a pattern matches.
+
+## FAQ
+
+### Does vregex replace regexp?
+
+No. `vregex` provides common helpers around regex workflows. Use `regexp` directly when you need compiled pattern reuse, advanced control, or lower-level APIs.
+
+### Should I compile regexes myself?
+
+Compile patterns yourself with `regexp` when the same pattern is used repeatedly in a hot path. Use `vregex` helpers for concise one-off or low-volume workflows.
+
+### Are regexes enough for validating structured data?
+
+Usually no. Regex can check simple shapes, but structured formats should use dedicated parsers or validators after any lightweight regex precheck.
+
 ## Match, find, and count
 
 ```go

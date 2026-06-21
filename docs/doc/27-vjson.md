@@ -4,6 +4,54 @@
 
 Use `encoding/json` directly when you need full control over streaming, tokenization, or decoder settings. Use `vjson` when the common object, array, formatting, path lookup, or XML bridge helpers reduce boilerplate for your workflow.
 
+## Which helper should I use?
+
+Start with `encoding/json` when you need decoder-level control. Use `vjson` when the operation is a common encode/decode, object lookup, path update, formatting, or XML bridge.
+
+| Need | Use | Notes |
+| --- | --- | --- |
+| Encode a value to compact JSON | `ToStr` | Supports package options such as date formatting for common value-to-string workflows. |
+| Encode pretty JSON | `ToStrIndent`, `Format`, `FormatWithOptions` | Use for logs, fixtures, docs, or human review; do not treat formatting as validation by itself. |
+| Decode into a struct | `ToBean` | The destination must be a pointer. Keep strict decoding requirements in `encoding/json` if unknown fields must fail. |
+| Parse and inspect object fields | `ParseObj`, `JSONObject` getters | Useful when payload shape is partially dynamic but object access should stay readable. |
+| Parse arrays | `ParseArray`, `JSONArray` helpers | Use when the top-level JSON value is an array or you need typed element helpers. |
+| Read or update nested values | `GetByPath`, `GetByPathOr`, `PutByPath` | Keep path strings close to the schema they describe; missing paths should have explicit defaults. |
+| Convert between XML and JSON | `XMLToJSON`, `ToXML` | Good for bridge code. Validate XML inputs separately when they cross a trust boundary. |
+| Inject parsing behavior in tests | `ParseObjWithOptions`, `WithParseDecoderFactory` | Keeps tests deterministic without changing global JSON behavior. |
+
+## JSON safety checklist
+
+- Validate payload size before parsing when JSON comes from a network, file upload, queue, or other untrusted source.
+- Use `encoding/json.Decoder` directly when you need streaming, `DisallowUnknownFields`, number preservation, token inspection, or multiple JSON values from one stream.
+- Treat path lookups as schema-dependent. Prefer `GetByPathOr` when missing fields are acceptable, and fail explicitly when they are required.
+- Do not log raw JSON that may contain secrets or personal data; redact before formatting for diagnostics.
+- Validate XML inputs before XML/JSON conversion when the XML crosses a trust boundary.
+- Keep custom decoder factories local to tests or narrow integration points so parsing behavior remains predictable.
+
+## Benchmarks and trade-offs
+
+Use the JSON benchmark suite to measure helper overhead and conversion cost on your machine:
+
+```bash
+go test -bench=. -benchmem -run=^$ ./vjson
+```
+
+The suite covers object parsing, JSON encoding, path reads, and XML-to-JSON conversion. Treat the output as a local baseline rather than a universal performance claim. For streaming or very large payloads, benchmark the direct `encoding/json.Decoder` approach next to the `vjson` helper you plan to use.
+
+## FAQ
+
+### Does vjson replace encoding/json?
+
+No. `vjson` wraps common workflows. Use `encoding/json` directly when you need streaming, strict decoder options, custom token handling, or maximum control over allocation and numeric behavior.
+
+### Are path helpers schema validation?
+
+No. Path helpers make nested access concise. They do not prove that the entire payload matches a schema; validate required fields and types at your boundary.
+
+### When should I use the XML bridge?
+
+Use it for small bridge workflows where callers need JSON-shaped access to XML data or must serialize a JSON object back to XML. Keep XML-specific validation and trust-boundary checks outside the bridge call.
+
 ## Cookbook
 
 ### Encode a struct
