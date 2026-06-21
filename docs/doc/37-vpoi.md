@@ -4,6 +4,53 @@
 
 Worksheet names are validated before opening or saving workbooks. Use `vpoi.ValidateSheetName` or `vpoi.IsValidSheetName` when sheet names come from user input, and rely on deterministic alphabetical sheet ordering when `WriteSheets` materializes multi-sheet workbooks.
 
+## Which helper should I use?
+
+Choose helpers by where the workbook lives and whether you need one sheet, multiple sheets, or early worksheet validation.
+
+| Need | Use | Notes |
+| --- | --- | --- |
+| Write a simple workbook file | `WriteRows` | Good for single-sheet exports with default worksheet behavior. |
+| Read rows from a workbook file | `ReadRows` | Use when the file path is already trusted and available on disk. |
+| Write to a named worksheet or start cell | `WriteSheetRows`, `WithStartCell` | Validate user-supplied worksheet names before writing. |
+| List workbook worksheets | `SheetNames` | Use to inspect incoming files before selecting a sheet. |
+| Validate worksheet names | `ValidateSheetName`, `IsValidSheetName` | Run before using names from users, reports, or external systems. |
+| Work entirely in memory | `WriteRowsToBuffer`, `ReadRowsFromReader` | Useful for HTTP responses, tests, and pipelines that should avoid temporary files. |
+| Write several worksheets | `WriteSheets` | Sheet materialization is deterministic; keep map keys as the intended worksheet names. |
+
+## XLSX safety checklist
+
+- Validate worksheet names from user input before opening or saving workbooks.
+- Use temporary directories or in-memory buffers in tests to avoid leaving workbook files behind.
+- Be explicit about overwrite behavior when writing files; accidental replacement is hard to detect after export.
+- Treat uploaded workbooks as untrusted input. Validate sheet names and row shape before binding rows into application structs.
+- Avoid logging raw spreadsheet cells when they may contain personal data, credentials, or customer content.
+- Prefer in-memory buffer helpers for HTTP export paths where no durable file is needed.
+
+## Benchmarks and trade-offs
+
+Use the POI benchmark suite to measure workbook export overhead on your machine:
+
+```bash
+go test -bench=. -benchmem -run=^$ ./vpoi
+```
+
+The suite covers representative in-memory workbook writes. Treat the output as a local baseline rather than a universal performance claim. For large exports, benchmark with row counts, sheet counts, and cell sizes that match your workload.
+
+## FAQ
+
+### Does vpoi handle every Excel feature?
+
+No. `vpoi` focuses on common XLSX row read/write workflows. Use the underlying Excel library or a dedicated spreadsheet package directly when you need formulas, charts, styles, merged cells, or advanced workbook features.
+
+### Should exports use files or buffers?
+
+Use files when another process needs a durable artifact. Use buffers for HTTP responses, tests, and short-lived pipelines where keeping data in memory is simpler and safe for the expected size.
+
+### Why validate sheet names early?
+
+Early validation turns user-facing report or worksheet naming problems into clear input errors before a workbook is partially written.
+
 ## Write and read workbook files
 
 ```go

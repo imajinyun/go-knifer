@@ -2,6 +2,52 @@
 
 `vbean` maps fields between structs and maps. Use `Copy` / `CopyProperties` for trusted Go-to-Go property copy, `Decode` / `DecodeResult` for weak string/numeric/bool input conversion with metadata, and `Merge` / `MergeResult` when multiple sources should update an existing destination from left to right.
 
+## Which helper should I use?
+
+Choose the helper by the mapping direction and how much conversion metadata the caller needs.
+
+| Need | Use | Notes |
+| --- | --- | --- |
+| Convert a struct or map to `map[string]any` | `ToMap` | Good for serialization boundaries, diagnostics, and generic map workflows. |
+| Fill a struct from a map or another struct | `ToStruct`, `Decode` | Destination must be a pointer. Enable weak conversion only when the input boundary needs it. |
+| Copy trusted Go values between compatible shapes | `Copy`, `CopyProperties` | Use when source and destination are already trusted Go values and conversion policy is simple. |
+| Track matched and unused fields | `DecodeResult`, `MergeResult` | Use metadata when callers must reject unused input or explain mapping decisions. |
+| Merge layered sources into an existing destination | `Merge`, `MergeWithOptions`, `MergeResultWithOptions` | Later sources override earlier sources; keep that precedence visible at the call site. |
+| Customize matching or conversion | `WithTagNames`, `WithCaseInsensitive`, `WithWeaklyTyped`, parser options | Prefer explicit options over hidden global conversion policy. |
+
+## Mapping safety checklist
+
+- Pass a pointer destination for struct writes, and handle mapping errors instead of assuming every field is assignable.
+- Enable weak typing only at input boundaries that intentionally accept string/numeric/bool coercion.
+- Use `WithStrictUnused(true)` or inspect `Result.Unused` when extra source fields should fail validation.
+- Keep tag-name precedence explicit with `WithTagNames` when JSON, DB, form, or config tags differ.
+- Be deliberate with `WithIgnoreEmpty` and `WithIgnoreZero`; they can preserve existing values but can also hide intentional zero-value updates.
+- Treat map inputs from users or config files as untrusted until required fields, unused fields, and type conversions have been checked.
+
+## Benchmarks and trade-offs
+
+Use the bean benchmark suite to measure reflection and conversion overhead on your machine:
+
+```bash
+go test -bench=. -benchmem -run=^$ ./vbean
+```
+
+The suite covers representative `DecodeResult` and `Merge` workflows. Treat the output as a local baseline rather than a universal performance claim. For hot paths with known types, compare a hand-written typed mapper against the `vbean` helper.
+
+## FAQ
+
+### Does vbean replace hand-written mappers?
+
+No. `vbean` reduces boilerplate for dynamic or tag-driven mapping. Hand-written mappers remain clearer and faster when source and destination types are stable and business rules are complex.
+
+### When should I use DecodeResult instead of Decode?
+
+Use `DecodeResult` when the caller needs to know what matched, what was unused, or why a boundary payload should be rejected. Use `Decode` when only the populated destination and error matter.
+
+### Is weak conversion safe by default?
+
+Weak conversion is convenient, not a validation substitute. Enable it deliberately and pair it with required-field and unused-field checks where input comes from users, config files, or external systems.
+
 ## Convert a struct to a map
 
 ```go
