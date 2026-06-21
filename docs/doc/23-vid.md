@@ -2,6 +2,42 @@
 
 `vid` provides UUID, ObjectId, NanoId, and Snowflake ID generators, with support for injecting random sources, clocks, and Snowflake worker/datacenter configuration.
 
+## Which helper should I use?
+
+Choose ID helpers by the property you need: randomness, compactness, sortability, or distributed sequence generation.
+
+| Need | Use | Notes |
+| --- | --- | --- |
+| General random identifiers | `RandomUUID`, `SimpleUUID` | Good default for opaque IDs that do not need ordering. |
+| Fast non-cryptographic UUID-style IDs | `FastUUID`, `FastSimpleUUID` | Use only when unpredictability is not a security requirement. |
+| MongoDB-style time-bearing IDs | `ObjectId` | Useful when interoperability or approximate creation time is desired. |
+| Compact random textual IDs | `NanoId`, `NanoIdN`, `NanoIdWithOptions` | Tune length and alphabet for the collision budget and downstream format. |
+| Distributed sortable numeric IDs | `CreateSnowflake`, `GetSnowflakeNextID`, `GetSnowflakeNextIDStr` | Configure worker/datacenter ids so generators do not collide. |
+| Deterministic tests | random source, clock, and Snowflake options | Inject deterministic dependencies only in tests and examples. |
+
+## ID safety checklist
+
+- Do not treat ordinary IDs as authentication secrets. Use `vrand.SecureBytes` for bearer tokens, reset tokens, API keys, and session secrets.
+- Choose ID length and alphabet based on collision risk, storage limits, and whether users will type or copy the value.
+- Avoid fast pseudo-random ID helpers when IDs must be unpredictable to attackers.
+- Configure Snowflake worker and datacenter IDs uniquely per generator instance to avoid collisions.
+- Remember that time-bearing IDs can reveal creation time or ordering; avoid them where metadata disclosure matters.
+- Keep deterministic random sources and clocks limited to tests so production IDs remain unique and appropriately unpredictable.
+
+## FAQ
+
+### Can I use vid IDs as login or reset tokens?
+
+No. IDs identify records; tokens grant access. Use `vrand.SecureBytes` or a dedicated token workflow for credentials and bearer secrets.
+
+### When should I use Snowflake IDs?
+
+Use Snowflake IDs when you need compact sortable numeric IDs generated across multiple workers. Ensure worker/datacenter configuration is unique across the deployment.
+
+### Are ObjectIds or Snowflake IDs private?
+
+No. They can reveal ordering or time-derived metadata. Use random opaque IDs when creation-time disclosure is undesirable.
+
 ## Generate UUIDs
 
 ```go

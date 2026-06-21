@@ -2,7 +2,7 @@
 
 `vurl` provides URL building, parsing, encoding/decoding, query handling, normalization, resource opening, and safe HTTP(S) resource access helpers.
 
-## When to use `vurl`
+## Which helper should I use?
 
 Use `vurl` when the task is about URL shape or safe resource access rather than a full HTTP request workflow. Use `vhttp` or `vresty` when you need request headers, methods, response status handling, downloads, or client configuration.
 
@@ -22,7 +22,14 @@ Use `vurl` when the task is about URL shape or safe resource access rather than 
 - Keep private-host rejection enabled for internet-facing inputs; disable it only for controlled tests or documented internal calls.
 - Inject `WithLookupIP` in deterministic tests so host validation does not depend on external DNS.
 - Set `WithTimeout` and `WithMaxBytes` for remote reads to avoid hanging calls and unbounded response bodies.
+- Safe helpers validate redirects before following them; keep that behavior enabled for untrusted input.
 - Use `vhttp` or `vresty` safe helpers when you need method-specific requests, headers, or download helpers after URL validation.
+
+## When not to use vurl
+
+- Use `vhttp` or `vresty` when the task is a full HTTP workflow with methods, headers, response status handling, downloads, retries, or client-level configuration.
+- Use `vnet` when the task is IP math, CIDR/range handling, DNS records, TCP probes, TLS configuration, or multipart upload saving.
+- Use `Open` and `OpenWithOptions` only for trusted resource locations. Use `OpenSafe` or `OpenSafeWithOptions` for user, configuration, webhook, or upstream URLs.
 
 ## Benchmarks and trade-offs
 
@@ -141,3 +148,21 @@ func main() {
 	fmt.Println(string(body))
 }
 ```
+
+## FAQ
+
+### Does normalization make a URL safe?
+
+No. Normalization changes URL shape; it does not decide whether a host, scheme, redirect, or response size is allowed. Apply `OpenSafeWithOptions` or caller-specific policy after normalization.
+
+### Can `Open` read local files?
+
+Yes. `Open` and `OpenWithOptions` support file URLs and plain paths, so they are for trusted locations only. Safe helpers disable local files by default.
+
+### Why inject `WithLookupIP` in tests?
+
+Safe host validation resolves hostnames to detect private, loopback, and link-local addresses. Injecting a resolver keeps tests hermetic and avoids depending on external DNS.
+
+### Should I allow private hosts?
+
+Only for documented internal calls. For internet-facing input, keep private-host rejection enabled and add `WithAllowedHosts` when only known upstream domains are expected.

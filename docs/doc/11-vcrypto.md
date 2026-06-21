@@ -2,24 +2,29 @@
 
 `vcrypto` provides common cryptographic helpers, including digests, HMAC, AES-GCM, random bytes, PBKDF2, RSA encryption/decryption/signing, and PEM conversion.
 
-## Recommended API families
+## Which helper should I use?
 
-| Need | Recommended API family | Notes |
+| Need | Use | Notes |
 | --- | --- | --- |
-| Hash non-secret data | SHA-256/SHA-512 helpers | Do not use plain hashes as authentication codes. |
-| Authenticate a message | HMAC helpers | Compare outputs using constant-time checks where exposed. |
-| Encrypt bytes | AES-GCM helpers | Use fresh nonces and authenticated encryption. |
-| Generate secrets | `vrand` secure helpers | Do not use `math/rand` for secrets. |
+| Hash non-secret data | SHA-256/SHA-512 helpers | Use for checksums and fingerprints. Do not use plain hashes as authentication codes. |
+| Authenticate a message | HMAC helpers | Use when both sides share a secret key and the message must be tamper-evident. |
+| Encrypt bytes symmetrically | AES-GCM helpers | Use authenticated encryption with a fresh nonce per key/message pair. |
+| Derive keys from passwords | `PBKDF2` | Use a unique salt and policy-controlled iterations; prefer dedicated password hashing where available for password storage. |
+| Generate random keys, salts, nonces, or tokens | `GenAESKey`, random byte helpers, or `vrand.SecureBytes` | Do not use pseudo-random helpers for secrets. |
+| Sign or verify with RSA | RSA signing/verification helpers | Use when interoperability requires RSA keys and signatures. |
+| Marshal keys | PEM conversion helpers | Treat private-key bytes as secrets and avoid logging them. |
 
-## Misuse checklist
+## Crypto safety checklist
 
 - Do not use MD5 or SHA-1 for new security-sensitive designs.
 - Do not reuse AES-GCM nonces with the same key.
-- Do not generate keys, tokens, nonces, or salts with `math/rand`.
+- Do not generate keys, tokens, nonces, or salts with `math/rand` or deterministic test sources.
 - Do not log secret bytes, private keys, raw tokens, or derived credentials.
 - Do not ignore crypto errors; treat them as security-relevant failures.
+- Keep keys outside source code and rotate them according to application policy.
+- Separate hashing, message authentication, encryption, password derivation, and signing decisions; they solve different problems.
 
-## Benchmarks
+## Benchmarks and trade-offs
 
 Measure crypto helper overhead locally with the focused benchmark suite:
 
@@ -38,6 +43,10 @@ No. It provides focused helper entry points and documents safe defaults for comm
 ### Which APIs should I avoid for security-sensitive code?
 
 Avoid legacy digest algorithms such as MD5 or SHA-1 for new security-sensitive designs. Prefer documented recommended APIs.
+
+### Are hashes the same as encryption?
+
+No. Hashes are one-way fingerprints, HMAC authenticates messages with a shared secret, and encryption protects confidentiality. Choose the primitive that matches the threat model.
 
 ### Are secrets ever logged?
 
