@@ -51,6 +51,7 @@ github.com/imajinyun/go-knifer/vai
   var ErrMissingEmbeddingProvider error
 
 github.com/imajinyun/go-knifer/vbean
+  func ComposeDecodeHook(hooks ...DecodeHookFunc) DecodeHookFunc
   func Copy(src any, dst any, opts ...Option) error
   func CopyProperties(src any, dst any, opts ...Option) error
   func Decode(src any, dst any, opts ...Option) error
@@ -61,6 +62,8 @@ github.com/imajinyun/go-knifer/vbean
   func MergeResultWithOptions(dst any, sources []any, opts ...Option) (Result, error)
   func MergeWithOptions(dst any, sources []any, opts ...Option) error
   func NewOptions() Options
+  func StringToDurationHook() DecodeHookFunc
+  func StringToTimeHook(layout string) DecodeHookFunc
   func ToMap(src any, opts ...Option) (map[string]any, error)
   func ToStruct(src any, dst any, opts ...Option) error
   func WithBoolParser(parser func(string) (bool, error)) Option

@@ -323,9 +323,26 @@ func TestToolsCatalogRecommendedEntrypoints(t *testing.T) {
 			violations = append(violations, pkg.Name+": missing recommended entrypoints")
 			continue
 		}
+		if len(pkg.GoldenPath) == 0 {
+			violations = append(violations, pkg.Name+": missing golden path APIs")
+		}
+		if len(pkg.GoldenPath) > 7 {
+			violations = append(violations, pkg.Name+": golden path has more than 7 APIs")
+		}
 		functions := map[string]FuncDoc{}
 		for _, fn := range pkg.Functions {
 			functions[fn.Name] = fn
+		}
+		for _, entrypoint := range pkg.GoldenPath {
+			if _, ok := functions[entrypoint.Name]; !ok {
+				violations = append(violations, pkg.Name+"."+entrypoint.Name+": unknown golden path API")
+			}
+			if strings.TrimSpace(entrypoint.UseWhen) == "" {
+				violations = append(violations, pkg.Name+"."+entrypoint.Name+": missing golden path use_when")
+			}
+			if strings.TrimSpace(entrypoint.AvoidWhen) == "" {
+				violations = append(violations, pkg.Name+"."+entrypoint.Name+": missing golden path avoid_when")
+			}
 		}
 		seenProfiles := map[string]struct{}{}
 		for _, entrypoint := range pkg.RecommendedEntrypoints {

@@ -487,6 +487,9 @@ if tools_catalog_data:
         for profile in sorted(allowed_recommended_profiles):
             if profile not in recommended_profile_schema:
                 add_error(f"ai_tooling.api_catalog.recommended_profile_schema must mention {profile!r}")
+        for term in ("golden_path", "use_when", "avoid_when"):
+            if term not in recommended_profile_schema:
+                add_error(f"ai_tooling.api_catalog.recommended_profile_schema must mention {term!r}")
     for package_index, package in enumerate(tools_catalog_data.get("packages", [])):
         package = require_mapping(package, f"{api_catalog_path}.packages[{package_index}]")
         package_name = require_string(package.get("name"), f"{api_catalog_path}.packages[{package_index}].name")
@@ -494,6 +497,35 @@ if tools_catalog_data:
             {fn.get("name"): fn for fn in package.get("functions", []) if isinstance(fn, dict)},
             f"{api_catalog_path}.packages[{package_index}].functions_by_name",
         )
+        golden_path = package.get("golden_path")
+        if not isinstance(golden_path, list) or not golden_path:
+            add_error(f"{api_catalog_path}.packages[{package_index}] {package_name!r} must declare golden_path")
+        elif len(golden_path) > 7:
+            add_error(f"{api_catalog_path}.packages[{package_index}] {package_name!r} golden_path must contain at most 7 APIs")
+        else:
+            seen_golden_names = set()
+            for golden_index, golden_entrypoint in enumerate(golden_path):
+                golden_entrypoint = require_mapping(
+                    golden_entrypoint,
+                    f"{api_catalog_path}.packages[{package_index}].golden_path[{golden_index}]",
+                )
+                golden_name = require_string(
+                    golden_entrypoint.get("name"),
+                    f"{api_catalog_path}.packages[{package_index}].golden_path[{golden_index}].name",
+                )
+                require_string(
+                    golden_entrypoint.get("use_when"),
+                    f"{api_catalog_path}.packages[{package_index}].golden_path[{golden_index}].use_when",
+                )
+                require_string(
+                    golden_entrypoint.get("avoid_when"),
+                    f"{api_catalog_path}.packages[{package_index}].golden_path[{golden_index}].avoid_when",
+                )
+                if golden_name in seen_golden_names:
+                    add_error(f"{api_catalog_path}.{package_name}.golden_path repeats function {golden_name!r}")
+                seen_golden_names.add(golden_name)
+                if golden_name not in functions:
+                    add_error(f"{api_catalog_path}.{package_name}.golden_path contains unknown function {golden_name!r}")
         entrypoints = package.get("recommended_entrypoints")
         if not isinstance(entrypoints, list) or not entrypoints:
             add_error(f"{api_catalog_path}.packages[{package_index}] {package_name!r} must declare recommended_entrypoints")
@@ -566,6 +598,32 @@ for index, entrypoint in enumerate(top_entrypoints):
     entrypoint = require_mapping(entrypoint, f"ai_tooling.top_entrypoints[{index}]")
     require_string(entrypoint.get("intent"), f"ai_tooling.top_entrypoints[{index}].intent")
     require_string_list(entrypoint.get("packages"), f"ai_tooling.top_entrypoints[{index}].packages")
+
+stdlib_first_decisions = ai_tooling.get("stdlib_first_decisions")
+if not isinstance(stdlib_first_decisions, list):
+    add_error("ai_tooling.stdlib_first_decisions must be a list")
+    stdlib_first_decisions = []
+if len(stdlib_first_decisions) < 5:
+    add_error("ai_tooling.stdlib_first_decisions should cover core package-vs-stdlib decisions")
+for index, decision in enumerate(stdlib_first_decisions):
+    decision = require_mapping(decision, f"ai_tooling.stdlib_first_decisions[{index}]")
+    require_string(decision.get("scenario"), f"ai_tooling.stdlib_first_decisions[{index}].scenario")
+    prefer_stdlib_when = require_string(
+        decision.get("prefer_stdlib_when"),
+        f"ai_tooling.stdlib_first_decisions[{index}].prefer_stdlib_when",
+    )
+    prefer_go_knifer_when = require_string(
+        decision.get("prefer_go_knifer_when"),
+        f"ai_tooling.stdlib_first_decisions[{index}].prefer_go_knifer_when",
+    )
+    packages = require_string_list(
+        decision.get("packages"),
+        f"ai_tooling.stdlib_first_decisions[{index}].packages",
+    )
+    if "stdlib" not in prefer_stdlib_when.lower() and "standard" not in prefer_stdlib_when.lower():
+        add_error(f"ai_tooling.stdlib_first_decisions[{index}].prefer_stdlib_when must mention stdlib or standard library")
+    if "go_knifer" not in prefer_go_knifer_when.lower() and "go-knifer" not in prefer_go_knifer_when.lower():
+        add_error(f"ai_tooling.stdlib_first_decisions[{index}].prefer_go_knifer_when must mention go-knifer")
 
 coverage_gates = require_mapping(data.get("coverage_gates"), "coverage_gates")
 repository_threshold = require_number(coverage_gates.get("repository_threshold"), "coverage_gates.repository_threshold")
@@ -650,6 +708,13 @@ for index, entrypoint in enumerate(top_entrypoints):
         if package not in declared_facades:
             add_error(f"ai_tooling.top_entrypoints[{index}].packages contains unknown package {package!r}")
 
+for index, decision in enumerate(stdlib_first_decisions):
+    if not isinstance(decision, dict):
+        continue
+    for package in decision.get("packages", []):
+        if package not in declared_facades:
+            add_error(f"ai_tooling.stdlib_first_decisions[{index}].packages contains unknown package {package!r}")
+
 security_sensitive = set(require_string_list(data.get("security_sensitive_packages"), "security_sensitive_packages"))
 unknown_security_sensitive = sorted(security_sensitive - declared_facades)
 if unknown_security_sensitive:
@@ -694,6 +759,29 @@ if len(v1_blocking_exit_criteria) < 3:
 for command_name in v1_check_commands:
     if command_name not in command_names:
         add_error(f"v1_readiness.check_commands references unknown command {command_name!r}")
+
+api_freeze = require_mapping(data.get("api_freeze"), "api_freeze")
+allowed_statuses = set(require_string_list(api_freeze.get("allowed_statuses"), "api_freeze.allowed_statuses"))
+if allowed_statuses != {"recommended", "compatibility", "experimental", "deprecated"}:
+    add_error("api_freeze.allowed_statuses must contain recommended, compatibility, experimental, deprecated")
+if api_freeze.get("decision_card_required") is not True:
+    add_error("api_freeze.decision_card_required must be true")
+if api_freeze.get("replacement_required_for_deprecation") is not True:
+    add_error("api_freeze.replacement_required_for_deprecation must be true")
+freeze_checks = require_string_list(api_freeze.get("freeze_checks"), "api_freeze.freeze_checks")
+freeze_checks_text = " ".join(freeze_checks).lower()
+for required_term in ("decision card", "replacement", "snapshot", "tools catalog"):
+    if required_term not in freeze_checks_text:
+        add_error(f"api_freeze.freeze_checks must mention {required_term!r}")
+deprecations = api_freeze.get("deprecations")
+if not isinstance(deprecations, list):
+    add_error("api_freeze.deprecations must be a list")
+    deprecations = []
+for index, deprecation in enumerate(deprecations):
+    deprecation = require_mapping(deprecation, f"api_freeze.deprecations[{index}]")
+    require_string(deprecation.get("name"), f"api_freeze.deprecations[{index}].name")
+    require_string(deprecation.get("replacement"), f"api_freeze.deprecations[{index}].replacement")
+    require_string(deprecation.get("rationale"), f"api_freeze.deprecations[{index}].rationale")
 
 if errors:
     for error in errors:

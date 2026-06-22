@@ -1,22 +1,22 @@
 {
-  "schema": "1.6",
+  "schema": "1.7",
   "module": "github.com/imajinyun/go-knifer",
   "summary": {
     "package_count": 54,
-    "function_count": 2606,
+    "function_count": 2609,
     "functions_with_examples": 1253,
     "context_aware_functions": 36,
     "returns_error_functions": 603,
-    "variadic_functions": 776,
+    "variadic_functions": 777,
     "status_counts": {
       "compatibility": 22,
       "deprecated": 0,
       "experimental": 0,
-      "recommended": 2584
+      "recommended": 2587
     },
     "synopsis_sources": {
       "empty": 0,
-      "facade": 1964,
+      "facade": 1967,
       "internal": 642
     }
   },
@@ -41,6 +41,38 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "Chat",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "New",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "Redact",
+          "use_when": "Use first for concise trusted-input workflows in vai.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vai."
+        },
+        {
+          "name": "Embed",
+          "use_when": "Use first for concise trusted-input workflows in vai.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vai."
+        },
+        {
+          "name": "WithChatProvider",
+          "use_when": "Use first for concise trusted-input workflows in vai.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vai."
+        },
+        {
+          "name": "WithEmbeddingProvider",
+          "use_when": "Use first for concise trusted-input workflows in vai.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vai."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "Chat",
@@ -216,21 +248,58 @@
       "name": "vbean",
       "synopsis": "Package vbean provides public APIs for struct and map property mapping.",
       "summary": {
-        "function_count": 23,
+        "function_count": 26,
         "functions_with_examples": 7,
-        "example_coverage_percent": 30.4,
+        "example_coverage_percent": 26.9,
         "status_counts": {
           "compatibility": 1,
           "deprecated": 0,
           "experimental": 0,
-          "recommended": 22
+          "recommended": 25
         },
         "synopsis_sources": {
           "empty": 0,
-          "facade": 23,
+          "facade": 26,
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "CopyProperties",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "ComposeDecodeHook",
+          "use_when": "Use first for concise trusted-input workflows in vbean.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vbean."
+        },
+        {
+          "name": "Copy",
+          "use_when": "Use only to preserve existing call-site behavior during migration.",
+          "avoid_when": "Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists."
+        },
+        {
+          "name": "Decode",
+          "use_when": "Use first for concise trusted-input workflows in vbean.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vbean."
+        },
+        {
+          "name": "DecodeResult",
+          "use_when": "Use first for concise trusted-input workflows in vbean.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vbean."
+        },
+        {
+          "name": "FillMap",
+          "use_when": "Use first for concise trusted-input workflows in vbean.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vbean."
+        },
+        {
+          "name": "Merge",
+          "use_when": "Use first for concise trusted-input workflows in vbean.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vbean."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "CopyProperties",
@@ -238,7 +307,7 @@
           "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
         },
         {
-          "name": "NewOptions",
+          "name": "ComposeDecodeHook",
           "profile": "day-one",
           "rationale": "Start here for concise, trusted-input use cases in this package."
         },
@@ -249,6 +318,25 @@
         }
       ],
       "functions": [
+        {
+          "name": "ComposeDecodeHook",
+          "signature": "func ComposeDecodeHook(hooks ...DecodeHookFunc) DecodeHookFunc",
+          "synopsis": "ComposeDecodeHook chains hooks from left to right.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "hooks",
+              "type": "...DecodeHookFunc"
+            }
+          ],
+          "results": [
+            "DecodeHookFunc"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": true
+        },
         {
           "name": "Copy",
           "signature": "func Copy(src any, dst any, opts ...Option) error",
@@ -510,6 +598,38 @@
           "status": "recommended",
           "results": [
             "Options"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "StringToDurationHook",
+          "signature": "func StringToDurationHook() DecodeHookFunc",
+          "synopsis": "StringToDurationHook converts string values into time.Duration.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "results": [
+            "DecodeHookFunc"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "StringToTimeHook",
+          "signature": "func StringToTimeHook(layout string) DecodeHookFunc",
+          "synopsis": "StringToTimeHook converts string values into time.Time using layout.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "layout",
+              "type": "string"
+            }
+          ],
+          "results": [
+            "DecodeHookFunc"
           ],
           "returns_error": false,
           "context_aware": false,
@@ -804,6 +924,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "InitFromFileWithOptions",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "NewBitMapBloomFilterWithOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "BloomFNVHash",
+          "use_when": "Use first for concise trusted-input workflows in vblf.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vblf."
+        },
+        {
+          "name": "ApHash",
+          "use_when": "Use first for concise trusted-input workflows in vblf.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vblf."
+        },
+        {
+          "name": "BkdrHash",
+          "use_when": "Use first for concise trusted-input workflows in vblf.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vblf."
+        },
+        {
+          "name": "BloomBKDRHash",
+          "use_when": "Use first for concise trusted-input workflows in vblf.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vblf."
+        },
+        {
+          "name": "BloomDJBHash",
+          "use_when": "Use first for concise trusted-input workflows in vblf.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vblf."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "InitFromFileWithOptions",
@@ -2103,6 +2260,28 @@
           "internal": 4
         }
       },
+      "golden_path": [
+        {
+          "name": "And",
+          "use_when": "Use first for concise trusted-input workflows in vbool.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vbool."
+        },
+        {
+          "name": "Negate",
+          "use_when": "Use first for concise trusted-input workflows in vbool.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vbool."
+        },
+        {
+          "name": "Or",
+          "use_when": "Use first for concise trusted-input workflows in vbool.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vbool."
+        },
+        {
+          "name": "ToInt",
+          "use_when": "Use first for concise trusted-input workflows in vbool.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vbool."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "And",
@@ -2221,6 +2400,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "NewFIFOWithOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "NewFIFO",
+          "use_when": "Use first for concise trusted-input workflows in vcache.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcache."
+        },
+        {
+          "name": "NewFIFOWithTimeout",
+          "use_when": "Use first for concise trusted-input workflows in vcache.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcache."
+        },
+        {
+          "name": "NewLFU",
+          "use_when": "Use first for concise trusted-input workflows in vcache.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcache."
+        },
+        {
+          "name": "NewLFUWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vcache.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcache."
+        },
+        {
+          "name": "NewLFUWithTimeout",
+          "use_when": "Use first for concise trusted-input workflows in vcache.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcache."
+        },
+        {
+          "name": "NewLRU",
+          "use_when": "Use first for concise trusted-input workflows in vcache.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcache."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "NewFIFOWithOptions",
@@ -2731,6 +2947,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "Output",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "Colorize",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "WithColorMode",
+          "use_when": "Use first for concise trusted-input workflows in vcli.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcli."
+        },
+        {
+          "name": "NewFlagParser",
+          "use_when": "Use first for concise trusted-input workflows in vcli.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcli."
+        },
+        {
+          "name": "RenderHelp",
+          "use_when": "Use first for concise trusted-input workflows in vcli.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcli."
+        },
+        {
+          "name": "Run",
+          "use_when": "Use first for concise trusted-input workflows in vcli.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcli."
+        },
+        {
+          "name": "WithDir",
+          "use_when": "Use first for concise trusted-input workflows in vcli.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcli."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "Output",
@@ -3145,6 +3398,43 @@
           "internal": 14
         }
       },
+      "golden_path": [
+        {
+          "name": "Base64Decode",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "Base64Encode",
+          "use_when": "Use first for concise trusted-input workflows in vcodec.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcodec."
+        },
+        {
+          "name": "Base64DecodeStr",
+          "use_when": "Use first for concise trusted-input workflows in vcodec.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcodec."
+        },
+        {
+          "name": "Base64DecodeWithEncoding",
+          "use_when": "Use first for concise trusted-input workflows in vcodec.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcodec."
+        },
+        {
+          "name": "Base64EncodeStr",
+          "use_when": "Use first for concise trusted-input workflows in vcodec.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcodec."
+        },
+        {
+          "name": "Base64EncodeWithEncoding",
+          "use_when": "Use first for concise trusted-input workflows in vcodec.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcodec."
+        },
+        {
+          "name": "Base64RawURLDecode",
+          "use_when": "Use first for concise trusted-input workflows in vcodec.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcodec."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "Base64Decode",
@@ -3476,6 +3766,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "LoadRemoteSafe",
+          "use_when": "Use first when inputs are external, remote, file-backed, or security-sensitive.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "Base64Decrypt",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "Merge",
+          "use_when": "Use first for concise trusted-input workflows in vconf.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconf."
+        },
+        {
+          "name": "Load",
+          "use_when": "Use first for concise trusted-input workflows in vconf.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconf."
+        },
+        {
+          "name": "LoadFiles",
+          "use_when": "Use first for concise trusted-input workflows in vconf.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconf."
+        },
+        {
+          "name": "LoadFilesWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vconf.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconf."
+        },
+        {
+          "name": "LoadProfile",
+          "use_when": "Use first for concise trusted-input workflows in vconf.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconf."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "LoadRemoteSafe",
@@ -4366,6 +4693,43 @@
           "internal": 35
         }
       },
+      "golden_path": [
+        {
+          "name": "ToBoolE",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "ToBoolDefaultWithOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "ToBool",
+          "use_when": "Use first for concise trusted-input workflows in vconv.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconv."
+        },
+        {
+          "name": "ToBoolDefault",
+          "use_when": "Use first for concise trusted-input workflows in vconv.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconv."
+        },
+        {
+          "name": "ToBoolEWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vconv.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconv."
+        },
+        {
+          "name": "ToBoolWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vconv.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconv."
+        },
+        {
+          "name": "ToBytes",
+          "use_when": "Use first for concise trusted-input workflows in vconv.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconv."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "ToBoolE",
@@ -5285,6 +5649,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "CronRestart",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "ConfigureDefaultScheduler",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "NewCronError",
+          "use_when": "Use first for concise trusted-input workflows in vcron.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcron."
+        },
+        {
+          "name": "MustNewPattern",
+          "use_when": "Use only to preserve existing call-site behavior during migration.",
+          "avoid_when": "Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists."
+        },
+        {
+          "name": "CronLaunchingCount",
+          "use_when": "Use first for concise trusted-input workflows in vcron.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcron."
+        },
+        {
+          "name": "CronRemove",
+          "use_when": "Use first for concise trusted-input workflows in vcron.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcron."
+        },
+        {
+          "name": "CronRemoveWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vcron.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcron."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "CronRestart",
@@ -6358,6 +6759,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "AESDecryptGCM",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "WithGCMRandomOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "ConstantTimeEqual",
+          "use_when": "Use first for concise trusted-input workflows in vcrypto.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcrypto."
+        },
+        {
+          "name": "AESDecryptGCMWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vcrypto.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcrypto."
+        },
+        {
+          "name": "AESEncryptGCM",
+          "use_when": "Use first for concise trusted-input workflows in vcrypto.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcrypto."
+        },
+        {
+          "name": "AESEncryptGCMWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vcrypto.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcrypto."
+        },
+        {
+          "name": "AESOpenGCM",
+          "use_when": "Use first for concise trusted-input workflows in vcrypto.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcrypto."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "AESDecryptGCM",
@@ -8328,6 +8766,43 @@
           "internal": 23
         }
       },
+      "golden_path": [
+        {
+          "name": "ForEach",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "MapsToRecords",
+          "use_when": "Use first for concise trusted-input workflows in vcsv.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcsv."
+        },
+        {
+          "name": "Read",
+          "use_when": "Use first for concise trusted-input workflows in vcsv.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcsv."
+        },
+        {
+          "name": "ReadMaps",
+          "use_when": "Use first for concise trusted-input workflows in vcsv.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcsv."
+        },
+        {
+          "name": "ReadString",
+          "use_when": "Use first for concise trusted-input workflows in vcsv.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcsv."
+        },
+        {
+          "name": "ReadStringMaps",
+          "use_when": "Use first for concise trusted-input workflows in vcsv.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcsv."
+        },
+        {
+          "name": "RecordsToMaps",
+          "use_when": "Use first for concise trusted-input workflows in vcsv.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcsv."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "ForEach",
@@ -8896,6 +9371,43 @@
           "internal": 29
         }
       },
+      "golden_path": [
+        {
+          "name": "Parse",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "NowWithOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "BeginOfDay",
+          "use_when": "Use first for concise trusted-input workflows in vdate.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdate."
+        },
+        {
+          "name": "BeginOfMonth",
+          "use_when": "Use first for concise trusted-input workflows in vdate.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdate."
+        },
+        {
+          "name": "BeginOfYear",
+          "use_when": "Use first for concise trusted-input workflows in vdate.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdate."
+        },
+        {
+          "name": "BetweenDays",
+          "use_when": "Use first for concise trusted-input workflows in vdate.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdate."
+        },
+        {
+          "name": "EndOfDay",
+          "use_when": "Use first for concise trusted-input workflows in vdate.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdate."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "Parse",
@@ -9579,6 +10091,43 @@
           "internal": 36
         }
       },
+      "golden_path": [
+        {
+          "name": "IsSafeIdentifier",
+          "use_when": "Use first when inputs are external, remote, file-backed, or security-sensitive.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "AssignEntity",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "NewBuilder",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "BuildLikeValue",
+          "use_when": "Use first for concise trusted-input workflows in vdb.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdb."
+        },
+        {
+          "name": "AndGroup",
+          "use_when": "Use first for concise trusted-input workflows in vdb.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdb."
+        },
+        {
+          "name": "Asc",
+          "use_when": "Use first for concise trusted-input workflows in vdb.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdb."
+        },
+        {
+          "name": "Between",
+          "use_when": "Use first for concise trusted-input workflows in vdb.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdb."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "IsSafeIdentifier",
@@ -10733,6 +11282,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "FilterAny",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "ContainsAnyWithOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "Contains",
+          "use_when": "Use first for concise trusted-input workflows in vdfa.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdfa."
+        },
+        {
+          "name": "ConfigureAsyncRunner",
+          "use_when": "Use first for concise trusted-input workflows in vdfa.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdfa."
+        },
+        {
+          "name": "ContainsAny",
+          "use_when": "Use first for concise trusted-input workflows in vdfa.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdfa."
+        },
+        {
+          "name": "ContainsWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vdfa.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdfa."
+        },
+        {
+          "name": "DefaultProcessor",
+          "use_when": "Use first for concise trusted-input workflows in vdfa.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdfa."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "FilterAny",
@@ -11657,6 +12243,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "Recover",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "GetStackTraceWithOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "ErrorIs",
+          "use_when": "Use first for concise trusted-input workflows in verr.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in verr."
+        },
+        {
+          "name": "MustExit",
+          "use_when": "Use only to preserve existing call-site behavior during migration.",
+          "avoid_when": "Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists."
+        },
+        {
+          "name": "ConfigureDefaultLogFunc",
+          "use_when": "Use first for concise trusted-input workflows in verr.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in verr."
+        },
+        {
+          "name": "GetStack",
+          "use_when": "Use first for concise trusted-input workflows in verr.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in verr."
+        },
+        {
+          "name": "GetStackTrace",
+          "use_when": "Use first for concise trusted-input workflows in verr.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in verr."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "Recover",
@@ -12763,6 +13386,43 @@
           "internal": 6
         }
       },
+      "golden_path": [
+        {
+          "name": "AppendFileString",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "ExistsWithOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "CloseQuietly",
+          "use_when": "Use first for concise trusted-input workflows in vfile.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vfile."
+        },
+        {
+          "name": "AppendFileStringWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vfile.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vfile."
+        },
+        {
+          "name": "Copy",
+          "use_when": "Use first for concise trusted-input workflows in vfile.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vfile."
+        },
+        {
+          "name": "CopyFile",
+          "use_when": "Use first for concise trusted-input workflows in vfile.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vfile."
+        },
+        {
+          "name": "CopyFileWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vfile.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vfile."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "AppendFileString",
@@ -14266,6 +14926,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "IsChineseWithOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "IsEmail",
+          "use_when": "Use first for concise trusted-input workflows in vform.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vform."
+        },
+        {
+          "name": "IsChinese",
+          "use_when": "Use first for concise trusted-input workflows in vform.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vform."
+        },
+        {
+          "name": "IsEmailWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vform.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vform."
+        },
+        {
+          "name": "IsIDCard",
+          "use_when": "Use first for concise trusted-input workflows in vform.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vform."
+        },
+        {
+          "name": "IsIDCardWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vform.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vform."
+        },
+        {
+          "name": "IsIPv4",
+          "use_when": "Use first for concise trusted-input workflows in vform.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vform."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "IsChineseWithOptions",
@@ -14678,6 +15375,33 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "Download",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "New",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "WithProvider",
+          "use_when": "Use first for concise trusted-input workflows in vftp.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vftp."
+        },
+        {
+          "name": "List",
+          "use_when": "Use first for concise trusted-input workflows in vftp.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vftp."
+        },
+        {
+          "name": "Upload",
+          "use_when": "Use first for concise trusted-input workflows in vftp.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vftp."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "Download",
@@ -14855,6 +15579,28 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "Convert",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "New",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "WithProvider",
+          "use_when": "Use first for concise trusted-input workflows in vhan.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhan."
+        },
+        {
+          "name": "Initials",
+          "use_when": "Use first for concise trusted-input workflows in vhan.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhan."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "Convert",
@@ -15001,6 +15747,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "AdditiveHash",
+          "use_when": "Use first for concise trusted-input workflows in vhash.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhash."
+        },
+        {
+          "name": "ApHash",
+          "use_when": "Use first for concise trusted-input workflows in vhash.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhash."
+        },
+        {
+          "name": "BkdrHash",
+          "use_when": "Use first for concise trusted-input workflows in vhash.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhash."
+        },
+        {
+          "name": "DjbHash",
+          "use_when": "Use first for concise trusted-input workflows in vhash.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhash."
+        },
+        {
+          "name": "ElfHash",
+          "use_when": "Use first for concise trusted-input workflows in vhash.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhash."
+        },
+        {
+          "name": "FnvHash",
+          "use_when": "Use first for concise trusted-input workflows in vhash.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhash."
+        },
+        {
+          "name": "FnvHashString",
+          "use_when": "Use first for concise trusted-input workflows in vhash.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhash."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "AdditiveHash",
@@ -15358,6 +16141,43 @@
           "internal": 5
         }
       },
+      "golden_path": [
+        {
+          "name": "DeleteSafe",
+          "use_when": "Use first when inputs are external, remote, file-backed, or security-sensitive.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "Download",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "CleanHTMLWithOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "AddGlobalHeader",
+          "use_when": "Use first for concise trusted-input workflows in vhttp.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhttp."
+        },
+        {
+          "name": "BuildBasicAuth",
+          "use_when": "Use first for concise trusted-input workflows in vhttp.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhttp."
+        },
+        {
+          "name": "BuildContentType",
+          "use_when": "Use first for concise trusted-input workflows in vhttp.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhttp."
+        },
+        {
+          "name": "CleanHTML",
+          "use_when": "Use first for concise trusted-input workflows in vhttp.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhttp."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "DeleteSafe",
@@ -18865,6 +19685,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "ConfigureDefaultSnowflake",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "GetSnowflakeNextID",
+          "use_when": "Use first for concise trusted-input workflows in vid.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vid."
+        },
+        {
+          "name": "FastSimpleUUID",
+          "use_when": "Use only to preserve existing call-site behavior during migration.",
+          "avoid_when": "Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists."
+        },
+        {
+          "name": "ConfigureDefaultFallbackRandomSourceProvider",
+          "use_when": "Use first for concise trusted-input workflows in vid.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vid."
+        },
+        {
+          "name": "CreateSnowflake",
+          "use_when": "Use first for concise trusted-input workflows in vid.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vid."
+        },
+        {
+          "name": "CreateSnowflakeWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vid.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vid."
+        },
+        {
+          "name": "GetDataCenterID",
+          "use_when": "Use first for concise trusted-input workflows in vid.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vid."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "ConfigureDefaultSnowflake",
@@ -19904,6 +20761,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "AgeWithOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "AgeAt",
+          "use_when": "Use first for concise trusted-input workflows in vident.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vident."
+        },
+        {
+          "name": "Age",
+          "use_when": "Use first for concise trusted-input workflows in vident.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vident."
+        },
+        {
+          "name": "BirthDate",
+          "use_when": "Use first for concise trusted-input workflows in vident.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vident."
+        },
+        {
+          "name": "BirthDateWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vident.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vident."
+        },
+        {
+          "name": "BirthString",
+          "use_when": "Use first for concise trusted-input workflows in vident.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vident."
+        },
+        {
+          "name": "BirthStringWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vident.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vident."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "AgeWithOptions",
@@ -20982,6 +21876,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "BarcodeASCII",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "GenMathGeneratorWithOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "CanDecodeBarcodeFormat",
+          "use_when": "Use first for concise trusted-input workflows in vimg.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vimg."
+        },
+        {
+          "name": "BarcodeASCIIWithChars",
+          "use_when": "Use first for concise trusted-input workflows in vimg.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vimg."
+        },
+        {
+          "name": "BarcodeBase64Data",
+          "use_when": "Use first for concise trusted-input workflows in vimg.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vimg."
+        },
+        {
+          "name": "BarcodeBytes",
+          "use_when": "Use first for concise trusted-input workflows in vimg.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vimg."
+        },
+        {
+          "name": "BarcodeImage",
+          "use_when": "Use first for concise trusted-input workflows in vimg.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vimg."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "BarcodeASCII",
@@ -23315,6 +24246,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "NewMapE",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "NewBatch",
+          "use_when": "Use first for concise trusted-input workflows in vjob.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjob."
+        },
+        {
+          "name": "NewBatchSingle",
+          "use_when": "Use first for concise trusted-input workflows in vjob.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjob."
+        },
+        {
+          "name": "NewMap",
+          "use_when": "Use first for concise trusted-input workflows in vjob.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjob."
+        },
+        {
+          "name": "NewMapKeys",
+          "use_when": "Use first for concise trusted-input workflows in vjob.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjob."
+        },
+        {
+          "name": "NewSlice",
+          "use_when": "Use first for concise trusted-input workflows in vjob.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjob."
+        },
+        {
+          "name": "NewSliceSingle",
+          "use_when": "Use first for concise trusted-input workflows in vjob.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjob."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "NewMapE",
@@ -23577,6 +24545,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "Parse",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "FormatWithOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "CreateConfig",
+          "use_when": "Use first for concise trusted-input workflows in vjson.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjson."
+        },
+        {
+          "name": "Format",
+          "use_when": "Use first for concise trusted-input workflows in vjson.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjson."
+        },
+        {
+          "name": "GetByPath",
+          "use_when": "Use first for concise trusted-input workflows in vjson.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjson."
+        },
+        {
+          "name": "GetByPathOr",
+          "use_when": "Use first for concise trusted-input workflows in vjson.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjson."
+        },
+        {
+          "name": "IsArray",
+          "use_when": "Use first for concise trusted-input workflows in vjson.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjson."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "Parse",
@@ -25177,6 +26182,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "CreateJWTToken",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "ES256WithOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "AlgorithmName",
+          "use_when": "Use first for concise trusted-input workflows in vjwt.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjwt."
+        },
+        {
+          "name": "MustHMACSigner",
+          "use_when": "Use only to preserve existing call-site behavior during migration.",
+          "avoid_when": "Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists."
+        },
+        {
+          "name": "CreateJWTTokenWithSigner",
+          "use_when": "Use first for concise trusted-input workflows in vjwt.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjwt."
+        },
+        {
+          "name": "CreateSigner",
+          "use_when": "Use first for concise trusted-input workflows in vjwt.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjwt."
+        },
+        {
+          "name": "CreateSignerStrict",
+          "use_when": "Use first for concise trusted-input workflows in vjwt.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjwt."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "CreateJWTToken",
@@ -27068,6 +28110,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "LogAtE",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "DebugWithOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "GetDefault",
+          "use_when": "Use first for concise trusted-input workflows in vlog.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vlog."
+        },
+        {
+          "name": "Debug",
+          "use_when": "Use first for concise trusted-input workflows in vlog.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vlog."
+        },
+        {
+          "name": "Debugf",
+          "use_when": "Use first for concise trusted-input workflows in vlog.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vlog."
+        },
+        {
+          "name": "DebugfWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vlog.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vlog."
+        },
+        {
+          "name": "DefaultLogger",
+          "use_when": "Use first for concise trusted-input workflows in vlog.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vlog."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "LogAtE",
@@ -28190,6 +29269,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "NewAddress",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "WithQuickClientOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "WithHeader",
+          "use_when": "Use first for concise trusted-input workflows in vmail.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmail."
+        },
+        {
+          "name": "NewAttachment",
+          "use_when": "Use first for concise trusted-input workflows in vmail.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmail."
+        },
+        {
+          "name": "NewAttachmentFile",
+          "use_when": "Use first for concise trusted-input workflows in vmail.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmail."
+        },
+        {
+          "name": "NewAttachmentReader",
+          "use_when": "Use first for concise trusted-input workflows in vmail.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmail."
+        },
+        {
+          "name": "NewClient",
+          "use_when": "Use first for concise trusted-input workflows in vmail.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmail."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "NewAddress",
@@ -29475,6 +30591,43 @@
           "internal": 61
         }
       },
+      "golden_path": [
+        {
+          "name": "FilterErr",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "Assign",
+          "use_when": "Use first for concise trusted-input workflows in vmap.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmap."
+        },
+        {
+          "name": "Clear",
+          "use_when": "Use first for concise trusted-input workflows in vmap.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmap."
+        },
+        {
+          "name": "Clone",
+          "use_when": "Use first for concise trusted-input workflows in vmap.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmap."
+        },
+        {
+          "name": "ContainsKey",
+          "use_when": "Use first for concise trusted-input workflows in vmap.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmap."
+        },
+        {
+          "name": "ContainsValue",
+          "use_when": "Use first for concise trusted-input workflows in vmap.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmap."
+        },
+        {
+          "name": "CountBy",
+          "use_when": "Use first for concise trusted-input workflows in vmap.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmap."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "FilterErr",
@@ -31113,6 +32266,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "BankCard",
+          "use_when": "Use first for concise trusted-input workflows in vmask.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmask."
+        },
+        {
+          "name": "Address",
+          "use_when": "Use first for concise trusted-input workflows in vmask.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmask."
+        },
+        {
+          "name": "CarLicense",
+          "use_when": "Use first for concise trusted-input workflows in vmask.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmask."
+        },
+        {
+          "name": "ChineseName",
+          "use_when": "Use first for concise trusted-input workflows in vmask.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmask."
+        },
+        {
+          "name": "Clear",
+          "use_when": "Use first for concise trusted-input workflows in vmask.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmask."
+        },
+        {
+          "name": "ClearToNil",
+          "use_when": "Use first for concise trusted-input workflows in vmask.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmask."
+        },
+        {
+          "name": "CreditCode",
+          "use_when": "Use first for concise trusted-input workflows in vmask.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmask."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "BankCard",
@@ -31548,6 +32738,43 @@
           "internal": 113
         }
       },
+      "golden_path": [
+        {
+          "name": "AddRootCABytes",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "GetHardwareAddressWithOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "CreateAddress",
+          "use_when": "Use first for concise trusted-input workflows in vnet.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnet."
+        },
+        {
+          "name": "AddRootCAFileWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vnet.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnet."
+        },
+        {
+          "name": "AddRootCAReader",
+          "use_when": "Use first for concise trusted-input workflows in vnet.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnet."
+        },
+        {
+          "name": "AddRootCAReaderWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vnet.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnet."
+        },
+        {
+          "name": "BeginIP",
+          "use_when": "Use first for concise trusted-input workflows in vnet.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnet."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "AddRootCABytes",
@@ -35268,6 +36495,43 @@
           "internal": 131
         }
       },
+      "golden_path": [
+        {
+          "name": "AbsIntegerE",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "DecimalFormatMoneyWithOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "Add",
+          "use_when": "Use first for concise trusted-input workflows in vnum.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnum."
+        },
+        {
+          "name": "AbsFloat32",
+          "use_when": "Use first for concise trusted-input workflows in vnum.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnum."
+        },
+        {
+          "name": "AbsFloat64",
+          "use_when": "Use first for concise trusted-input workflows in vnum.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnum."
+        },
+        {
+          "name": "AbsInteger",
+          "use_when": "Use first for concise trusted-input workflows in vnum.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnum."
+        },
+        {
+          "name": "AddStr",
+          "use_when": "Use first for concise trusted-input workflows in vnum.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnum."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "AbsIntegerE",
@@ -38620,6 +39884,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "Clone",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "CloneIfPossibleWithOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "Apply",
+          "use_when": "Use first for concise trusted-input workflows in vobj.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vobj."
+        },
+        {
+          "name": "Equals",
+          "use_when": "Use only to preserve existing call-site behavior during migration.",
+          "avoid_when": "Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists."
+        },
+        {
+          "name": "Accept",
+          "use_when": "Use first for concise trusted-input workflows in vobj.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vobj."
+        },
+        {
+          "name": "CloneByStream",
+          "use_when": "Use first for concise trusted-input workflows in vobj.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vobj."
+        },
+        {
+          "name": "CloneByStreamWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vobj.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vobj."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "Clone",
@@ -39744,6 +41045,33 @@
           "internal": 5
         }
       },
+      "golden_path": [
+        {
+          "name": "Analyze",
+          "use_when": "Use first for concise trusted-input workflows in vpass.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpass."
+        },
+        {
+          "name": "IsStrong",
+          "use_when": "Use first for concise trusted-input workflows in vpass.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpass."
+        },
+        {
+          "name": "IsWeak",
+          "use_when": "Use first for concise trusted-input workflows in vpass.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpass."
+        },
+        {
+          "name": "Score",
+          "use_when": "Use first for concise trusted-input workflows in vpass.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpass."
+        },
+        {
+          "name": "StrengthOf",
+          "use_when": "Use first for concise trusted-input workflows in vpass.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpass."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "Analyze",
@@ -39884,6 +41212,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "ReadRows",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "WithOpenOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "WithReadSheet",
+          "use_when": "Use first for concise trusted-input workflows in vpoi.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpoi."
+        },
+        {
+          "name": "IsValidSheetName",
+          "use_when": "Use first for concise trusted-input workflows in vpoi.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpoi."
+        },
+        {
+          "name": "ReadRowsFromReader",
+          "use_when": "Use first for concise trusted-input workflows in vpoi.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpoi."
+        },
+        {
+          "name": "ReadSheetRows",
+          "use_when": "Use first for concise trusted-input workflows in vpoi.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpoi."
+        },
+        {
+          "name": "ReadSheetRowsWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vpoi.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpoi."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "ReadRows",
@@ -40548,6 +41913,43 @@
           "internal": 11
         }
       },
+      "golden_path": [
+        {
+          "name": "BytesWithOptions",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "BoolWithOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "Ele",
+          "use_when": "Use first for concise trusted-input workflows in vrand.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vrand."
+        },
+        {
+          "name": "WithRandomSource",
+          "use_when": "Use only to preserve existing call-site behavior during migration.",
+          "avoid_when": "Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists."
+        },
+        {
+          "name": "Bool",
+          "use_when": "Use first for concise trusted-input workflows in vrand.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vrand."
+        },
+        {
+          "name": "ConfigureDefaultRandomSourceProvider",
+          "use_when": "Use first for concise trusted-input workflows in vrand.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vrand."
+        },
+        {
+          "name": "EleWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vrand.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vrand."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "BytesWithOptions",
@@ -41187,6 +42589,43 @@
           "internal": 62
         }
       },
+      "golden_path": [
+        {
+          "name": "Invoke",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "GetFieldValueWithOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "GetFieldValue",
+          "use_when": "Use first for concise trusted-input workflows in vref.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vref."
+        },
+        {
+          "name": "GetConstructorsDirectly",
+          "use_when": "Use only to preserve existing call-site behavior during migration.",
+          "avoid_when": "Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists."
+        },
+        {
+          "name": "GetConstructor",
+          "use_when": "Use first for concise trusted-input workflows in vref.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vref."
+        },
+        {
+          "name": "GetConstructors",
+          "use_when": "Use first for concise trusted-input workflows in vref.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vref."
+        },
+        {
+          "name": "GetField",
+          "use_when": "Use first for concise trusted-input workflows in vref.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vref."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "Invoke",
@@ -42751,6 +44190,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "ContainsWithOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "Contains",
+          "use_when": "Use first for concise trusted-input workflows in vregex.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vregex."
+        },
+        {
+          "name": "ContainsRe",
+          "use_when": "Use first for concise trusted-input workflows in vregex.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vregex."
+        },
+        {
+          "name": "Count",
+          "use_when": "Use first for concise trusted-input workflows in vregex.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vregex."
+        },
+        {
+          "name": "CountRe",
+          "use_when": "Use first for concise trusted-input workflows in vregex.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vregex."
+        },
+        {
+          "name": "CountWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vregex.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vregex."
+        },
+        {
+          "name": "DelAll",
+          "use_when": "Use first for concise trusted-input workflows in vregex.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vregex."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "ContainsWithOptions",
@@ -45137,6 +46613,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "DeleteSafe",
+          "use_when": "Use first when inputs are external, remote, file-backed, or security-sensitive.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "Download",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "Delete",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "AddGlobalHeader",
+          "use_when": "Use first for concise trusted-input workflows in vresty.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vresty."
+        },
+        {
+          "name": "BuildBasicAuth",
+          "use_when": "Use first for concise trusted-input workflows in vresty.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vresty."
+        },
+        {
+          "name": "BuildContentType",
+          "use_when": "Use first for concise trusted-input workflows in vresty.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vresty."
+        },
+        {
+          "name": "CloneGlobalHeaders",
+          "use_when": "Use first for concise trusted-input workflows in vresty.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vresty."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "DeleteSafe",
@@ -47932,6 +49445,18 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "NewE",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "New",
+          "use_when": "Use first for concise trusted-input workflows in vsem.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vsem."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "NewE",
@@ -48012,6 +49537,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "New",
+          "use_when": "Use first for concise trusted-input workflows in vset.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vset."
+        },
+        {
+          "name": "NewInt",
+          "use_when": "Use first for concise trusted-input workflows in vset.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vset."
+        },
+        {
+          "name": "NewInt32",
+          "use_when": "Use first for concise trusted-input workflows in vset.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vset."
+        },
+        {
+          "name": "NewInt64",
+          "use_when": "Use first for concise trusted-input workflows in vset.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vset."
+        },
+        {
+          "name": "NewString",
+          "use_when": "Use first for concise trusted-input workflows in vset.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vset."
+        },
+        {
+          "name": "NewUint",
+          "use_when": "Use first for concise trusted-input workflows in vset.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vset."
+        },
+        {
+          "name": "NewUint32",
+          "use_when": "Use first for concise trusted-input workflows in vset.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vset."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "New",
@@ -48263,6 +49825,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "ChannelDial",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "NewSocketConfigWithOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "GetRemoteAddress",
+          "use_when": "Use first for concise trusted-input workflows in vskt.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vskt."
+        },
+        {
+          "name": "ChannelDialWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vskt.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vskt."
+        },
+        {
+          "name": "ChannelUtilDial",
+          "use_when": "Use first for concise trusted-input workflows in vskt.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vskt."
+        },
+        {
+          "name": "NewAioClient",
+          "use_when": "Use first for concise trusted-input workflows in vskt.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vskt."
+        },
+        {
+          "name": "NewAioClientWithConfig",
+          "use_when": "Use first for concise trusted-input workflows in vskt.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vskt."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "ChannelDial",
@@ -49436,6 +51035,43 @@
           "internal": 43
         }
       },
+      "golden_path": [
+        {
+          "name": "FilterErr",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "Associate",
+          "use_when": "Use first for concise trusted-input workflows in vslice.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vslice."
+        },
+        {
+          "name": "SliceToMap",
+          "use_when": "Use only to preserve existing call-site behavior during migration.",
+          "avoid_when": "Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists."
+        },
+        {
+          "name": "Chunk",
+          "use_when": "Use first for concise trusted-input workflows in vslice.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vslice."
+        },
+        {
+          "name": "Compact",
+          "use_when": "Use first for concise trusted-input workflows in vslice.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vslice."
+        },
+        {
+          "name": "Concat",
+          "use_when": "Use first for concise trusted-input workflows in vslice.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vslice."
+        },
+        {
+          "name": "Contains",
+          "use_when": "Use first for concise trusted-input workflows in vslice.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vslice."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "FilterErr",
@@ -50572,6 +52208,38 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "Download",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "New",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "WithProvider",
+          "use_when": "Use first for concise trusted-input workflows in vssh.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vssh."
+        },
+        {
+          "name": "List",
+          "use_when": "Use first for concise trusted-input workflows in vssh.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vssh."
+        },
+        {
+          "name": "Run",
+          "use_when": "Use first for concise trusted-input workflows in vssh.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vssh."
+        },
+        {
+          "name": "Upload",
+          "use_when": "Use first for concise trusted-input workflows in vssh.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vssh."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "Download",
@@ -50780,6 +52448,43 @@
           "internal": 64
         }
       },
+      "golden_path": [
+        {
+          "name": "ContainsEmojiWithOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "AddPrefixIfNot",
+          "use_when": "Use first for concise trusted-input workflows in vstr.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vstr."
+        },
+        {
+          "name": "AddSuffixIfNot",
+          "use_when": "Use first for concise trusted-input workflows in vstr.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vstr."
+        },
+        {
+          "name": "AntPathMatch",
+          "use_when": "Use first for concise trusted-input workflows in vstr.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vstr."
+        },
+        {
+          "name": "AntPathMatchWithSeparator",
+          "use_when": "Use first for concise trusted-input workflows in vstr.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vstr."
+        },
+        {
+          "name": "Contains",
+          "use_when": "Use first for concise trusted-input workflows in vstr.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vstr."
+        },
+        {
+          "name": "ContainsAll",
+          "use_when": "Use first for concise trusted-input workflows in vstr.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vstr."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "ContainsEmojiWithOptions",
@@ -52375,6 +54080,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "CurrentPIDWithOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "DumpSystemInfoTo",
+          "use_when": "Use first for concise trusted-input workflows in vsys.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vsys."
+        },
+        {
+          "name": "CurrentPID",
+          "use_when": "Use first for concise trusted-input workflows in vsys.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vsys."
+        },
+        {
+          "name": "DumpSystemInfo",
+          "use_when": "Use first for concise trusted-input workflows in vsys.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vsys."
+        },
+        {
+          "name": "DumpSystemInfoWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vsys.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vsys."
+        },
+        {
+          "name": "Env",
+          "use_when": "Use first for concise trusted-input workflows in vsys.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vsys."
+        },
+        {
+          "name": "EnvBool",
+          "use_when": "Use first for concise trusted-input workflows in vsys.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vsys."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "CurrentPIDWithOptions",
@@ -54578,6 +56320,28 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "Keywords",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "New",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "WithProvider",
+          "use_when": "Use first for concise trusted-input workflows in vtok.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vtok."
+        },
+        {
+          "name": "Tokenize",
+          "use_when": "Use first for concise trusted-input workflows in vtok.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vtok."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "Keywords",
@@ -54724,6 +56488,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "Render",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "NewHTMLEngine",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "WithFuncMap",
+          "use_when": "Use first for concise trusted-input workflows in vtpl.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vtpl."
+        },
+        {
+          "name": "NewTextEngine",
+          "use_when": "Use first for concise trusted-input workflows in vtpl.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vtpl."
+        },
+        {
+          "name": "RenderTemplate",
+          "use_when": "Use first for concise trusted-input workflows in vtpl.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vtpl."
+        },
+        {
+          "name": "RenderWithEngine",
+          "use_when": "Use first for concise trusted-input workflows in vtpl.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vtpl."
+        },
+        {
+          "name": "RenderWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vtpl.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vtpl."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "Render",
@@ -55111,6 +56912,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "ContentLengthSafe",
+          "use_when": "Use first when inputs are external, remote, file-backed, or security-sensitive.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "Complete",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "EncodePathSegmentWithOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "AppendQuery",
+          "use_when": "Use first for concise trusted-input workflows in vurl.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vurl."
+        },
+        {
+          "name": "BuildQuery",
+          "use_when": "Use first for concise trusted-input workflows in vurl.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vurl."
+        },
+        {
+          "name": "ContentLength",
+          "use_when": "Use first for concise trusted-input workflows in vurl.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vurl."
+        },
+        {
+          "name": "ContentLengthSafeWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vurl.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vurl."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "ContentLengthSafe",
@@ -57103,6 +58941,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "MatchElWithDelimiterErr",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "AnyMatch",
+          "use_when": "Use first for concise trusted-input workflows in vver.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vver."
+        },
+        {
+          "name": "AnyMatchSlice",
+          "use_when": "Use first for concise trusted-input workflows in vver.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vver."
+        },
+        {
+          "name": "CompareVersion",
+          "use_when": "Use first for concise trusted-input workflows in vver.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vver."
+        },
+        {
+          "name": "IsGreaterThan",
+          "use_when": "Use first for concise trusted-input workflows in vver.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vver."
+        },
+        {
+          "name": "IsGreaterThanOrEqual",
+          "use_when": "Use first for concise trusted-input workflows in vver.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vver."
+        },
+        {
+          "name": "IsLessThan",
+          "use_when": "Use first for concise trusted-input workflows in vver.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vver."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "MatchElWithDelimiterErr",
@@ -57418,6 +59293,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "Format",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "CleanCommentWithOptions",
+          "use_when": "Use first when policies, providers, parsers, limits, or clocks must be explicit.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "Append",
+          "use_when": "Use first for concise trusted-input workflows in vxml.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vxml."
+        },
+        {
+          "name": "AppendChild",
+          "use_when": "Use first for concise trusted-input workflows in vxml.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vxml."
+        },
+        {
+          "name": "AppendText",
+          "use_when": "Use first for concise trusted-input workflows in vxml.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vxml."
+        },
+        {
+          "name": "CleanComment",
+          "use_when": "Use first for concise trusted-input workflows in vxml.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vxml."
+        },
+        {
+          "name": "CleanInvalid",
+          "use_when": "Use first for concise trusted-input workflows in vxml.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vxml."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "Format",
@@ -59387,6 +61299,43 @@
           "internal": 0
         }
       },
+      "golden_path": [
+        {
+          "name": "Append",
+          "use_when": "Use first when callers must observe invalid input or provider failure.",
+          "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
+        },
+        {
+          "name": "NewWriter",
+          "use_when": "Use first for concise trusted-input workflows in vzip.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vzip."
+        },
+        {
+          "name": "AppendWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vzip.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vzip."
+        },
+        {
+          "name": "Get",
+          "use_when": "Use first for concise trusted-input workflows in vzip.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vzip."
+        },
+        {
+          "name": "GetBytes",
+          "use_when": "Use first for concise trusted-input workflows in vzip.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vzip."
+        },
+        {
+          "name": "GetBytesWithOptions",
+          "use_when": "Use first for concise trusted-input workflows in vzip.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vzip."
+        },
+        {
+          "name": "GetStream",
+          "use_when": "Use first for concise trusted-input workflows in vzip.",
+          "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vzip."
+        }
+      ],
       "recommended_entrypoints": [
         {
           "name": "Append",

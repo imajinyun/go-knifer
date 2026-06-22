@@ -23,7 +23,7 @@ import (
 const modulePath = "github.com/imajinyun/go-knifer"
 
 // schemaVersion is bumped when the tools.json structure changes.
-const schemaVersion = "1.6"
+const schemaVersion = "1.7"
 
 const (
 	apiStatusRecommended   = "recommended"
@@ -59,8 +59,17 @@ type PackageDoc struct {
 	Name                   string                  `json:"name"`
 	Synopsis               string                  `json:"synopsis"`
 	Summary                PackageSummaryDoc       `json:"summary"`
+	GoldenPath             []GoldenPathEntrypoint  `json:"golden_path"`
 	RecommendedEntrypoints []RecommendedEntrypoint `json:"recommended_entrypoints"`
 	Functions              []FuncDoc               `json:"functions"`
+}
+
+// GoldenPathEntrypoint describes the smallest public API set an agent should
+// try before scanning the full package catalog.
+type GoldenPathEntrypoint struct {
+	Name      string `json:"name"`
+	UseWhen   string `json:"use_when"`
+	AvoidWhen string `json:"avoid_when"`
 }
 
 // RecommendedEntrypoint marks the smallest public API subset to try first for a
@@ -209,6 +218,21 @@ func renderToolsMarkdown(doc ToolsDoc) []byte {
 				b.WriteString(markdownText(entrypoint.Profile))
 				b.WriteString(" | ")
 				b.WriteString(markdownText(entrypoint.Rationale))
+				b.WriteString(" |\n")
+			}
+			b.WriteString("\n")
+		}
+		if len(pkg.GoldenPath) > 0 {
+			b.WriteString("Golden path API set:\n\n")
+			b.WriteString("| Function | Use when | Avoid when |\n")
+			b.WriteString("| --- | --- | --- |\n")
+			for _, entrypoint := range pkg.GoldenPath {
+				b.WriteString("| `")
+				b.WriteString(entrypoint.Name)
+				b.WriteString("` | ")
+				b.WriteString(markdownText(entrypoint.UseWhen))
+				b.WriteString(" | ")
+				b.WriteString(markdownText(entrypoint.AvoidWhen))
 				b.WriteString(" |\n")
 			}
 			b.WriteString("\n")
@@ -632,7 +656,74 @@ func buildPackageDoc(pkg *packages.Package, exampleSet map[string]struct{}, impl
 	})
 	pd.Summary = summarizePackageDoc(pd.Functions)
 	pd.RecommendedEntrypoints = recommendedEntrypoints(pd.Functions)
+	pd.GoldenPath = goldenPathEntrypoints(pd.Name, pd.Functions, pd.RecommendedEntrypoints)
 	return pd
+}
+
+func goldenPathEntrypoints(packageName string, functions []FuncDoc, recommended []RecommendedEntrypoint) []GoldenPathEntrypoint {
+	functionsByName := make(map[string]FuncDoc, len(functions))
+	for _, fn := range functions {
+		functionsByName[fn.Name] = fn
+	}
+	out := make([]GoldenPathEntrypoint, 0, min(7, len(recommended)))
+	seen := map[string]struct{}{}
+	for _, entrypoint := range recommended {
+		if _, ok := functionsByName[entrypoint.Name]; !ok {
+			continue
+		}
+		out = append(out, GoldenPathEntrypoint{
+			Name:      entrypoint.Name,
+			UseWhen:   goldenPathUseWhen(packageName, entrypoint.Profile),
+			AvoidWhen: goldenPathAvoidWhen(packageName, entrypoint.Profile),
+		})
+		seen[entrypoint.Name] = struct{}{}
+		if len(out) == 7 {
+			return out
+		}
+	}
+	for _, fn := range functions {
+		if len(out) == 7 {
+			break
+		}
+		if fn.Status != apiStatusRecommended {
+			continue
+		}
+		if _, ok := seen[fn.Name]; ok {
+			continue
+		}
+		out = append(out, GoldenPathEntrypoint{
+			Name:      fn.Name,
+			UseWhen:   goldenPathUseWhen(packageName, "day-one"),
+			AvoidWhen: goldenPathAvoidWhen(packageName, "day-one"),
+		})
+	}
+	return out
+}
+
+func goldenPathUseWhen(packageName, profile string) string {
+	switch profile {
+	case "safe":
+		return "Use first when inputs are external, remote, file-backed, or security-sensitive."
+	case "error":
+		return "Use first when callers must observe invalid input or provider failure."
+	case "options":
+		return "Use first when policies, providers, parsers, limits, or clocks must be explicit."
+	case "compatibility":
+		return "Use only to preserve existing call-site behavior during migration."
+	default:
+		return "Use first for concise trusted-input workflows in " + packageName + "."
+	}
+}
+
+func goldenPathAvoidWhen(packageName, profile string) string {
+	switch profile {
+	case "safe", "error", "options":
+		return "Avoid for trivial in-memory code where the standard library is clearer."
+	case "compatibility":
+		return "Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists."
+	default:
+		return "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in " + packageName + "."
+	}
 }
 
 func recommendedEntrypoints(functions []FuncDoc) []RecommendedEntrypoint {

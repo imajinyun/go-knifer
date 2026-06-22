@@ -15,6 +15,7 @@
     "ai_tooling",
     "dependency_tiers",
     "v1_readiness",
+    "api_freeze",
     "coverage_gates",
     "public_facades",
     "security_sensitive_packages"
@@ -89,7 +90,7 @@
     },
     "ai_tooling": {
       "type": "object",
-      "required": ["api_catalog", "human_catalog", "agent_import_rules", "selection_rules", "top_entrypoints", "api_decision_card_template", "metadata_refresh_triggers"],
+      "required": ["api_catalog", "human_catalog", "agent_import_rules", "selection_rules", "top_entrypoints", "stdlib_first_decisions", "api_decision_card_template", "metadata_refresh_triggers"],
       "properties": {
         "api_catalog": { "$ref": "#/$defs/api_catalog" },
         "human_catalog": { "$ref": "#/$defs/human_catalog" },
@@ -98,6 +99,10 @@
         "top_entrypoints": {
           "type": "array",
           "items": { "$ref": "#/$defs/tooling_entrypoint" }
+        },
+        "stdlib_first_decisions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/stdlib_first_decision" }
         },
         "api_decision_card_template": { "$ref": "#/$defs/string_array" },
         "metadata_refresh_triggers": { "$ref": "#/$defs/string_array" }
@@ -135,6 +140,22 @@
         "checklist": { "$ref": "#/$defs/string_array" },
         "check_commands": { "$ref": "#/$defs/string_array" },
         "blocking_exit_criteria": { "$ref": "#/$defs/string_array" }
+      },
+      "additionalProperties": false
+    },
+    "api_freeze": {
+      "type": "object",
+      "required": ["v1_candidate", "decision_card_required", "replacement_required_for_deprecation", "allowed_statuses", "freeze_checks", "deprecations"],
+      "properties": {
+        "v1_candidate": { "type": "boolean" },
+        "decision_card_required": { "type": "boolean" },
+        "replacement_required_for_deprecation": { "type": "boolean" },
+        "allowed_statuses": { "$ref": "#/$defs/string_array" },
+        "freeze_checks": { "$ref": "#/$defs/string_array" },
+        "deprecations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/deprecation_entry" }
+        }
       },
       "additionalProperties": false
     },
@@ -260,6 +281,27 @@
       "properties": {
         "intent": { "type": "string", "minLength": 1 },
         "packages": { "$ref": "#/$defs/string_array" }
+      },
+      "additionalProperties": false
+    },
+    "stdlib_first_decision": {
+      "type": "object",
+      "required": ["scenario", "prefer_stdlib_when", "prefer_go_knifer_when", "packages"],
+      "properties": {
+        "scenario": { "type": "string", "minLength": 1 },
+        "prefer_stdlib_when": { "type": "string", "minLength": 1 },
+        "prefer_go_knifer_when": { "type": "string", "minLength": 1 },
+        "packages": { "$ref": "#/$defs/string_array" }
+      },
+      "additionalProperties": false
+    },
+    "deprecation_entry": {
+      "type": "object",
+      "required": ["name", "replacement", "rationale"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "replacement": { "type": "string", "minLength": 1 },
+        "rationale": { "type": "string", "minLength": 1 }
       },
       "additionalProperties": false
     },

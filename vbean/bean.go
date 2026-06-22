@@ -67,6 +67,17 @@ func WithDecodeHook(hook func(from reflect.Type, to reflect.Type, value any) (an
 	return beanimpl.WithDecodeHook(hook)
 }
 
+// ComposeDecodeHook chains hooks from left to right.
+func ComposeDecodeHook(hooks ...DecodeHookFunc) DecodeHookFunc {
+	return beanimpl.ComposeDecodeHook(hooks...)
+}
+
+// StringToTimeHook converts string values into time.Time using layout.
+func StringToTimeHook(layout string) DecodeHookFunc { return beanimpl.StringToTimeHook(layout) }
+
+// StringToDurationHook converts string values into time.Duration.
+func StringToDurationHook() DecodeHookFunc { return beanimpl.StringToDurationHook() }
+
 // ToMap converts a struct or map to map[string]any using field tags and aliases.
 func ToMap(src any, opts ...Option) (map[string]any, error) { return beanimpl.ToMap(src, opts...) }
 

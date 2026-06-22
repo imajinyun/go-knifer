@@ -284,6 +284,12 @@ Selection rules:
 - Use non-`E` helpers only when inputs are already trusted and a zero/default fallback is intentional for compatibility or concise pure transformations.
 - Prefer `WithOptions` or `WithXxx` helpers when limits, providers, clocks, filesystem hooks, DB openers, HTTP clients, or network policies must be reviewable at the call site.
 
+Golden path rules:
+
+- Start from the generated `golden_path` APIs in `docs/api/tools.json` before scanning a whole facade.
+- Keep the golden path small: each facade exposes at most seven first-choice APIs with `use_when` and `avoid_when` guidance.
+- Use golden path APIs for new examples unless the example is specifically about compatibility, migration, or an advanced option.
+
 | Scenario | Recommended API |
 | --- | --- |
 | Build a trusted standard-library HTTP request | `vhttp.Get`, `vhttp.Post`, `vhttp.NewRequest` |
@@ -298,6 +304,40 @@ Selection rules:
 | Load remote configuration from a trust boundary | `vconf.LoadRemoteSafe` or `vconf.LoadRemoteSafeWithOptions` |
 | Use a provider-injected FTP contract without adding a network client dependency | `vftp.New`, `vftp.List`, `vftp.Download`, `vftp.Upload` |
 | Use a provider-injected SSH/SFTP contract without adding a network client dependency | `vssh.New`, `vssh.Run`, `vssh.List`, `vssh.Download`, `vssh.Upload` |
+
+### stdlib-first decision table
+
+Prefer the Go standard library when it is shorter, clearer, and keeps failure behavior explicit. Use `go-knifer` when the workflow needs reusable package contracts, safer defaults, metadata, or option/provider injection.
+
+| Scenario | Prefer stdlib when | Prefer go-knifer when |
+| --- | --- | --- |
+| Slice iteration and simple transforms | A plain `for` loop or `slices` call is shorter and allocation-free. | Use `vslice` for reusable `Map`, `Filter`, `GroupBy`, `Chunk`, `Page`, or error-returning callback helpers. |
+| Map lookup, clone, ordering, and transforms | Direct map access, `maps.Clone`, `maps.Copy`, or `slices.Sorted(maps.Keys(m))` expresses the whole operation. | Use `vmap` for `Pick`, `Omit`, `Diff`, `MergeFunc`, `MapValues`, `FilterErr`, `GroupBy`, or non-nil map contracts. |
+| String processing | `strings`, `strconv`, `unicode`, or `regexp` directly express the operation. | Use `vstr` for reusable blank checks, case helpers, text cleanup, or string predicates. |
+| JSON parsing and formatting | `encoding/json.Decoder` or direct struct marshal/unmarshal gives needed streaming or token control. | Use `vjson` for small in-memory object/array helpers, path lookup, formatting, or dynamic JSON defaults. |
+| HTTP and URL access | The URL and host are trusted and `net/http` gives clearer request, transport, and context control. | Use `vurl`, `vhttp`, or `vresty` for SSRF-aware validation, allowed-host policies, bounded reads, or safe downloads. |
+| Crypto and random data | The caller needs full `crypto/*` primitive control. | Use `vcrypto`, `vjwt`, and `vrand` for reviewed HMAC, AES-GCM, RSA-OAEP/PSS, parameter signing, JWT, or secure token helpers. |
+| Struct, map, and configuration binding | `encoding/json`, `flag`, `os.LookupEnv`, or direct assignment keeps a small data shape explicit. | Use `vbean` or `vconf` for tag-aware copy/decode, `DecodeResult` metadata, `StrictUnused`, `DecodeHook`, profile overlays, environment expansion, or safe remote config. |
+
+### vslice / vmap generic main path
+
+`vslice` and `vmap` are the generic collection facades. Their main path is typed, order-aware where possible, and avoids reflection. Use these APIs before compatibility or broad object helpers:
+
+| Workflow | `vslice` main path | `vmap` main path | Standard library alternative |
+| --- | --- | --- | --- |
+| Transform | `Map`, `MapErr`, `FlatMap` | `Map`, `MapErr`, `MapKeys`, `MapValues` | Plain `for` loop when local and clearer. |
+| Filter | `Filter`, `Reject`, `FilterErr` | `Filter`, `Reject`, `FilterKeys`, `FilterValues` | Plain `for` loop with append/map assignment. |
+| Aggregate | `Reduce`, `ReduceErr`, `CountBy`, `GroupBy` | `Reduce`, `ReduceErr`, `CountBy`, `GroupBy` | Plain loop when no reusable helper is needed. |
+| Lookup | `Contains`, `Find`, `FindIndex` | `ContainsKey`, `GetAny`, `Find`, `FindKey` | `slices.Contains`, direct map lookup. |
+| Shape | `Chunk`, `Window`, `Flatten`, `PartitionBy`, `Page` | `Keys`, `Values`, `Entries`, `SortedKeys`, `Pick`, `Omit` | `slices` / `maps` packages for direct operations. |
+| Set-like operations | `Union`, `Intersection`, `Subtract`, `Uniq` | `Intersect`, `Diff`, `SymmetricDiff` | Direct loops when the domain rule is custom. |
+
+Generic collection contract:
+
+- Nil inputs are accepted by read-only helpers; returned collection values are initialized unless a function explicitly documents in-place mutation.
+- `vslice` preserves input order for transform/filter/group item order; `vmap` follows Go map iteration order unless using sorted helpers.
+- `MapErr`, `FilterErr`, and `ReduceErr` stop on the first error and return work completed before the failing callback.
+- Use `make bench-facade BENCH=Benchmark BENCHCOUNT=10 BENCHTIME=3s` before making performance claims about collection helpers.
 
 ### API choice matrix
 
@@ -324,6 +364,13 @@ Selection rules:
 | Provider contract facades | `vai`, `vftp`, `vhan`, `vssh`, `vtok` | Public API exposes provider interfaces and call contracts; concrete clients, credentials, dictionaries, or NLP engines belong outside the lightweight core. |
 
 The tier inventory is machine-readable in `ai-context.json` under `dependency_tiers` and is validated by `make ai-context-check`. Heavy dependency bleed-through is blocked by `make arch`.
+
+Physical dependency rules:
+
+- Core facade production files must delegate to `internal/*` and may not import third-party runtime dependencies unless `bin/check_arch.sh` explicitly allowlists the facade.
+- Heavy extensions keep optional integrations inside `verr`, `vimg`, `vpoi`, `vresty`, or their matching internal package families.
+- Provider contract facades expose interfaces and call contracts only; concrete clients, credentials, dictionaries, and NLP engines stay outside the lightweight core.
+- Adding a third-party dependency to a core facade requires an API decision card and must pass `make arch` and `make ai-context-check`.
 
 ### API decision card
 
@@ -461,6 +508,22 @@ Performance budget workflow:
 | Facade-only wrapper change | Run `make bench-smoke`; run focused facade benchmarks only if the wrapper adds allocation, reflection, parsing, or provider dispatch. | Facade overhead should stay below measurement noise for pure delegation. |
 | Documentation-only benchmark claim | Include the exact command, package list, Go version, and benchstat output near the claim. | Never publish performance comparisons from a single benchmark run. |
 
+Historical benchmark baseline workflow:
+
+```bash
+make bench-baseline BENCHCOUNT=10 BENCHTIME=3s BENCH_BASELINE_OUT=/tmp/go-knifer-bench-baseline.txt
+make bench-compare BENCHCOUNT=10 BENCHTIME=3s BENCH_BASELINE_OUT=/tmp/go-knifer-bench-baseline.txt BENCH_CURRENT_OUT=/tmp/go-knifer-bench-current.txt
+```
+
+Core performance budgets:
+
+| Package group | Budget expectation |
+| --- | --- |
+| `vslice`, `vmap`, `vstr` generic helpers | Prefer direct loops or standard library when they are clearer; investigate >10% regression in `ns/op` or `allocs/op` for hot helpers. |
+| `vconv` scalar conversion | `E` helpers may add validation branches; preserve documented failure behavior before optimizing. |
+| `vbean`, `vjson`, `vxml` reflection/dynamic helpers | Reflection and allocation are expected; benchmark against typed code before using in hot paths. |
+| `vcodec` encode/decode helpers | Round-trip correctness comes first; compare `B/op` and `allocs/op` for payload-size-sensitive changes. |
+
 Refresh the API snapshot after an intentional exported API change:
 
 ```bash
@@ -494,6 +557,22 @@ Use this release gate before declaring a v1-ready surface:
 | Safety | Security-sensitive packages use Safe/E/WithOptions variants at trust boundaries and pass coverage gates. |
 | Reliability | `make release-check`, `make fuzz-smoke`, and `make bench-smoke` pass; benchmark claims include repeated runs and `benchstat`. |
 | Blocking failures | No stale generated artifacts, architecture violations, heavy dependency bleed-through, unresolved lint/govulncheck findings, or undocumented public APIs remain. |
+
+### v1 API freeze and deprecation gate
+
+Run the API freeze gate before release branches and any v1 candidate tag:
+
+```bash
+make api-freeze-check
+```
+
+Freeze rules:
+
+- Public API additions, removals, or signature changes require an API decision card.
+- `docs/api/exports.txt`, `docs/api/tools.json`, and `docs/api/tools.md` must be current.
+- Experimental APIs are blocked while `ai-context.json` marks the project as a v1 candidate.
+- Deprecated APIs must include a replacement and rationale in `ai-context.json` and their godoc synopsis.
+- Compatibility APIs may remain for migration, but examples and generated `golden_path` guidance should prefer recommended alternatives.
 
 Format code:
 

@@ -8,19 +8,19 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 
 | Metric | Value |
 | --- | ---: |
-| Schema | 1.6 |
+| Schema | 1.7 |
 | Module | `github.com/imajinyun/go-knifer` |
 | Packages | 54 |
-| Functions | 2606 |
+| Functions | 2609 |
 | Functions with examples | 1253 |
 | Context-aware functions | 36 |
 | Functions returning error | 603 |
-| Variadic functions | 776 |
-| API status: recommended | 2584 |
+| Variadic functions | 777 |
+| API status: recommended | 2587 |
 | API status: compatibility | 22 |
 | API status: experimental | 0 |
 | API status: deprecated | 0 |
-| Synopsis source: facade | 1964 |
+| Synopsis source: facade | 1967 |
 | Synopsis source: internal | 642 |
 | Synopsis source: empty | 0 |
 
@@ -42,6 +42,17 @@ Recommended entrypoints:
 | `New` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `Redact` | day-one | Start here for concise, trusted-input use cases in this package. |
 
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `Chat` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `New` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `Redact` | Use first for concise trusted-input workflows in vai. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vai. |
+| `Embed` | Use first for concise trusted-input workflows in vai. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vai. |
+| `WithChatProvider` | Use first for concise trusted-input workflows in vai. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vai. |
+| `WithEmbeddingProvider` | Use first for concise trusted-input workflows in vai. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vai. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Chat` | `func Chat(ctx context.Context, provider ChatProvider, request ChatRequest) (ChatResponse, error)` | recommended | Chat validates request and delegates to provider through a short-lived Client. | facade | `ExampleChat` |
@@ -57,18 +68,31 @@ Import path: `github.com/imajinyun/go-knifer/vbean`
 
 Package vbean provides public APIs for struct and map property mapping.
 
-Quality: 23 functions · 7 with examples · 30.4% example coverage · statuses: recommended=22, compatibility=1, experimental=0, deprecated=0 · synopsis sources: facade=23, internal=0, empty=0
+Quality: 26 functions · 7 with examples · 26.9% example coverage · statuses: recommended=25, compatibility=1, experimental=0, deprecated=0 · synopsis sources: facade=26, internal=0, empty=0
 
 Recommended entrypoints:
 
 | Function | Profile | Rationale |
 | --- | --- | --- |
 | `CopyProperties` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
-| `NewOptions` | day-one | Start here for concise, trusted-input use cases in this package. |
+| `ComposeDecodeHook` | day-one | Start here for concise, trusted-input use cases in this package. |
 | `Copy` | compatibility | Compatibility API; use only when preserving existing call-site semantics. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `CopyProperties` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `ComposeDecodeHook` | Use first for concise trusted-input workflows in vbean. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vbean. |
+| `Copy` | Use only to preserve existing call-site behavior during migration. | Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists. |
+| `Decode` | Use first for concise trusted-input workflows in vbean. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vbean. |
+| `DecodeResult` | Use first for concise trusted-input workflows in vbean. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vbean. |
+| `FillMap` | Use first for concise trusted-input workflows in vbean. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vbean. |
+| `Merge` | Use first for concise trusted-input workflows in vbean. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vbean. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
+| `ComposeDecodeHook` | `func ComposeDecodeHook(hooks ...DecodeHookFunc) DecodeHookFunc` | recommended | ComposeDecodeHook chains hooks from left to right. | facade | — |
 | `Copy` | `func Copy(src any, dst any, opts ...Option) error` | compatibility | Copy is an alias of CopyProperties. | facade | `ExampleCopy` |
 | `CopyProperties` | `func CopyProperties(src any, dst any, opts ...Option) error` | recommended | CopyProperties copies matching properties between struct/map values. | facade | `ExampleCopyProperties` |
 | `Decode` | `func Decode(src any, dst any, opts ...Option) error` | recommended | Decode converts matching properties from src into dst using the configured weak conversion rules. | facade | — |
@@ -79,6 +103,8 @@ Recommended entrypoints:
 | `MergeResultWithOptions` | `func MergeResultWithOptions(dst any, sources []any, opts ...Option) (Result, error)` | recommended | MergeResultWithOptions copies sources into dst from left to right using options and reports metadata. | facade | — |
 | `MergeWithOptions` | `func MergeWithOptions(dst any, sources []any, opts ...Option) error` | recommended | MergeWithOptions copies sources into dst from left to right using options. | facade | — |
 | `NewOptions` | `func NewOptions() Options` | recommended | NewOptions returns default mapping options. | facade | — |
+| `StringToDurationHook` | `func StringToDurationHook() DecodeHookFunc` | recommended | StringToDurationHook converts string values into time.Duration. | facade | — |
+| `StringToTimeHook` | `func StringToTimeHook(layout string) DecodeHookFunc` | recommended | StringToTimeHook converts string values into time.Time using layout. | facade | — |
 | `ToMap` | `func ToMap(src any, opts ...Option) (map[string]any, error)` | recommended | ToMap converts a struct or map to map[string]any using field tags and aliases. | facade | `ExampleToMap` |
 | `ToStruct` | `func ToStruct(src any, dst any, opts ...Option) error` | recommended | ToStruct copies properties from src into dst, which must be a pointer to struct. | facade | `ExampleToStruct`, `ExampleToStruct_withOptions` |
 | `WithBoolParser` | `func WithBoolParser(parser func(string) (bool, error)) Option` | recommended | WithBoolParser sets the parser used during weak string-to-bool conversion. | facade | — |
@@ -108,6 +134,18 @@ Recommended entrypoints:
 | `InitFromFileWithOptions` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `NewBitMapBloomFilterWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `BloomFNVHash` | day-one | Start here for concise, trusted-input use cases in this package. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `InitFromFileWithOptions` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `NewBitMapBloomFilterWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `BloomFNVHash` | Use first for concise trusted-input workflows in vblf. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vblf. |
+| `ApHash` | Use first for concise trusted-input workflows in vblf. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vblf. |
+| `BkdrHash` | Use first for concise trusted-input workflows in vblf. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vblf. |
+| `BloomBKDRHash` | Use first for concise trusted-input workflows in vblf. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vblf. |
+| `BloomDJBHash` | Use first for concise trusted-input workflows in vblf. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vblf. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -186,6 +224,15 @@ Recommended entrypoints:
 | --- | --- | --- |
 | `And` | day-one | Start here for concise, trusted-input use cases in this package. |
 
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `And` | Use first for concise trusted-input workflows in vbool. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vbool. |
+| `Negate` | Use first for concise trusted-input workflows in vbool. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vbool. |
+| `Or` | Use first for concise trusted-input workflows in vbool. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vbool. |
+| `ToInt` | Use first for concise trusted-input workflows in vbool. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vbool. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `And` | `func And(bs ...bool) bool` | recommended | And returns true only when all inputs are true. | internal | `ExampleAnd` |
@@ -207,6 +254,18 @@ Recommended entrypoints:
 | --- | --- | --- |
 | `NewFIFOWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `NewFIFO` | day-one | Start here for concise, trusted-input use cases in this package. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `NewFIFOWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `NewFIFO` | Use first for concise trusted-input workflows in vcache. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcache. |
+| `NewFIFOWithTimeout` | Use first for concise trusted-input workflows in vcache. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcache. |
+| `NewLFU` | Use first for concise trusted-input workflows in vcache. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcache. |
+| `NewLFUWithOptions` | Use first for concise trusted-input workflows in vcache. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcache. |
+| `NewLFUWithTimeout` | Use first for concise trusted-input workflows in vcache. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcache. |
+| `NewLRU` | Use first for concise trusted-input workflows in vcache. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcache. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -251,6 +310,18 @@ Recommended entrypoints:
 | `Colorize` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `WithColorMode` | day-one | Start here for concise, trusted-input use cases in this package. |
 
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `Output` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `Colorize` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `WithColorMode` | Use first for concise trusted-input workflows in vcli. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcli. |
+| `NewFlagParser` | Use first for concise trusted-input workflows in vcli. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcli. |
+| `RenderHelp` | Use first for concise trusted-input workflows in vcli. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcli. |
+| `Run` | Use first for concise trusted-input workflows in vcli. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcli. |
+| `WithDir` | Use first for concise trusted-input workflows in vcli. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcli. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Colorize` | `func Colorize(text string, color Color, opts ...ColorOption) string` | recommended | Colorize wraps text in ANSI escape codes when enabled. | facade | `ExampleColorize` |
@@ -284,6 +355,18 @@ Recommended entrypoints:
 | `Base64Decode` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `Base64Encode` | day-one | Start here for concise, trusted-input use cases in this package. |
 
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `Base64Decode` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `Base64Encode` | Use first for concise trusted-input workflows in vcodec. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcodec. |
+| `Base64DecodeStr` | Use first for concise trusted-input workflows in vcodec. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcodec. |
+| `Base64DecodeWithEncoding` | Use first for concise trusted-input workflows in vcodec. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcodec. |
+| `Base64EncodeStr` | Use first for concise trusted-input workflows in vcodec. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcodec. |
+| `Base64EncodeWithEncoding` | Use first for concise trusted-input workflows in vcodec. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcodec. |
+| `Base64RawURLDecode` | Use first for concise trusted-input workflows in vcodec. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcodec. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Base64Decode` | `func Base64Decode(s string) ([]byte, error)` | recommended | Base64Decode decodes a standard Base64 string. | internal | `ExampleBase64Decode` |
@@ -316,6 +399,18 @@ Recommended entrypoints:
 | `LoadRemoteSafe` | safe | Prefer when inputs cross trust boundaries or need explicit safety checks. |
 | `Base64Decrypt` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `Merge` | day-one | Start here for concise, trusted-input use cases in this package. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `LoadRemoteSafe` | Use first when inputs are external, remote, file-backed, or security-sensitive. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `Base64Decrypt` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `Merge` | Use first for concise trusted-input workflows in vconf. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconf. |
+| `Load` | Use first for concise trusted-input workflows in vconf. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconf. |
+| `LoadFiles` | Use first for concise trusted-input workflows in vconf. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconf. |
+| `LoadFilesWithOptions` | Use first for concise trusted-input workflows in vconf. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconf. |
+| `LoadProfile` | Use first for concise trusted-input workflows in vconf. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconf. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -375,6 +470,18 @@ Recommended entrypoints:
 | `ToBoolDefaultWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `ToBool` | day-one | Start here for concise, trusted-input use cases in this package. |
 
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `ToBoolE` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `ToBoolDefaultWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `ToBool` | Use first for concise trusted-input workflows in vconv. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconv. |
+| `ToBoolDefault` | Use first for concise trusted-input workflows in vconv. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconv. |
+| `ToBoolEWithOptions` | Use first for concise trusted-input workflows in vconv. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconv. |
+| `ToBoolWithOptions` | Use first for concise trusted-input workflows in vconv. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconv. |
+| `ToBytes` | Use first for concise trusted-input workflows in vconv. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconv. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `ToBool` | `func ToBool(v any) bool` | recommended | ToBool converts a value to bool and returns false on failure. | internal | `ExampleToBool` |
@@ -429,6 +536,18 @@ Recommended entrypoints:
 | `ConfigureDefaultScheduler` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `NewCronError` | day-one | Start here for concise, trusted-input use cases in this package. |
 | `MustNewPattern` | compatibility | Compatibility API; use only when preserving existing call-site semantics. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `CronRestart` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `ConfigureDefaultScheduler` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `NewCronError` | Use first for concise trusted-input workflows in vcron. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcron. |
+| `MustNewPattern` | Use only to preserve existing call-site behavior during migration. | Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists. |
+| `CronLaunchingCount` | Use first for concise trusted-input workflows in vcron. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcron. |
+| `CronRemove` | Use first for concise trusted-input workflows in vcron. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcron. |
+| `CronRemoveWithOptions` | Use first for concise trusted-input workflows in vcron. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcron. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -499,6 +618,18 @@ Recommended entrypoints:
 | `AESDecryptGCM` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `WithGCMRandomOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `ConstantTimeEqual` | day-one | Start here for concise, trusted-input use cases in this package. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `AESDecryptGCM` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `WithGCMRandomOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `ConstantTimeEqual` | Use first for concise trusted-input workflows in vcrypto. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcrypto. |
+| `AESDecryptGCMWithOptions` | Use first for concise trusted-input workflows in vcrypto. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcrypto. |
+| `AESEncryptGCM` | Use first for concise trusted-input workflows in vcrypto. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcrypto. |
+| `AESEncryptGCMWithOptions` | Use first for concise trusted-input workflows in vcrypto. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcrypto. |
+| `AESOpenGCM` | Use first for concise trusted-input workflows in vcrypto. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcrypto. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -589,6 +720,18 @@ Recommended entrypoints:
 | `ForEach` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `MapsToRecords` | day-one | Start here for concise, trusted-input use cases in this package. |
 
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `ForEach` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `MapsToRecords` | Use first for concise trusted-input workflows in vcsv. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcsv. |
+| `Read` | Use first for concise trusted-input workflows in vcsv. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcsv. |
+| `ReadMaps` | Use first for concise trusted-input workflows in vcsv. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcsv. |
+| `ReadString` | Use first for concise trusted-input workflows in vcsv. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcsv. |
+| `ReadStringMaps` | Use first for concise trusted-input workflows in vcsv. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcsv. |
+| `RecordsToMaps` | Use first for concise trusted-input workflows in vcsv. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcsv. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `ForEach` | `func ForEach(r io.Reader, handle func([]string) error, opts ...ReadOption) error` | recommended | ForEach reads CSV records from r and invokes handle for each record. | internal | — |
@@ -630,6 +773,18 @@ Recommended entrypoints:
 | `Parse` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `NowWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `BeginOfDay` | day-one | Start here for concise, trusted-input use cases in this package. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `Parse` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `NowWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `BeginOfDay` | Use first for concise trusted-input workflows in vdate. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdate. |
+| `BeginOfMonth` | Use first for concise trusted-input workflows in vdate. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdate. |
+| `BeginOfYear` | Use first for concise trusted-input workflows in vdate. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdate. |
+| `BetweenDays` | Use first for concise trusted-input workflows in vdate. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdate. |
+| `EndOfDay` | Use first for concise trusted-input workflows in vdate. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdate. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -679,6 +834,18 @@ Recommended entrypoints:
 | `AssignEntity` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `NewBuilder` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `BuildLikeValue` | day-one | Start here for concise, trusted-input use cases in this package. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `IsSafeIdentifier` | Use first when inputs are external, remote, file-backed, or security-sensitive. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `AssignEntity` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `NewBuilder` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `BuildLikeValue` | Use first for concise trusted-input workflows in vdb. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdb. |
+| `AndGroup` | Use first for concise trusted-input workflows in vdb. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdb. |
+| `Asc` | Use first for concise trusted-input workflows in vdb. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdb. |
+| `Between` | Use first for concise trusted-input workflows in vdb. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdb. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -750,6 +917,18 @@ Recommended entrypoints:
 | `ContainsAnyWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `Contains` | day-one | Start here for concise, trusted-input use cases in this package. |
 
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `FilterAny` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `ContainsAnyWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `Contains` | Use first for concise trusted-input workflows in vdfa. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdfa. |
+| `ConfigureAsyncRunner` | Use first for concise trusted-input workflows in vdfa. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdfa. |
+| `ContainsAny` | Use first for concise trusted-input workflows in vdfa. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdfa. |
+| `ContainsWithOptions` | Use first for concise trusted-input workflows in vdfa. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdfa. |
+| `DefaultProcessor` | Use first for concise trusted-input workflows in vdfa. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdfa. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `ConfigureAsyncRunner` | `func ConfigureAsyncRunner(runner func(func()))` | recommended | ConfigureAsyncRunner sets the runner used by asynchronous package-level matcher initialization. | facade | — |
@@ -810,6 +989,18 @@ Recommended entrypoints:
 | `GetStackTraceWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `ErrorIs` | day-one | Start here for concise, trusted-input use cases in this package. |
 | `MustExit` | compatibility | Compatibility API; use only when preserving existing call-site semantics. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `Recover` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `GetStackTraceWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `ErrorIs` | Use first for concise trusted-input workflows in verr. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in verr. |
+| `MustExit` | Use only to preserve existing call-site behavior during migration. | Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists. |
+| `ConfigureDefaultLogFunc` | Use first for concise trusted-input workflows in verr. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in verr. |
+| `GetStack` | Use first for concise trusted-input workflows in verr. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in verr. |
+| `GetStackTrace` | Use first for concise trusted-input workflows in verr. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in verr. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -882,6 +1073,18 @@ Recommended entrypoints:
 | `AppendFileString` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `ExistsWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `CloseQuietly` | day-one | Start here for concise, trusted-input use cases in this package. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `AppendFileString` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `ExistsWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `CloseQuietly` | Use first for concise trusted-input workflows in vfile. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vfile. |
+| `AppendFileStringWithOptions` | Use first for concise trusted-input workflows in vfile. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vfile. |
+| `Copy` | Use first for concise trusted-input workflows in vfile. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vfile. |
+| `CopyFile` | Use first for concise trusted-input workflows in vfile. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vfile. |
+| `CopyFileWithOptions` | Use first for concise trusted-input workflows in vfile. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vfile. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -960,6 +1163,18 @@ Recommended entrypoints:
 | `IsChineseWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `IsEmail` | day-one | Start here for concise, trusted-input use cases in this package. |
 
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `IsChineseWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `IsEmail` | Use first for concise trusted-input workflows in vform. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vform. |
+| `IsChinese` | Use first for concise trusted-input workflows in vform. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vform. |
+| `IsEmailWithOptions` | Use first for concise trusted-input workflows in vform. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vform. |
+| `IsIDCard` | Use first for concise trusted-input workflows in vform. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vform. |
+| `IsIDCardWithOptions` | Use first for concise trusted-input workflows in vform. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vform. |
+| `IsIPv4` | Use first for concise trusted-input workflows in vform. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vform. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `IsChinese` | `func IsChinese(s string) bool` | recommended | IsChinese reports whether s consists only of Chinese Han characters. | facade | — |
@@ -997,6 +1212,16 @@ Recommended entrypoints:
 | `New` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `WithProvider` | day-one | Start here for concise, trusted-input use cases in this package. |
 
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `Download` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `New` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `WithProvider` | Use first for concise trusted-input workflows in vftp. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vftp. |
+| `List` | Use first for concise trusted-input workflows in vftp. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vftp. |
+| `Upload` | Use first for concise trusted-input workflows in vftp. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vftp. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Download` | `func Download(ctx context.Context, provider Provider, request DownloadRequest) (DownloadResponse, error)` | recommended | Download validates request and delegates to provider through a short-lived Client. | facade | `ExampleDownload` |
@@ -1021,6 +1246,15 @@ Recommended entrypoints:
 | `New` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `WithProvider` | day-one | Start here for concise, trusted-input use cases in this package. |
 
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `Convert` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `New` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `WithProvider` | Use first for concise trusted-input workflows in vhan. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhan. |
+| `Initials` | Use first for concise trusted-input workflows in vhan. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhan. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Convert` | `func Convert(ctx context.Context, provider Provider, request ConvertRequest) (ConvertResponse, error)` | recommended | Convert validates request and delegates to provider through a short-lived Client. | facade | `ExampleConvert` |
@@ -1041,6 +1275,18 @@ Recommended entrypoints:
 | Function | Profile | Rationale |
 | --- | --- | --- |
 | `AdditiveHash` | day-one | Start here for concise, trusted-input use cases in this package. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `AdditiveHash` | Use first for concise trusted-input workflows in vhash. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhash. |
+| `ApHash` | Use first for concise trusted-input workflows in vhash. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhash. |
+| `BkdrHash` | Use first for concise trusted-input workflows in vhash. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhash. |
+| `DjbHash` | Use first for concise trusted-input workflows in vhash. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhash. |
+| `ElfHash` | Use first for concise trusted-input workflows in vhash. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhash. |
+| `FnvHash` | Use first for concise trusted-input workflows in vhash. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhash. |
+| `FnvHashString` | Use first for concise trusted-input workflows in vhash. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhash. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -1077,6 +1323,18 @@ Recommended entrypoints:
 | `Download` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `CleanHTMLWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `AddGlobalHeader` | day-one | Start here for concise, trusted-input use cases in this package. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `DeleteSafe` | Use first when inputs are external, remote, file-backed, or security-sensitive. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `Download` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `CleanHTMLWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `AddGlobalHeader` | Use first for concise trusted-input workflows in vhttp. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhttp. |
+| `BuildBasicAuth` | Use first for concise trusted-input workflows in vhttp. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhttp. |
+| `BuildContentType` | Use first for concise trusted-input workflows in vhttp. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhttp. |
+| `CleanHTML` | Use first for concise trusted-input workflows in vhttp. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhttp. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -1258,6 +1516,18 @@ Recommended entrypoints:
 | `GetSnowflakeNextID` | day-one | Start here for concise, trusted-input use cases in this package. |
 | `FastSimpleUUID` | compatibility | Compatibility API; use only when preserving existing call-site semantics. |
 
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `ConfigureDefaultSnowflake` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `GetSnowflakeNextID` | Use first for concise trusted-input workflows in vid. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vid. |
+| `FastSimpleUUID` | Use only to preserve existing call-site behavior during migration. | Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists. |
+| `ConfigureDefaultFallbackRandomSourceProvider` | Use first for concise trusted-input workflows in vid. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vid. |
+| `CreateSnowflake` | Use first for concise trusted-input workflows in vid. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vid. |
+| `CreateSnowflakeWithOptions` | Use first for concise trusted-input workflows in vid. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vid. |
+| `GetDataCenterID` | Use first for concise trusted-input workflows in vid. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vid. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `ConfigureDefaultFallbackRandomSourceProvider` | `func ConfigureDefaultFallbackRandomSourceProvider(provider func() *rand.Rand)` | recommended | ConfigureDefaultFallbackRandomSourceProvider sets the provider used to lazily create the package-level fallback PRNG. | facade | — |
@@ -1329,6 +1599,18 @@ Recommended entrypoints:
 | `AgeWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `AgeAt` | day-one | Start here for concise, trusted-input use cases in this package. |
 
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `AgeWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `AgeAt` | Use first for concise trusted-input workflows in vident. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vident. |
+| `Age` | Use first for concise trusted-input workflows in vident. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vident. |
+| `BirthDate` | Use first for concise trusted-input workflows in vident. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vident. |
+| `BirthDateWithOptions` | Use first for concise trusted-input workflows in vident. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vident. |
+| `BirthString` | Use first for concise trusted-input workflows in vident. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vident. |
+| `BirthStringWithOptions` | Use first for concise trusted-input workflows in vident. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vident. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Age` | `func Age(idCard string) (int, bool)` | recommended | Age returns the current age encoded in idCard. | facade | — |
@@ -1395,6 +1677,18 @@ Recommended entrypoints:
 | `BarcodeASCII` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `GenMathGeneratorWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `CanDecodeBarcodeFormat` | day-one | Start here for concise, trusted-input use cases in this package. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `BarcodeASCII` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `GenMathGeneratorWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `CanDecodeBarcodeFormat` | Use first for concise trusted-input workflows in vimg. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vimg. |
+| `BarcodeASCIIWithChars` | Use first for concise trusted-input workflows in vimg. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vimg. |
+| `BarcodeBase64Data` | Use first for concise trusted-input workflows in vimg. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vimg. |
+| `BarcodeBytes` | Use first for concise trusted-input workflows in vimg. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vimg. |
+| `BarcodeImage` | Use first for concise trusted-input workflows in vimg. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vimg. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -1505,6 +1799,18 @@ Recommended entrypoints:
 | `NewMapE` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `NewBatch` | day-one | Start here for concise, trusted-input use cases in this package. |
 
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `NewMapE` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `NewBatch` | Use first for concise trusted-input workflows in vjob. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjob. |
+| `NewBatchSingle` | Use first for concise trusted-input workflows in vjob. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjob. |
+| `NewMap` | Use first for concise trusted-input workflows in vjob. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjob. |
+| `NewMapKeys` | Use first for concise trusted-input workflows in vjob. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjob. |
+| `NewSlice` | Use first for concise trusted-input workflows in vjob. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjob. |
+| `NewSliceSingle` | Use first for concise trusted-input workflows in vjob. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjob. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `NewBatch` | `func NewBatch[T any](run func(context.Context, []T) (Merge, error), vals []T) *Batch[T]` | recommended | NewBatch creates a typed slice job. | facade | `ExampleNewBatch` |
@@ -1532,6 +1838,18 @@ Recommended entrypoints:
 | `Parse` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `FormatWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `CreateConfig` | day-one | Start here for concise, trusted-input use cases in this package. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `Parse` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `FormatWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `CreateConfig` | Use first for concise trusted-input workflows in vjson. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjson. |
+| `Format` | Use first for concise trusted-input workflows in vjson. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjson. |
+| `GetByPath` | Use first for concise trusted-input workflows in vjson. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjson. |
+| `GetByPathOr` | Use first for concise trusted-input workflows in vjson. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjson. |
+| `IsArray` | Use first for concise trusted-input workflows in vjson. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjson. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -1617,6 +1935,18 @@ Recommended entrypoints:
 | `ES256WithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `AlgorithmName` | day-one | Start here for concise, trusted-input use cases in this package. |
 | `MustHMACSigner` | compatibility | Compatibility API; use only when preserving existing call-site semantics. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `CreateJWTToken` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `ES256WithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `AlgorithmName` | Use first for concise trusted-input workflows in vjwt. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjwt. |
+| `MustHMACSigner` | Use only to preserve existing call-site behavior during migration. | Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists. |
+| `CreateJWTTokenWithSigner` | Use first for concise trusted-input workflows in vjwt. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjwt. |
+| `CreateSigner` | Use first for concise trusted-input workflows in vjwt. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjwt. |
+| `CreateSignerStrict` | Use first for concise trusted-input workflows in vjwt. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjwt. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -1709,6 +2039,18 @@ Recommended entrypoints:
 | `DebugWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `GetDefault` | day-one | Start here for concise, trusted-input use cases in this package. |
 
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `LogAtE` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `DebugWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `GetDefault` | Use first for concise trusted-input workflows in vlog. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vlog. |
+| `Debug` | Use first for concise trusted-input workflows in vlog. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vlog. |
+| `Debugf` | Use first for concise trusted-input workflows in vlog. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vlog. |
+| `DebugfWithOptions` | Use first for concise trusted-input workflows in vlog. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vlog. |
+| `DefaultLogger` | Use first for concise trusted-input workflows in vlog. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vlog. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Debug` | `func Debug(args ...any)` | recommended | Debug logs debug-level output through the static logger. | facade | — |
@@ -1782,6 +2124,18 @@ Recommended entrypoints:
 | `WithQuickClientOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `WithHeader` | day-one | Start here for concise, trusted-input use cases in this package. |
 
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `NewAddress` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `WithQuickClientOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `WithHeader` | Use first for concise trusted-input workflows in vmail. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmail. |
+| `NewAttachment` | Use first for concise trusted-input workflows in vmail. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmail. |
+| `NewAttachmentFile` | Use first for concise trusted-input workflows in vmail. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmail. |
+| `NewAttachmentReader` | Use first for concise trusted-input workflows in vmail. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmail. |
+| `NewClient` | Use first for concise trusted-input workflows in vmail. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmail. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `NewAddress` | `func NewAddress(name string, email string) (*Address, error)` | recommended | NewAddress validates and returns a mailbox address. | facade | `ExampleNewAddress` |
@@ -1850,6 +2204,18 @@ Recommended entrypoints:
 | --- | --- | --- |
 | `FilterErr` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `Assign` | day-one | Start here for concise, trusted-input use cases in this package. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `FilterErr` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `Assign` | Use first for concise trusted-input workflows in vmap. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmap. |
+| `Clear` | Use first for concise trusted-input workflows in vmap. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmap. |
+| `Clone` | Use first for concise trusted-input workflows in vmap. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmap. |
+| `ContainsKey` | Use first for concise trusted-input workflows in vmap. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmap. |
+| `ContainsValue` | Use first for concise trusted-input workflows in vmap. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmap. |
+| `CountBy` | Use first for concise trusted-input workflows in vmap. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmap. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -1933,6 +2299,18 @@ Recommended entrypoints:
 | --- | --- | --- |
 | `BankCard` | day-one | Start here for concise, trusted-input use cases in this package. |
 
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `BankCard` | Use first for concise trusted-input workflows in vmask. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmask. |
+| `Address` | Use first for concise trusted-input workflows in vmask. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmask. |
+| `CarLicense` | Use first for concise trusted-input workflows in vmask. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmask. |
+| `ChineseName` | Use first for concise trusted-input workflows in vmask. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmask. |
+| `Clear` | Use first for concise trusted-input workflows in vmask. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmask. |
+| `ClearToNil` | Use first for concise trusted-input workflows in vmask. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmask. |
+| `CreditCode` | Use first for concise trusted-input workflows in vmask. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmask. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Address` | `func Address(address string, sensitiveSize int) string` | recommended | Address masks the last sensitiveSize characters of an address. | facade | — |
@@ -1971,6 +2349,18 @@ Recommended entrypoints:
 | `AddRootCABytes` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `GetHardwareAddressWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `CreateAddress` | day-one | Start here for concise, trusted-input use cases in this package. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `AddRootCABytes` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `GetHardwareAddressWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `CreateAddress` | Use first for concise trusted-input workflows in vnet. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnet. |
+| `AddRootCAFileWithOptions` | Use first for concise trusted-input workflows in vnet. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnet. |
+| `AddRootCAReader` | Use first for concise trusted-input workflows in vnet. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnet. |
+| `AddRootCAReaderWithOptions` | Use first for concise trusted-input workflows in vnet. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnet. |
+| `BeginIP` | Use first for concise trusted-input workflows in vnet. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnet. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2157,6 +2547,18 @@ Recommended entrypoints:
 | `DecimalFormatMoneyWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `Add` | day-one | Start here for concise, trusted-input use cases in this package. |
 
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `AbsIntegerE` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `DecimalFormatMoneyWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `Add` | Use first for concise trusted-input workflows in vnum. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnum. |
+| `AbsFloat32` | Use first for concise trusted-input workflows in vnum. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnum. |
+| `AbsFloat64` | Use first for concise trusted-input workflows in vnum. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnum. |
+| `AbsInteger` | Use first for concise trusted-input workflows in vnum. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnum. |
+| `AddStr` | Use first for concise trusted-input workflows in vnum. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnum. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `AbsFloat32` | `func AbsFloat32(x float32) float32` | recommended | AbsFloat32 returns the absolute value of x without widening to float64. | facade | — |
@@ -2323,6 +2725,18 @@ Recommended entrypoints:
 | `Apply` | day-one | Start here for concise, trusted-input use cases in this package. |
 | `Equals` | compatibility | Compatibility API; use only when preserving existing call-site semantics. |
 
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `Clone` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `CloneIfPossibleWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `Apply` | Use first for concise trusted-input workflows in vobj. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vobj. |
+| `Equals` | Use only to preserve existing call-site behavior during migration. | Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists. |
+| `Accept` | Use first for concise trusted-input workflows in vobj. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vobj. |
+| `CloneByStream` | Use first for concise trusted-input workflows in vobj. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vobj. |
+| `CloneByStreamWithOptions` | Use first for concise trusted-input workflows in vobj. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vobj. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Accept` | `func Accept[T any](source *T, consumer func(T))` | recommended | Accept calls consumer when source is not nil. | facade | — |
@@ -2389,6 +2803,16 @@ Recommended entrypoints:
 | --- | --- | --- |
 | `Analyze` | day-one | Start here for concise, trusted-input use cases in this package. |
 
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `Analyze` | Use first for concise trusted-input workflows in vpass. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpass. |
+| `IsStrong` | Use first for concise trusted-input workflows in vpass. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpass. |
+| `IsWeak` | Use first for concise trusted-input workflows in vpass. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpass. |
+| `Score` | Use first for concise trusted-input workflows in vpass. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpass. |
+| `StrengthOf` | Use first for concise trusted-input workflows in vpass. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpass. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Analyze` | `func Analyze(password string) Analysis` | recommended | Analyze evaluates password strength using local deterministic rules. | internal | `ExampleAnalyze` |
@@ -2412,6 +2836,18 @@ Recommended entrypoints:
 | `ReadRows` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `WithOpenOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `WithReadSheet` | day-one | Start here for concise, trusted-input use cases in this package. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `ReadRows` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `WithOpenOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `WithReadSheet` | Use first for concise trusted-input workflows in vpoi. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpoi. |
+| `IsValidSheetName` | Use first for concise trusted-input workflows in vpoi. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpoi. |
+| `ReadRowsFromReader` | Use first for concise trusted-input workflows in vpoi. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpoi. |
+| `ReadSheetRows` | Use first for concise trusted-input workflows in vpoi. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpoi. |
+| `ReadSheetRowsWithOptions` | Use first for concise trusted-input workflows in vpoi. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpoi. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2461,6 +2897,18 @@ Recommended entrypoints:
 | `Ele` | day-one | Start here for concise, trusted-input use cases in this package. |
 | `WithRandomSource` | compatibility | Compatibility API; use only when preserving existing call-site semantics. |
 
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `BytesWithOptions` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `BoolWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `Ele` | Use first for concise trusted-input workflows in vrand. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vrand. |
+| `WithRandomSource` | Use only to preserve existing call-site behavior during migration. | Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists. |
+| `Bool` | Use first for concise trusted-input workflows in vrand. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vrand. |
+| `ConfigureDefaultRandomSourceProvider` | Use first for concise trusted-input workflows in vrand. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vrand. |
+| `EleWithOptions` | Use first for concise trusted-input workflows in vrand. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vrand. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Bool` | `func Bool() bool` | recommended | Bool returns a pseudo-random boolean. | facade | — |
@@ -2509,6 +2957,18 @@ Recommended entrypoints:
 | `GetFieldValueWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `GetFieldValue` | day-one | Start here for concise, trusted-input use cases in this package. |
 | `GetConstructorsDirectly` | compatibility | Compatibility API; use only when preserving existing call-site semantics. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `Invoke` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `GetFieldValueWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `GetFieldValue` | Use first for concise trusted-input workflows in vref. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vref. |
+| `GetConstructorsDirectly` | Use only to preserve existing call-site behavior during migration. | Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists. |
+| `GetConstructor` | Use first for concise trusted-input workflows in vref. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vref. |
+| `GetConstructors` | Use first for concise trusted-input workflows in vref. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vref. |
+| `GetField` | Use first for concise trusted-input workflows in vref. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vref. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2594,6 +3054,18 @@ Recommended entrypoints:
 | --- | --- | --- |
 | `ContainsWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `Contains` | day-one | Start here for concise, trusted-input use cases in this package. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `ContainsWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `Contains` | Use first for concise trusted-input workflows in vregex. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vregex. |
+| `ContainsRe` | Use first for concise trusted-input workflows in vregex. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vregex. |
+| `Count` | Use first for concise trusted-input workflows in vregex. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vregex. |
+| `CountRe` | Use first for concise trusted-input workflows in vregex. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vregex. |
+| `CountWithOptions` | Use first for concise trusted-input workflows in vregex. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vregex. |
+| `DelAll` | Use first for concise trusted-input workflows in vregex. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vregex. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2703,6 +3175,18 @@ Recommended entrypoints:
 | `Download` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `Delete` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `AddGlobalHeader` | day-one | Start here for concise, trusted-input use cases in this package. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `DeleteSafe` | Use first when inputs are external, remote, file-backed, or security-sensitive. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `Download` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `Delete` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `AddGlobalHeader` | Use first for concise trusted-input workflows in vresty. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vresty. |
+| `BuildBasicAuth` | Use first for concise trusted-input workflows in vresty. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vresty. |
+| `BuildContentType` | Use first for concise trusted-input workflows in vresty. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vresty. |
+| `CloneGlobalHeaders` | Use first for concise trusted-input workflows in vresty. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vresty. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2842,6 +3326,13 @@ Recommended entrypoints:
 | `NewE` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `New` | day-one | Start here for concise, trusted-input use cases in this package. |
 
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `NewE` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `New` | Use first for concise trusted-input workflows in vsem. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vsem. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `New` | `func New(capacity int) *Semaphore` | recommended | New creates a semaphore with capacity permits. | facade | `ExampleNew` |
@@ -2860,6 +3351,18 @@ Recommended entrypoints:
 | Function | Profile | Rationale |
 | --- | --- | --- |
 | `New` | day-one | Start here for concise, trusted-input use cases in this package. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `New` | Use first for concise trusted-input workflows in vset. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vset. |
+| `NewInt` | Use first for concise trusted-input workflows in vset. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vset. |
+| `NewInt32` | Use first for concise trusted-input workflows in vset. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vset. |
+| `NewInt64` | Use first for concise trusted-input workflows in vset. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vset. |
+| `NewString` | Use first for concise trusted-input workflows in vset. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vset. |
+| `NewUint` | Use first for concise trusted-input workflows in vset. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vset. |
+| `NewUint32` | Use first for concise trusted-input workflows in vset. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vset. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2889,6 +3392,18 @@ Recommended entrypoints:
 | `ChannelDial` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `NewSocketConfigWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `GetRemoteAddress` | day-one | Start here for concise, trusted-input use cases in this package. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `ChannelDial` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `NewSocketConfigWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `GetRemoteAddress` | Use first for concise trusted-input workflows in vskt. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vskt. |
+| `ChannelDialWithOptions` | Use first for concise trusted-input workflows in vskt. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vskt. |
+| `ChannelUtilDial` | Use first for concise trusted-input workflows in vskt. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vskt. |
+| `NewAioClient` | Use first for concise trusted-input workflows in vskt. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vskt. |
+| `NewAioClientWithConfig` | Use first for concise trusted-input workflows in vskt. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vskt. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2959,6 +3474,18 @@ Recommended entrypoints:
 | `Associate` | day-one | Start here for concise, trusted-input use cases in this package. |
 | `SliceToMap` | compatibility | Compatibility API; use only when preserving existing call-site semantics. |
 
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `FilterErr` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `Associate` | Use first for concise trusted-input workflows in vslice. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vslice. |
+| `SliceToMap` | Use only to preserve existing call-site behavior during migration. | Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists. |
+| `Chunk` | Use first for concise trusted-input workflows in vslice. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vslice. |
+| `Compact` | Use first for concise trusted-input workflows in vslice. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vslice. |
+| `Concat` | Use first for concise trusted-input workflows in vslice. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vslice. |
+| `Contains` | Use first for concise trusted-input workflows in vslice. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vslice. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Associate` | `func Associate[T any, K comparable, V any](a []T, transform func(T) (K, V)) map[K]V` | recommended | Associate builds a map from transform(item). | internal | `ExampleAssociate` |
@@ -3021,6 +3548,17 @@ Recommended entrypoints:
 | `New` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `WithProvider` | day-one | Start here for concise, trusted-input use cases in this package. |
 
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `Download` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `New` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `WithProvider` | Use first for concise trusted-input workflows in vssh. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vssh. |
+| `List` | Use first for concise trusted-input workflows in vssh. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vssh. |
+| `Run` | Use first for concise trusted-input workflows in vssh. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vssh. |
+| `Upload` | Use first for concise trusted-input workflows in vssh. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vssh. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Download` | `func Download(ctx context.Context, provider Provider, request DownloadRequest) (DownloadResponse, error)` | recommended | Download validates request and delegates to provider through a short-lived Client. | facade | `ExampleDownload` |
@@ -3044,6 +3582,18 @@ Recommended entrypoints:
 | --- | --- | --- |
 | `ContainsEmojiWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `AddPrefixIfNot` | day-one | Start here for concise, trusted-input use cases in this package. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `ContainsEmojiWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `AddPrefixIfNot` | Use first for concise trusted-input workflows in vstr. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vstr. |
+| `AddSuffixIfNot` | Use first for concise trusted-input workflows in vstr. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vstr. |
+| `AntPathMatch` | Use first for concise trusted-input workflows in vstr. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vstr. |
+| `AntPathMatchWithSeparator` | Use first for concise trusted-input workflows in vstr. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vstr. |
+| `Contains` | Use first for concise trusted-input workflows in vstr. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vstr. |
+| `ContainsAll` | Use first for concise trusted-input workflows in vstr. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vstr. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -3126,6 +3676,18 @@ Recommended entrypoints:
 | --- | --- | --- |
 | `CurrentPIDWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `DumpSystemInfoTo` | day-one | Start here for concise, trusted-input use cases in this package. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `CurrentPIDWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `DumpSystemInfoTo` | Use first for concise trusted-input workflows in vsys. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vsys. |
+| `CurrentPID` | Use first for concise trusted-input workflows in vsys. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vsys. |
+| `DumpSystemInfo` | Use first for concise trusted-input workflows in vsys. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vsys. |
+| `DumpSystemInfoWithOptions` | Use first for concise trusted-input workflows in vsys. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vsys. |
+| `Env` | Use first for concise trusted-input workflows in vsys. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vsys. |
+| `EnvBool` | Use first for concise trusted-input workflows in vsys. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vsys. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -3257,6 +3819,15 @@ Recommended entrypoints:
 | `New` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `WithProvider` | day-one | Start here for concise, trusted-input use cases in this package. |
 
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `Keywords` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `New` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `WithProvider` | Use first for concise trusted-input workflows in vtok. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vtok. |
+| `Tokenize` | Use first for concise trusted-input workflows in vtok. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vtok. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Keywords` | `func Keywords(ctx context.Context, provider Provider, request KeywordsRequest) (KeywordsResponse, error)` | recommended | Keywords validates request and delegates to provider through a short-lived Client. | facade | `ExampleKeywords` |
@@ -3279,6 +3850,18 @@ Recommended entrypoints:
 | `Render` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `NewHTMLEngine` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `WithFuncMap` | day-one | Start here for concise, trusted-input use cases in this package. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `Render` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `NewHTMLEngine` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `WithFuncMap` | Use first for concise trusted-input workflows in vtpl. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vtpl. |
+| `NewTextEngine` | Use first for concise trusted-input workflows in vtpl. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vtpl. |
+| `RenderTemplate` | Use first for concise trusted-input workflows in vtpl. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vtpl. |
+| `RenderWithEngine` | Use first for concise trusted-input workflows in vtpl. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vtpl. |
+| `RenderWithOptions` | Use first for concise trusted-input workflows in vtpl. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vtpl. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -3314,6 +3897,18 @@ Recommended entrypoints:
 | `Complete` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `EncodePathSegmentWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `AppendQuery` | day-one | Start here for concise, trusted-input use cases in this package. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `ContentLengthSafe` | Use first when inputs are external, remote, file-backed, or security-sensitive. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `Complete` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `EncodePathSegmentWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `AppendQuery` | Use first for concise trusted-input workflows in vurl. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vurl. |
+| `BuildQuery` | Use first for concise trusted-input workflows in vurl. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vurl. |
+| `ContentLength` | Use first for concise trusted-input workflows in vurl. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vurl. |
+| `ContentLengthSafeWithOptions` | Use first for concise trusted-input workflows in vurl. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vurl. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -3416,6 +4011,18 @@ Recommended entrypoints:
 | `MatchElWithDelimiterErr` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `AnyMatch` | day-one | Start here for concise, trusted-input use cases in this package. |
 
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `MatchElWithDelimiterErr` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `AnyMatch` | Use first for concise trusted-input workflows in vver. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vver. |
+| `AnyMatchSlice` | Use first for concise trusted-input workflows in vver. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vver. |
+| `CompareVersion` | Use first for concise trusted-input workflows in vver. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vver. |
+| `IsGreaterThan` | Use first for concise trusted-input workflows in vver. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vver. |
+| `IsGreaterThanOrEqual` | Use first for concise trusted-input workflows in vver. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vver. |
+| `IsLessThan` | Use first for concise trusted-input workflows in vver. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vver. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `AnyMatch` | `func AnyMatch(currentVersion string, compareVersions ...string) bool` | recommended | AnyMatch reports whether currentVersion matches any expression in compareVersions. | facade | `ExampleAnyMatch` |
@@ -3445,6 +4052,18 @@ Recommended entrypoints:
 | `Format` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `CleanCommentWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `Append` | day-one | Start here for concise, trusted-input use cases in this package. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `Format` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `CleanCommentWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `Append` | Use first for concise trusted-input workflows in vxml. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vxml. |
+| `AppendChild` | Use first for concise trusted-input workflows in vxml. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vxml. |
+| `AppendText` | Use first for concise trusted-input workflows in vxml. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vxml. |
+| `CleanComment` | Use first for concise trusted-input workflows in vxml. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vxml. |
+| `CleanInvalid` | Use first for concise trusted-input workflows in vxml. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vxml. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -3549,6 +4168,18 @@ Recommended entrypoints:
 | --- | --- | --- |
 | `Append` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `NewWriter` | day-one | Start here for concise, trusted-input use cases in this package. |
+
+Golden path API set:
+
+| Function | Use when | Avoid when |
+| --- | --- | --- |
+| `Append` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `NewWriter` | Use first for concise trusted-input workflows in vzip. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vzip. |
+| `AppendWithOptions` | Use first for concise trusted-input workflows in vzip. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vzip. |
+| `Get` | Use first for concise trusted-input workflows in vzip. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vzip. |
+| `GetBytes` | Use first for concise trusted-input workflows in vzip. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vzip. |
+| `GetBytesWithOptions` | Use first for concise trusted-input workflows in vzip. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vzip. |
+| `GetStream` | Use first for concise trusted-input workflows in vzip. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vzip. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |

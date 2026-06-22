@@ -87,6 +87,29 @@ func TestDecodeWithDecodeHook(t *testing.T) {
 	}
 }
 
+func TestDecodeWithComposedDecodeHooks(t *testing.T) {
+	type target struct {
+		Created time.Time
+		Delay   time.Duration
+	}
+	var dst target
+	err := Decode(map[string]any{"created": "2026-06-22", "delay": "150ms"}, &dst,
+		WithDecodeHook(ComposeDecodeHook(
+			StringToTimeHook(time.DateOnly),
+			StringToDurationHook(),
+		)),
+	)
+	if err != nil {
+		t.Fatalf("Decode() with composed hooks error = %v", err)
+	}
+	if got := dst.Created.Format(time.DateOnly); got != "2026-06-22" {
+		t.Fatalf("Created = %q", got)
+	}
+	if dst.Delay != 150*time.Millisecond {
+		t.Fatalf("Delay = %v, want 150ms", dst.Delay)
+	}
+}
+
 func TestDecodeReportsNestedFieldPath(t *testing.T) {
 	type item struct {
 		Count int
@@ -235,4 +258,56 @@ func TestBeanCopyDecodeMergeSemanticMatrix(t *testing.T) {
 		t.Fatalf("MergeResult() merged = %+v", merged)
 	}
 	assertEqualStrings(t, []string{"age", "name"}, mergeResult.Matched)
+}
+
+func TestMergeStrategyContract(t *testing.T) {
+	type profile struct {
+		Name  string
+		Tags  []string
+		Score int
+	}
+
+	dst := profile{Name: "base", Tags: []string{"old"}, Score: 10}
+	result, err := MergeResultWithOptions(&dst, []any{
+		map[string]any{"name": "", "tags": []string{"new"}},
+		map[string]any{"score": 0},
+	}, WithIgnoreZero(true))
+	if err != nil {
+		t.Fatalf("MergeResultWithOptions() error = %v", err)
+	}
+	if dst.Name != "base" || dst.Score != 10 {
+		t.Fatalf("MergeResultWithOptions() zero overwrite dst = %+v", dst)
+	}
+	assertEqualStrings(t, []string{"name", "score"}, result.Skipped)
+
+	result, err = MergeResult(&dst, map[string]any{"tags": []string{"latest"}, "score": "12"})
+	if err != nil {
+		t.Fatalf("MergeResult() error = %v", err)
+	}
+	if dst.Score != 12 || len(dst.Tags) != 1 || dst.Tags[0] != "latest" {
+		t.Fatalf("MergeResult() replace/convert dst = %+v", dst)
+	}
+	assertEqualStrings(t, []string{"score", "tags"}, result.Matched)
+}
+
+func TestCopyContractFieldTagsAndRequiredGaps(t *testing.T) {
+	type source struct {
+		Name string `bean:"full_name"`
+		Age  int    `bean:"-"`
+	}
+	type target struct {
+		Name string `bean:"full_name"`
+		Age  int
+	}
+
+	var dst target
+	result, err := copyPropertiesResult(source{Name: "alice", Age: 30}, &dst)
+	if err != nil {
+		t.Fatalf("copyPropertiesResult() error = %v", err)
+	}
+	if dst != (target{Name: "alice"}) {
+		t.Fatalf("copyPropertiesResult() dst = %+v", dst)
+	}
+	assertEqualStrings(t, []string{"full_name"}, result.Matched)
+	assertEqualStrings(t, []string{}, result.Unused)
 }

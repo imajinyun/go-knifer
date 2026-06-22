@@ -397,6 +397,11 @@ func toInt64(v any, cfg config) (int64, bool) {
 		return int64(rv.Uint()), true
 	case reflect.Float32, reflect.Float64:
 		return int64(rv.Float()), true
+	case reflect.Bool:
+		if rv.Bool() {
+			return 1, true
+		}
+		return 0, true
 	case reflect.String:
 		return parseStringToInt64(rv.String(), cfg)
 	}
@@ -458,6 +463,11 @@ func toInt64Strict(v any, cfg config) (int64, bool) {
 		return int64(u), true
 	case reflect.Float32, reflect.Float64:
 		return float64ToInt64Strict(rv.Float())
+	case reflect.Bool:
+		if rv.Bool() {
+			return 1, true
+		}
+		return 0, true
 	case reflect.String:
 		return parseStringToInt64Strict(rv.String(), cfg)
 	}

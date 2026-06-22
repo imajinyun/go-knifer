@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // Option customizes bean mapping behavior.
@@ -132,6 +133,54 @@ func WithFloatParser(parser func(string, int) (float64, error)) Option {
 func WithDecodeHook(hook DecodeHookFunc) Option {
 	return func(o *Options) {
 		o.DecodeHook = hook
+	}
+}
+
+// ComposeDecodeHook chains hooks from left to right.
+//
+// Each hook receives the output of the previous hook. The destination type is
+// stable across the chain, while the source type is recomputed after every
+// non-nil transformed value.
+func ComposeDecodeHook(hooks ...DecodeHookFunc) DecodeHookFunc {
+	return func(from reflect.Type, to reflect.Type, value any) (any, error) {
+		current := value
+		currentType := from
+		for _, hook := range hooks {
+			if hook == nil {
+				continue
+			}
+			next, err := hook(currentType, to, current)
+			if err != nil {
+				return nil, err
+			}
+			current = next
+			if current == nil {
+				currentType = nil
+				continue
+			}
+			currentType = reflect.TypeOf(current)
+		}
+		return current, nil
+	}
+}
+
+// StringToTimeHook converts string values into time.Time using layout.
+func StringToTimeHook(layout string) DecodeHookFunc {
+	return func(from reflect.Type, to reflect.Type, value any) (any, error) {
+		if from == nil || from.Kind() != reflect.String || to != reflect.TypeOf(time.Time{}) {
+			return value, nil
+		}
+		return time.Parse(layout, value.(string))
+	}
+}
+
+// StringToDurationHook converts string values into time.Duration.
+func StringToDurationHook() DecodeHookFunc {
+	return func(from reflect.Type, to reflect.Type, value any) (any, error) {
+		if from == nil || from.Kind() != reflect.String || to != reflect.TypeOf(time.Duration(0)) {
+			return value, nil
+		}
+		return time.ParseDuration(value.(string))
 	}
 }
 
@@ -518,7 +567,7 @@ func shouldSkip(v reflect.Value, cfg Options) bool {
 	if cfg.IgnoreEmpty && isEmptyValue(v) {
 		return true
 	}
-	if cfg.IgnoreZero && v.IsZero() {
+	if cfg.IgnoreZero && indirect(v).IsZero() {
 		return true
 	}
 	return false

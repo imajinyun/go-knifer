@@ -110,6 +110,28 @@ func TestFacadeBeanDecodeHookApplied(t *testing.T) {
 	}
 }
 
+func TestFacadeBeanComposedDecodeHooksApplied(t *testing.T) {
+	type target struct {
+		Created time.Time
+		Delay   time.Duration
+	}
+	var dst target
+	if err := vbean.Decode(map[string]any{"created": "2026-06-22", "delay": "250ms"}, &dst,
+		vbean.WithDecodeHook(vbean.ComposeDecodeHook(
+			vbean.StringToTimeHook(time.DateOnly),
+			vbean.StringToDurationHook(),
+		)),
+	); err != nil {
+		t.Fatalf("Decode() with composed hooks error = %v", err)
+	}
+	if got := dst.Created.Format(time.DateOnly); got != "2026-06-22" {
+		t.Fatalf("Created = %q", got)
+	}
+	if dst.Delay != 250*time.Millisecond {
+		t.Fatalf("Delay = %v, want 250ms", dst.Delay)
+	}
+}
+
 func TestFacadeBeanParseParserApplied(t *testing.T) {
 	type P struct {
 		Active bool

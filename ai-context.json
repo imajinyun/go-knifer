@@ -361,6 +361,36 @@
       "risk_level": "low",
       "reads_artifacts": ["/tmp/go-knifer-old.bench", "/tmp/go-knifer-new.bench"],
       "notes": "Compares repeated benchmark outputs with benchstat. Requires benchmark files produced by separate runs and a local benchstat binary."
+    },
+    "bench_baseline": {
+      "cmd": "make bench-baseline BENCHCOUNT=10 BENCHTIME=3s BENCH_BASELINE_OUT=/tmp/go-knifer-bench-baseline.txt",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": false,
+      "risk_level": "medium",
+      "creates_artifacts": ["/tmp/go-knifer-bench-baseline.txt"],
+      "notes": "Writes repeated benchmark output outside the repository for historical baseline comparisons. Runtime can be long with BENCHCOUNT=10."
+    },
+    "bench_compare": {
+      "cmd": "make bench-compare BENCHCOUNT=10 BENCHTIME=3s BENCH_BASELINE_OUT=/tmp/go-knifer-bench-baseline.txt BENCH_CURRENT_OUT=/tmp/go-knifer-bench-current.txt",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": false,
+      "risk_level": "medium",
+      "creates_artifacts": ["/tmp/go-knifer-bench-current.txt"],
+      "reads_artifacts": ["/tmp/go-knifer-bench-baseline.txt"],
+      "notes": "Writes current repeated benchmark output and compares it against the saved baseline with benchstat."
+    },
+    "api_freeze_check": {
+      "cmd": "make api-freeze-check",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": false,
+      "risk_level": "low",
+      "notes": "Validates v1 API freeze and deprecation governance metadata against the generated API catalog."
     }
   },
   "change_type_policies": {
@@ -471,10 +501,10 @@
   "ai_tooling": {
     "api_catalog": {
       "path": "docs/api/tools.json",
-      "schema": "1.6",
-      "recommended_profile_schema": "recommended_entrypoints profiles: day-one, safe, error, options, compatibility",
+      "schema": "1.7",
+      "recommended_profile_schema": "recommended_entrypoints profiles: day-one, safe, error, options, compatibility; golden_path lists 1-7 APIs with use_when and avoid_when guidance",
       "package_count": 54,
-      "function_count": 2606,
+      "function_count": 2609,
       "functions_with_examples": 1253,
       "context_aware_functions": 36,
       "returns_error_functions": 603,
@@ -482,11 +512,11 @@
         "compatibility": 22,
         "deprecated": 0,
         "experimental": 0,
-        "recommended": 2584
+        "recommended": 2587
       },
       "synopsis_sources": {
         "empty": 0,
-        "facade": 1964,
+        "facade": 1967,
         "internal": 642
       },
       "regenerate_command": "tools_update",
@@ -521,6 +551,50 @@
       { "intent": "JSON, XML, file, and archive workflows", "packages": ["vjson", "vxml", "vfile", "vzip"] },
       { "intent": "configuration and struct binding", "packages": ["vconf", "vbean", "vform"] },
       { "intent": "cache, IDs, logging, and application helpers", "packages": ["vcache", "vid", "vlog", "vcli"] }
+    ],
+    "stdlib_first_decisions": [
+      {
+        "scenario": "slice iteration and simple transforms",
+        "prefer_stdlib_when": "Prefer stdlib when a plain for loop or slices package call is shorter, allocation-free, and local to one call site.",
+        "prefer_go_knifer_when": "Prefer go-knifer when the workflow needs reusable Map, Filter, GroupBy, Chunk, Page, or error-returning callback helpers.",
+        "packages": ["vslice"]
+      },
+      {
+        "scenario": "map lookup, clone, ordering, and transforms",
+        "prefer_stdlib_when": "Prefer stdlib when direct map access, maps.Clone, maps.Copy, or slices.Sorted(maps.Keys(m)) expresses the whole operation.",
+        "prefer_go_knifer_when": "Prefer go-knifer when the workflow needs Pick, Omit, Diff, MergeFunc, MapValues, FilterErr, GroupBy, or a documented non-nil map contract.",
+        "packages": ["vmap"]
+      },
+      {
+        "scenario": "string processing",
+        "prefer_stdlib_when": "Prefer stdlib when strings, strconv, unicode, or regexp directly express the operation without project-specific semantics.",
+        "prefer_go_knifer_when": "Prefer go-knifer when the workflow combines blank checks, case helpers, masking-friendly text cleanup, or reusable string predicates.",
+        "packages": ["vstr"]
+      },
+      {
+        "scenario": "JSON parsing and formatting",
+        "prefer_stdlib_when": "Prefer stdlib when the caller needs streaming, token-level control, Decoder options, or direct struct marshaling.",
+        "prefer_go_knifer_when": "Prefer go-knifer when the workflow needs small in-memory object/array helpers, path lookup, formatting, or default-returning convenience around dynamic JSON.",
+        "packages": ["vjson"]
+      },
+      {
+        "scenario": "HTTP and URL access",
+        "prefer_stdlib_when": "Prefer stdlib when the URL and host are trusted and net/http gives clearer request, transport, and context control.",
+        "prefer_go_knifer_when": "Prefer go-knifer when inputs cross trust boundaries and need SSRF-aware URL validation, allowed-host policies, bounded reads, or safe download helpers.",
+        "packages": ["vurl", "vhttp", "vresty"]
+      },
+      {
+        "scenario": "crypto and random data",
+        "prefer_stdlib_when": "Prefer stdlib when the caller is composing primitives directly and needs full crypto/rand, crypto/cipher, crypto/x509, or crypto/tls control.",
+        "prefer_go_knifer_when": "Prefer go-knifer when the workflow needs reviewed helper combinations for HMAC, AES-GCM, RSA-OAEP/PSS, parameter signing, JWT, or secure token bytes.",
+        "packages": ["vcrypto", "vjwt", "vrand"]
+      },
+      {
+        "scenario": "struct, map, and configuration binding",
+        "prefer_stdlib_when": "Prefer stdlib when encoding/json, flag, os.LookupEnv, or direct assignment keeps the data shape explicit and small.",
+        "prefer_go_knifer_when": "Prefer go-knifer when the workflow needs tag-aware Copy, DecodeResult metadata, StrictUnused, DecodeHook, profile overlays, environment expansion, or safe remote config loading.",
+        "packages": ["vbean", "vconf", "vobj"]
+      }
     ],
     "api_decision_card_template": [
       "Problem: what user workflow or compatibility gap requires a public API change?",
@@ -567,6 +641,20 @@
       "No unresolved lint, govulncheck, coverage, fuzz smoke, or release-note readiness failures.",
       "No undocumented public API additions or unclassified recommended entrypoints."
     ]
+  },
+  "api_freeze": {
+    "v1_candidate": true,
+    "decision_card_required": true,
+    "replacement_required_for_deprecation": true,
+    "allowed_statuses": ["recommended", "compatibility", "experimental", "deprecated"],
+    "freeze_checks": [
+      "Every intentional public API addition or signature change must have an API decision card.",
+      "Every deprecated API must include a replacement and rationale before v1 freeze.",
+      "docs/api/exports.txt snapshot must stay current through api_check.",
+      "docs/api/tools.json tools catalog must classify every API status and expose golden_path guidance.",
+      "Experimental APIs are not allowed while v1_candidate is true."
+    ],
+    "deprecations": []
   },
   "coverage_gates": {
     "repository_threshold": 75.2,

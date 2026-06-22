@@ -35,7 +35,9 @@ Use this matrix when choosing between permissive compatibility helpers and expli
 | Unsigned integer | decimal string | range-checked for destination | exact numeric conversion when representable | nonzero is true | decimal string bytes | `E` helpers reject unsigned values that cannot fit signed destinations. |
 | Float | formatted with `FormatFloat` policy | truncated toward zero when finite and in range | exact numeric conversion | nonzero is true | formatted float bytes | `E` integer helpers reject `NaN`, `Inf`, and out-of-range values. |
 | Bool | formatted with bool formatter | `1` or `0` | `1` or `0` | returned as-is | formatted bool bytes | Formatter/parser options are per-call; no global conversion state is used. |
-| `[]byte` | string copy of bytes | parsed through string rules | parsed through string rules | parsed through string rules | returned as-is | Clone before mutation when ownership matters. |
+| `[]byte` | string copy of bytes | unsupported by `E`; zero/default helpers fall back | unsupported by `E`; zero/default helpers fall back | unsupported by `E`; zero/default helpers fall back | returned as-is | Clone before mutation when ownership matters; convert to string first when parsing bytes as text. |
+| `json.Number` | returned through `fmt.Sprint` | parsed through string rules | parsed through string rules | unsupported unless parser accepts the string form | decimal string bytes | Use `encoding/json.Decoder.UseNumber` plus `E` helpers when numeric precision matters. |
+| `time.Duration` | duration string such as `150ms` | nanoseconds as `int64` | nanoseconds as `float64` | nonzero is true | duration string bytes | Use `vdate` or direct `time.ParseDuration` when duration grammar is the main contract. |
 | Other values | `fmt.Sprint` | unsupported except through string/default compatibility paths | unsupported except through string/default compatibility paths | unsupported except through string/default compatibility paths | stringified bytes | Prefer explicit typed conversion or domain validation before using generic values. |
 
 ## When not to use vconv
@@ -71,8 +73,10 @@ Error-returning helpers add branches but improve correctness by separating inval
 - String-to-int conversion trims spaces, tries integer parsing first, then accepts float strings by truncating toward zero, so `"42.9"` becomes `42`.
 - `E` integer helpers reject uint, float, `NaN`, and `Inf` inputs that cannot fit in the destination integer type; the legacy zero/default helpers keep their permissive conversion behavior for backward compatibility.
 - Named string and numeric types are accepted by the same scalar conversion rules as their underlying types.
+- `json.Number` and `time.Duration` are covered by the property matrix so their string, numeric, and failure behavior stays stable.
 - Bool conversion accepts `true`, `yes`, `y`, `ok`, `1`, `on`, `false`, `no`, `n`, `0`, and `off` case-insensitively after trimming spaces. Non-string numerics convert to `true` when nonzero.
 - `ToBytes` returns `nil` for `nil`, returns an existing `[]byte` as-is, converts strings directly, and stringifies other values.
+- `internal/conv/conversion_matrix_test.go` is the executable property contract for the table above; update it when adding a new scalar source or target behavior.
 
 ## FAQ
 
