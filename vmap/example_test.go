@@ -99,3 +99,83 @@ func ExampleIterValues() {
 	fmt.Println(values)
 	// Output: [1 2]
 }
+
+func ExampleNew() {
+	m := vmap.New[string, int]()
+	m["count"] = 2
+
+	fmt.Println(m["count"])
+	// Output: 2
+}
+
+func ExampleOf() {
+	m := vmap.Of[string, int]("a", 1, "b", 2)
+	fmt.Println(m["a"], m["b"], len(m))
+	// Output: 1 2 2
+}
+
+func ExampleContainsKey() {
+	m := map[string]int{"a": 1}
+	fmt.Println(vmap.ContainsKey(m, "a"))
+	fmt.Println(vmap.ContainsKey(m, "b"))
+	// Output:
+	// true
+	// false
+}
+
+func ExampleKeys() {
+	keys := vmap.Keys(map[string]int{"b": 2, "a": 1})
+	sort.Strings(keys)
+	fmt.Println(keys)
+	// Output: [a b]
+}
+
+func ExampleValues() {
+	values := vmap.Values(map[string]int{"b": 2, "a": 1})
+	sort.Ints(values)
+	fmt.Println(values)
+	// Output: [1 2]
+}
+
+func ExampleFilter() {
+	filtered := vmap.Filter(map[string]int{"a": 1, "b": 2}, func(_ string, value int) bool {
+		return value%2 == 0
+	})
+	fmt.Println(filtered)
+	// Output: map[b:2]
+}
+
+func ExampleGroupBy() {
+	grouped := vmap.GroupBy([]string{"go", "js", "ts"}, func(value string) int {
+		return len(value)
+	})
+	sort.Strings(grouped[2])
+	fmt.Println(grouped[2])
+	// Output: [go js ts]
+}
+
+func ExampleCountBy() {
+	counts := vmap.CountBy([]string{"go", "js", "rust"}, func(value string) int {
+		return len(value)
+	})
+	fmt.Println(counts[2], counts[4])
+	// Output: 2 1
+}
+
+func ExampleClone() {
+	original := map[string][]int{"a": {1, 2}}
+	cloned := vmap.Clone(original)
+	cloned["a"] = append(cloned["a"], 3)
+
+	fmt.Println(original["a"])
+	fmt.Println(cloned["a"])
+	// Output:
+	// [1 2]
+	// [1 2 3]
+}
+
+func ExampleDiff() {
+	diff := vmap.Diff(map[string]int{"a": 1, "b": 2}, map[string]int{"b": 20})
+	fmt.Println(diff)
+	// Output: map[a:1]
+}

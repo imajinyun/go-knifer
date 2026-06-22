@@ -4,7 +4,7 @@
   "summary": {
     "package_count": 54,
     "function_count": 2604,
-    "functions_with_examples": 1032,
+    "functions_with_examples": 1048,
     "context_aware_functions": 36,
     "returns_error_functions": 603,
     "variadic_functions": 776,
@@ -27362,8 +27362,8 @@
       "synopsis": "Package vmap provides public APIs for map utilities.",
       "summary": {
         "function_count": 65,
-        "functions_with_examples": 11,
-        "example_coverage_percent": 16.9,
+        "functions_with_examples": 21,
+        "example_coverage_percent": 32.3,
         "synopsis_sources": {
           "empty": 0,
           "facade": 4,
@@ -27420,7 +27420,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleClone"
+          ]
         },
         {
           "name": "ContainsKey",
@@ -27442,7 +27445,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleContainsKey"
+          ]
         },
         {
           "name": "ContainsValue",
@@ -27486,7 +27492,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleCountBy"
+          ]
         },
         {
           "name": "Diff",
@@ -27508,7 +27517,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleDiff"
+          ]
         },
         {
           "name": "Entries",
@@ -27618,7 +27630,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleFilter"
+          ]
         },
         {
           "name": "FilterErr",
@@ -27883,7 +27898,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleGroupBy"
+          ]
         },
         {
           "name": "Intersect",
@@ -28060,7 +28078,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleKeys"
+          ]
         },
         {
           "name": "KeysOf",
@@ -28319,7 +28340,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNew"
+          ]
         },
         {
           "name": "NewWithCap",
@@ -28355,7 +28379,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleOf"
+          ]
         },
         {
           "name": "OfE",
@@ -28745,7 +28772,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleValues"
+          ]
         }
       ]
     },
@@ -32688,8 +32718,8 @@
       "synopsis": "Package vnum provides public APIs for numeric utilities.",
       "summary": {
         "function_count": 146,
-        "functions_with_examples": 17,
-        "example_coverage_percent": 11.6,
+        "functions_with_examples": 23,
+        "example_coverage_percent": 15.8,
         "synopsis_sources": {
           "empty": 0,
           "facade": 15,
@@ -32789,7 +32819,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleAdd"
+          ]
         },
         {
           "name": "AddStr",
@@ -32840,7 +32873,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleAppendRange"
+          ]
         },
         {
           "name": "Avg",
@@ -32943,7 +32979,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleBinaryToLong"
+          ]
         },
         {
           "name": "BinaryToLongWithOptions",
@@ -33033,7 +33072,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleCeilDiv"
+          ]
         },
         {
           "name": "Compare",
@@ -33055,7 +33097,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleCompare"
+          ]
         },
         {
           "name": "Count",
@@ -35328,7 +35373,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleSub"
+          ]
         },
         {
           "name": "SubStr",

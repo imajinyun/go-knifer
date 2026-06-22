@@ -12,7 +12,7 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Module | `github.com/imajinyun/go-knifer` |
 | Packages | 54 |
 | Functions | 2604 |
-| Functions with examples | 1032 |
+| Functions with examples | 1048 |
 | Context-aware functions | 36 |
 | Functions returning error | 603 |
 | Variadic functions | 776 |
@@ -1601,22 +1601,22 @@ Import path: `github.com/imajinyun/go-knifer/vmap`
 
 Package vmap provides public APIs for map utilities.
 
-Quality: 65 functions · 11 with examples · 16.9% example coverage · synopsis sources: facade=4, internal=61, empty=0
+Quality: 65 functions · 21 with examples · 32.3% example coverage · synopsis sources: facade=4, internal=61, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `Assign` | `func Assign[K comparable, V any](maps ...map[K]V) map[K]V` | Assign merges maps into a new map. | internal | — |
 | `Clear` | `func Clear[K comparable, V any](m map[K]V)` | Clear removes all entries from m in place. | internal | — |
-| `Clone` | `func Clone[K comparable, V any](m map[K]V) map[K]V` | Clone returns a shallow copy of m. | internal | — |
-| `ContainsKey` | `func ContainsKey[K comparable, V any](m map[K]V, key K) bool` | ContainsKey reports whether key exists in m. | internal | — |
+| `Clone` | `func Clone[K comparable, V any](m map[K]V) map[K]V` | Clone returns a shallow copy of m. | internal | `ExampleClone` |
+| `ContainsKey` | `func ContainsKey[K comparable, V any](m map[K]V, key K) bool` | ContainsKey reports whether key exists in m. | internal | `ExampleContainsKey` |
 | `ContainsValue` | `func ContainsValue[K comparable, V comparable](m map[K]V, value V) bool` | ContainsValue reports whether any entry of m has the given value. | internal | — |
-| `CountBy` | `func CountBy[T any, K comparable](items []T, keyFn func(T) K) map[K]int` | CountBy counts slice items grouped by keyFn. | internal | — |
-| `Diff` | `func Diff[K comparable, V any](a map[K]V, others ...map[K]V) map[K]V` | Diff returns entries from a whose keys are absent in any of others. | internal | — |
+| `CountBy` | `func CountBy[T any, K comparable](items []T, keyFn func(T) K) map[K]int` | CountBy counts slice items grouped by keyFn. | internal | `ExampleCountBy` |
+| `Diff` | `func Diff[K comparable, V any](a map[K]V, others ...map[K]V) map[K]V` | Diff returns entries from a whose keys are absent in any of others. | internal | `ExampleDiff` |
 | `Entries` | `func Entries[K comparable, V any](m map[K]V) []Pair[K, V]` | Entries returns all key-value pairs. | internal | — |
 | `Equal` | `func Equal[K comparable, V comparable](a map[K]V, b map[K]V) bool` | Equal reports whether two maps contain the same key-value pairs. | internal | — |
 | `EqualFunc` | `func EqualFunc[K comparable, V1 any, V2 any](a map[K]V1, b map[K]V2, eq func(V1, V2) bool) bool` | EqualFunc reports whether two maps contain the same keys and pairwise-equivalent values per eq. | internal | — |
 | `Every` | `func Every[K comparable, V any](m map[K]V, pred func(K, V) bool) bool` | Every reports whether every entry satisfies the predicate. | internal | — |
-| `Filter` | `func Filter[K comparable, V any](m map[K]V, pred func(K, V) bool) map[K]V` | Filter returns entries satisfying the predicate. | internal | — |
+| `Filter` | `func Filter[K comparable, V any](m map[K]V, pred func(K, V) bool) map[K]V` | Filter returns entries satisfying the predicate. | internal | `ExampleFilter` |
 | `FilterErr` | `func FilterErr[K comparable, V any](m map[K]V, pred func(K, V) (bool, error)) (map[K]V, error)` | FilterErr returns entries satisfying the predicate and stops on the first error. | internal | `ExampleFilterErr` |
 | `FilterKeys` | `func FilterKeys[K comparable, V any](m map[K]V, pred func(K) bool) map[K]V` | FilterKeys keeps entries whose key satisfies the predicate. | internal | — |
 | `FilterValues` | `func FilterValues[K comparable, V any](m map[K]V, pred func(V) bool) map[K]V` | FilterValues keeps entries whose value satisfies the predicate. | internal | — |
@@ -1628,7 +1628,7 @@ Quality: 65 functions · 11 with examples · 16.9% example coverage · synopsis 
 | `Get` | `func Get[K comparable, V any](m map[K]V, key K) V` | Get returns the value for key, or the zero value of V when absent. | internal | — |
 | `GetAny` | `func GetAny[K comparable, V any](m map[K]V, keys ...K) (V, bool)` | GetAny returns the first present value among keys, or zero value when none exist. | internal | — |
 | `GetOr` | `func GetOr[K comparable, V any](m map[K]V, key K, fallback V) V` | GetOr returns the value for key, or fallback when absent. | internal | — |
-| `GroupBy` | `func GroupBy[T any, K comparable](items []T, keyFn func(T) K) map[K][]T` | GroupBy groups slice items into a map keyed by the result of keyFn. | internal | — |
+| `GroupBy` | `func GroupBy[T any, K comparable](items []T, keyFn func(T) K) map[K][]T` | GroupBy groups slice items into a map keyed by the result of keyFn. | internal | `ExampleGroupBy` |
 | `Intersect` | `func Intersect[K comparable, V any](maps ...map[K]V) map[K]V` | Intersect returns entries whose keys appear in every input map. | internal | — |
 | `Inverse` | `func Inverse[K comparable, V comparable](m map[K]V) map[V]K` | Inverse swaps keys and values. | internal | `ExampleInverse` |
 | `Invert` | `func Invert[K comparable, V comparable](m map[K]V) map[V]K` | Invert swaps keys and values. | internal | — |
@@ -1637,7 +1637,7 @@ Quality: 65 functions · 11 with examples · 16.9% example coverage · synopsis 
 | `Iter` | `func Iter[K comparable, V any](m map[K]V) iter.Seq2[K, V]` | Iter returns an iterator over map key-value pairs. | internal | `ExampleIter` |
 | `IterKeys` | `func IterKeys[K comparable, V any](m map[K]V) iter.Seq[K]` | IterKeys returns an iterator over map keys. | internal | `ExampleIterKeys` |
 | `IterValues` | `func IterValues[K comparable, V any](m map[K]V) iter.Seq[V]` | IterValues returns an iterator over map values. | internal | `ExampleIterValues` |
-| `Keys` | `func Keys[K comparable, V any](m map[K]V) []K` | Keys returns all keys. | internal | — |
+| `Keys` | `func Keys[K comparable, V any](m map[K]V) []K` | Keys returns all keys. | internal | `ExampleKeys` |
 | `KeysOf` | `func KeysOf[K comparable, V comparable](m map[K]V, target V) []K` | KeysOf returns all keys whose value equals target. | internal | — |
 | `Map` | `func Map[K1 comparable, K2 comparable, V1 any, V2 any](m map[K1]V1, transform func(K1, V1) (K2, V2)) map[K2]V2` | Map transforms each (k, v) into a new pair (k2, v2). | internal | — |
 | `MapErr` | `func MapErr[K1 comparable, K2 comparable, V1 any, V2 any](m map[K1]V1, transform func(K1, V1) (K2, V2, error)) (map[K2]V2, error)` | MapErr transforms each (k, v) into a new pair and stops on the first error. | internal | `ExampleMapErr` |
@@ -1649,9 +1649,9 @@ Quality: 65 functions · 11 with examples · 16.9% example coverage · synopsis 
 | `MergeFunc` | `func MergeFunc[K comparable, V any](resolve func(old V, new V) V, maps ...map[K]V) map[K]V` | MergeFunc is like Merge but resolves conflicts via the supplied function. | internal | — |
 | `MergeWithOverwrite` | `func MergeWithOverwrite[K comparable, V any](dstMap map[K]V, srcMaps ...map[K]V)` | MergeWithOverwrite merges srcMaps into dstMap in place. | internal | — |
 | `MergeWithoutOverwrite` | `func MergeWithoutOverwrite[K comparable, V any](dstMap map[K]V, srcMaps ...map[K]V)` | MergeWithoutOverwrite merges srcMaps into dstMap in place, keeping the existing value whenever a key already exists in dstMap. | internal | — |
-| `New` | `func New[K comparable, V any]() map[K]V` | New creates an initialized empty map. | facade | — |
+| `New` | `func New[K comparable, V any]() map[K]V` | New creates an initialized empty map. | facade | `ExampleNew` |
 | `NewWithCap` | `func NewWithCap[K comparable, V any](hint int) map[K]V` | NewWithCap creates an initialized empty map with a capacity hint. | facade | — |
-| `Of` | `func Of[K comparable, V any](kvs ...any) map[K]V` | Of creates a map from alternating key and value arguments and drops invalid pairs. | facade | — |
+| `Of` | `func Of[K comparable, V any](kvs ...any) map[K]V` | Of creates a map from alternating key and value arguments and drops invalid pairs. | facade | `ExampleOf` |
 | `OfE` | `func OfE[K comparable, V any](kvs ...any) (map[K]V, error)` | OfE creates a map from alternating key and value arguments and reports invalid input. | facade | — |
 | `Omit` | `func Omit[K comparable, V any](m map[K]V, keys ...K) map[K]V` | Omit returns a new map without the specified keys. | internal | — |
 | `OmitBy` | `func OmitBy[K comparable, V any](m map[K]V, pred func(K, V) bool) map[K]V` | OmitBy returns entries NOT satisfying the predicate. | internal | — |
@@ -1669,7 +1669,7 @@ Quality: 65 functions · 11 with examples · 16.9% example coverage · synopsis 
 | `SymmetricDiff` | `func SymmetricDiff[K comparable, V any](a map[K]V, b map[K]V) map[K]V` | SymmetricDiff returns entries present in exactly one of the two maps. | internal | — |
 | `ToSlice` | `func ToSlice[K comparable, V any, R any](m map[K]V, transform func(K, V) R) []R` | ToSlice transforms each map entry into a slice element. | internal | — |
 | `Update` | `func Update[K comparable, V any](dst map[K]V, src map[K]V) map[K]V` | Update copies all entries from src into dst, overriding existing keys. | internal | — |
-| `Values` | `func Values[K comparable, V any](m map[K]V) []V` | Values returns all values. | internal | — |
+| `Values` | `func Values[K comparable, V any](m map[K]V) []V` | Values returns all values. | internal | `ExampleValues` |
 
 ### vmask
 
@@ -1885,7 +1885,7 @@ Import path: `github.com/imajinyun/go-knifer/vnum`
 
 Package vnum provides public APIs for numeric utilities.
 
-Quality: 146 functions · 17 with examples · 11.6% example coverage · synopsis sources: facade=15, internal=131, empty=0
+Quality: 146 functions · 23 with examples · 15.8% example coverage · synopsis sources: facade=15, internal=131, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -1893,19 +1893,19 @@ Quality: 146 functions · 17 with examples · 11.6% example coverage · synopsis
 | `AbsFloat64` | `func AbsFloat64(x float64) float64` | AbsFloat64 returns the absolute value of x. | facade | — |
 | `AbsInteger` | `func AbsInteger[T integer](v T) T` | AbsInteger returns the absolute value of v, or zero on signed-min overflow. | facade | — |
 | `AbsIntegerE` | `func AbsIntegerE[T integer](v T) (T, error)` | AbsIntegerE returns the absolute value of v, reporting signed-min overflow. | facade | `ExampleAbsIntegerE` |
-| `Add` | `func Add(values ...float64) float64` | Add returns the sum of all values using decimal strings as the intermediate form. | internal | — |
+| `Add` | `func Add(values ...float64) float64` | Add returns the sum of all values using decimal strings as the intermediate form. | internal | `ExampleAdd` |
 | `AddStr` | `func AddStr(values ...string) *big.Rat` | AddStr returns the exact decimal sum of all numeric strings. | internal | `ExampleAddStr` |
-| `AppendRange` | `func AppendRange(start int, stop int, step int, values []int) []int` | AppendRange appends an inclusive range to values and returns the result. | internal | — |
+| `AppendRange` | `func AppendRange(start int, stop int, step int, values []int) []int` | AppendRange appends an inclusive range to values and returns the result. | internal | `ExampleAppendRange` |
 | `Avg` | `func Avg[T Number](nums ...T) float64` | Avg returns the arithmetic mean as float64, or 0 for empty input. | internal | — |
 | `AvgNumber` | `func AvgNumber[T number](values ...T) float64` | AvgNumber returns the arithmetic mean of all values, or 0 for empty input. | facade | `ExampleAvgNumber` |
 | `BinaryToInt` | `func BinaryToInt(binaryStr string) (int, error)` | BinaryToInt parses a binary string into int. | internal | `ExampleBinaryToInt` |
 | `BinaryToIntWithOptions` | `func BinaryToIntWithOptions(binaryStr string, opts ...ParseOption) (int, error)` | BinaryToIntWithOptions parses a binary string into int using per-call parser options. | internal | — |
-| `BinaryToLong` | `func BinaryToLong(binaryStr string) (int64, error)` | BinaryToLong parses a binary string into int64. | internal | — |
+| `BinaryToLong` | `func BinaryToLong(binaryStr string) (int64, error)` | BinaryToLong parses a binary string into int64. | internal | `ExampleBinaryToLong` |
 | `BinaryToLongWithOptions` | `func BinaryToLongWithOptions(binaryStr string, opts ...ParseOption) (int64, error)` | BinaryToLongWithOptions parses a binary string into int64 using per-call parser options. | internal | — |
 | `Calculate` | `func Calculate(expression string) (float64, error)` | Calculate evaluates a simple arithmetic expression supporting +, -, *, /, %, and parentheses. | internal | `ExampleCalculate` |
 | `CalculateWithOptions` | `func CalculateWithOptions(expression string, opts ...ParseOption) (float64, error)` | CalculateWithOptions evaluates a simple arithmetic expression using per-call parser options. | internal | — |
-| `CeilDiv` | `func CeilDiv(v1 int, v2 int) int` | CeilDiv returns ceil(v1 / v2). | internal | — |
-| `Compare` | `func Compare[T Ordered](x T, y T) int` | Compare returns -1, 0, or 1 according to x and y ordering. | internal | — |
+| `CeilDiv` | `func CeilDiv(v1 int, v2 int) int` | CeilDiv returns ceil(v1 / v2). | internal | `ExampleCeilDiv` |
+| `Compare` | `func Compare[T Ordered](x T, y T) int` | Compare returns -1, 0, or 1 according to x and y ordering. | internal | `ExampleCompare` |
 | `Count` | `func Count(total int, part int) int` | Count returns how many parts of size part are needed for total. | internal | — |
 | `DecimalFormat` | `func DecimalFormat(format string, v float64) string` | DecimalFormat formats v with common decimal patterns such as "0", "0.00", ",##0.00" and percent patterns. | internal | — |
 | `DecimalFormatMoney` | `func DecimalFormatMoney(v float64) string` | DecimalFormatMoney formats money with comma grouping and two decimal places. | internal | `ExampleDecimalFormatMoney` |
@@ -2008,7 +2008,7 @@ Quality: 146 functions · 17 with examples · 11.6% example coverage · synopsis
 | `RoundStr` | `func RoundStr(v float64, scale int) string` | RoundStr returns Round formatted with fixed scale digits. | internal | — |
 | `RoundStrWithOptions` | `func RoundStrWithOptions(v float64, scale int, opts ...FormatOption) string` | RoundStrWithOptions returns Round formatted with fixed scale digits using custom providers. | internal | — |
 | `Sqrt` | `func Sqrt(x uint64) uint64` | Sqrt returns the integer square root of x. | internal | — |
-| `Sub` | `func Sub(values ...float64) float64` | Sub subtracts all following values from the first value. | internal | — |
+| `Sub` | `func Sub(values ...float64) float64` | Sub subtracts all following values from the first value. | internal | `ExampleSub` |
 | `SubStr` | `func SubStr(values ...string) *big.Rat` | SubStr subtracts all following numeric strings from the first value. | internal | — |
 | `Sum` | `func Sum[T Number](nums ...T) T` | Sum returns the sum of all values. | internal | — |
 | `SumNumber` | `func SumNumber[T number](values ...T) float64` | SumNumber returns the sum of all integer or floating-point values as float64. | facade | `ExampleSumNumber` |

@@ -142,3 +142,44 @@ func ExampleToUnsignedByteArrayLen() {
 	// [0 0 0 255]
 	// <nil>
 }
+
+func ExampleAdd() {
+	fmt.Println(vnum.Add(1.5, 2.25, -0.75))
+	// Output: 3
+}
+
+func ExampleSub() {
+	fmt.Println(vnum.Sub(10, 2.5, 1.5))
+	// Output: 6
+}
+
+func ExampleCompare() {
+	fmt.Println(vnum.Compare(3, 5))
+	fmt.Println(vnum.Compare("go", "go"))
+	// Output:
+	// -1
+	// 0
+}
+
+func ExampleAppendRange() {
+	values := vnum.AppendRange(1, 5, 2, []int{0})
+	fmt.Println(values)
+	// Output: [0 1 3 5]
+}
+
+func ExampleCeilDiv() {
+	fmt.Println(vnum.CeilDiv(10, 3))
+	fmt.Println(vnum.CeilDiv(9, 3))
+	// Output:
+	// 4
+	// 3
+}
+
+func ExampleBinaryToLong() {
+	value, err := vnum.BinaryToLong("100000000")
+	fmt.Println(value)
+	fmt.Println(err)
+	// Output:
+	// 256
+	// <nil>
+}
