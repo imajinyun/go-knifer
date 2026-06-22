@@ -15,6 +15,8 @@
 #      known compatibility shims.
 #   8. Public v* production imports do not add new third-party dependencies
 #      unless explicitly allowed for that facade.
+#   9. Heavy optional integrations stay isolated to their owning facade/internal
+#      package families so core utilities do not accidentally pull them in.
 #
 # It relies on the Go toolchain (go list) for accurate import analysis instead
 # of fragile text matching, so it transparently handles abbreviated package
@@ -49,6 +51,40 @@ allowed_facade_external_import() {
 	vresty:resty.dev/v3)
 		return 0
 		;;
+	esac
+	return 1
+}
+
+allowed_heavy_external_import() {
+	case "$1:$2" in
+		internal/errx:github.com/getsentry/sentry-go | \
+		internal/errx:github.com/sirupsen/logrus | \
+		verr:github.com/getsentry/sentry-go | \
+		verr:github.com/sirupsen/logrus | \
+		internal/httpx/resty:resty.dev/v3 | \
+		vresty:resty.dev/v3 | \
+		internal/poi:github.com/xuri/excelize/v2 | \
+		vpoi:github.com/xuri/excelize/v2)
+			return 0
+			;;
+	esac
+	case "$1:$2" in
+		internal/imgx:github.com/makiuchi-d/gozxing*)
+			return 0
+			;;
+	esac
+	return 1
+}
+
+is_heavy_external_import() {
+	case "$1" in
+		github.com/getsentry/sentry-go | \
+		github.com/sirupsen/logrus | \
+		github.com/xuri/excelize/v2 | \
+		resty.dev/v3 | \
+		github.com/makiuchi-d/gozxing*)
+			return 0
+			;;
 	esac
 	return 1
 }
@@ -152,6 +188,19 @@ while IFS= read -r pkg; do
 		esac
 	done <<<"${imports}"
 done < <(go list ./internal/... 2>/dev/null)
+
+# Rule 9: heavyweight optional integrations must not bleed into core packages.
+while IFS= read -r pkg; do
+	[ -z "${pkg}" ] && continue
+	rel="${pkg#${MODULE}/}"
+	imports="$(go list -f '{{range .Imports}}{{println .}}{{end}}' "${pkg}")"
+	while IFS= read -r imp; do
+		[ -z "${imp}" ] && continue
+		if is_heavy_external_import "${imp}" && ! allowed_heavy_external_import "${rel}" "${imp}"; then
+			err "${rel}: imports heavy optional dependency ${imp} outside its isolated package family"
+		fi
+	done <<<"${imports}"
+done < <(go list ./internal/... ./v... 2>/dev/null)
 
 # Rules 5 and 6 use lightweight source checks. They intentionally complement
 # go vet/golangci-lint by encoding project-specific architecture policy.

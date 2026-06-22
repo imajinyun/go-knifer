@@ -15,6 +15,7 @@
 - [🏗️ Architecture and package boundaries](#architecture-and-package-boundaries)
 - [🔒 API compatibility, deprecation, and releases](#api-compatibility-deprecation-and-releases)
 - [✅ Recommended API entry points](#recommended-api-entry-points)
+- [🍳 Practical cookbook](#practical-cookbook)
 - [📦 Build, test, and release workflow](#build-test-and-release-workflow)
 - [🛡️ Governance](#governance)
 - [🤝 Contributing](#contributing)
@@ -312,6 +313,37 @@ Selection rules:
 | Generated IDs such as UUID, Snowflake, and NanoId | `vid` | Use `vident` for legal identity number parsing/validation, not generated service identifiers. |
 | Provider-neutral AI, FTP, SSH/SFTP, pinyin, or tokenization contracts | `vai`, `vftp`, `vssh`, `vhan`, `vtok` | Use a dedicated provider/client package outside core when real network clients, credentials, dictionaries, or NLP engines are required. |
 
+### vbean / vconf / vobj boundary rule
+
+These packages are intentionally adjacent but not interchangeable:
+
+| If the data is... | Use | Why |
+| --- | --- | --- |
+| Configuration text, files, profiles, environment expansion, remote config, schema validation, or file watching | `vconf` | It owns configuration source loading, precedence, profile overlays, validation, and safe remote config boundaries. |
+| A struct/map value that must be copied, decoded, merged, tagged, weakly converted, or reported with matched/unused metadata | `vbean` | It owns reflection-based property mapping and conversion between Go object shapes. |
+| A dynamic `any` value that needs nil/empty checks, length/membership checks, defaulting, comparison, type inspection, or serialization-based cloning | `vobj` | It owns generic object-level convenience helpers, not domain mapping or configuration loading. |
+
+When a workflow crosses boundaries, keep each step explicit: load and validate with `vconf`, bind or map with `vbean`, then use `vobj` only for generic object checks or cloning. Do not add configuration parsing to `vbean`, struct binding policy to `vobj`, or broad object helpers to `vconf`.
+
+<a id="practical-cookbook"></a>
+
+## 🍳 Practical cookbook
+
+Use these recipes as the shortest path from an application task to a reviewed package boundary. Each recipe names the first package to open, the safer default API family, and the validation command that proves examples and generated catalogs stayed current.
+
+| Task | Start with | Minimal recipe | Validate |
+| --- | --- | --- | --- |
+| Filter, map, deduplicate, or page a slice | `vslice` | Use `Filter`, `Map`, `Uniq`, `Chunk`, or `Page`; choose `MapErr` / `FilterErr` when a callback can fail. Use package benchmarks only as local baselines before making performance claims. | `go test ./vslice` and `make bench-facade BENCH=Benchmark` |
+| Pick, omit, merge, or sort map data | `vmap` | Use `Pick`, `Omit`, `Merge`, `SortedKeys`, `MapValues`, or `Filter`; use package benchmarks only as local baselines before making performance claims about map helpers. | `go test ./vmap` and `make bench-facade BENCH=Benchmark` |
+| Parse user-provided scalar values | `vconv` | Use `ToIntE`, `ToFloat64E`, or `ToBoolE` when invalid input must be visible; use default-returning variants only when fallback behavior is intended. | `go test ./vconv` |
+| Read or mutate structured JSON | `vjson` | Use object/path helpers for small in-memory JSON documents; use `encoding/json.Decoder` directly for streams or token-level control. | `go test ./vjson` |
+| Fetch a URL controlled by users or config | `vurl`, then `vhttp` or `vresty` | Validate/probe with `OpenSafe` or `ContentLengthSafe`, then use `GetStringSafeE`, `DownloadBytesSafeE`, or safe Resty equivalents when a request is needed. | `go test ./vurl ./vhttp ./vresty` and `make agent-security-check` |
+| Load configuration from local files or remote URLs | `vconf` | Use `Load` for local trusted files, `LoadRemoteSafe` for untrusted HTTP(S), and `LoadWithOptions` / `LoadRemoteSafeWithOptions` when limits or providers must be reviewable. | `go test ./vconf` |
+| Map structs and maps without JSON serialization | `vbean` | Use `ToStruct`, `ToMap`, `CopyProperties`, or `DecodeResult`; keep weak conversion and strict-unused behavior explicit through `WithWeaklyTyped` and `WithStrictUnused`. | `go test ./vbean` |
+| Choose crypto or random helpers | `vcrypto`, `vrand`, `vjwt` | Use AES-GCM, HMAC-SHA-2, RSA-OAEP/PSS, `SecureBytes`, and signed JWT helpers; do not use `vhash` for security decisions. | `go test ./vcrypto ./vrand ./vjwt` and `make agent-security-check` |
+
+When adding a cookbook-backed public facade example, also run `make tools-gen` so `docs/api/tools.json` and `docs/api/tools.md` expose the new examples to AI agents.
+
 <a id="build-test-and-release-workflow"></a>
 
 ## 📦 Build, test, and release workflow
@@ -398,7 +430,7 @@ Run repository `go:generate` directives after confirming generated output is exp
 make generate
 ```
 
-GitHub Actions reuses the Makefile targets for module verification, vet, tidy checks, diff cleanliness, architecture checks, race/shuffle tests, coverage gates, and API compatibility checks. It also runs `golangci-lint`, `govulncheck`, and CodeQL. Dependabot is configured for Go modules and GitHub Actions updates.
+GitHub Actions reuses the Makefile targets for module verification, vet, tidy checks, diff cleanliness, architecture checks, race/shuffle tests, coverage gates, API compatibility checks, generated tool-catalog checks, and AI metadata checks. It also runs `golangci-lint`, `govulncheck`, CodeQL, benchmark smoke tests, and OpenSSF Scorecard. Dependabot is configured for Go modules and GitHub Actions updates.
 
 Format code:
 
@@ -416,7 +448,7 @@ gofmt -w .
 - API gate: `make api-check` compares root-package and top-level `v*` API signatures, exported fields, interface methods, and method sets against [`../api/exports.txt`](../api/exports.txt). Commit the refreshed snapshot only for intentional public API changes.
 - Generated documentation gate: `make docs-check` verifies generated documentation artifacts, including the machine-readable tool catalog at [`../api/tools.json`](../api/tools.json) and the readable catalog at [`../api/tools.md`](../api/tools.md). Regenerate with `make docs-gen` only when source docs, facade functions, or Examples intentionally change.
 - AI metadata gate: `make ai-context-check` validates [`../../ai-context.json`](../../ai-context.json), including command side effects, facade inventory, coverage gates, and security-sensitive package references.
-- Workflow gates: use `make doctor` for environment diagnostics, `make worktree-check` to block unrelated untracked Go files, `make quick-check` for fast local validation, `make security-check` for lint and vulnerability scanning, `make full-check COVERAGE_FILE=/tmp/go-knifer-coverage.out` for the full pre-push gate, and `make ci-test` for the GitHub Actions test-job gate. Optional Git hooks can be enabled with `make install-hooks` and disabled with `make uninstall-hooks`.
+- Workflow gates: use `make doctor` for environment diagnostics, `make worktree-check` to block unrelated untracked Go files, `make quick-check` for fast local validation, `make security-check` for lint and vulnerability scanning, `make full-check COVERAGE_FILE=/tmp/go-knifer-coverage.out` for the full pre-push gate, and `make ci-test` for the GitHub Actions test-job gate. GitHub Actions additionally runs CodeQL, OpenSSF Scorecard, and a benchmark smoke gate. Optional Git hooks can be enabled with `make install-hooks` and disabled with `make uninstall-hooks`.
 - Security suppressions: keep `.golangci.yml`, `#nosec`, and `//nolint:gosec` exceptions narrow and justified at the call site; prefer a regression test before broadening an exclusion.
 - Benchmark baseline: use `make bench-core` for hot-path benchmark suites or `make bench-facade` for matching public facade packages. Treat the output as a baseline unless a separate `benchstat` comparison proves a performance change.
 

@@ -39,6 +39,12 @@ subpackage APIs are treated as the compatibility boundary.
   option helpers, and ZIP file/filter archive helpers.
 - Added a release readiness gate and strengthened release automation with tag
   format, changelog, full validation, and protected environment checks.
+- Added OpenSSF Scorecard to CI and surfaced the Scorecard badge in the README
+  so dependency, branch-protection, and workflow trust signals are easier to
+  audit.
+- Extended `ai-context.json` with AI/tooling metadata for catalog metrics,
+  agent import rules, package-selection rules, top entry points, and metadata
+  refresh triggers.
 - Added Makefile-driven stability gates so local validation and CI share the
   same module, vet, architecture, race/shuffle test, coverage, lint, and
   vulnerability check targets.

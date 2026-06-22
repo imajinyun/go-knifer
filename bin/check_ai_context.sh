@@ -55,6 +55,16 @@ def require_number(value, path):
     return float(value)
 
 
+def require_non_negative_integer(value, path):
+    if not isinstance(value, int) or isinstance(value, bool):
+        add_error(f"{path} must be a non-negative integer")
+        return 0
+    if value < 0:
+        add_error(f"{path} must be a non-negative integer")
+        return 0
+    return value
+
+
 def require_enum(value, path, allowed):
     value = require_string(value, path)
     if value and value not in allowed:
@@ -157,6 +167,24 @@ if schema_ref:
 project = require_mapping(data.get("project"), "project")
 for key in ("name", "module", "language", "go_version", "layout"):
     require_string(project.get(key), f"project.{key}")
+
+go_mod_path = os.path.join(root_dir, "go.mod")
+go_mod_text = ""
+if not os.path.exists(go_mod_path):
+    add_error("go.mod is missing")
+else:
+    with open(go_mod_path, "r", encoding="utf-8") as f:
+        go_mod_text = f.read()
+    match = re.search(r"^go\s+(\d+\.\d+)(?:\.\d+)?\s*$", go_mod_text, flags=re.MULTILINE)
+    if not match:
+        add_error("go.mod must declare a Go language version")
+    else:
+        module_go_minor = match.group(1)
+        expected_project_go = f">={module_go_minor}"
+        if project.get("go_version") != expected_project_go:
+            add_error(
+                f"project.go_version must be {expected_project_go!r} to match go.mod language version {module_go_minor!r}"
+            )
 
 commands = require_mapping(data.get("commands"), "commands")
 command_name_pattern = re.compile(r"^[a-z][a-z0-9_]*$")
@@ -321,6 +349,10 @@ for name, workflow in sorted(github_actions.items()):
         if "GOLANGCI_LINT_VERSION" not in workflow_text or golangci_lint_version not in workflow_text:
             add_error(f"ci_workflows.github_actions.{name} must use declared golangci-lint version {golangci_lint_version!r}")
     if workflow_text and name == "go":
+        if go_1_25_patch and f'go-version: ["{go_1_25_patch}", "1.26"]' not in workflow_text:
+            add_error(
+                f"ci_workflows.github_actions.{name} test matrix must include minimum patch {go_1_25_patch!r} and next Go minor '1.26'"
+            )
         duplicate_steps = ["make race-test", "make shuffle-test", "make mod-check"]
         for duplicate_step in duplicate_steps:
             if duplicate_step in workflow_text:
@@ -355,6 +387,132 @@ for name, artifact in sorted(generated_artifacts.items()):
     checker = commands.get(check_command, {})
     if checker and checker.get("writes_workspace", False):
         add_error(f"generated_artifacts.{name}.check_command must not write workspace files")
+
+ai_tooling = require_mapping(data.get("ai_tooling"), "ai_tooling")
+api_catalog = require_mapping(ai_tooling.get("api_catalog"), "ai_tooling.api_catalog")
+api_catalog_path = require_string(api_catalog.get("path"), "ai_tooling.api_catalog.path")
+api_catalog_schema = require_string(api_catalog.get("schema"), "ai_tooling.api_catalog.schema")
+api_catalog_regenerate_command = require_string(
+    api_catalog.get("regenerate_command"),
+    "ai_tooling.api_catalog.regenerate_command",
+)
+api_catalog_check_command = require_string(api_catalog.get("check_command"), "ai_tooling.api_catalog.check_command")
+for command_name, path in (
+    (api_catalog_regenerate_command, "ai_tooling.api_catalog.regenerate_command"),
+    (api_catalog_check_command, "ai_tooling.api_catalog.check_command"),
+):
+    if command_name and command_name not in command_names:
+        add_error(f"{path} references unknown command {command_name!r}")
+if api_catalog_regenerate_command:
+    generator = commands.get(api_catalog_regenerate_command, {})
+    if generator and not generator.get("requires_user_consent", False):
+        add_error("ai_tooling.api_catalog.regenerate_command must require user consent")
+if api_catalog_check_command:
+    checker = commands.get(api_catalog_check_command, {})
+    if checker and checker.get("writes_workspace", False):
+        add_error("ai_tooling.api_catalog.check_command must not write workspace files")
+
+tools_catalog_data = None
+if api_catalog_path:
+    absolute_api_catalog_path = os.path.join(root_dir, api_catalog_path)
+    if not os.path.exists(absolute_api_catalog_path):
+        add_error(f"ai_tooling.api_catalog.path references missing file {api_catalog_path!r}")
+    else:
+        try:
+            with open(absolute_api_catalog_path, "r", encoding="utf-8") as f:
+                tools_catalog_data = json.load(f)
+        except json.JSONDecodeError as exc:
+            add_error(f"invalid tools catalog {api_catalog_path!r}: {exc}")
+
+declared_api_metrics = {
+    "package_count": require_non_negative_integer(
+        api_catalog.get("package_count"),
+        "ai_tooling.api_catalog.package_count",
+    ),
+    "function_count": require_non_negative_integer(
+        api_catalog.get("function_count"),
+        "ai_tooling.api_catalog.function_count",
+    ),
+    "functions_with_examples": require_non_negative_integer(
+        api_catalog.get("functions_with_examples"),
+        "ai_tooling.api_catalog.functions_with_examples",
+    ),
+    "context_aware_functions": require_non_negative_integer(
+        api_catalog.get("context_aware_functions"),
+        "ai_tooling.api_catalog.context_aware_functions",
+    ),
+    "returns_error_functions": require_non_negative_integer(
+        api_catalog.get("returns_error_functions"),
+        "ai_tooling.api_catalog.returns_error_functions",
+    ),
+}
+status_counts = require_mapping(api_catalog.get("status_counts"), "ai_tooling.api_catalog.status_counts")
+synopsis_sources = require_mapping(api_catalog.get("synopsis_sources"), "ai_tooling.api_catalog.synopsis_sources")
+for key, value in sorted(status_counts.items()):
+    require_non_negative_integer(value, f"ai_tooling.api_catalog.status_counts.{key}")
+for key, value in sorted(synopsis_sources.items()):
+    require_non_negative_integer(value, f"ai_tooling.api_catalog.synopsis_sources.{key}")
+
+if tools_catalog_data:
+    tools_summary = require_mapping(tools_catalog_data.get("summary"), f"{api_catalog_path}.summary")
+    if api_catalog_schema and tools_catalog_data.get("schema") != api_catalog_schema:
+        add_error(
+            "ai_tooling.api_catalog.schema must match "
+            f"{api_catalog_path}.schema {tools_catalog_data.get('schema')!r}"
+        )
+    for key, expected in declared_api_metrics.items():
+        actual = tools_summary.get(key)
+        if actual != expected:
+            add_error(f"ai_tooling.api_catalog.{key} must match {api_catalog_path}.summary.{key} ({actual!r})")
+    for key, expected in sorted(status_counts.items()):
+        actual = tools_summary.get("status_counts", {}).get(key)
+        if actual != expected:
+            add_error(
+                f"ai_tooling.api_catalog.status_counts.{key} must match "
+                f"{api_catalog_path}.summary.status_counts.{key} ({actual!r})"
+            )
+    for key, expected in sorted(synopsis_sources.items()):
+        actual = tools_summary.get("synopsis_sources", {}).get(key)
+        if actual != expected:
+            add_error(
+                f"ai_tooling.api_catalog.synopsis_sources.{key} must match "
+                f"{api_catalog_path}.summary.synopsis_sources.{key} ({actual!r})"
+            )
+
+human_catalog = require_mapping(ai_tooling.get("human_catalog"), "ai_tooling.human_catalog")
+human_catalog_path = require_string(human_catalog.get("path"), "ai_tooling.human_catalog.path")
+human_catalog_check_command = require_string(human_catalog.get("check_command"), "ai_tooling.human_catalog.check_command")
+if human_catalog_path and not os.path.exists(os.path.join(root_dir, human_catalog_path)):
+    add_error(f"ai_tooling.human_catalog.path references missing file {human_catalog_path!r}")
+if human_catalog_check_command and human_catalog_check_command not in command_names:
+    add_error(f"ai_tooling.human_catalog.check_command references unknown command {human_catalog_check_command!r}")
+
+agent_import_rules = require_string_list(ai_tooling.get("agent_import_rules"), "ai_tooling.agent_import_rules")
+selection_rules = require_string_list(ai_tooling.get("selection_rules"), "ai_tooling.selection_rules")
+metadata_refresh_triggers = require_string_list(
+    ai_tooling.get("metadata_refresh_triggers"),
+    "ai_tooling.metadata_refresh_triggers",
+)
+if len(agent_import_rules) < 3:
+    add_error("ai_tooling.agent_import_rules should include import boundary, selection, and safety guidance")
+if len(selection_rules) < 5:
+    add_error("ai_tooling.selection_rules should document common package-routing decisions")
+metadata_refresh_text = " ".join(metadata_refresh_triggers)
+if "tools_update" not in metadata_refresh_text and "make tools-gen" not in metadata_refresh_text:
+    add_error("ai_tooling.metadata_refresh_triggers must mention tools_update or make tools-gen")
+if "ai-context-check" not in metadata_refresh_text:
+    add_error("ai_tooling.metadata_refresh_triggers must mention make ai-context-check")
+
+top_entrypoints = ai_tooling.get("top_entrypoints")
+if not isinstance(top_entrypoints, list):
+    add_error("ai_tooling.top_entrypoints must be a list")
+    top_entrypoints = []
+if len(top_entrypoints) < 5:
+    add_error("ai_tooling.top_entrypoints should cover the main package-selection intents")
+for index, entrypoint in enumerate(top_entrypoints):
+    entrypoint = require_mapping(entrypoint, f"ai_tooling.top_entrypoints[{index}]")
+    require_string(entrypoint.get("intent"), f"ai_tooling.top_entrypoints[{index}].intent")
+    require_string_list(entrypoint.get("packages"), f"ai_tooling.top_entrypoints[{index}].packages")
 
 coverage_gates = require_mapping(data.get("coverage_gates"), "coverage_gates")
 repository_threshold = require_number(coverage_gates.get("repository_threshold"), "coverage_gates.repository_threshold")
@@ -410,6 +568,13 @@ if missing_facades:
     add_error("public_facades is missing package(s): " + ", ".join(missing_facades))
 if stale_facades:
     add_error("public_facades contains stale package(s): " + ", ".join(stale_facades))
+
+for index, entrypoint in enumerate(top_entrypoints):
+    if not isinstance(entrypoint, dict):
+        continue
+    for package in entrypoint.get("packages", []):
+        if package not in declared_facades:
+            add_error(f"ai_tooling.top_entrypoints[{index}].packages contains unknown package {package!r}")
 
 security_sensitive = set(require_string_list(data.get("security_sensitive_packages"), "security_sensitive_packages"))
 unknown_security_sensitive = sorted(security_sensitive - declared_facades)

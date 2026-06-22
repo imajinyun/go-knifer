@@ -12,6 +12,7 @@
     "ci_workflows",
     "architecture_rules",
     "generated_artifacts",
+    "ai_tooling",
     "coverage_gates",
     "public_facades",
     "security_sensitive_packages"
@@ -83,6 +84,22 @@
       "type": "object",
       "minProperties": 1,
       "additionalProperties": { "$ref": "#/$defs/generated_artifact" }
+    },
+    "ai_tooling": {
+      "type": "object",
+      "required": ["api_catalog", "human_catalog", "agent_import_rules", "selection_rules", "top_entrypoints", "metadata_refresh_triggers"],
+      "properties": {
+        "api_catalog": { "$ref": "#/$defs/api_catalog" },
+        "human_catalog": { "$ref": "#/$defs/human_catalog" },
+        "agent_import_rules": { "$ref": "#/$defs/string_array" },
+        "selection_rules": { "$ref": "#/$defs/string_array" },
+        "top_entrypoints": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/tooling_entrypoint" }
+        },
+        "metadata_refresh_triggers": { "$ref": "#/$defs/string_array" }
+      },
+      "additionalProperties": false
     },
     "coverage_gates": {
       "type": "object",
@@ -169,6 +186,54 @@
         "path": { "type": "string", "minLength": 1 },
         "generator_command": { "type": "string", "minLength": 1 },
         "check_command": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "api_catalog": {
+      "type": "object",
+      "required": [
+        "path",
+        "schema",
+        "package_count",
+        "function_count",
+        "functions_with_examples",
+        "context_aware_functions",
+        "returns_error_functions",
+        "status_counts",
+        "synopsis_sources",
+        "regenerate_command",
+        "check_command"
+      ],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "schema": { "type": "string", "minLength": 1 },
+        "package_count": { "type": "number", "exclusiveMinimum": 0 },
+        "function_count": { "type": "number", "exclusiveMinimum": 0 },
+        "functions_with_examples": { "type": "number" },
+        "context_aware_functions": { "type": "number" },
+        "returns_error_functions": { "type": "number" },
+        "status_counts": { "type": "object", "additionalProperties": { "type": "number" } },
+        "synopsis_sources": { "type": "object", "additionalProperties": { "type": "number" } },
+        "regenerate_command": { "type": "string", "minLength": 1 },
+        "check_command": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "human_catalog": {
+      "type": "object",
+      "required": ["path", "check_command"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "check_command": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "tooling_entrypoint": {
+      "type": "object",
+      "required": ["intent", "packages"],
+      "properties": {
+        "intent": { "type": "string", "minLength": 1 },
+        "packages": { "$ref": "#/$defs/string_array" }
       },
       "additionalProperties": false
     },

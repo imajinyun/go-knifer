@@ -85,3 +85,63 @@ func ExampleNewUint() {
 	// 2
 	// true
 }
+
+func ExampleNewInt64() {
+	s := vset.NewInt64(1, 2, 2)
+
+	fmt.Println(len(s.Members()))
+	fmt.Println(s.Contains(1))
+	// Output:
+	// 2
+	// true
+}
+
+func ExampleNewUint32() {
+	s := vset.NewUint32(1, 2, 2)
+
+	fmt.Println(len(s.Members()))
+	fmt.Println(s.Contains(2))
+	// Output:
+	// 2
+	// true
+}
+
+func ExampleNewUint64() {
+	s := vset.NewUint64(1, 2, 2)
+
+	fmt.Println(len(s.Members()))
+	fmt.Println(s.Contains(3))
+	// Output:
+	// 2
+	// false
+}
+
+func ExampleWithSetMarshalFunc() {
+	s := vset.New("red")
+	data, err := s.MarshalJSONWithOptions(vset.WithSetMarshalFunc(func(any) ([]byte, error) {
+		return []byte(`["custom"]`), nil
+	}))
+
+	fmt.Println(string(data))
+	fmt.Println(err)
+	// Output:
+	// ["custom"]
+	// <nil>
+}
+
+func ExampleWithSetUnmarshalFunc() {
+	var s vset.Set[string]
+	err := s.UnmarshalJSONWithOptions([]byte(`ignored`), vset.WithSetUnmarshalFunc(func(_ []byte, v any) error {
+		items := v.(*[]string)
+		*items = []string{"red", "red", "blue"}
+		return nil
+	}))
+
+	fmt.Println(err)
+	fmt.Println(len(s.Members()))
+	fmt.Println(s.Contains("blue"))
+	// Output:
+	// <nil>
+	// 2
+	// true
+}

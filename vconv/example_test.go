@@ -132,3 +132,189 @@ func ExampleToBoolEWithOptions() {
 	// true
 	// <nil>
 }
+
+func ExampleWithBoolParser() {
+	parser := func(s string) (bool, error) {
+		return s == "enabled", nil
+	}
+
+	fmt.Println(vconv.ToBoolWithOptions("enabled", vconv.WithBoolParser(parser)))
+	// Output: true
+}
+
+func ExampleWithParseIntFunc() {
+	parser := func(s string, base, bitSize int) (int64, error) {
+		if s == "dozen" {
+			return 12, nil
+		}
+		return strconv.ParseInt(s, base, bitSize)
+	}
+
+	fmt.Println(vconv.ToIntWithOptions("dozen", vconv.WithParseIntFunc(parser)))
+	// Output: 12
+}
+
+func ExampleWithParseFloatFunc() {
+	parser := func(s string, bitSize int) (float64, error) {
+		if s == "pi" {
+			return 3.14, nil
+		}
+		return strconv.ParseFloat(s, bitSize)
+	}
+
+	fmt.Printf("%.2f\n", vconv.ToFloat64WithOptions("pi", vconv.WithParseFloatFunc(parser)))
+	// Output: 3.14
+}
+
+func ExampleWithFormatBoolFunc() {
+	formatter := func(v bool) string {
+		if v {
+			return "yes"
+		}
+		return "no"
+	}
+
+	fmt.Println(vconv.ToStringWithOptions(false, vconv.WithFormatBoolFunc(formatter)))
+	// Output: no
+}
+
+func ExampleWithFormatFloatFunc() {
+	formatter := func(v float64, _ byte, _ int, _ int) string {
+		return fmt.Sprintf("%.1f units", v)
+	}
+
+	fmt.Println(vconv.ToStringWithOptions(2.25, vconv.WithFormatFloatFunc(formatter)))
+	// Output: 2.2 units
+}
+
+func ExampleToStringDefaultWithOptions() {
+	formatter := func(v bool) string {
+		if v {
+			return "on"
+		}
+		return "off"
+	}
+
+	fmt.Println(vconv.ToStringDefaultWithOptions(true, "missing", vconv.WithFormatBoolFunc(formatter)))
+	// Output: on
+}
+
+func ExampleToIntWithOptions() {
+	parser := func(string, int, int) (int64, error) { return 7, nil }
+
+	fmt.Println(vconv.ToIntWithOptions("seven", vconv.WithParseIntFunc(parser)))
+	// Output: 7
+}
+
+func ExampleToIntDefaultWithOptions() {
+	parser := func(string, int, int) (int64, error) { return 0, errors.New("bad int") }
+
+	fmt.Println(vconv.ToIntDefaultWithOptions("bad", -1, vconv.WithParseIntFunc(parser)))
+	// Output: -1
+}
+
+func ExampleToIntE() {
+	value, err := vconv.ToIntE("42")
+
+	fmt.Println(value)
+	fmt.Println(err)
+	// Output:
+	// 42
+	// <nil>
+}
+
+func ExampleToInt64() {
+	fmt.Println(vconv.ToInt64("42"))
+	// Output: 42
+}
+
+func ExampleToInt64WithOptions() {
+	parser := func(string, int, int) (int64, error) { return 64, nil }
+
+	fmt.Println(vconv.ToInt64WithOptions("sixty-four", vconv.WithParseIntFunc(parser)))
+	// Output: 64
+}
+
+func ExampleToInt64Default() {
+	fmt.Println(vconv.ToInt64Default("bad", -64))
+	// Output: -64
+}
+
+func ExampleToInt64DefaultWithOptions() {
+	parser := func(string, int, int) (int64, error) { return 0, errors.New("bad int64") }
+
+	fmt.Println(vconv.ToInt64DefaultWithOptions("bad", -64, vconv.WithParseIntFunc(parser)))
+	// Output: -64
+}
+
+func ExampleToInt64EWithOptions() {
+	parser := func(string, int, int) (int64, error) { return 128, nil }
+	value, err := vconv.ToInt64EWithOptions("one-two-eight", vconv.WithParseIntFunc(parser))
+
+	fmt.Println(value)
+	fmt.Println(err)
+	// Output:
+	// 128
+	// <nil>
+}
+
+func ExampleToFloat64WithOptions() {
+	parser := func(string, int) (float64, error) { return 6.28, nil }
+
+	fmt.Printf("%.2f\n", vconv.ToFloat64WithOptions("tau", vconv.WithParseFloatFunc(parser)))
+	// Output: 6.28
+}
+
+func ExampleToFloat64DefaultWithOptions() {
+	parser := func(string, int) (float64, error) { return 0, errors.New("bad float") }
+
+	fmt.Println(vconv.ToFloat64DefaultWithOptions("bad", -1.25, vconv.WithParseFloatFunc(parser)))
+	// Output: -1.25
+}
+
+func ExampleToFloat64E() {
+	value, err := vconv.ToFloat64E("3.5")
+
+	fmt.Printf("%.1f\n", value)
+	fmt.Println(err)
+	// Output:
+	// 3.5
+	// <nil>
+}
+
+func ExampleToFloat64EWithOptions() {
+	parser := func(string, int) (float64, error) { return 9.5, nil }
+	value, err := vconv.ToFloat64EWithOptions("nine-point-five", vconv.WithParseFloatFunc(parser))
+
+	fmt.Printf("%.1f\n", value)
+	fmt.Println(err)
+	// Output:
+	// 9.5
+	// <nil>
+}
+
+func ExampleToBoolWithOptions() {
+	parser := func(s string) (bool, error) { return s == "YES", nil }
+
+	fmt.Println(vconv.ToBoolWithOptions("YES", vconv.WithBoolParser(parser)))
+	// Output: true
+}
+
+func ExampleToBoolDefaultWithOptions() {
+	parser := func(string) (bool, error) { return false, errors.New("bad bool") }
+
+	fmt.Println(vconv.ToBoolDefaultWithOptions("bad", true, vconv.WithBoolParser(parser)))
+	// Output: true
+}
+
+func ExampleToBytesWithOptions() {
+	formatter := func(v bool) string {
+		if v {
+			return "enabled"
+		}
+		return "disabled"
+	}
+
+	fmt.Println(string(vconv.ToBytesWithOptions(true, vconv.WithFormatBoolFunc(formatter))))
+	// Output: enabled
+}

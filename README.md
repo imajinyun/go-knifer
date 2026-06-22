@@ -11,6 +11,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/imajinyun/go-knifer.svg)](https://pkg.go.dev/github.com/imajinyun/go-knifer)
 [![Go Version](https://img.shields.io/badge/go-%3E%3D1.25-00ADD8?logo=go)](https://go.dev/)
 [![CI](https://github.com/imajinyun/go-knifer/actions/workflows/go.yml/badge.svg)](https://github.com/imajinyun/go-knifer/actions/workflows/go.yml)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/imajinyun/go-knifer/badge)](https://securityscorecards.dev/viewer/?uri=github.com/imajinyun/go-knifer)
 [![License](https://img.shields.io/github/license/imajinyun/go-knifer)](./LICENSE)
 
 ## 📑 Table of Contents
@@ -240,6 +241,8 @@ Not sure which package to import? Start from what you want to do:
 - 📦 Full module matrix: [`docs/doc/README.md#package-catalog`](./docs/doc/README.md#package-catalog)
 - 🔎 Per-package quickstarts: [`docs/doc/*.md`](./docs/doc/README.md#quickstart-documents)
 - 🧾 Exported API snapshot: [`docs/api/exports.txt`](./docs/api/exports.txt)
+- 🧭 Machine-readable function catalog: [`docs/api/tools.json`](./docs/api/tools.json)
+- 📋 Human-readable function catalog: [`docs/api/tools.md`](./docs/api/tools.md)
 
 <a id="architecture"></a>
 
@@ -343,6 +346,7 @@ See [Build, test, and release workflow](./docs/doc/README.md#build-test-and-rele
 - Security reports: see [`SECURITY.md`](./SECURITY.md). Please do not disclose suspected vulnerabilities in public issues.
 - Release notes: see [`CHANGELOG.md`](./CHANGELOG.md). User-visible changes should be recorded before tagging a release.
 - Coverage/API/workflow gate details: see [Governance](./docs/doc/README.md#governance).
+- CI trust signals include race/shuffle tests, coverage gates, generated API and tool-catalog checks, `golangci-lint`, `govulncheck`, CodeQL, benchmark smoke tests, and OpenSSF Scorecard.
 
 <a id="contributing"></a>
 

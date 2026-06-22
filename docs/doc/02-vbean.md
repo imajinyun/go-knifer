@@ -37,6 +37,14 @@ Choose the helper by the mapping direction and how much conversion metadata the 
 - Use `vconv` for explicit scalar conversions before or after struct mapping.
 - Use `vmap` when the source data is map-shaped and does not need struct binding.
 - Use `vjson` when the mapping boundary starts from JSON payloads or fixtures.
+- Use `vconf` to load, layer, validate, and watch configuration before binding it into structs.
+- Use `vobj` only for generic nil/empty/default/clone checks around already-mapped values.
+
+## Boundary with vconf and vobj
+
+`vbean` owns property mapping, not configuration source management or broad object utilities. A typical config-to-struct flow should load and validate with `vconf`, map or bind with `vbean` only when a Go value shape must change, and reserve `vobj` for generic object checks such as optional pointer defaults or serialization-based cloning.
+
+Do not put file loading, profile precedence, environment expansion, or remote URL policy in `vbean`; those belong to `vconf`. Do not add generic emptiness, length, comparison, or clone helpers to `vbean`; those belong to `vobj` or typed Go code.
 
 ## Benchmarks and trade-offs
 

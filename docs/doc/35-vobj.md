@@ -37,6 +37,13 @@ Choose helpers by whether you need nil/empty checks, generic pointer handling, c
 - Use `vref` when object inspection requires reflection, dynamic fields, or method invocation.
 - Use `vbean` when object values need struct-to-struct or map-to-struct copying.
 - Use `vjson` when deep copy or comparison workflows rely on serialization boundaries.
+- Use `vconf` when object values come from configuration files, profiles, environment expansion, or remote config.
+
+## Boundary with vbean and vconf
+
+`vobj` is the broad convenience layer for dynamic object checks. It should not own configuration loading, profile precedence, schema validation, struct binding policy, or tag-driven property mapping.
+
+Use `vconf` first when data is still configuration text, files, remote URLs, or profile overlays. Use `vbean` when a Go value needs tag-aware struct/map mapping or matched/unused metadata. Use `vobj` after those focused packages have done their work, for generic operations such as nil/default handling, object length checks, comparison, type inspection, or serialization-based cloning.
 
 ## Benchmarks and trade-offs
 

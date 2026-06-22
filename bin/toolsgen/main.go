@@ -23,7 +23,14 @@ import (
 const modulePath = "github.com/imajinyun/go-knifer"
 
 // schemaVersion is bumped when the tools.json structure changes.
-const schemaVersion = "1.4"
+const schemaVersion = "1.5"
+
+const (
+	apiStatusRecommended   = "recommended"
+	apiStatusCompatibility = "compatibility"
+	apiStatusExperimental  = "experimental"
+	apiStatusDeprecated    = "deprecated"
+)
 
 // ToolsDoc is the top-level machine-readable tool catalog.
 type ToolsDoc struct {
@@ -42,6 +49,7 @@ type SummaryDoc struct {
 	ContextAwareFunctions int            `json:"context_aware_functions"`
 	ReturnsErrorFunctions int            `json:"returns_error_functions"`
 	VariadicFunctions     int            `json:"variadic_functions"`
+	StatusCounts          map[string]int `json:"status_counts"`
 	SynopsisSources       map[string]int `json:"synopsis_sources"`
 }
 
@@ -60,6 +68,7 @@ type PackageSummaryDoc struct {
 	FunctionCount          int            `json:"function_count"`
 	FunctionsWithExamples  int            `json:"functions_with_examples"`
 	ExampleCoveragePercent float64        `json:"example_coverage_percent"`
+	StatusCounts           map[string]int `json:"status_counts"`
 	SynopsisSources        map[string]int `json:"synopsis_sources"`
 }
 
@@ -69,6 +78,7 @@ type FuncDoc struct {
 	Signature      string   `json:"signature"`
 	Synopsis       string   `json:"synopsis"`
 	SynopsisSource string   `json:"synopsis_source,omitempty"`
+	Status         string   `json:"status"`
 	Params         []Param  `json:"params,omitempty"`
 	Results        []string `json:"results,omitempty"`
 	ReturnsError   bool     `json:"returns_error"`
@@ -151,6 +161,9 @@ func renderToolsMarkdown(doc ToolsDoc) []byte {
 	writeMetric(&b, "Context-aware functions", doc.Summary.ContextAwareFunctions)
 	writeMetric(&b, "Functions returning error", doc.Summary.ReturnsErrorFunctions)
 	writeMetric(&b, "Variadic functions", doc.Summary.VariadicFunctions)
+	for _, status := range orderedAPIStatuses(doc.Summary.StatusCounts) {
+		writeMetric(&b, "API status: "+status, doc.Summary.StatusCounts[status])
+	}
 	for _, source := range orderedSynopsisSources(doc.Summary.SynopsisSources) {
 		writeMetric(&b, "Synopsis source: "+source, doc.Summary.SynopsisSources[source])
 	}
@@ -169,20 +182,23 @@ func renderToolsMarkdown(doc ToolsDoc) []byte {
 		}
 		fmt.Fprintf(
 			&b,
-			"Quality: %d functions · %d with examples · %.1f%% example coverage · synopsis sources: %s\n\n",
+			"Quality: %d functions · %d with examples · %.1f%% example coverage · statuses: %s · synopsis sources: %s\n\n",
 			pkg.Summary.FunctionCount,
 			pkg.Summary.FunctionsWithExamples,
 			pkg.Summary.ExampleCoveragePercent,
+			markdownAPIStatusCounts(pkg.Summary.StatusCounts),
 			markdownSynopsisSourceCounts(pkg.Summary.SynopsisSources),
 		)
-		b.WriteString("| Function | Signature | Synopsis | Source | Examples |\n")
-		b.WriteString("| --- | --- | --- | --- | --- |\n")
+		b.WriteString("| Function | Signature | Status | Synopsis | Source | Examples |\n")
+		b.WriteString("| --- | --- | --- | --- | --- | --- |\n")
 		for _, fn := range pkg.Functions {
 			b.WriteString("| `")
 			b.WriteString(fn.Name)
 			b.WriteString("` | `")
 			b.WriteString(markdownEscape(fn.Signature))
 			b.WriteString("` | ")
+			b.WriteString(markdownText(fn.Status))
+			b.WriteString(" | ")
 			b.WriteString(markdownText(fn.Synopsis))
 			b.WriteString(" | ")
 			b.WriteString(markdownText(synopsisSource(fn.SynopsisSource)))
@@ -241,6 +257,9 @@ func renderToolsQualityReport(doc ToolsDoc) []byte {
 	writeMetric(&b, "Functions", doc.Summary.FunctionCount)
 	writeMetric(&b, "Empty synopses", doc.Summary.SynopsisSources["empty"])
 	writeMetric(&b, "Functions with examples", doc.Summary.FunctionsWithExamples)
+	for _, status := range orderedAPIStatuses(doc.Summary.StatusCounts) {
+		writeMetric(&b, "API status: "+status, doc.Summary.StatusCounts[status])
+	}
 
 	b.WriteString("\n## Package ranking\n\n")
 	b.WriteString("| Package | Functions | Empty synopses | With docs | With examples | Empty functions |\n")
@@ -316,6 +335,43 @@ func markdownSynopsisSourceCounts(sources map[string]int) string {
 		parts = append(parts, fmt.Sprintf("%s=%d", markdownEscape(source), sources[source]))
 	}
 	return strings.Join(parts, ", ")
+}
+
+func markdownAPIStatusCounts(statuses map[string]int) string {
+	ordered := orderedAPIStatuses(statuses)
+	if len(ordered) == 0 {
+		return "—"
+	}
+	parts := make([]string, 0, len(ordered))
+	for _, status := range ordered {
+		parts = append(parts, fmt.Sprintf("%s=%d", markdownEscape(status), statuses[status]))
+	}
+	return strings.Join(parts, ", ")
+}
+
+func orderedAPIStatuses(statuses map[string]int) []string {
+	preferred := []string{
+		apiStatusRecommended,
+		apiStatusCompatibility,
+		apiStatusExperimental,
+		apiStatusDeprecated,
+	}
+	seen := map[string]struct{}{}
+	out := make([]string, 0, len(statuses))
+	for _, status := range preferred {
+		if _, ok := statuses[status]; ok {
+			out = append(out, status)
+			seen[status] = struct{}{}
+		}
+	}
+	var extra []string
+	for status := range statuses {
+		if _, ok := seen[status]; !ok {
+			extra = append(extra, status)
+		}
+	}
+	sort.Strings(extra)
+	return append(out, extra...)
 }
 
 func markdownText(text string) string {
@@ -395,6 +451,7 @@ func generateToolsDoc(root string) (ToolsDoc, error) {
 func summarizeToolsDoc(pkgs []PackageDoc) SummaryDoc {
 	summary := SummaryDoc{
 		PackageCount:    len(pkgs),
+		StatusCounts:    emptyAPIStatusCounts(),
 		SynopsisSources: map[string]int{"empty": 0, "facade": 0, "internal": 0},
 	}
 	for _, pkg := range pkgs {
@@ -412,6 +469,7 @@ func summarizeToolsDoc(pkgs []PackageDoc) SummaryDoc {
 			if fn.Variadic {
 				summary.VariadicFunctions++
 			}
+			summary.StatusCounts[apiStatus(fn.Status)]++
 
 			source := fn.SynopsisSource
 			if source == "" {
@@ -426,12 +484,14 @@ func summarizeToolsDoc(pkgs []PackageDoc) SummaryDoc {
 func summarizePackageDoc(functions []FuncDoc) PackageSummaryDoc {
 	summary := PackageSummaryDoc{
 		FunctionCount:   len(functions),
+		StatusCounts:    emptyAPIStatusCounts(),
 		SynopsisSources: map[string]int{"empty": 0, "facade": 0, "internal": 0},
 	}
 	for _, fn := range functions {
 		if len(fn.Examples) > 0 {
 			summary.FunctionsWithExamples++
 		}
+		summary.StatusCounts[apiStatus(fn.Status)]++
 		summary.SynopsisSources[synopsisSource(fn.SynopsisSource)]++
 	}
 	if summary.FunctionCount > 0 {
@@ -439,6 +499,32 @@ func summarizePackageDoc(functions []FuncDoc) PackageSummaryDoc {
 		summary.ExampleCoveragePercent = math.Round(coverage*10) / 10
 	}
 	return summary
+}
+
+func emptyAPIStatusCounts() map[string]int {
+	return map[string]int{
+		apiStatusRecommended:   0,
+		apiStatusCompatibility: 0,
+		apiStatusExperimental:  0,
+		apiStatusDeprecated:    0,
+	}
+}
+
+func apiStatus(status string) string {
+	status = strings.TrimSpace(strings.ToLower(status))
+	if status == "" {
+		return apiStatusRecommended
+	}
+	return status
+}
+
+func knownAPIStatus(status string) bool {
+	switch apiStatus(status) {
+	case apiStatusRecommended, apiStatusCompatibility, apiStatusExperimental, apiStatusDeprecated:
+		return true
+	default:
+		return false
+	}
 }
 
 func hasTestFiles(pkg *packages.Package) bool {
@@ -529,6 +615,7 @@ func buildFuncDoc(obj *types.Func, sig *types.Signature, qualifier types.Qualifi
 		Signature:      "func " + obj.Name() + signatureTail(sig, qualifier),
 		Synopsis:       doc.synopsis,
 		SynopsisSource: doc.source,
+		Status:         classifyAPIStatus(obj.Name(), doc.synopsis),
 		Variadic:       sig.Variadic(),
 	}
 
@@ -558,6 +645,35 @@ func buildFuncDoc(obj *types.Func, sig *types.Signature, qualifier types.Qualifi
 
 	fd.Examples = matchExamples(obj.Name(), exampleSet)
 	return fd
+}
+
+func classifyAPIStatus(name, synopsis string) string {
+	if strings.Contains(synopsis, "Deprecated:") {
+		return apiStatusDeprecated
+	}
+
+	lowerName := strings.ToLower(name)
+	lowerSynopsis := strings.ToLower(synopsis)
+	if strings.Contains(lowerName, "experimental") || strings.Contains(lowerSynopsis, "experimental") {
+		return apiStatusExperimental
+	}
+	if isCompatibilityAPIName(name) || strings.Contains(lowerSynopsis, "compatibility") || strings.Contains(lowerSynopsis, " alias ") {
+		return apiStatusCompatibility
+	}
+	return apiStatusRecommended
+}
+
+func isCompatibilityAPIName(name string) bool {
+	if strings.HasPrefix(name, "Must") {
+		return true
+	}
+	if strings.HasSuffix(name, "Unsafe") {
+		return true
+	}
+	if strings.HasPrefix(name, "Old") || strings.HasPrefix(name, "Legacy") {
+		return true
+	}
+	return false
 }
 
 // matchExamples returns sorted Example function names that document fn.

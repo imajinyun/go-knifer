@@ -405,7 +405,7 @@
     "github_actions": {
       "go": {
         "path": ".github/workflows/go.yml",
-        "required_jobs": ["agent-governance", "test", "lint", "govulncheck", "benchmark-smoke", "codeql"],
+        "required_jobs": ["agent-governance", "test", "lint", "govulncheck", "benchmark-smoke", "codeql", "scorecard"],
         "agent_governance": {
           "required_commands": ["make ci-agent-governance"],
           "required_env": ["AGENT_CHANGE_BASE_REF", "AGENT_EVIDENCE_FILE"],
@@ -448,6 +448,66 @@
       "generator_command": "docs_update",
       "check_command": "docs_check"
     }
+  },
+  "ai_tooling": {
+    "api_catalog": {
+      "path": "docs/api/tools.json",
+      "schema": "1.5",
+      "package_count": 54,
+      "function_count": 2604,
+      "functions_with_examples": 1253,
+      "context_aware_functions": 36,
+      "returns_error_functions": 603,
+      "status_counts": {
+        "compatibility": 22,
+        "deprecated": 0,
+        "experimental": 0,
+        "recommended": 2582
+      },
+      "synopsis_sources": {
+        "empty": 0,
+        "facade": 1962,
+        "internal": 642
+      },
+      "regenerate_command": "tools_update",
+      "check_command": "tools_check"
+    },
+    "human_catalog": {
+      "path": "docs/api/tools.md",
+      "check_command": "docs_check"
+    },
+    "agent_import_rules": [
+      "Import public v* facade packages from github.com/imajinyun/go-knifer; do not import internal/* from application code.",
+      "Choose one focused facade package per domain first, then combine packages only when the caller's workflow crosses domains.",
+      "Prefer Safe, E, and WithOptions variants when inputs cross trust boundaries, can fail, or need explicit provider/limit injection.",
+      "Use docs/api/tools.json as the machine-readable function index and docs/doc/README.md as the human quickstart map."
+    ],
+    "selection_rules": [
+      "String manipulation starts in vstr.",
+      "Slice transformation starts in vslice; map transformation starts in vmap.",
+      "Safe HTTP request or download workflows start in vhttp; use vresty only when Resty-style chaining is desired.",
+      "URL parsing, query building, normalization, and SSRF-aware resource checks start in vurl.",
+      "Security-oriented digests, HMAC, encryption, signing, PEM, and X.509 helpers start in vcrypto; non-cryptographic hashes start in vhash.",
+      "Struct/map property mapping starts in vbean; generic object-level convenience starts in vobj only after focused package boundaries are considered.",
+      "Configuration loading, profile overlays, environment expansion, and safe remote config start in vconf.",
+      "JSON object/path helpers start in vjson; XML tree and namespace helpers start in vxml."
+    ],
+    "top_entrypoints": [
+      { "intent": "string helpers", "packages": ["vstr"] },
+      { "intent": "slice helpers", "packages": ["vslice"] },
+      { "intent": "map helpers", "packages": ["vmap"] },
+      { "intent": "safe HTTP and URL workflows", "packages": ["vhttp", "vresty", "vurl"] },
+      { "intent": "crypto, JWT, and secure random workflows", "packages": ["vcrypto", "vjwt", "vrand"] },
+      { "intent": "JSON, XML, file, and archive workflows", "packages": ["vjson", "vxml", "vfile", "vzip"] },
+      { "intent": "configuration and struct binding", "packages": ["vconf", "vbean", "vform"] },
+      { "intent": "cache, IDs, logging, and application helpers", "packages": ["vcache", "vid", "vlog", "vcli"] }
+    ],
+    "metadata_refresh_triggers": [
+      "Run make tools-gen after intentional facade, doc comment, or Example changes.",
+      "Run make ai-context-check after ai-context.json, ai-context.schema.json, Makefile, workflow, facade inventory, security domain, or coverage gate changes.",
+      "Run make docs-quickstart-check after docs/doc quickstart or public_facades changes.",
+      "Run UPDATE_API=1 make api-check only after confirming an intentional public API change."
+    ]
   },
   "coverage_gates": {
     "repository_threshold": 75.2,

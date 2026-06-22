@@ -28,6 +28,9 @@ func Run(ctx context.Context, name string, values ...int) (string, error) {
 	return name, nil
 }
 
+// Copy is an alias of Run.
+func Copy(ctx context.Context, name string) (string, error) { return Run(ctx, name) }
+
 func Double(v int) int { return impl.Double(v) }
 
 func AddToCounter(c *impl.Counter, v int) int { return c.Add(v) }
@@ -73,14 +76,20 @@ func Hidden() {}
 	}
 	wantSummary := SummaryDoc{
 		PackageCount:          1,
-		FunctionCount:         3,
+		FunctionCount:         4,
 		FunctionsWithExamples: 1,
-		ContextAwareFunctions: 1,
-		ReturnsErrorFunctions: 1,
+		ContextAwareFunctions: 2,
+		ReturnsErrorFunctions: 2,
 		VariadicFunctions:     1,
+		StatusCounts: map[string]int{
+			apiStatusRecommended:   3,
+			apiStatusCompatibility: 1,
+			apiStatusExperimental:  0,
+			apiStatusDeprecated:    0,
+		},
 		SynopsisSources: map[string]int{
 			"empty":    0,
-			"facade":   1,
+			"facade":   2,
 			"internal": 2,
 		},
 	}
@@ -95,12 +104,18 @@ func Hidden() {}
 		t.Fatalf("unexpected package: %#v", pkg)
 	}
 	wantPackageSummary := PackageSummaryDoc{
-		FunctionCount:          3,
+		FunctionCount:          4,
 		FunctionsWithExamples:  1,
-		ExampleCoveragePercent: 33.3,
+		ExampleCoveragePercent: 25,
+		StatusCounts: map[string]int{
+			apiStatusRecommended:   3,
+			apiStatusCompatibility: 1,
+			apiStatusExperimental:  0,
+			apiStatusDeprecated:    0,
+		},
 		SynopsisSources: map[string]int{
 			"empty":    0,
-			"facade":   1,
+			"facade":   2,
 			"internal": 2,
 		},
 	}
@@ -110,8 +125,8 @@ func Hidden() {}
 	if !strings.Contains(pkg.Synopsis, "Package vtool exposes test facade helpers.") {
 		t.Fatalf("package synopsis = %q", pkg.Synopsis)
 	}
-	if len(pkg.Functions) != 3 {
-		t.Fatalf("functions len = %d, want 3: %#v", len(pkg.Functions), pkg.Functions)
+	if len(pkg.Functions) != 4 {
+		t.Fatalf("functions len = %d, want 4: %#v", len(pkg.Functions), pkg.Functions)
 	}
 	fns := map[string]FuncDoc{}
 	for _, fn := range pkg.Functions {
@@ -144,6 +159,14 @@ func Hidden() {}
 	}
 	if strings.Join(fn.Examples, ",") != "ExampleRun,ExampleRun_withValues" {
 		t.Fatalf("examples = %#v", fn.Examples)
+	}
+	if fn.Status != apiStatusRecommended {
+		t.Fatalf("status = %q, want %q", fn.Status, apiStatusRecommended)
+	}
+
+	compatibility := fns["Copy"]
+	if compatibility.Status != apiStatusCompatibility {
+		t.Fatalf("compatibility status = %q, want %q", compatibility.Status, apiStatusCompatibility)
 	}
 
 	fallback := fns["Double"]
@@ -213,6 +236,57 @@ func TestToolsCatalogSynopsisCoverageBudget(t *testing.T) {
 	got := doc.Summary.SynopsisSources["empty"]
 	if got > maxEmptySynopses {
 		t.Fatalf("empty synopsis count = %d, want <= %d\n%s", got, maxEmptySynopses, renderToolsQualityReport(doc))
+	}
+}
+
+func TestToolsCatalogAPIStatusCoverage(t *testing.T) {
+	root := repositoryRoot(t)
+	doc, err := generateToolsDoc(root)
+	if err != nil {
+		t.Fatalf("generateToolsDoc(%q) error = %v", root, err)
+	}
+	missing := []string{}
+	unknown := []string{}
+	for _, pkg := range doc.Packages {
+		for _, fn := range pkg.Functions {
+			if strings.TrimSpace(fn.Status) == "" {
+				missing = append(missing, pkg.Name+"."+fn.Name)
+				continue
+			}
+			if !knownAPIStatus(fn.Status) {
+				unknown = append(unknown, pkg.Name+"."+fn.Name+"="+fn.Status)
+			}
+		}
+	}
+	if len(missing) > 0 || len(unknown) > 0 {
+		t.Fatalf("invalid API status coverage: missing=%s unknown=%s", strings.Join(missing, ", "), strings.Join(unknown, ", "))
+	}
+}
+
+func TestToolsCatalogNamingContracts(t *testing.T) {
+	root := repositoryRoot(t)
+	doc, err := generateToolsDoc(root)
+	if err != nil {
+		t.Fatalf("generateToolsDoc(%q) error = %v", root, err)
+	}
+
+	violations := []string{}
+	for _, pkg := range doc.Packages {
+		for _, fn := range pkg.Functions {
+			name := pkg.Name + "." + fn.Name
+			if isExplicitErrorVariant(fn.Name) && !fn.ReturnsError && !hasErrorParam(fn) {
+				violations = append(violations, name+" uses E naming but neither returns nor accepts error")
+			}
+			if strings.Contains(fn.Name, "Safe") && !safeSynopsis(fn.Synopsis) {
+				violations = append(violations, name+" uses Safe naming without safety wording in synopsis")
+			}
+			if strings.HasSuffix(fn.Name, "WithOptions") && !hasOptionsParam(fn) {
+				violations = append(violations, name+" uses WithOptions naming without an Option/Options parameter")
+			}
+		}
+	}
+	if len(violations) > 0 {
+		t.Fatalf("naming contract violations:\n%s", strings.Join(violations, "\n"))
 	}
 }
 
@@ -293,6 +367,12 @@ func TestSummarizePackageDocRoundsExampleCoverage(t *testing.T) {
 		FunctionCount:          3,
 		FunctionsWithExamples:  1,
 		ExampleCoveragePercent: 33.3,
+		StatusCounts: map[string]int{
+			apiStatusRecommended:   3,
+			apiStatusCompatibility: 0,
+			apiStatusExperimental:  0,
+			apiStatusDeprecated:    0,
+		},
 		SynopsisSources: map[string]int{
 			"empty":    1,
 			"facade":   1,
@@ -316,6 +396,48 @@ func toolsExamplesByPackage(doc ToolsDoc) map[string]int {
 	return examplesByPackage
 }
 
+func isExplicitErrorVariant(name string) bool {
+	return strings.HasSuffix(name, "E") || strings.HasSuffix(name, "EWithOptions")
+}
+
+func hasErrorParam(fn FuncDoc) bool {
+	for _, param := range fn.Params {
+		if param.Type == "error" {
+			return true
+		}
+	}
+	return false
+}
+
+func hasOptionsParam(fn FuncDoc) bool {
+	for _, param := range fn.Params {
+		if strings.Contains(param.Type, "Option") || strings.Contains(param.Type, "Options") {
+			return true
+		}
+	}
+	return false
+}
+
+func safeSynopsis(synopsis string) bool {
+	text := strings.ToLower(synopsis)
+	keywords := []string{
+		"safe",
+		"safety",
+		"secure",
+		"security",
+		"ssrf",
+		"untrusted",
+		"identifier",
+		"valid",
+	}
+	for _, keyword := range keywords {
+		if strings.Contains(text, keyword) {
+			return true
+		}
+	}
+	return false
+}
+
 func TestWriteToolsDocWritesIndentedFile(t *testing.T) {
 	outPath := filepath.Join(t.TempDir(), "tools.json")
 	doc := ToolsDoc{
@@ -323,6 +445,7 @@ func TestWriteToolsDocWritesIndentedFile(t *testing.T) {
 		Module: modulePath,
 		Summary: SummaryDoc{
 			PackageCount:    0,
+			StatusCounts:    emptyAPIStatusCounts(),
 			SynopsisSources: map[string]int{"empty": 0, "facade": 0, "internal": 0},
 		},
 	}
@@ -353,7 +476,13 @@ func TestRenderToolsMarkdownIncludesSummaryAndPackages(t *testing.T) {
 			ContextAwareFunctions: 1,
 			ReturnsErrorFunctions: 1,
 			VariadicFunctions:     1,
-			SynopsisSources:       map[string]int{"empty": 1, "facade": 1, "internal": 0},
+			StatusCounts: map[string]int{
+				apiStatusRecommended:   1,
+				apiStatusCompatibility: 1,
+				apiStatusExperimental:  0,
+				apiStatusDeprecated:    0,
+			},
+			SynopsisSources: map[string]int{"empty": 1, "facade": 1, "internal": 0},
 		},
 		Packages: []PackageDoc{
 			{
@@ -364,7 +493,13 @@ func TestRenderToolsMarkdownIncludesSummaryAndPackages(t *testing.T) {
 					FunctionCount:          2,
 					FunctionsWithExamples:  1,
 					ExampleCoveragePercent: 50,
-					SynopsisSources:        map[string]int{"empty": 1, "facade": 1, "internal": 0},
+					StatusCounts: map[string]int{
+						apiStatusRecommended:   1,
+						apiStatusCompatibility: 1,
+						apiStatusExperimental:  0,
+						apiStatusDeprecated:    0,
+					},
+					SynopsisSources: map[string]int{"empty": 1, "facade": 1, "internal": 0},
 				},
 				Functions: []FuncDoc{
 					{
@@ -372,12 +507,14 @@ func TestRenderToolsMarkdownIncludesSummaryAndPackages(t *testing.T) {
 						Signature:      "func Run(name string) (string, error)",
 						Synopsis:       "Run executes | the test helper.",
 						SynopsisSource: "facade",
+						Status:         apiStatusCompatibility,
 						ReturnsError:   true,
 						Examples:       []string{"ExampleRun"},
 					},
 					{
 						Name:      "HiddenDoc",
 						Signature: "func HiddenDoc()",
+						Status:    apiStatusRecommended,
 					},
 				},
 			},
@@ -389,13 +526,15 @@ func TestRenderToolsMarkdownIncludesSummaryAndPackages(t *testing.T) {
 		"# go-knifer Machine-readable Tool Catalog\n",
 		"| Schema | " + schemaVersion + " |",
 		"| Module | `" + modulePath + "` |",
+		"| API status: recommended | 1 |",
+		"| API status: compatibility | 1 |",
 		"| Synopsis source: empty | 1 |",
 		"### vtool",
 		"Import path: `" + modulePath + "/vtool`",
 		"Package vtool exposes | test helpers.",
-		"Quality: 2 functions · 1 with examples · 50.0% example coverage · synopsis sources: facade=1, internal=0, empty=1",
-		"| `Run` | `func Run(name string) (string, error)` | Run executes \\| the test helper. | facade | `ExampleRun` |",
-		"| `HiddenDoc` | `func HiddenDoc()` | — | empty | — |",
+		"Quality: 2 functions · 1 with examples · 50.0% example coverage · statuses: recommended=1, compatibility=1, experimental=0, deprecated=0 · synopsis sources: facade=1, internal=0, empty=1",
+		"| `Run` | `func Run(name string) (string, error)` | compatibility | Run executes \\| the test helper. | facade | `ExampleRun` |",
+		"| `HiddenDoc` | `func HiddenDoc()` | recommended | — | empty | — |",
 	}
 	for _, want := range wants {
 		if !strings.Contains(got, want) {
