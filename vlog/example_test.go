@@ -70,3 +70,45 @@ func ExampleGetWithOptions() {
 	fmt.Println(log != nil)
 	// Output: true
 }
+
+func ExampleLoggerWithOptions() {
+	var out bytes.Buffer
+	fixed := time.Date(2024, 4, 5, 6, 7, 8, 0, time.UTC)
+	log := vlog.LoggerWithOptions("request", vlog.WithLoggerCache(false), vlog.WithLoggerConsoleOptions(
+		vlog.WithLogClock(func() time.Time { return fixed }),
+		vlog.WithLogTimeLayout(time.RFC3339),
+		vlog.WithLogOutput(&out, &bytes.Buffer{}),
+	))
+
+	log.Infof("handled {}", "GET /healthz")
+	fmt.Print(out.String())
+	// Output: [2024-04-05T06:07:08Z] [INFO ] request: handled GET /healthz
+}
+
+func ExampleErrorfWithOptions() {
+	var errOut bytes.Buffer
+	fixed := time.Date(2024, 4, 5, 6, 7, 8, 0, time.UTC)
+	opts := []vlog.LoggerOption{vlog.WithLoggerConsoleOptions(
+		vlog.WithLogClock(func() time.Time { return fixed }),
+		vlog.WithLogTimeLayout(time.RFC3339),
+		vlog.WithLogOutput(&bytes.Buffer{}, &errOut),
+	)}
+
+	vlog.ErrorfWithOptions(opts, "connect {}", "failed")
+	fmt.Print(errOut.String())
+	// Output: [2024-04-05T06:07:08Z] [ERROR] static: connect failed
+}
+
+func ExampleLogAtWithOptions() {
+	var out bytes.Buffer
+	fixed := time.Date(2024, 4, 5, 6, 7, 8, 0, time.UTC)
+	opts := []vlog.LoggerOption{vlog.WithLoggerConsoleOptions(
+		vlog.WithLogClock(func() time.Time { return fixed }),
+		vlog.WithLogTimeLayout(time.RFC3339),
+		vlog.WithLogOutput(&out, &bytes.Buffer{}),
+	)}
+
+	vlog.LogAtWithOptions(opts, vlog.LogLevelInfo, "queue depth {}", 3)
+	fmt.Print(out.String())
+	// Output: [2024-04-05T06:07:08Z] [INFO ] static: queue depth 3
+}

@@ -69,3 +69,40 @@ func ExampleNewCronError() {
 	fmt.Println(err.Error())
 	// Output: invalid pattern
 }
+
+func ExampleCronScheduleFuncWithOptions() {
+	s := vcron.NewSchedulerWithOptions(vcron.WithIDGenerator(func() string { return "job-1" }))
+	id, err := vcron.CronScheduleFuncWithOptions("* * * * *", func() {}, vcron.WithDefaultScheduler(s))
+
+	fmt.Println(id, s.Size())
+	fmt.Println(err)
+	// Output:
+	// job-1 1
+	// <nil>
+}
+
+func ExampleCronRemoveWithOptions() {
+	s := vcron.NewScheduler()
+	err := vcron.CronScheduleWithIDWithOptions("job-1", "* * * * *", vcron.TaskFunc(func() {}), vcron.WithDefaultScheduler(s))
+	removed := vcron.CronRemoveWithOptions("job-1", vcron.WithDefaultScheduler(s))
+
+	fmt.Println(removed, s.Size())
+	fmt.Println(err)
+	// Output:
+	// true 0
+	// <nil>
+}
+
+func ExampleCronUpdatePatternWithOptions() {
+	s := vcron.NewScheduler()
+	err := vcron.CronScheduleWithIDWithOptions("job-1", "* * * * *", vcron.TaskFunc(func() {}), vcron.WithDefaultScheduler(s))
+	updateErr := vcron.CronUpdatePatternWithOptions("job-1", "0 9 * * *", vcron.WithDefaultScheduler(s))
+
+	fmt.Println(s.Size())
+	fmt.Println(err)
+	fmt.Println(updateErr)
+	// Output:
+	// 1
+	// <nil>
+	// <nil>
+}

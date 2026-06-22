@@ -1,6 +1,7 @@
 package verr_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -63,4 +64,38 @@ func ExampleMustExitWithOptions() {
 
 	fmt.Println(called)
 	// Output: true
+}
+
+func ExampleWrap() {
+	err := verr.Wrap(func() error {
+		panic("boom")
+	}).WithLogFunc(func(context.Context, logrus.Level, error, string, string, ...any) {}).WithErrorf("safe call").Exec(context.Background())
+
+	fmt.Println(err != nil)
+	// Output: true
+}
+
+func ExampleRecover() {
+	verr.ConfigureDefaultLogFunc(func(context.Context, logrus.Level, error, string, string, ...any) {})
+	defer verr.ResetDefaultLogFunc()
+
+	err := verr.Recover(func() error {
+		return errors.New("failed")
+	}, "run task")
+
+	fmt.Println(err != nil)
+	// Output: true
+}
+
+func ExampleNewIsolatedLogrusWithOptions() {
+	var out bytes.Buffer
+	logger := verr.NewIsolatedLogrusWithOptions(
+		verr.WithLogOutput(&out),
+		verr.WithLogFormatter(&logrus.TextFormatter{DisableTimestamp: true, DisableColors: true}),
+		verr.WithReportCaller(false),
+	)
+
+	logger.Info("ready")
+	fmt.Print(out.String())
+	// Output: level=info msg=ready
 }

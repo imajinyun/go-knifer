@@ -12,7 +12,7 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Module | `github.com/imajinyun/go-knifer` |
 | Packages | 54 |
 | Functions | 2604 |
-| Functions with examples | 998 |
+| Functions with examples | 1013 |
 | Context-aware functions | 36 |
 | Functions returning error | 603 |
 | Variadic functions | 776 |
@@ -345,20 +345,20 @@ Import path: `github.com/imajinyun/go-knifer/vcron`
 
 Package vcron provides public APIs for cron scheduling utilities.
 
-Quality: 51 functions · 5 with examples · 9.8% example coverage · synopsis sources: facade=51, internal=0, empty=0
+Quality: 51 functions · 8 with examples · 15.7% example coverage · synopsis sources: facade=51, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `ConfigureDefaultScheduler` | `func ConfigureDefaultScheduler(opts ...SchedulerOption) *Scheduler` | ConfigureDefaultScheduler replaces the package-level scheduler with one created from options. | facade | — |
 | `CronLaunchingCount` | `func CronLaunchingCount() int` | CronLaunchingCount returns the number of launcher jobs currently dispatching due tasks. | facade | — |
 | `CronRemove` | `func CronRemove(id string) bool` | CronRemove removes a task by id. | facade | — |
-| `CronRemoveWithOptions` | `func CronRemoveWithOptions(id string, opts ...DefaultSchedulerOption) bool` | CronRemoveWithOptions removes a task by id from the selected default scheduler. | facade | — |
+| `CronRemoveWithOptions` | `func CronRemoveWithOptions(id string, opts ...DefaultSchedulerOption) bool` | CronRemoveWithOptions removes a task by id from the selected default scheduler. | facade | `ExampleCronRemoveWithOptions` |
 | `CronRestart` | `func CronRestart() error` | CronRestart restarts the default scheduler. | facade | — |
 | `CronRestartWithOptions` | `func CronRestartWithOptions(opts ...DefaultSchedulerOption) error` | CronRestartWithOptions restarts the selected default scheduler. | facade | — |
 | `CronRunningCount` | `func CronRunningCount() int` | CronRunningCount returns the number of running task executions on the default scheduler. | facade | — |
 | `CronSchedule` | `func CronSchedule(pattern string, task Task) (string, error)` | CronSchedule schedules a task on the default scheduler. | facade | — |
 | `CronScheduleFunc` | `func CronScheduleFunc(pattern string, fn func()) (string, error)` | CronScheduleFunc schedules fn on the default scheduler. | facade | — |
-| `CronScheduleFuncWithOptions` | `func CronScheduleFuncWithOptions(pattern string, fn func(), opts ...DefaultSchedulerOption) (string, error)` | CronScheduleFuncWithOptions schedules fn on the selected default scheduler. | facade | — |
+| `CronScheduleFuncWithOptions` | `func CronScheduleFuncWithOptions(pattern string, fn func(), opts ...DefaultSchedulerOption) (string, error)` | CronScheduleFuncWithOptions schedules fn on the selected default scheduler. | facade | `ExampleCronScheduleFuncWithOptions` |
 | `CronScheduleWithID` | `func CronScheduleWithID(id string, pattern string, task Task) error` | CronScheduleWithID schedules task with id. | facade | — |
 | `CronScheduleWithIDWithOptions` | `func CronScheduleWithIDWithOptions(id string, pattern string, task Task, opts ...DefaultSchedulerOption) error` | CronScheduleWithIDWithOptions schedules task with id on the selected default scheduler. | facade | — |
 | `CronScheduleWithOptions` | `func CronScheduleWithOptions(pattern string, task Task, opts ...DefaultSchedulerOption) (string, error)` | CronScheduleWithOptions schedules a task on the selected default scheduler. | facade | — |
@@ -373,7 +373,7 @@ Quality: 51 functions · 5 with examples · 9.8% example coverage · synopsis so
 | `CronStop` | `func CronStop()` | CronStop stops the default scheduler. | facade | — |
 | `CronStopWithOptions` | `func CronStopWithOptions(opts ...DefaultSchedulerOption)` | CronStopWithOptions stops the selected default scheduler. | facade | — |
 | `CronUpdatePattern` | `func CronUpdatePattern(id string, pattern string) error` | CronUpdatePattern updates the pattern for a task. | facade | — |
-| `CronUpdatePatternWithOptions` | `func CronUpdatePatternWithOptions(id string, pattern string, opts ...DefaultSchedulerOption) error` | CronUpdatePatternWithOptions updates the pattern for a task on the selected default scheduler. | facade | — |
+| `CronUpdatePatternWithOptions` | `func CronUpdatePatternWithOptions(id string, pattern string, opts ...DefaultSchedulerOption) error` | CronUpdatePatternWithOptions updates the pattern for a task on the selected default scheduler. | facade | `ExampleCronUpdatePatternWithOptions` |
 | `DefaultScheduler` | `func DefaultScheduler() *Scheduler` | DefaultScheduler returns the package-level scheduler. | facade | — |
 | `DefaultSchedulerWithOptions` | `func DefaultSchedulerWithOptions(opts ...DefaultSchedulerOption) *Scheduler` | DefaultSchedulerWithOptions returns the package-level scheduler or a per-call override. | facade | — |
 | `MustNewPattern` | `func MustNewPattern(expr string) *Pattern` | MustNewPattern delegates to the internal cron implementation. | facade | `ExampleMustNewPattern` |
@@ -677,7 +677,7 @@ Import path: `github.com/imajinyun/go-knifer/verr`
 
 Package verr exposes error handling, panic recovery, and stack helpers.
 
-Quality: 53 functions · 5 with examples · 9.4% example coverage · synopsis sources: facade=53, internal=0, empty=0
+Quality: 53 functions · 8 with examples · 15.1% example coverage · synopsis sources: facade=53, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -693,8 +693,8 @@ Quality: 53 functions · 5 with examples · 9.4% example coverage · synopsis so
 | `MustExitWithOptions` | `func MustExitWithOptions(ctx context.Context, err error, opts ...ExitOption)` | MustExitWithOptions logs err and panics when err is non-nil with custom options. | facade | `ExampleMustExitWithOptions` |
 | `NewCollector` | `func NewCollector() *Collector` | NewCollector creates a Collector that logs failures at error level. | facade | `ExampleNewCollector` |
 | `NewCollectorWithOptions` | `func NewCollectorWithOptions(opts ...CollectorOption) *Collector` | NewCollectorWithOptions creates a Collector customized by options. | facade | — |
-| `NewIsolatedLogrusWithOptions` | `func NewIsolatedLogrusWithOptions(opts ...InitOption) *logrus.Logger` | NewIsolatedLogrusWithOptions creates a standalone logrus logger without mutating global logrus/Sentry state. | facade | — |
-| `Recover` | `func Recover(f func() error, format string, args ...any) error` | Recover executes f with panic recovery and logs failures at error level. | facade | — |
+| `NewIsolatedLogrusWithOptions` | `func NewIsolatedLogrusWithOptions(opts ...InitOption) *logrus.Logger` | NewIsolatedLogrusWithOptions creates a standalone logrus logger without mutating global logrus/Sentry state. | facade | `ExampleNewIsolatedLogrusWithOptions` |
+| `Recover` | `func Recover(f func() error, format string, args ...any) error` | Recover executes f with panic recovery and logs failures at error level. | facade | `ExampleRecover` |
 | `RecoverWithoutError` | `func RecoverWithoutError(f func(), format string, args ...any) error` | RecoverWithoutError executes f with panic recovery and logs failures at error level. | facade | `ExampleRecoverWithoutError` |
 | `ResetDefaultLogFunc` | `func ResetDefaultLogFunc()` | ResetDefaultLogFunc restores the package-level logger to the logrus-backed default. | facade | — |
 | `ResetStackFrameCache` | `func ResetStackFrameCache()` | ResetStackFrameCache clears cached stack frame metadata captured by GetStackTraceWithOptions. | facade | — |
@@ -733,7 +733,7 @@ Quality: 53 functions · 5 with examples · 9.4% example coverage · synopsis so
 | `WithTimerFactory` | `func WithTimerFactory(c *Collector, factory TimerFactory) *Collector` | WithTimerFactory sets the default timer factory used by Collector.WaitUntil. | facade | — |
 | `WithWaitContext` | `func WithWaitContext(ctx context.Context) WaitOption` | WithWaitContext sets a context that can cancel a single WaitUntilWithOptions call. | facade | — |
 | `WithWaitTimerFactory` | `func WithWaitTimerFactory(factory TimerFactory) WaitOption` | WithWaitTimerFactory sets the timer factory for a single WaitUntilWithOptions call. | facade | — |
-| `Wrap` | `func Wrap(f func() error) *Wrapper` | Wrap creates a recoverable function wrapper. | facade | — |
+| `Wrap` | `func Wrap(f func() error) *Wrapper` | Wrap creates a recoverable function wrapper. | facade | `ExampleWrap` |
 
 ### vfile
 
@@ -1070,14 +1070,14 @@ Import path: `github.com/imajinyun/go-knifer/vid`
 
 Package vid provides public APIs for ID generation utilities.
 
-Quality: 53 functions · 5 with examples · 9.4% example coverage · synopsis sources: facade=53, internal=0, empty=0
+Quality: 53 functions · 9 with examples · 17.0% example coverage · synopsis sources: facade=53, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
 | `ConfigureDefaultFallbackRandomSourceProvider` | `func ConfigureDefaultFallbackRandomSourceProvider(provider func() *rand.Rand)` | ConfigureDefaultFallbackRandomSourceProvider sets the provider used to lazily create the package-level fallback PRNG. | facade | — |
 | `ConfigureDefaultSnowflake` | `func ConfigureDefaultSnowflake(opts ...SnowflakeOption) *Snowflake` | ConfigureDefaultSnowflake replaces the default singleton Snowflake generator with options. | facade | — |
 | `CreateSnowflake` | `func CreateSnowflake(workerID int64, datacenterID int64) *Snowflake` | CreateSnowflake creates a Snowflake generator for an explicit worker and datacenter pair. | facade | — |
-| `CreateSnowflakeWithOptions` | `func CreateSnowflakeWithOptions(opts ...SnowflakeOption) *Snowflake` | CreateSnowflakeWithOptions creates a Snowflake generator from options. | facade | — |
+| `CreateSnowflakeWithOptions` | `func CreateSnowflakeWithOptions(opts ...SnowflakeOption) *Snowflake` | CreateSnowflakeWithOptions creates a Snowflake generator from options. | facade | `ExampleCreateSnowflakeWithOptions` |
 | `FastSimpleUUID` | `func FastSimpleUUID() string` | FastSimpleUUID creates a hyphen-free UUID through the compatibility fast UUID alias. | facade | — |
 | `FastSimpleUUIDWithOptions` | `func FastSimpleUUIDWithOptions(opts ...RandomOption) string` | FastSimpleUUIDWithOptions creates a simple UUID alias with random options. | facade | — |
 | `FastUUID` | `func FastUUID() string` | FastUUID creates an RFC 4122 UUID through the compatibility fast UUID alias. | facade | — |
@@ -1099,12 +1099,12 @@ Quality: 53 functions · 5 with examples · 9.4% example coverage · synopsis so
 | `NanoId` | `func NanoId() string` | NanoId creates a NanoId using the default alphabet and length. | facade | — |
 | `NanoIdN` | `func NanoIdN(n int) string` | NanoIdN creates a NanoId with an explicit length and the default alphabet. | facade | `ExampleNanoIdN` |
 | `NanoIdNWithOptions` | `func NanoIdNWithOptions(n int, opts ...NanoIDOption) string` | NanoIdNWithOptions creates a NanoId with explicit length and custom options. | facade | — |
-| `NanoIdWithOptions` | `func NanoIdWithOptions(opts ...NanoIDOption) string` | NanoIdWithOptions creates a NanoId with custom generation options. | facade | — |
+| `NanoIdWithOptions` | `func NanoIdWithOptions(opts ...NanoIDOption) string` | NanoIdWithOptions creates a NanoId with custom generation options. | facade | `ExampleNanoIdWithOptions` |
 | `NewIsolatedSnowflake` | `func NewIsolatedSnowflake(opts ...SnowflakeOption) *Snowflake` | NewIsolatedSnowflake creates a standalone Snowflake generator without singleton/cache lookup. | facade | — |
 | `ObjectId` | `func ObjectId() string` | ObjectId creates a MongoDB-style ObjectId using the default timestamp, random bytes, and counter sources. | facade | `ExampleObjectId` |
-| `ObjectIdWithOptions` | `func ObjectIdWithOptions(opts ...ObjectIDOption) string` | ObjectIdWithOptions creates an ObjectId with deterministic/custom generation options. | facade | — |
+| `ObjectIdWithOptions` | `func ObjectIdWithOptions(opts ...ObjectIDOption) string` | ObjectIdWithOptions creates an ObjectId with deterministic/custom generation options. | facade | `ExampleObjectIdWithOptions` |
 | `RandomUUID` | `func RandomUUID() string` | RandomUUID creates an RFC 4122 UUID using the default entropy source. | facade | `ExampleRandomUUID` |
-| `RandomUUIDWithOptions` | `func RandomUUIDWithOptions(opts ...RandomOption) string` | RandomUUIDWithOptions creates an RFC 4122 UUID with random options. | facade | — |
+| `RandomUUIDWithOptions` | `func RandomUUIDWithOptions(opts ...RandomOption) string` | RandomUUIDWithOptions creates an RFC 4122 UUID with random options. | facade | `ExampleRandomUUIDWithOptions` |
 | `ResetDefaultFallbackRandomSource` | `func ResetDefaultFallbackRandomSource()` | ResetDefaultFallbackRandomSource restores the fallback PRNG provider and clears cached state. | facade | — |
 | `SetFallbackRandomSeed` | `func SetFallbackRandomSeed(seed int64)` | SetFallbackRandomSeed resets the package-level fallback PRNG to a deterministic seed. | facade | — |
 | `SimpleUUID` | `func SimpleUUID() string` | SimpleUUID creates a UUID string without hyphens using the default entropy source. | facade | `ExampleSimpleUUID` |
@@ -1474,7 +1474,7 @@ Import path: `github.com/imajinyun/go-knifer/vlog`
 
 Package vlog provides public APIs for logging utilities.
 
-Quality: 54 functions · 5 with examples · 9.3% example coverage · synopsis sources: facade=54, internal=0, empty=0
+Quality: 54 functions · 8 with examples · 14.8% example coverage · synopsis sources: facade=54, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -1487,7 +1487,7 @@ Quality: 54 functions · 5 with examples · 9.3% example coverage · synopsis so
 | `ErrorLog` | `func ErrorLog(args ...any)` | ErrorLog logs error-level output through the static logger. | facade | — |
 | `ErrorLogWithOptions` | `func ErrorLogWithOptions(opts []LoggerOption, args ...any)` | ErrorLogWithOptions logs error-level output through a per-call logger configuration. | facade | — |
 | `Errorf` | `func Errorf(format string, args ...any)` | Errorf logs formatted error-level output through the static logger. | facade | — |
-| `ErrorfWithOptions` | `func ErrorfWithOptions(opts []LoggerOption, format string, args ...any)` | ErrorfWithOptions logs formatted error-level output through a per-call logger configuration. | facade | — |
+| `ErrorfWithOptions` | `func ErrorfWithOptions(opts []LoggerOption, format string, args ...any)` | ErrorfWithOptions logs formatted error-level output through a per-call logger configuration. | facade | `ExampleErrorfWithOptions` |
 | `Get` | `func Get(name string) Log` | Get delegates to the internal logx implementation. | facade | — |
 | `GetConsoleLevel` | `func GetConsoleLevel() Level` | GetConsoleLevel delegates to the internal logx implementation. | facade | — |
 | `GetDefault` | `func GetDefault() Log` | GetDefault delegates to the internal logx implementation. | facade | `ExampleGetDefault` |
@@ -1502,9 +1502,9 @@ Quality: 54 functions · 5 with examples · 9.3% example coverage · synopsis so
 | `LogAt` | `func LogAt(level LogLevel, format string, args ...any)` | LogAt logs output at the provided level through the static logger. | facade | — |
 | `LogAtE` | `func LogAtE(level LogLevel, err error, format string, args ...any)` | LogAtE logs output at the provided level with an error through the static logger. | facade | — |
 | `LogAtEWithOptions` | `func LogAtEWithOptions(opts []LoggerOption, level LogLevel, err error, format string, args ...any)` | LogAtEWithOptions logs output at the provided level with an error through a per-call logger configuration. | facade | — |
-| `LogAtWithOptions` | `func LogAtWithOptions(opts []LoggerOption, level LogLevel, format string, args ...any)` | LogAtWithOptions logs output at the provided level through a per-call logger configuration. | facade | — |
+| `LogAtWithOptions` | `func LogAtWithOptions(opts []LoggerOption, level LogLevel, format string, args ...any)` | LogAtWithOptions logs output at the provided level through a per-call logger configuration. | facade | `ExampleLogAtWithOptions` |
 | `Logger` | `func Logger(name string) Log` | Logger returns a cached logger by name. | facade | — |
-| `LoggerWithOptions` | `func LoggerWithOptions(name string, opts ...LoggerOption) Log` | LoggerWithOptions returns a logger by name with per-call factory/cache options. | facade | — |
+| `LoggerWithOptions` | `func LoggerWithOptions(name string, opts ...LoggerOption) Log` | LoggerWithOptions returns a logger by name with per-call factory/cache options. | facade | `ExampleLoggerWithOptions` |
 | `NewConsoleColorLog` | `func NewConsoleColorLog(name string) *ConsoleColorLog` | NewConsoleColorLog creates a colored console logger by name. | facade | — |
 | `NewConsoleColorLogWithOptions` | `func NewConsoleColorLogWithOptions(name string, opts ...ConsoleLogOption) *ConsoleColorLog` | NewConsoleColorLogWithOptions creates a colored console logger customized by options. | facade | — |
 | `NewConsoleLog` | `func NewConsoleLog(name string) *ConsoleLog` | NewConsoleLog creates a console logger by name. | facade | — |
@@ -1539,7 +1539,7 @@ Import path: `github.com/imajinyun/go-knifer/vmail`
 
 Package vmail exposes email message construction, MIME attachment, and SMTP sending helpers.
 
-Quality: 51 functions · 5 with examples · 9.8% example coverage · synopsis sources: facade=51, internal=0, empty=0
+Quality: 51 functions · 7 with examples · 13.7% example coverage · synopsis sources: facade=51, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -1548,7 +1548,7 @@ Quality: 51 functions · 5 with examples · 9.8% example coverage · synopsis so
 | `NewAttachmentFile` | `func NewAttachmentFile(path string) (Attachment, error)` | NewAttachmentFile creates an attachment loaded lazily from path. | facade | — |
 | `NewAttachmentReader` | `func NewAttachmentReader(name string, size int64, contentType ContentType, open func() (io.ReadCloser, error)) (Attachment, error)` | NewAttachmentReader creates an attachment from a reader opener. | facade | — |
 | `NewClient` | `func NewClient(host string, port int, opts ...ClientOption) (*Client, error)` | NewClient creates an SMTP client. | facade | — |
-| `NewInline` | `func NewInline(name string, contentID string, content []byte, contentType ContentType) (Attachment, error)` | NewInline creates an inline attachment from bytes with a Content-ID. | facade | — |
+| `NewInline` | `func NewInline(name string, contentID string, content []byte, contentType ContentType) (Attachment, error)` | NewInline creates an inline attachment from bytes with a Content-ID. | facade | `ExampleNewInline` |
 | `NewInlineFile` | `func NewInlineFile(path string, contentID string) (Attachment, error)` | NewInlineFile creates an inline attachment loaded lazily from path with a Content-ID. | facade | — |
 | `NewInlineReader` | `func NewInlineReader(name string, contentID string, size int64, contentType ContentType, open func() (io.ReadCloser, error)) (Attachment, error)` | NewInlineReader creates an inline attachment from a reader opener with a Content-ID. | facade | — |
 | `NewMessage` | `func NewMessage(opts ...MessageOption) (*Message, error)` | NewMessage creates and validates an email message. | facade | `ExampleNewMessage` |
@@ -1576,7 +1576,7 @@ Quality: 51 functions · 5 with examples · 9.8% example coverage · synopsis so
 | `WithFrom` | `func WithFrom(address string) MessageOption` | WithFrom sets the From address. | facade | — |
 | `WithFromAddress` | `func WithFromAddress(addr *Address) MessageOption` | WithFromAddress sets the From address. | facade | — |
 | `WithHTML` | `func WithHTML(html string) MessageOption` | WithHTML sets the text/html body. | facade | — |
-| `WithHeader` | `func WithHeader(name string, values ...string) MessageOption` | WithHeader appends an additional header. | facade | — |
+| `WithHeader` | `func WithHeader(name string, values ...string) MessageOption` | WithHeader appends an additional header. | facade | `ExampleWithHeader` |
 | `WithInline` | `func WithInline(name string, contentID string, content []byte, contentType ContentType) MessageOption` | WithInline appends an inline file from bytes. | facade | — |
 | `WithInlineFile` | `func WithInlineFile(path string, contentID string) MessageOption` | WithInlineFile appends an inline attachment loaded lazily from path with a Content-ID. | facade | — |
 | `WithInlineReader` | `func WithInlineReader(name string, contentID string, size int64, contentType ContentType, open func() (io.ReadCloser, error)) MessageOption` | WithInlineReader appends an inline file from a reader opener with a Content-ID. | facade | — |

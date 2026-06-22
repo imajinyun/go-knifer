@@ -4,7 +4,7 @@
   "summary": {
     "package_count": 54,
     "function_count": 2604,
-    "functions_with_examples": 998,
+    "functions_with_examples": 1013,
     "context_aware_functions": 36,
     "returns_error_functions": 603,
     "variadic_functions": 776,
@@ -4699,8 +4699,8 @@
       "synopsis": "Package vcron provides public APIs for cron scheduling utilities.",
       "summary": {
         "function_count": 51,
-        "functions_with_examples": 5,
-        "example_coverage_percent": 9.8,
+        "functions_with_examples": 8,
+        "example_coverage_percent": 15.7,
         "synopsis_sources": {
           "empty": 0,
           "facade": 51,
@@ -4776,7 +4776,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleCronRemoveWithOptions"
+          ]
         },
         {
           "name": "CronRestart",
@@ -4891,7 +4894,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleCronScheduleFuncWithOptions"
+          ]
         },
         {
           "name": "CronScheduleWithID",
@@ -5194,7 +5200,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleCronUpdatePatternWithOptions"
+          ]
         },
         {
           "name": "DefaultScheduler",
@@ -10608,8 +10617,8 @@
       "synopsis": "Package verr exposes error handling, panic recovery, and stack helpers.",
       "summary": {
         "function_count": 53,
-        "functions_with_examples": 5,
-        "example_coverage_percent": 9.4,
+        "functions_with_examples": 8,
+        "example_coverage_percent": 15.1,
         "synopsis_sources": {
           "empty": 0,
           "facade": 53,
@@ -10860,7 +10869,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleNewIsolatedLogrusWithOptions"
+          ]
         },
         {
           "name": "Recover",
@@ -10886,7 +10898,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleRecover"
+          ]
         },
         {
           "name": "RecoverWithoutError",
@@ -11614,7 +11629,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWrap"
+          ]
         }
       ]
     },
@@ -17335,8 +17353,8 @@
       "synopsis": "Package vid provides public APIs for ID generation utilities.",
       "summary": {
         "function_count": 53,
-        "functions_with_examples": 5,
-        "example_coverage_percent": 9.4,
+        "functions_with_examples": 9,
+        "example_coverage_percent": 17,
         "synopsis_sources": {
           "empty": 0,
           "facade": 53,
@@ -17415,7 +17433,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleCreateSnowflakeWithOptions"
+          ]
         },
         {
           "name": "FastSimpleUUID",
@@ -17817,7 +17838,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleNanoIdWithOptions"
+          ]
         },
         {
           "name": "NewIsolatedSnowflake",
@@ -17868,7 +17892,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleObjectIdWithOptions"
+          ]
         },
         {
           "name": "RandomUUID",
@@ -17901,7 +17928,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleRandomUUIDWithOptions"
+          ]
         },
         {
           "name": "ResetDefaultFallbackRandomSource",
@@ -25037,8 +25067,8 @@
       "synopsis": "Package vlog provides public APIs for logging utilities.",
       "summary": {
         "function_count": 54,
-        "functions_with_examples": 5,
-        "example_coverage_percent": 9.3,
+        "functions_with_examples": 8,
+        "example_coverage_percent": 14.8,
         "synopsis_sources": {
           "empty": 0,
           "facade": 54,
@@ -25226,7 +25256,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleErrorfWithOptions"
+          ]
         },
         {
           "name": "Get",
@@ -25525,7 +25558,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleLogAtWithOptions"
+          ]
         },
         {
           "name": "Logger",
@@ -25565,7 +25601,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleLoggerWithOptions"
+          ]
         },
         {
           "name": "NewConsoleColorLog",
@@ -26073,8 +26112,8 @@
       "synopsis": "Package vmail exposes email message construction, MIME attachment, and SMTP sending helpers.",
       "summary": {
         "function_count": 51,
-        "functions_with_examples": 5,
-        "example_coverage_percent": 9.8,
+        "functions_with_examples": 7,
+        "example_coverage_percent": 13.7,
         "synopsis_sources": {
           "empty": 0,
           "facade": 51,
@@ -26244,7 +26283,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewInline"
+          ]
         },
         {
           "name": "NewInlineFile",
@@ -26930,7 +26972,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleWithHeader"
+          ]
         },
         {
           "name": "WithInline",

@@ -2,6 +2,7 @@ package vmail_test
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/imajinyun/go-knifer/vmail"
 )
@@ -73,5 +74,49 @@ func ExampleParseAddress() {
 	fmt.Println(err)
 	// Output:
 	// Carol carol@example.com
+	// <nil>
+}
+
+func ExampleNewInline() {
+	inline, err := vmail.NewInline("logo.png", "logo", []byte("img"), vmail.TypeApplicationOctetStream)
+
+	fmt.Println(inline.Name, inline.ContentID, inline.Size)
+	fmt.Println(err)
+	// Output:
+	// logo.png logo 3
+	// <nil>
+}
+
+func ExampleWithHeader() {
+	message, err := vmail.NewMessage(
+		vmail.WithFrom("sender@example.com"),
+		vmail.WithTo("recipient@example.com"),
+		vmail.WithSubject("Hello"),
+		vmail.WithText("World"),
+		vmail.WithHeader("X-Trace", "abc"),
+	)
+	data, bytesErr := message.Bytes()
+
+	fmt.Println(strings.Contains(string(data), "X-Trace: abc"))
+	fmt.Println(err)
+	fmt.Println(bytesErr)
+	// Output:
+	// true
+	// <nil>
+	// <nil>
+}
+
+func ExampleMessage_Recipients() {
+	message, err := vmail.NewMessage(
+		vmail.WithFrom("sender@example.com"),
+		vmail.WithTo("alice@example.com", "bob@example.com"),
+		vmail.WithCc("alice@example.com"),
+		vmail.WithText("World"),
+	)
+
+	fmt.Println(message.Recipients())
+	fmt.Println(err)
+	// Output:
+	// [alice@example.com bob@example.com]
 	// <nil>
 }
