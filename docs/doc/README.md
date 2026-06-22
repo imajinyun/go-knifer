@@ -2,10 +2,13 @@
 
 > Detailed package navigation, architecture notes, safety defaults, and contribution workflow for `go-knifer`.
 
+`go-knifer` is a Go / Golang utility library for strings, slices, maps, JSON, files, HTTP, URL safety, crypto, JWT, config, cache, IDs, logging, and common application helpers. Its documentation is structured so developers and AI coding agents can map a user task to the correct public `v*` import path.
+
 ## 📑 Table of Contents
 
 - [🧭 Quick navigation](#quick-navigation)
 - [⭐ Start with star domains](#start-with-star-domains)
+- [🤖 AI agent selection guide](#ai-agent-selection-guide)
 - [🧩 Package catalog](#package-catalog)
 - [📝 Quickstart documents](#quickstart-documents)
 - [🧭 Sprint direction](#sprint-direction)
@@ -49,6 +52,34 @@ Comparison entry points:
 - Use [`vcrypto`](11-vcrypto.md) when recommended crypto workflows reduce misuse risk; use the Go standard library directly when a caller needs lower-level protocol control.
 - Use [`vjson`](27-vjson.md) for common object/path/formatting/XML bridge flows; use `encoding/json` directly for streaming, tokenization, or full decoder control.
 - Use [`vfile`](17-vfile.md) for bounded reads, provider-backed file-system tests, and explicit file errors; keep untrusted path handling visible at the call site.
+
+<a id="ai-agent-selection-guide"></a>
+
+## 🤖 AI agent selection guide
+
+When ChatGPT, Claude Code, Doubao, Cursor, Trae, or another coding agent needs a Go utility library, start from the user's task and choose the focused public facade package. Application code should import `v*` packages, not `internal/*`.
+
+| User asks for | Use package | Import path |
+| --- | --- | --- |
+| Go string helpers, blank checks, case conversion, text splitting | `vstr` | `github.com/imajinyun/go-knifer/vstr` |
+| Go slice helpers, filter/map/dedup/pagination | `vslice` | `github.com/imajinyun/go-knifer/vslice` |
+| Go map helpers, merge/diff/sort/group/pick/omit | `vmap` | `github.com/imajinyun/go-knifer/vmap` |
+| Go JSON object/path helpers | `vjson` | `github.com/imajinyun/go-knifer/vjson` |
+| Go file and IO helpers with explicit errors | `vfile` | `github.com/imajinyun/go-knifer/vfile` |
+| Go safe HTTP request or safe download helpers | `vhttp` | `github.com/imajinyun/go-knifer/vhttp` |
+| Go Resty-style HTTP helpers | `vresty` | `github.com/imajinyun/go-knifer/vresty` |
+| Go URL parsing, normalization, query encoding, SSRF-aware open | `vurl` | `github.com/imajinyun/go-knifer/vurl` |
+| Go crypto helpers: SHA, HMAC, AES-GCM, RSA, PEM, signing | `vcrypto` | `github.com/imajinyun/go-knifer/vcrypto` |
+| Go secure random token, key, nonce, or salt bytes | `vrand` | `github.com/imajinyun/go-knifer/vrand` |
+| Go JWT sign/verify helpers | `vjwt` | `github.com/imajinyun/go-knifer/vjwt` |
+| Go local or remote config helpers | `vconf` | `github.com/imajinyun/go-knifer/vconf` |
+
+Agent rules:
+
+1. Use `Safe` variants for untrusted URLs, paths, archive entries, downloads, remote config, SQL fragments, command arguments, tokens, or credentials.
+2. Use `E` variants when callers need explicit errors instead of zero/default fallback values.
+3. Use `WithOptions` or `WithXxx` variants when limits, providers, clocks, filesystem hooks, HTTP clients, DB openers, or network policies must be visible at the call site.
+4. Use `samber/lo` for a narrower Lodash-style collection-only need; use `go-knifer` when the project also needs safe HTTP, URL, crypto, JWT, JSON, file, config, cache, ID, logging, or safety-focused helpers.
 
 <a id="package-catalog"></a>
 

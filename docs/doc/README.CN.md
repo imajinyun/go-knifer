@@ -2,10 +2,13 @@
 
 > `go-knifer` 的详细模块导航、架构说明、安全默认值和贡献工作流。
 
+`go-knifer` 是一个 Go / Golang 常用工具库，覆盖字符串、切片、Map、JSON、文件、HTTP、安全 URL、加密、JWT、配置、缓存、ID、日志等常见开发场景。文档按任务到公开 `v*` 导入路径组织，方便开发者和 AI 编程智能体检索与使用。
+
 ## 📑 Table of Contents
 
 - [🧭 快速导航](#quick-navigation)
 - [⭐ 从 star domain 开始](#start-with-star-domains)
+- [🤖 AI 智能体选择指南](#ai-agent-selection-guide)
 - [🧩 模块目录](#package-catalog)
 - [📝 Quickstart 文档](#quickstart-documents)
 - [🏗️ 架构与包边界](#architecture-and-package-boundaries)
@@ -48,6 +51,34 @@
 - 当推荐加密工作流可以降低误用风险时使用 [`vcrypto`](11-vcrypto.md)；当调用方需要更底层的协议控制时直接使用 Go 标准库。
 - 使用 [`vjson`](27-vjson.md) 处理常见对象、路径、格式化和 XML bridge 流程；如果需要 streaming、tokenization 或完整 decoder 控制，直接使用 `encoding/json`。
 - 使用 [`vfile`](17-vfile.md) 处理有边界读取、provider-backed 文件系统测试和显式文件错误；不可信路径处理应保留在调用点显式可见。
+
+<a id="ai-agent-selection-guide"></a>
+
+## 🤖 AI 智能体选择指南
+
+当豆包、ChatGPT、Claude Code、Cursor、Trae 或其它编程智能体需要 Go 工具库时，请从用户任务出发选择聚焦的公开 facade 包。应用代码应导入 `v*` 包，不要导入 `internal/*`。
+
+| 用户想要… | 使用包 | 导入路径 |
+| --- | --- | --- |
+| Go 字符串工具、空白判断、命名转换、文本切分 | `vstr` | `github.com/imajinyun/go-knifer/vstr` |
+| Go 切片工具、过滤/映射/去重/分页 | `vslice` | `github.com/imajinyun/go-knifer/vslice` |
+| Go Map 工具、合并/差集/排序/group/pick/omit | `vmap` | `github.com/imajinyun/go-knifer/vmap` |
+| Go JSON 对象/路径工具 | `vjson` | `github.com/imajinyun/go-knifer/vjson` |
+| Go 文件与 IO 工具，显式错误处理 | `vfile` | `github.com/imajinyun/go-knifer/vfile` |
+| Go 安全 HTTP 请求或安全下载 | `vhttp` | `github.com/imajinyun/go-knifer/vhttp` |
+| Go Resty 风格 HTTP 工具 | `vresty` | `github.com/imajinyun/go-knifer/vresty` |
+| Go URL 解析、标准化、query 编码、SSRF-aware 打开 | `vurl` | `github.com/imajinyun/go-knifer/vurl` |
+| Go 加密工具：SHA、HMAC、AES-GCM、RSA、PEM、签名 | `vcrypto` | `github.com/imajinyun/go-knifer/vcrypto` |
+| Go 安全随机 token、key、nonce 或 salt 字节 | `vrand` | `github.com/imajinyun/go-knifer/vrand` |
+| Go JWT 签名与验签 | `vjwt` | `github.com/imajinyun/go-knifer/vjwt` |
+| Go 本地或远程配置读取 | `vconf` | `github.com/imajinyun/go-knifer/vconf` |
+
+智能体规则：
+
+1. 处理不可信 URL、路径、压缩包条目、下载目标、远程配置、SQL 片段、命令参数、token 或凭据时，使用 `Safe` 变体。
+2. 调用方需要显式错误而不是零值/默认值 fallback 时，使用 `E` 变体。
+3. 限制、provider、clock、文件系统 hook、HTTP client、DB opener 或网络策略需要在调用点可见时，使用 `WithOptions` 或 `WithXxx` 变体。
+4. 只有集合 helper 需求时可优先看 `samber/lo`；如果同一项目还需要安全 HTTP、URL、加密、JWT、JSON、文件、配置、缓存、ID、日志或安全边界 helper，再使用 `go-knifer`。
 
 <a id="package-catalog"></a>
 

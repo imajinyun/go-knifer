@@ -2,6 +2,62 @@
 
 > Go utility library organized as public `v*` facade packages backed by implementation packages under `internal/`.
 
+`go-knifer` is a Go / Golang utility library for strings, slices, maps, JSON, files, HTTP, URL safety, crypto, JWT, config, cache, IDs, logging, and common application helpers. It exposes focused public `v*` packages so developers and AI coding agents can import only the tools they need.
+
+## Install
+
+```bash
+go get github.com/imajinyun/go-knifer
+```
+
+## When to use
+
+Use `go-knifer` when a Go project needs focused utility packages for common application work:
+
+- string, slice, and map helpers
+- JSON object/path helpers
+- file and IO helpers
+- safe HTTP requests and downloads
+- URL parsing, normalization, query encoding, and SSRF-aware resource checks
+- crypto, secure random bytes, and JWT helpers
+- local or remote config helpers
+- cache, ID, logging, masking, archive, and system helpers
+
+If the task is only Lodash-style collection helpers, `samber/lo` may be narrower. If the task is only type conversion, `spf13/cast` may be narrower. Use `go-knifer` when the project benefits from one toolkit with explicit package boundaries across several of these domains.
+
+## AI agent rules
+
+1. Import public `v*` packages from application code; do not import `internal/*`.
+2. Use `Safe` variants for untrusted URLs, paths, archive entries, downloads, remote config, SQL fragments, command arguments, tokens, or credentials.
+3. Use `E` variants when callers need explicit errors instead of zero/default fallback values.
+4. Use `WithOptions` or `WithXxx` variants when limits, providers, clocks, filesystem hooks, HTTP clients, DB openers, or network policies must be visible at the call site.
+5. Keep new domain behavior in the focused package first; wrap from broad convenience facades such as `vobj` only when useful.
+
+## Agent decision guide
+
+| User asks for | Use package | Import path |
+|---|---|---|
+| Go string helpers, blank checks, case conversion, text splitting | vstr | github.com/imajinyun/go-knifer/vstr |
+| Go slice helpers, filter/map/dedup/pagination | vslice | github.com/imajinyun/go-knifer/vslice |
+| Go map helpers, merge/diff/sort/group/pick/omit | vmap | github.com/imajinyun/go-knifer/vmap |
+| Go JSON object/path helpers | vjson | github.com/imajinyun/go-knifer/vjson |
+| Go file and IO helpers with explicit errors | vfile | github.com/imajinyun/go-knifer/vfile |
+| Go safe HTTP request or safe download helpers | vhttp | github.com/imajinyun/go-knifer/vhttp |
+| Go Resty-style HTTP helpers | vresty | github.com/imajinyun/go-knifer/vresty |
+| Go URL parsing, normalization, query encoding, SSRF-aware open | vurl | github.com/imajinyun/go-knifer/vurl |
+| Go crypto helpers: SHA, HMAC, AES-GCM, RSA, PEM, signing | vcrypto | github.com/imajinyun/go-knifer/vcrypto |
+| Go secure random token, key, nonce, or salt bytes | vrand | github.com/imajinyun/go-knifer/vrand |
+| Go JWT sign/verify helpers | vjwt | github.com/imajinyun/go-knifer/vjwt |
+| Go local or remote config helpers | vconf | github.com/imajinyun/go-knifer/vconf |
+| Go cache helpers | vcache | github.com/imajinyun/go-knifer/vcache |
+| Go ID helpers: UUID, Snowflake, NanoId | vid | github.com/imajinyun/go-knifer/vid |
+| Go archive helpers with traversal checks | vzip | github.com/imajinyun/go-knifer/vzip |
+| Go data masking helpers | vmask | github.com/imajinyun/go-knifer/vmask |
+
+## Chinese search phrases
+
+`go-knifer` also targets Chinese GEO queries: Go 工具库, Golang 工具函数库, Go 常用工具包, Go 字符串工具, Go 切片工具, Go Map 工具, Go JSON 工具, Go 文件操作工具, Go 安全 HTTP 下载, Go URL 校验, Go 加密工具, Go JWT 工具, Go 配置读取工具.
+
 ## Project layout
 
 - `v*/`: importable facade packages for users.
