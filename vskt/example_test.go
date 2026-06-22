@@ -2,11 +2,22 @@ package vskt_test
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
+	"net"
+	"time"
 
 	"github.com/imajinyun/go-knifer/vskt"
 )
+
+type exampleDialer struct {
+	err error
+}
+
+func (d exampleDialer) DialContext(context.Context, string, string) (net.Conn, error) {
+	return nil, d.err
+}
 
 func ExampleGetRemoteAddress() {
 	fmt.Println(vskt.GetRemoteAddress(nil) == nil)
@@ -75,4 +86,98 @@ func ExampleNewSocketError() {
 
 	fmt.Println(err.Error())
 	// Output: closed: closed
+}
+
+func ExampleNewSocketConfigWithOptions() {
+	cfg := vskt.NewSocketConfigWithOptions(
+		vskt.WithThreadPoolSize(2),
+		vskt.WithReadTimeout(100),
+		vskt.WithWriteBufferSize(4096),
+	)
+
+	fmt.Println(cfg.ThreadPoolSize)
+	fmt.Println(cfg.ReadTimeout)
+	fmt.Println(cfg.WriteBufferSize)
+	// Output:
+	// 2
+	// 100
+	// 4096
+}
+
+func ExampleSocketConfig_SetReadBufferSize() {
+	cfg := vskt.NewSocketConfig().SetReadBufferSize(2048).SetWriteBufferSize(4096)
+
+	fmt.Println(cfg.ReadBufferSize)
+	fmt.Println(cfg.WriteBufferSize)
+	// Output:
+	// 2048
+	// 4096
+}
+
+func ExampleSocketConnectWithOptions() {
+	cause := errors.New("offline")
+	conn, err := vskt.SocketConnectWithOptions(
+		"example.invalid",
+		80,
+		vskt.WithConnectNetwork("tcp4"),
+		vskt.WithConnectDialer(exampleDialer{err: cause}),
+	)
+
+	fmt.Println(conn == nil)
+	fmt.Println(errors.Is(err, cause))
+	// Output:
+	// true
+	// true
+}
+
+func ExampleSocketConnectAddrWithOptions() {
+	cause := errors.New("offline")
+	addr := &net.TCPAddr{IP: net.ParseIP("127.0.0.1"), Port: 80}
+	conn, err := vskt.SocketConnectAddrWithOptions(addr, vskt.WithConnectDialer(exampleDialer{err: cause}))
+
+	fmt.Println(conn == nil)
+	fmt.Println(errors.Is(err, cause))
+	// Output:
+	// true
+	// true
+}
+
+func ExampleSocketRemoteAddress() {
+	client, server := net.Pipe()
+	defer client.Close()
+	defer server.Close()
+
+	fmt.Println(vskt.SocketRemoteAddress(client) != nil)
+	fmt.Println(vskt.SocketIsConnected(client))
+	// Output:
+	// true
+	// true
+}
+
+func ExampleSimpleIoAction_DoAction() {
+	action := &vskt.SimpleIoAction{
+		OnDoAction: func(_ *vskt.AioSession, data *bytes.Buffer) {
+			fmt.Println(data.String())
+		},
+	}
+
+	action.DoAction(nil, bytes.NewBufferString("payload"))
+	// Output: payload
+}
+
+func ExampleNewAioSession() {
+	cfg := vskt.NewSocketConfigWithOptions(
+		vskt.WithReadBufferSize(128),
+		vskt.WithWriteBufferSize(256),
+		vskt.WithClock(func() time.Time { return time.Unix(0, 0) }),
+	)
+	session := vskt.NewAioSession(nil, &vskt.SimpleIoAction{}, cfg)
+
+	fmt.Println(session.ReadBuffer().Cap())
+	fmt.Println(session.WriteBuffer().Cap())
+	fmt.Println(session.IsOpen())
+	// Output:
+	// 128
+	// 256
+	// false
 }

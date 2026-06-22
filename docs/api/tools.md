@@ -12,7 +12,7 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Module | `github.com/imajinyun/go-knifer` |
 | Packages | 54 |
 | Functions | 2604 |
-| Functions with examples | 1076 |
+| Functions with examples | 1108 |
 | Context-aware functions | 36 |
 | Functions returning error | 603 |
 | Variadic functions | 776 |
@@ -78,7 +78,7 @@ Import path: `github.com/imajinyun/go-knifer/vblf`
 
 Package vblf provides public APIs for Bloom filter utilities.
 
-Quality: 60 functions · 7 with examples · 11.7% example coverage · synopsis sources: facade=60, internal=0, empty=0
+Quality: 60 functions · 17 with examples · 28.3% example coverage · synopsis sources: facade=60, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -87,7 +87,7 @@ Quality: 60 functions · 7 with examples · 11.7% example coverage · synopsis s
 | `BloomBKDRHash` | `func BloomBKDRHash(str string) int32` | BloomBKDRHash returns BKDR hash. | facade | — |
 | `BloomDJBHash` | `func BloomDJBHash(str string) int32` | BloomDJBHash returns DJB hash. | facade | — |
 | `BloomELFHash` | `func BloomELFHash(str string) int32` | BloomELFHash returns ELF hash. | facade | — |
-| `BloomFNVHash` | `func BloomFNVHash(str string) int32` | BloomFNVHash returns FNV hash. | facade | — |
+| `BloomFNVHash` | `func BloomFNVHash(str string) int32` | BloomFNVHash returns FNV hash. | facade | `ExampleBloomFNVHash` |
 | `BloomJSHash` | `func BloomJSHash(str string) int32` | BloomJSHash returns JS hash. | facade | — |
 | `BloomRSHash` | `func BloomRSHash(str string) int32` | BloomRSHash returns RS hash. | facade | — |
 | `BloomSDBMHash` | `func BloomSDBMHash(str string) int32` | BloomSDBMHash returns SDBM hash. | facade | — |
@@ -96,29 +96,29 @@ Quality: 60 functions · 7 with examples · 11.7% example coverage · synopsis s
 | `FnvHashString` | `func FnvHashString(data string) int32` | FnvHashString delegates to the internal bloomfilter implementation. | facade | — |
 | `HfHash` | `func HfHash(data string) int64` | HfHash delegates to the internal bloomfilter implementation. | facade | — |
 | `HfIpHash` | `func HfIpHash(data string) int64` | HfIpHash delegates to the internal bloomfilter implementation. | facade | — |
-| `InitFromFileWithOptions` | `func InitFromFileWithOptions(b *BitSetBloomFilter, path string, opts ...FileOption) error` | InitFromFileWithOptions initializes a bitset bloom filter from a file using options. | facade | — |
-| `InitFromReader` | `func InitFromReader(b *BitSetBloomFilter, reader io.Reader) error` | InitFromReader initializes a bitset bloom filter from a reader. | facade | — |
+| `InitFromFileWithOptions` | `func InitFromFileWithOptions(b *BitSetBloomFilter, path string, opts ...FileOption) error` | InitFromFileWithOptions initializes a bitset bloom filter from a file using options. | facade | `ExampleInitFromFileWithOptions` |
+| `InitFromReader` | `func InitFromReader(b *BitSetBloomFilter, reader io.Reader) error` | InitFromReader initializes a bitset bloom filter from a reader. | facade | `ExampleInitFromReader` |
 | `JavaDefaultHash` | `func JavaDefaultHash(str string) int32` | JavaDefaultHash delegates to the internal bloomfilter implementation. | facade | — |
 | `JsHash` | `func JsHash(str string) int32` | JsHash delegates to the internal bloomfilter implementation. | facade | — |
 | `NewBitMapBloomFilter` | `func NewBitMapBloomFilter(m int) *BitMapBloomFilter` | NewBitMapBloomFilter creates a bitmap bloom filter. | facade | `ExampleNewBitMapBloomFilter` |
-| `NewBitMapBloomFilterE` | `func NewBitMapBloomFilterE(m int) (*BitMapBloomFilter, error)` | NewBitMapBloomFilterE creates a bitmap bloom filter and returns validation errors. | facade | — |
-| `NewBitMapBloomFilterWithFilters` | `func NewBitMapBloomFilterWithFilters(m int, filters ...BloomFilter) *BitMapBloomFilter` | NewBitMapBloomFilterWithFilters creates a bitmap bloom filter with filters. | facade | — |
+| `NewBitMapBloomFilterE` | `func NewBitMapBloomFilterE(m int) (*BitMapBloomFilter, error)` | NewBitMapBloomFilterE creates a bitmap bloom filter and returns validation errors. | facade | `ExampleNewBitMapBloomFilterE` |
+| `NewBitMapBloomFilterWithFilters` | `func NewBitMapBloomFilterWithFilters(m int, filters ...BloomFilter) *BitMapBloomFilter` | NewBitMapBloomFilterWithFilters creates a bitmap bloom filter with filters. | facade | `ExampleNewBitMapBloomFilterWithFilters` |
 | `NewBitMapBloomFilterWithFiltersE` | `func NewBitMapBloomFilterWithFiltersE(m int, filters ...BloomFilter) (*BitMapBloomFilter, error)` | NewBitMapBloomFilterWithFiltersE creates a bitmap bloom filter with filters and returns validation errors. | facade | — |
-| `NewBitMapBloomFilterWithOptions` | `func NewBitMapBloomFilterWithOptions(opts ...BitMapBloomFilterOption) *BitMapBloomFilter` | NewBitMapBloomFilterWithOptions creates a bitmap bloom filter with options. | facade | — |
+| `NewBitMapBloomFilterWithOptions` | `func NewBitMapBloomFilterWithOptions(opts ...BitMapBloomFilterOption) *BitMapBloomFilter` | NewBitMapBloomFilterWithOptions creates a bitmap bloom filter with options. | facade | `ExampleNewBitMapBloomFilterWithOptions` |
 | `NewBitMapBloomFilterWithOptionsE` | `func NewBitMapBloomFilterWithOptionsE(opts ...BitMapBloomFilterOption) (*BitMapBloomFilter, error)` | NewBitMapBloomFilterWithOptionsE creates a bitmap bloom filter with options and returns validation errors. | facade | — |
 | `NewBitSetBloomFilter` | `func NewBitSetBloomFilter(c int, n int, k int) *BitSetBloomFilter` | NewBitSetBloomFilter creates a bitset bloom filter. | facade | `ExampleNewBitSetBloomFilter` |
-| `NewBitSetBloomFilterE` | `func NewBitSetBloomFilterE(c int, n int, k int) (*BitSetBloomFilter, error)` | NewBitSetBloomFilterE creates a bitset bloom filter and returns validation errors. | facade | — |
-| `NewBitSetBloomFilterWithOptions` | `func NewBitSetBloomFilterWithOptions(opts ...BitSetBloomFilterOption) *BitSetBloomFilter` | NewBitSetBloomFilterWithOptions creates a bitset bloom filter with options. | facade | — |
+| `NewBitSetBloomFilterE` | `func NewBitSetBloomFilterE(c int, n int, k int) (*BitSetBloomFilter, error)` | NewBitSetBloomFilterE creates a bitset bloom filter and returns validation errors. | facade | `ExampleNewBitSetBloomFilterE` |
+| `NewBitSetBloomFilterWithOptions` | `func NewBitSetBloomFilterWithOptions(opts ...BitSetBloomFilterOption) *BitSetBloomFilter` | NewBitSetBloomFilterWithOptions creates a bitset bloom filter with options. | facade | `ExampleNewBitSetBloomFilterWithOptions` |
 | `NewBitSetBloomFilterWithOptionsE` | `func NewBitSetBloomFilterWithOptionsE(opts ...BitSetBloomFilterOption) (*BitSetBloomFilter, error)` | NewBitSetBloomFilterWithOptionsE creates a bitset bloom filter with options and returns validation errors. | facade | — |
 | `NewDefaultBloomFilter` | `func NewDefaultBloomFilter(maxValue int64) *FuncFilter` | NewDefaultBloomFilter creates a default bloom filter. | facade | — |
 | `NewDefaultFilter` | `func NewDefaultFilter(maxValue int64) *FuncFilter` | NewDefaultFilter delegates to the internal bloomfilter implementation. | facade | `ExampleNewDefaultFilter` |
 | `NewELFFilter` | `func NewELFFilter(maxValue int64) *FuncFilter` | NewELFFilter delegates to the internal bloomfilter implementation. | facade | — |
 | `NewFNVFilter` | `func NewFNVFilter(maxValue int64) *FuncFilter` | NewFNVFilter delegates to the internal bloomfilter implementation. | facade | — |
 | `NewFuncFilter` | `func NewFuncFilter(maxValue int64, hashFunc HashFunc) *FuncFilter` | NewFuncFilter creates a function-backed bloom filter. | facade | `ExampleNewFuncFilter` |
-| `NewFuncFilterE` | `func NewFuncFilterE(maxValue int64, hashFunc HashFunc) (*FuncFilter, error)` | NewFuncFilterE creates a function-backed bloom filter and returns validation errors. | facade | — |
+| `NewFuncFilterE` | `func NewFuncFilterE(maxValue int64, hashFunc HashFunc) (*FuncFilter, error)` | NewFuncFilterE creates a function-backed bloom filter and returns validation errors. | facade | `ExampleNewFuncFilterE` |
 | `NewFuncFilterWithMachineNum` | `func NewFuncFilterWithMachineNum(maxValue int64, machineNum int, hashFunc HashFunc) *FuncFilter` | NewFuncFilterWithMachineNum delegates to the internal bloomfilter implementation. | facade | — |
 | `NewFuncFilterWithMachineNumE` | `func NewFuncFilterWithMachineNumE(maxValue int64, machineNum int, hashFunc HashFunc) (*FuncFilter, error)` | NewFuncFilterWithMachineNumE delegates to the internal bloomfilter implementation. | facade | `ExampleNewFuncFilterWithMachineNumE` |
-| `NewFuncFilterWithOptions` | `func NewFuncFilterWithOptions(opts ...FuncFilterOption) *FuncFilter` | NewFuncFilterWithOptions creates a function-backed bloom filter with options. | facade | — |
+| `NewFuncFilterWithOptions` | `func NewFuncFilterWithOptions(opts ...FuncFilterOption) *FuncFilter` | NewFuncFilterWithOptions creates a function-backed bloom filter with options. | facade | `ExampleNewFuncFilterWithOptions` |
 | `NewFuncFilterWithOptionsE` | `func NewFuncFilterWithOptionsE(opts ...FuncFilterOption) (*FuncFilter, error)` | NewFuncFilterWithOptionsE creates a function-backed bloom filter with options and returns validation errors. | facade | — |
 | `NewHfFilter` | `func NewHfFilter(maxValue int64) *FuncFilter` | NewHfFilter delegates to the internal bloomfilter implementation. | facade | — |
 | `NewHfIpFilter` | `func NewHfIpFilter(maxValue int64) *FuncFilter` | NewHfIpFilter delegates to the internal bloomfilter implementation. | facade | — |
@@ -2197,7 +2197,7 @@ Import path: `github.com/imajinyun/go-knifer/vref`
 
 Package vref provides public APIs for reflection utilities.
 
-Quality: 67 functions · 7 with examples · 10.4% example coverage · synopsis sources: facade=5, internal=62, empty=0
+Quality: 67 functions · 24 with examples · 35.8% example coverage · synopsis sources: facade=5, internal=62, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -2206,16 +2206,16 @@ Quality: 67 functions · 7 with examples · 10.4% example coverage · synopsis s
 | `GetConstructorsDirectly` | `func GetConstructorsDirectly(target any) []reflect.Value` | GetConstructorsDirectly is an alias of GetConstructors. | internal | — |
 | `GetField` | `func GetField(target any, name string) reflect.StructField` | GetField returns the first field matched by Go name or common tag alias. | internal | — |
 | `GetFieldMap` | `func GetFieldMap(target any) map[string]reflect.StructField` | GetFieldMap returns a field name to StructField map. | internal | — |
-| `GetFieldName` | `func GetFieldName(field reflect.StructField) string` | GetFieldName returns field alias from ref/json/xml tag, or the Go field name. | internal | — |
+| `GetFieldName` | `func GetFieldName(field reflect.StructField) string` | GetFieldName returns field alias from ref/json/xml tag, or the Go field name. | internal | `ExampleGetFieldName` |
 | `GetFieldValue` | `func GetFieldValue(obj any, fieldName string) any` | GetFieldValue returns the value of a named field, or nil when the field cannot be read. | facade | `ExampleGetFieldValue` |
 | `GetFieldValueWithOptions` | `func GetFieldValueWithOptions(obj any, fieldName string, opts ...FieldAccessOption) any` | GetFieldValueWithOptions returns a field value by name using per-call access options. | internal | — |
 | `GetFields` | `func GetFields(target any, filters ...FieldFilter) []reflect.StructField` | GetFields returns all fields from a struct type and embedded anonymous structs. | internal | — |
 | `GetFieldsDirectly` | `func GetFieldsDirectly(target any, withEmbeddedFields bool) []reflect.StructField` | GetFieldsDirectly returns struct fields. | internal | — |
-| `GetFieldsValue` | `func GetFieldsValue(obj any, filters ...FieldFilter) []any` | GetFieldsValue returns readable field values selected by filters. | facade | — |
+| `GetFieldsValue` | `func GetFieldsValue(obj any, filters ...FieldFilter) []any` | GetFieldsValue returns readable field values selected by filters. | facade | `ExampleGetFieldsValue` |
 | `GetFieldsValueWithOptions` | `func GetFieldsValueWithOptions(obj any, opts []FieldAccessOption, filters ...FieldFilter) []any` | GetFieldsValueWithOptions returns values of all matched fields using per-call access options. | internal | — |
 | `GetMethod` | `func GetMethod(target any, ignoreCase bool, methodName string, paramTypes ...reflect.Type) (reflect.Method, bool)` | GetMethod returns a method by name and optional parameter types. | internal | — |
 | `GetMethodByName` | `func GetMethodByName(target any, methodName string) (reflect.Method, bool)` | GetMethodByName returns the first method with the provided name. | internal | — |
-| `GetMethodByNameIgnoreCase` | `func GetMethodByNameIgnoreCase(target any, methodName string) (reflect.Method, bool)` | GetMethodByNameIgnoreCase returns the first method with the provided name, ignoring case. | internal | — |
+| `GetMethodByNameIgnoreCase` | `func GetMethodByNameIgnoreCase(target any, methodName string) (reflect.Method, bool)` | GetMethodByNameIgnoreCase returns the first method with the provided name, ignoring case. | internal | `ExampleGetMethodByNameIgnoreCase` |
 | `GetMethodIgnoreCase` | `func GetMethodIgnoreCase(target any, methodName string, paramTypes ...reflect.Type) (reflect.Method, bool)` | GetMethodIgnoreCase returns a method by case-insensitive name and optional parameter types. | internal | — |
 | `GetMethodNames` | `func GetMethodNames(target any) []string` | GetMethodNames returns all method names. | internal | — |
 | `GetMethodOfObj` | `func GetMethodOfObj(obj any, methodName string, args ...any) (reflect.Method, bool)` | GetMethodOfObj returns a method by inferring parameter types from args. | internal | — |
@@ -2223,33 +2223,33 @@ Quality: 67 functions · 7 with examples · 10.4% example coverage · synopsis s
 | `GetMethodsDirectly` | `func GetMethodsDirectly(target any, withSupers bool, withMethodFromObject bool) []reflect.Method` | GetMethodsDirectly returns methods on target. | internal | — |
 | `GetPublicFieldNames` | `func GetPublicFieldNames(target any) []string` | GetPublicFieldNames returns exported field names from a struct type. | internal | `ExampleGetPublicFieldNames` |
 | `GetPublicMethod` | `func GetPublicMethod(target any, methodName string, paramTypes ...reflect.Type) (reflect.Method, bool)` | GetPublicMethod returns an exported method by name and optional parameter types. | internal | — |
-| `GetPublicMethodNames` | `func GetPublicMethodNames(target any) []string` | GetPublicMethodNames returns exported method names. | internal | — |
+| `GetPublicMethodNames` | `func GetPublicMethodNames(target any) []string` | GetPublicMethodNames returns exported method names. | internal | `ExampleGetPublicMethodNames` |
 | `GetPublicMethods` | `func GetPublicMethods(target any, filters ...MethodFilter) []reflect.Method` | GetPublicMethods returns exported methods after filtering. | internal | — |
 | `GetStaticFieldValue` | `func GetStaticFieldValue(value any) any` | GetStaticFieldValue returns the value represented by value. | internal | — |
-| `HasField` | `func HasField(target any, name string) bool` | HasField reports whether target struct type has a field by Go name or common tag alias. | internal | — |
-| `ImplementsContext` | `func ImplementsContext(typ reflect.Type) bool` | ImplementsContext reports whether typ implements context.Context. | internal | — |
-| `ImplementsError` | `func ImplementsError(typ reflect.Type) bool` | ImplementsError reports whether typ implements error. | internal | — |
-| `IndirectType` | `func IndirectType(typ reflect.Type) reflect.Type` | IndirectType unwraps pointers from typ. | internal | — |
-| `IndirectValue` | `func IndirectValue(value reflect.Value) reflect.Value` | IndirectValue unwraps pointers and interfaces from value. | internal | — |
+| `HasField` | `func HasField(target any, name string) bool` | HasField reports whether target struct type has a field by Go name or common tag alias. | internal | `ExampleHasField` |
+| `ImplementsContext` | `func ImplementsContext(typ reflect.Type) bool` | ImplementsContext reports whether typ implements context.Context. | internal | `ExampleImplementsContext` |
+| `ImplementsError` | `func ImplementsError(typ reflect.Type) bool` | ImplementsError reports whether typ implements error. | internal | `ExampleImplementsError` |
+| `IndirectType` | `func IndirectType(typ reflect.Type) reflect.Type` | IndirectType unwraps pointers from typ. | internal | `ExampleIndirectType` |
+| `IndirectValue` | `func IndirectValue(value reflect.Value) reflect.Value` | IndirectValue unwraps pointers and interfaces from value. | internal | `ExampleIndirectValue` |
 | `Invoke` | `func Invoke(obj any, methodName string, args ...any) (any, error)` | Invoke invokes a method by name on obj. | internal | `ExampleInvoke` |
 | `InvokeFunc` | `func InvokeFunc(fn any, args ...any) (any, error)` | InvokeFunc invokes a function with best-effort argument conversion. | internal | `ExampleInvokeFunc` |
 | `InvokeMethod` | `func InvokeMethod(obj any, method reflect.Method, args ...any) (any, error)` | InvokeMethod invokes a reflect method. | internal | — |
-| `InvokeRaw` | `func InvokeRaw(fn any, args ...any) (any, error)` | InvokeRaw invokes fn without name lookup. | internal | — |
+| `InvokeRaw` | `func InvokeRaw(fn any, args ...any) (any, error)` | InvokeRaw invokes fn without name lookup. | internal | `ExampleInvokeRaw` |
 | `InvokeStatic` | `func InvokeStatic(fn any, args ...any) (any, error)` | InvokeStatic invokes a function-like method value. | internal | — |
 | `InvokeWithCheck` | `func InvokeWithCheck(obj any, method reflect.Method, args ...any) (any, error)` | InvokeWithCheck invokes a method value with argument conversion. | internal | — |
 | `IsArray` | `func IsArray(in any) bool` | IsArray reports whether in is an array. | internal | — |
 | `IsArrayType` | `func IsArrayType(typ reflect.Type) bool` | IsArrayType reports whether typ is an array type. | internal | — |
-| `IsCollection` | `func IsCollection(in any) bool` | IsCollection reports whether in is a collection (slice or array). | internal | — |
+| `IsCollection` | `func IsCollection(in any) bool` | IsCollection reports whether in is a collection (slice or array). | internal | `ExampleIsCollection` |
 | `IsCollectionType` | `func IsCollectionType(typ reflect.Type) bool` | IsCollectionType reports whether typ is an array or slice type. | internal | — |
 | `IsEmptyParam` | `func IsEmptyParam(method reflect.Method) bool` | IsEmptyParam reports whether method has no non-receiver parameters. | internal | — |
 | `IsEqualsMethod` | `func IsEqualsMethod(method reflect.Method) bool` | IsEqualsMethod reports whether method name is Equal or Equals. | internal | — |
 | `IsFuncType` | `func IsFuncType(typ reflect.Type) bool` | IsFuncType reports whether typ is a function type. | internal | — |
-| `IsFunction` | `func IsFunction(in any) bool` | IsFunction reports whether in is a func. | internal | — |
-| `IsGetterOrSetter` | `func IsGetterOrSetter(method reflect.Method, ignoreCase bool) bool` | IsGetterOrSetter reports whether method name looks like a getter or setter. | internal | — |
+| `IsFunction` | `func IsFunction(in any) bool` | IsFunction reports whether in is a func. | internal | `ExampleIsFunction` |
+| `IsGetterOrSetter` | `func IsGetterOrSetter(method reflect.Method, ignoreCase bool) bool` | IsGetterOrSetter reports whether method name looks like a getter or setter. | internal | `ExampleIsGetterOrSetter` |
 | `IsGetterOrSetterIgnoreCase` | `func IsGetterOrSetterIgnoreCase(method reflect.Method) bool` | IsGetterOrSetterIgnoreCase reports whether method name looks like a getter or setter. | internal | — |
 | `IsHashCodeMethod` | `func IsHashCodeMethod(method reflect.Method) bool` | IsHashCodeMethod reports whether method name is HashCode. | internal | — |
 | `IsIteratee` | `func IsIteratee(in any) bool` | IsIteratee reports whether in can be ranged over. | internal | — |
-| `IsMap` | `func IsMap(in any) bool` | IsMap reports whether in is a map. | internal | — |
+| `IsMap` | `func IsMap(in any) bool` | IsMap reports whether in is a map. | internal | `ExampleIsMap` |
 | `IsMapType` | `func IsMapType(typ reflect.Type) bool` | IsMapType reports whether typ is a map type. | internal | — |
 | `IsNil` | `func IsNil(object any) bool` | IsNil reports whether object is nil, including typed nil values. | internal | `ExampleIsNil` |
 | `IsNilValue` | `func IsNilValue(value reflect.Value) bool` | IsNilValue reports whether value is invalid or holds a nil-able nil value. | internal | — |
@@ -2258,14 +2258,14 @@ Quality: 67 functions · 7 with examples · 10.4% example coverage · synopsis s
 | `IsSlice` | `func IsSlice(in any) bool` | IsSlice reports whether in is a slice. | internal | — |
 | `IsSliceType` | `func IsSliceType(typ reflect.Type) bool` | IsSliceType reports whether typ is a slice type. | internal | — |
 | `IsToStringMethod` | `func IsToStringMethod(method reflect.Method) bool` | IsToStringMethod reports whether method name is String or ToString. | internal | — |
-| `NewInstance` | `func NewInstance(target any, params ...any) (any, error)` | NewInstance creates a new value for target. | internal | — |
+| `NewInstance` | `func NewInstance(target any, params ...any) (any, error)` | NewInstance creates a new value for target. | internal | `ExampleNewInstance` |
 | `NewInstanceIfPossible` | `func NewInstanceIfPossible(target any) any` | NewInstanceIfPossible creates a useful zero value when possible. | internal | — |
 | `RemoveFinalModify` | `func RemoveFinalModify(object any)` | RemoveFinalModify is a no-op compatibility hook. | internal | — |
 | `SetAccessible` | `func SetAccessible[T any](object T) T` | SetAccessible returns object unchanged. | internal | — |
 | `SetFieldValue` | `func SetFieldValue(obj any, fieldName string, value any) error` | SetFieldValue assigns value to a named field when the target field is settable. | facade | `ExampleSetFieldValue` |
-| `SetFieldValueWithOptions` | `func SetFieldValueWithOptions(obj any, fieldName string, value any, opts ...FieldAccessOption) error` | SetFieldValueWithOptions sets a field by Go name or common tag alias using per-call access options. | internal | — |
+| `SetFieldValueWithOptions` | `func SetFieldValueWithOptions(obj any, fieldName string, value any, opts ...FieldAccessOption) error` | SetFieldValueWithOptions sets a field by Go name or common tag alias using per-call access options. | internal | `ExampleSetFieldValueWithOptions` |
 | `TypeOf` | `func TypeOf(object any) reflect.Type` | TypeOf returns the non-nil reflection type of object. | internal | `ExampleTypeOf` |
-| `ValueOf` | `func ValueOf(object any) reflect.Value` | ValueOf returns the reflection value of object. | internal | — |
+| `ValueOf` | `func ValueOf(object any) reflect.Value` | ValueOf returns the reflection value of object. | internal | `ExampleValueOf` |
 | `WithAllowUnexported` | `func WithAllowUnexported(enabled bool) FieldAccessOption` | WithAllowUnexported controls whether unexported addressable fields may be accessed via unsafe. | facade | — |
 | `WithUnsafeAccess` | `func WithUnsafeAccess(enabled bool) FieldAccessOption` | WithUnsafeAccess controls whether unexported addressable fields may be accessed via unsafe. | facade | — |
 
@@ -2540,7 +2540,7 @@ Import path: `github.com/imajinyun/go-knifer/vskt`
 
 Package vskt provides public APIs for socket utilities.
 
-Quality: 50 functions · 6 with examples · 12.0% example coverage · synopsis sources: facade=50, internal=0, empty=0
+Quality: 50 functions · 11 with examples · 22.0% example coverage · synopsis sources: facade=50, internal=0, empty=0
 
 | Function | Signature | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- |
@@ -2556,7 +2556,7 @@ Quality: 50 functions · 6 with examples · 12.0% example coverage · synopsis s
 | `NewAioServerAddr` | `func NewAioServerAddr(addr *net.TCPAddr, cfg *SocketConfig) (*AioServer, error)` | NewAioServerAddr creates an AIO-style TCP server at addr. | facade | — |
 | `NewAioServerAddrWithOptions` | `func NewAioServerAddrWithOptions(addr *net.TCPAddr, cfg *SocketConfig, opts ...ConfigOption) (*AioServer, error)` | NewAioServerAddrWithOptions creates an AIO-style TCP server at addr with custom config options. | facade | — |
 | `NewAioServerWithOptions` | `func NewAioServerWithOptions(port int, opts ...ConfigOption) (*AioServer, error)` | NewAioServerWithOptions creates an AIO-style TCP server on port with custom config options. | facade | — |
-| `NewAioSession` | `func NewAioSession(conn net.Conn, action IoAction[*bytes.Buffer], cfg *SocketConfig) *AioSession` | NewAioSession creates an AIO session from conn. | facade | — |
+| `NewAioSession` | `func NewAioSession(conn net.Conn, action IoAction[*bytes.Buffer], cfg *SocketConfig) *AioSession` | NewAioSession creates an AIO session from conn. | facade | `ExampleNewAioSession` |
 | `NewNioClient` | `func NewNioClient(host string, port int) (*NioClient, error)` | NewNioClient creates a NIO-style TCP client. | facade | — |
 | `NewNioClientAddr` | `func NewNioClientAddr(addr *net.TCPAddr) (*NioClient, error)` | NewNioClientAddr creates a NIO-style TCP client for addr. | facade | — |
 | `NewNioClientAddrWithOptions` | `func NewNioClientAddrWithOptions(addr *net.TCPAddr, opts ...ConfigOption) (*NioClient, error)` | NewNioClientAddrWithOptions creates a NIO-style TCP client for addr with custom config options. | facade | — |
@@ -2568,16 +2568,16 @@ Quality: 50 functions · 6 with examples · 12.0% example coverage · synopsis s
 | `NewNioServerWithConfig` | `func NewNioServerWithConfig(port int, cfg *SocketConfig) (*NioServer, error)` | NewNioServerWithConfig creates a NIO-style TCP server on port with config. | facade | — |
 | `NewNioServerWithOptions` | `func NewNioServerWithOptions(port int, opts ...ConfigOption) (*NioServer, error)` | NewNioServerWithOptions creates a NIO-style TCP server on port with custom config options. | facade | — |
 | `NewSocketConfig` | `func NewSocketConfig() *SocketConfig` | NewSocketConfig creates a default socket config. | facade | `ExampleNewSocketConfig` |
-| `NewSocketConfigWithOptions` | `func NewSocketConfigWithOptions(opts ...ConfigOption) *SocketConfig` | NewSocketConfigWithOptions creates a socket config customized by options. | facade | — |
+| `NewSocketConfigWithOptions` | `func NewSocketConfigWithOptions(opts ...ConfigOption) *SocketConfig` | NewSocketConfigWithOptions creates a socket config customized by options. | facade | `ExampleNewSocketConfigWithOptions` |
 | `NewSocketError` | `func NewSocketError(err error) *SocketRuntimeError` | NewSocketError delegates to the internal socketx implementation. | facade | `ExampleNewSocketError` |
 | `NewSocketErrorMsg` | `func NewSocketErrorMsg(msg string) *SocketRuntimeError` | NewSocketErrorMsg delegates to the internal socketx implementation. | facade | `ExampleNewSocketErrorMsg` |
 | `NewSocketErrorf` | `func NewSocketErrorf(format string, args ...any) *SocketRuntimeError` | NewSocketErrorf delegates to the internal socketx implementation. | facade | `ExampleNewSocketErrorf` |
 | `SocketConnect` | `func SocketConnect(hostname string, port int, timeout time.Duration) (net.Conn, error)` | SocketConnect connects to host:port with timeout. | facade | — |
 | `SocketConnectAddr` | `func SocketConnectAddr(addr *net.TCPAddr, timeout time.Duration) (net.Conn, error)` | SocketConnectAddr connects to addr with timeout. | facade | — |
-| `SocketConnectAddrWithOptions` | `func SocketConnectAddrWithOptions(addr *net.TCPAddr, opts ...ConnectOption) (net.Conn, error)` | SocketConnectAddrWithOptions connects to addr with custom dial options. | facade | — |
-| `SocketConnectWithOptions` | `func SocketConnectWithOptions(hostname string, port int, opts ...ConnectOption) (net.Conn, error)` | SocketConnectWithOptions connects to host:port with custom dial options. | facade | — |
+| `SocketConnectAddrWithOptions` | `func SocketConnectAddrWithOptions(addr *net.TCPAddr, opts ...ConnectOption) (net.Conn, error)` | SocketConnectAddrWithOptions connects to addr with custom dial options. | facade | `ExampleSocketConnectAddrWithOptions` |
+| `SocketConnectWithOptions` | `func SocketConnectWithOptions(hostname string, port int, opts ...ConnectOption) (net.Conn, error)` | SocketConnectWithOptions connects to host:port with custom dial options. | facade | `ExampleSocketConnectWithOptions` |
 | `SocketIsConnected` | `func SocketIsConnected(conn net.Conn) bool` | SocketIsConnected reports whether conn is non-nil. | facade | — |
-| `SocketRemoteAddress` | `func SocketRemoteAddress(conn net.Conn) net.Addr` | SocketRemoteAddress returns the remote address for conn. | facade | — |
+| `SocketRemoteAddress` | `func SocketRemoteAddress(conn net.Conn) net.Addr` | SocketRemoteAddress returns the remote address for conn. | facade | `ExampleSocketRemoteAddress` |
 | `WithClock` | `func WithClock(clock func() time.Time) ConfigOption` | WithClock sets the clock used to derive socket read/write deadlines. | facade | — |
 | `WithConnFactory` | `func WithConnFactory(factory func(*net.TCPAddr) (net.Conn, error)) ConfigOption` | WithConnFactory sets the factory used to create client connections. | facade | — |
 | `WithConnectContext` | `func WithConnectContext(ctx context.Context) ConnectOption` | WithConnectContext sets the context used while dialing. | facade | — |

@@ -4,7 +4,7 @@
   "summary": {
     "package_count": 54,
     "function_count": 2604,
-    "functions_with_examples": 1076,
+    "functions_with_examples": 1108,
     "context_aware_functions": 36,
     "returns_error_functions": 603,
     "variadic_functions": 776,
@@ -691,8 +691,8 @@
       "synopsis": "Package vblf provides public APIs for Bloom filter utilities.",
       "summary": {
         "function_count": 60,
-        "functions_with_examples": 7,
-        "example_coverage_percent": 11.7,
+        "functions_with_examples": 17,
+        "example_coverage_percent": 28.3,
         "synopsis_sources": {
           "empty": 0,
           "facade": 60,
@@ -806,7 +806,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleBloomFNVHash"
+          ]
         },
         {
           "name": "BloomJSHash",
@@ -976,7 +979,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleInitFromFileWithOptions"
+          ]
         },
         {
           "name": "InitFromReader",
@@ -998,7 +1004,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleInitFromReader"
+          ]
         },
         {
           "name": "JavaDefaultHash",
@@ -1074,7 +1083,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewBitMapBloomFilterE"
+          ]
         },
         {
           "name": "NewBitMapBloomFilterWithFilters",
@@ -1096,7 +1108,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleNewBitMapBloomFilterWithFilters"
+          ]
         },
         {
           "name": "NewBitMapBloomFilterWithFiltersE",
@@ -1137,7 +1152,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleNewBitMapBloomFilterWithOptions"
+          ]
         },
         {
           "name": "NewBitMapBloomFilterWithOptionsE",
@@ -1212,7 +1230,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewBitSetBloomFilterE"
+          ]
         },
         {
           "name": "NewBitSetBloomFilterWithOptions",
@@ -1230,7 +1251,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleNewBitSetBloomFilterWithOptions"
+          ]
         },
         {
           "name": "NewBitSetBloomFilterWithOptionsE",
@@ -1372,7 +1396,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewFuncFilterE"
+          ]
         },
         {
           "name": "NewFuncFilterWithMachineNum",
@@ -1446,7 +1473,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleNewFuncFilterWithOptions"
+          ]
         },
         {
           "name": "NewFuncFilterWithOptionsE",
@@ -38319,8 +38349,8 @@
       "synopsis": "Package vref provides public APIs for reflection utilities.",
       "summary": {
         "function_count": 67,
-        "functions_with_examples": 7,
-        "example_coverage_percent": 10.4,
+        "functions_with_examples": 24,
+        "example_coverage_percent": 35.8,
         "synopsis_sources": {
           "empty": 0,
           "facade": 5,
@@ -38438,7 +38468,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleGetFieldName"
+          ]
         },
         {
           "name": "GetFieldValue",
@@ -38555,7 +38588,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleGetFieldsValue"
+          ]
         },
         {
           "name": "GetFieldsValueWithOptions",
@@ -38658,7 +38694,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleGetMethodByNameIgnoreCase"
+          ]
         },
         {
           "name": "GetMethodIgnoreCase",
@@ -38844,7 +38883,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleGetPublicMethodNames"
+          ]
         },
         {
           "name": "GetPublicMethods",
@@ -38906,7 +38948,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleHasField"
+          ]
         },
         {
           "name": "ImplementsContext",
@@ -38924,7 +38969,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleImplementsContext"
+          ]
         },
         {
           "name": "ImplementsError",
@@ -38942,7 +38990,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleImplementsError"
+          ]
         },
         {
           "name": "IndirectType",
@@ -38960,7 +39011,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIndirectType"
+          ]
         },
         {
           "name": "IndirectValue",
@@ -38978,7 +39032,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIndirectValue"
+          ]
         },
         {
           "name": "Invoke",
@@ -39084,7 +39141,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleInvokeRaw"
+          ]
         },
         {
           "name": "InvokeStatic",
@@ -39188,7 +39248,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsCollection"
+          ]
         },
         {
           "name": "IsCollectionType",
@@ -39278,7 +39341,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsFunction"
+          ]
         },
         {
           "name": "IsGetterOrSetter",
@@ -39300,7 +39366,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsGetterOrSetter"
+          ]
         },
         {
           "name": "IsGetterOrSetterIgnoreCase",
@@ -39372,7 +39441,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsMap"
+          ]
         },
         {
           "name": "IsMapType",
@@ -39542,7 +39614,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleNewInstance"
+          ]
         },
         {
           "name": "NewInstanceIfPossible",
@@ -39652,7 +39727,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleSetFieldValueWithOptions"
+          ]
         },
         {
           "name": "TypeOf",
@@ -39691,7 +39769,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleValueOf"
+          ]
         },
         {
           "name": "WithAllowUnexported",
@@ -44936,8 +45017,8 @@
       "synopsis": "Package vskt provides public APIs for socket utilities.",
       "summary": {
         "function_count": 50,
-        "functions_with_examples": 6,
-        "example_coverage_percent": 12,
+        "functions_with_examples": 11,
+        "example_coverage_percent": 22,
         "synopsis_sources": {
           "empty": 0,
           "facade": 50,
@@ -45254,7 +45335,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewAioSession"
+          ]
         },
         {
           "name": "NewNioClient",
@@ -45513,7 +45597,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleNewSocketConfigWithOptions"
+          ]
         },
         {
           "name": "NewSocketError",
@@ -45653,7 +45740,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleSocketConnectAddrWithOptions"
+          ]
         },
         {
           "name": "SocketConnectWithOptions",
@@ -45680,7 +45770,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleSocketConnectWithOptions"
+          ]
         },
         {
           "name": "SocketIsConnected",
@@ -45716,7 +45809,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleSocketRemoteAddress"
+          ]
         },
         {
           "name": "WithClock",
