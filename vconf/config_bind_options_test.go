@@ -4,6 +4,7 @@ import (
 	"errors"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/imajinyun/go-knifer/vconf"
 )
@@ -77,5 +78,28 @@ choice=blue
 	)
 	if err != nil {
 		t.Fatalf("ValidateSchemaWithOptions() error = %v", err)
+	}
+}
+
+func TestFacadeBindDecodeHookApplied(t *testing.T) {
+	s := vconf.New()
+	s.Set("start", "2026-06-22")
+	type target struct {
+		Start time.Time `conf:"start"`
+	}
+	var cfg target
+	err := s.BindWithOptions(&cfg,
+		vconf.WithBindDecodeHook(func(from, to reflect.Type, value any) (any, error) {
+			if from.Kind() == reflect.String && to == reflect.TypeOf(time.Time{}) {
+				return time.Parse(time.DateOnly, value.(string))
+			}
+			return value, nil
+		}),
+	)
+	if err != nil {
+		t.Fatalf("BindWithOptions() with hook error = %v", err)
+	}
+	if got := cfg.Start.Format(time.DateOnly); got != "2026-06-22" {
+		t.Fatalf("Start = %q", got)
 	}
 }

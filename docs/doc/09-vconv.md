@@ -23,6 +23,21 @@ Choose the conversion family by how much ambiguity the caller can tolerate.
 - Treat `ToBytes` results as potentially shared when the input is already `[]byte`; make a defensive copy before mutation.
 - Keep custom parser options local to the call site or constructor so conversion policy is easy to audit.
 
+## Conversion matrix
+
+Use this matrix when choosing between permissive compatibility helpers and explicit-error helpers. The `E` helpers define the reviewed boundary contract; zero/default helpers preserve concise legacy behavior.
+
+| Source kind | String | Int / Int64 | Float64 | Bool | Bytes | Failure contract |
+| --- | --- | --- | --- | --- | --- | --- |
+| `nil` | `""` | `0` / default; `E` rejects | `0` / default; `E` rejects | `false` / default; `E` rejects | `nil` | `E` helpers return `ErrInvalidConversion` and match `knifer.ErrCodeInvalidInput`. |
+| String or named string | returned as-is | `strconv.ParseInt`; float strings accepted by integer helpers and truncated toward zero | `strconv.ParseFloat` | accepted tokens: `true/yes/y/ok/1/on` and `false/no/n/0/off` | raw string bytes | Invalid strings are swallowed by zero/default helpers and rejected by `E` helpers. |
+| Signed integer | decimal string | range-checked for destination | exact numeric conversion | nonzero is true | decimal string bytes | `E` helpers reject overflow for the destination integer type. |
+| Unsigned integer | decimal string | range-checked for destination | exact numeric conversion when representable | nonzero is true | decimal string bytes | `E` helpers reject unsigned values that cannot fit signed destinations. |
+| Float | formatted with `FormatFloat` policy | truncated toward zero when finite and in range | exact numeric conversion | nonzero is true | formatted float bytes | `E` integer helpers reject `NaN`, `Inf`, and out-of-range values. |
+| Bool | formatted with bool formatter | `1` or `0` | `1` or `0` | returned as-is | formatted bool bytes | Formatter/parser options are per-call; no global conversion state is used. |
+| `[]byte` | string copy of bytes | parsed through string rules | parsed through string rules | parsed through string rules | returned as-is | Clone before mutation when ownership matters. |
+| Other values | `fmt.Sprint` | unsupported except through string/default compatibility paths | unsupported except through string/default compatibility paths | unsupported except through string/default compatibility paths | stringified bytes | Prefer explicit typed conversion or domain validation before using generic values. |
+
 ## When not to use vconv
 
 - Use `strconv` directly when a strict grammar, bit size, or parse error is part of the contract.

@@ -12,6 +12,12 @@ import (
 // Option customizes bean mapping behavior.
 type Option func(*Options)
 
+// DecodeHookFunc can transform a source value before weak assignment.
+//
+// from and to describe the source value type and destination field type. Return
+// the original value unchanged when the hook does not handle the conversion.
+type DecodeHookFunc func(from reflect.Type, to reflect.Type, value any) (any, error)
+
 // Options controls struct/map property mapping.
 type Options struct {
 	// TagNames are checked in order to resolve field names and aliases.
@@ -34,6 +40,8 @@ type Options struct {
 	ParseUint func(string, int, int) (uint64, error)
 	// ParseFloat parses strings during weak floating-point conversion. nil means strconv.ParseFloat.
 	ParseFloat func(string, int) (float64, error)
+	// DecodeHook transforms values before assignment. nil means no custom hook.
+	DecodeHook DecodeHookFunc
 }
 
 // Result reports which source properties were consumed, skipped, or left unused.
@@ -117,6 +125,13 @@ func WithFloatParser(parser func(string, int) (float64, error)) Option {
 		if parser != nil {
 			o.ParseFloat = parser
 		}
+	}
+}
+
+// WithDecodeHook sets a per-call hook for custom type-to-type conversions.
+func WithDecodeHook(hook DecodeHookFunc) Option {
+	return func(o *Options) {
+		o.DecodeHook = hook
 	}
 }
 
@@ -334,6 +349,7 @@ func optionsFromConfig(cfg Options) []Option {
 		WithIntParser(cfg.ParseInt),
 		WithUintParser(cfg.ParseUint),
 		WithFloatParser(cfg.ParseFloat),
+		WithDecodeHook(cfg.DecodeHook),
 	}
 }
 
@@ -543,6 +559,15 @@ func assignValue(dst, src reflect.Value, cfg Options) error {
 		dst.Set(reflect.Zero(dst.Type()))
 		return nil
 	}
+	var err error
+	src, err = applyDecodeHook(dst.Type(), src, cfg)
+	if err != nil {
+		return err
+	}
+	if !src.IsValid() || isNilValue(src) {
+		dst.Set(reflect.Zero(dst.Type()))
+		return nil
+	}
 	if src.Type().AssignableTo(dst.Type()) {
 		dst.Set(src)
 		return nil
@@ -598,6 +623,20 @@ func assignValue(dst, src reflect.Value, cfg Options) error {
 	default:
 		return fmt.Errorf("cannot assign %s to %s", src.Type(), dst.Type())
 	}
+}
+
+func applyDecodeHook(dstType reflect.Type, src reflect.Value, cfg Options) (reflect.Value, error) {
+	if cfg.DecodeHook == nil || !src.IsValid() || !src.CanInterface() {
+		return src, nil
+	}
+	value, err := cfg.DecodeHook(src.Type(), dstType, src.Interface())
+	if err != nil {
+		return reflect.Value{}, err
+	}
+	if value == nil {
+		return reflect.Value{}, nil
+	}
+	return reflect.ValueOf(value), nil
 }
 
 func assignSlice(dst, src reflect.Value, cfg Options) error {

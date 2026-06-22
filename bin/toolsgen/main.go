@@ -23,7 +23,7 @@ import (
 const modulePath = "github.com/imajinyun/go-knifer"
 
 // schemaVersion is bumped when the tools.json structure changes.
-const schemaVersion = "1.5"
+const schemaVersion = "1.6"
 
 const (
 	apiStatusRecommended   = "recommended"
@@ -55,11 +55,20 @@ type SummaryDoc struct {
 
 // PackageDoc describes one public facade package.
 type PackageDoc struct {
-	ImportPath string            `json:"import_path"`
-	Name       string            `json:"name"`
-	Synopsis   string            `json:"synopsis"`
-	Summary    PackageSummaryDoc `json:"summary"`
-	Functions  []FuncDoc         `json:"functions"`
+	ImportPath             string                  `json:"import_path"`
+	Name                   string                  `json:"name"`
+	Synopsis               string                  `json:"synopsis"`
+	Summary                PackageSummaryDoc       `json:"summary"`
+	RecommendedEntrypoints []RecommendedEntrypoint `json:"recommended_entrypoints"`
+	Functions              []FuncDoc               `json:"functions"`
+}
+
+// RecommendedEntrypoint marks the smallest public API subset to try first for a
+// package. Agents should prefer these functions before scanning the whole facade.
+type RecommendedEntrypoint struct {
+	Name      string `json:"name"`
+	Profile   string `json:"profile"`
+	Rationale string `json:"rationale"`
 }
 
 // PackageSummaryDoc stores per-package quality counts so consumers can rank or
@@ -189,6 +198,22 @@ func renderToolsMarkdown(doc ToolsDoc) []byte {
 			markdownAPIStatusCounts(pkg.Summary.StatusCounts),
 			markdownSynopsisSourceCounts(pkg.Summary.SynopsisSources),
 		)
+		if len(pkg.RecommendedEntrypoints) > 0 {
+			b.WriteString("Recommended entrypoints:\n\n")
+			b.WriteString("| Function | Profile | Rationale |\n")
+			b.WriteString("| --- | --- | --- |\n")
+			for _, entrypoint := range pkg.RecommendedEntrypoints {
+				b.WriteString("| `")
+				b.WriteString(entrypoint.Name)
+				b.WriteString("` | ")
+				b.WriteString(markdownText(entrypoint.Profile))
+				b.WriteString(" | ")
+				b.WriteString(markdownText(entrypoint.Rationale))
+				b.WriteString(" |\n")
+			}
+			b.WriteString("\n")
+		}
+
 		b.WriteString("| Function | Signature | Status | Synopsis | Source | Examples |\n")
 		b.WriteString("| --- | --- | --- | --- | --- | --- |\n")
 		for _, fn := range pkg.Functions {
@@ -606,7 +631,90 @@ func buildPackageDoc(pkg *packages.Package, exampleSet map[string]struct{}, impl
 		return pd.Functions[i].Name < pd.Functions[j].Name
 	})
 	pd.Summary = summarizePackageDoc(pd.Functions)
+	pd.RecommendedEntrypoints = recommendedEntrypoints(pd.Functions)
 	return pd
+}
+
+func recommendedEntrypoints(functions []FuncDoc) []RecommendedEntrypoint {
+	profiles := []string{"safe", "error", "options", "day-one", "compatibility"}
+	byProfile := map[string]RecommendedEntrypoint{}
+	for _, fn := range functions {
+		profile := recommendedProfile(fn)
+		if profile == "" {
+			continue
+		}
+		candidate := RecommendedEntrypoint{
+			Name:      fn.Name,
+			Profile:   profile,
+			Rationale: recommendedRationale(fn, profile),
+		}
+		current, ok := byProfile[profile]
+		if !ok || betterRecommendedEntrypoint(candidate, current, functions) {
+			byProfile[profile] = candidate
+		}
+	}
+
+	out := make([]RecommendedEntrypoint, 0, len(byProfile))
+	for _, profile := range profiles {
+		if entrypoint, ok := byProfile[profile]; ok {
+			out = append(out, entrypoint)
+		}
+	}
+	return out
+}
+
+func recommendedProfile(fn FuncDoc) string {
+	if fn.Status == apiStatusCompatibility {
+		return "compatibility"
+	}
+	if fn.Status != apiStatusRecommended {
+		return ""
+	}
+	if strings.Contains(fn.Name, "Safe") {
+		return "safe"
+	}
+	if fn.ReturnsError || isExplicitErrorAPIName(fn.Name) {
+		return "error"
+	}
+	if strings.HasSuffix(fn.Name, "WithOptions") || hasOptionParameter(fn) {
+		return "options"
+	}
+	return "day-one"
+}
+
+func recommendedRationale(fn FuncDoc, profile string) string {
+	switch profile {
+	case "safe":
+		return "Prefer when inputs cross trust boundaries or need explicit safety checks."
+	case "error":
+		return "Prefer when callers must distinguish invalid input or provider failure from default values."
+	case "options":
+		return "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+	case "compatibility":
+		return "Compatibility API; use only when preserving existing call-site semantics."
+	default:
+		return "Start here for concise, trusted-input use cases in this package."
+	}
+}
+
+func betterRecommendedEntrypoint(candidate, current RecommendedEntrypoint, functions []FuncDoc) bool {
+	if candidate.Profile == "day-one" {
+		candidateExamples := examplesForFunction(candidate.Name, functions)
+		currentExamples := examplesForFunction(current.Name, functions)
+		if candidateExamples != currentExamples {
+			return candidateExamples > currentExamples
+		}
+	}
+	return candidate.Name < current.Name
+}
+
+func examplesForFunction(name string, functions []FuncDoc) int {
+	for _, fn := range functions {
+		if fn.Name == name {
+			return len(fn.Examples)
+		}
+	}
+	return 0
 }
 
 func buildFuncDoc(obj *types.Func, sig *types.Signature, qualifier types.Qualifier, doc functionDoc, exampleSet map[string]struct{}) FuncDoc {
@@ -672,6 +780,19 @@ func isCompatibilityAPIName(name string) bool {
 	}
 	if strings.HasPrefix(name, "Old") || strings.HasPrefix(name, "Legacy") {
 		return true
+	}
+	return false
+}
+
+func isExplicitErrorAPIName(name string) bool {
+	return strings.HasSuffix(name, "E") || strings.HasSuffix(name, "EWithOptions")
+}
+
+func hasOptionParameter(fn FuncDoc) bool {
+	for _, param := range fn.Params {
+		if strings.Contains(param.Type, "Option") || strings.Contains(param.Type, "Options") {
+			return true
+		}
 	}
 	return false
 }

@@ -3,6 +3,7 @@ package sets
 import (
 	"encoding/json"
 	"testing"
+	"unicode/utf8"
 )
 
 func TestSetJSONRoundTrip(t *testing.T) {
@@ -62,4 +63,32 @@ func TestSetJSONWithOptions(t *testing.T) {
 	if !unmarshalCalled || !decoded.Equal(original) {
 		t.Fatalf("unmarshalCalled=%v decoded=%v", unmarshalCalled, decoded.Members())
 	}
+}
+
+func FuzzSetJSONRoundTrip(f *testing.F) {
+	for _, seed := range []string{"", "go", "go,knifer", "重复,重复,value"} {
+		f.Add(seed)
+	}
+	f.Fuzz(func(t *testing.T, seed string) {
+		if !utf8.ValidString(seed) {
+			t.Skip()
+		}
+		members := []string{}
+		if seed != "" {
+			members = append(members, seed)
+		}
+		members = append(members, seed+"-suffix")
+		original := New(members...)
+		b, err := json.Marshal(original)
+		if err != nil {
+			t.Fatalf("Marshal() error = %v", err)
+		}
+		var decoded Set[string]
+		if err := json.Unmarshal(b, &decoded); err != nil {
+			t.Fatalf("Unmarshal(%q) error = %v", b, err)
+		}
+		if !decoded.Equal(original) {
+			t.Fatalf("decoded = %v, want %v", decoded.Members(), original.Members())
+		}
+	})
 }

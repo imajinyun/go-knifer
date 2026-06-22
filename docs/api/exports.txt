@@ -65,6 +65,7 @@ github.com/imajinyun/go-knifer/vbean
   func ToStruct(src any, dst any, opts ...Option) error
   func WithBoolParser(parser func(string) (bool, error)) Option
   func WithCaseInsensitive(enable bool) Option
+  func WithDecodeHook(hook func(from reflect.Type, to reflect.Type, value any) (any, error)) Option
   func WithFloatParser(parser func(string, int) (float64, error)) Option
   func WithIgnoreEmpty(enable bool) Option
   func WithIgnoreZero(enable bool) Option
@@ -73,6 +74,7 @@ github.com/imajinyun/go-knifer/vbean
   func WithTagNames(names ...string) Option
   func WithUintParser(parser func(string, int, int) (uint64, error)) Option
   func WithWeaklyTyped(enable bool) Option
+  type DecodeHookFunc = github.com/imajinyun/go-knifer/internal/bean.DecodeHookFunc
   type Error = github.com/imajinyun/go-knifer/internal/bean.BeanError
   type Option = github.com/imajinyun/go-knifer/internal/bean.Option
   type Options = github.com/imajinyun/go-knifer/internal/bean.Options
@@ -434,6 +436,7 @@ github.com/imajinyun/go-knifer/vconf
   func Watch(path string, interval time.Duration, onChange func(*Conf, error)) (func(), error)
   func WatchWithOptions(path string, opts WatchOptions, onChange func(*Conf, error)) (func(), error)
   func WithBindBoolParser(parser func(string) (bool, error)) BindOption
+  func WithBindDecodeHook(hook func(from reflect.Type, to reflect.Type, value any) (any, error)) BindOption
   func WithBindFloatParser(parser func(string, int) (float64, error)) BindOption
   func WithBindIntParser(parser func(string, int, int) (int64, error)) BindOption
   func WithBindUintParser(parser func(string, int, int) (uint64, error)) BindOption
@@ -448,6 +451,7 @@ github.com/imajinyun/go-knifer/vconf
   func WithYAMLUnmarshalFunc(unmarshal func([]byte, any) error) ParseOption
   type BindOption = github.com/imajinyun/go-knifer/internal/conf.BindOption
   type Conf = github.com/imajinyun/go-knifer/internal/conf.Conf
+  type DecodeHookFunc = github.com/imajinyun/go-knifer/internal/conf.DecodeHookFunc
   type DecryptFunc = github.com/imajinyun/go-knifer/internal/conf.DecryptFunc
   type Error = github.com/imajinyun/go-knifer/internal/conf.ConfError
   type ExpandOption = github.com/imajinyun/go-knifer/internal/conf.ExpandOption

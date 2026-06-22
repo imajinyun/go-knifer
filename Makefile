@@ -1,4 +1,4 @@
-.PHONY: help doctor install-hooks uninstall-hooks worktree-check change-policy-check security-sensitive-diff agent-evidence agent-evidence-check test test-race race-test shuffle-test coverage-profile coverage-report coverage-check release-notes-check api-check tools-check tools-gen tools-report docs-quickstart-check ai-context-check ci-workflow-check docs-gen docs-check generate mod-verify tidy-check mod-check diff-whitespace diff-clean diff-check vet arch lint govulncheck quick-check security-check full-check release-check agent-check agent-full-check agent-security-check ci-agent-governance bench bench-core bench-facade bench-codec bench-smoke check ci-test
+.PHONY: help doctor install-hooks uninstall-hooks worktree-check change-policy-check security-sensitive-diff agent-evidence agent-evidence-check test test-race race-test shuffle-test fuzz-smoke coverage-profile coverage-report coverage-check release-notes-check api-check tools-check tools-gen tools-report docs-quickstart-check ai-context-check ci-workflow-check docs-gen docs-check generate mod-verify tidy-check mod-check diff-whitespace diff-clean diff-check vet arch lint govulncheck quick-check security-check full-check release-check agent-check agent-full-check agent-security-check ci-agent-governance bench bench-core bench-facade bench-codec bench-smoke benchstat check ci-test
 
 GO ?= go
 GOLANGCI_LINT ?= golangci-lint
@@ -10,6 +10,10 @@ BENCH_FACADE_PKGS ?= ./vslice ./vmap ./vstr ./vnum ./vbean ./vdb ./vcrypto ./vpo
 BENCH_CODEC_PKGS ?= ./internal/json ./vjson ./internal/xml ./vxml
 BENCHTIME ?= 1s
 BENCHCOUNT ?= 1
+FUZZTIME ?= 1s
+FUZZ_PKGS ?= ./internal/codec ./internal/json ./internal/sets
+BENCH_BASELINE ?=
+BENCH_CURRENT ?=
 
 help:
 	@echo "Targets:"
@@ -17,6 +21,7 @@ help:
 	@echo "  test-race       Run race/shuffle tests and write coverage"
 	@echo "  race-test       Run race-enabled tests"
 	@echo "  shuffle-test    Run order-shuffled tests"
+	@echo "  fuzz-smoke      Run short fuzz/property smoke checks"
 	@echo "  coverage-profile Generate race/shuffle coverage profile"
 	@echo "  coverage-report  Print function coverage from COVERAGE_FILE"
 	@echo "  coverage-check  Enforce repository and package coverage gates"
@@ -25,6 +30,7 @@ help:
 	@echo "  bench-facade    Run facade benchmark baselines"
 	@echo "  bench-codec     Run JSON/XML benchmark baselines"
 	@echo "  bench-smoke     Run a short core benchmark smoke check"
+	@echo "  benchstat       Compare BENCH_BASELINE and BENCH_CURRENT files with benchstat"
 	@echo "  doctor          Diagnose local Go/tooling/Git environment"
 	@echo "  install-hooks   Enable optional local Git validation hooks"
 	@echo "  uninstall-hooks Disable optional local Git validation hooks"
@@ -118,6 +124,14 @@ race-test:
 
 shuffle-test:
 	$(GO) test -shuffle=on $(PKGS)
+
+fuzz-smoke:
+	@for pkg in $(FUZZ_PKGS); do \
+		fuzzes="$$( $(GO) test -list '^Fuzz' $$pkg | grep '^Fuzz' || true )"; \
+		for fuzz in $$fuzzes; do \
+			$(GO) test -run=^$$ -fuzz=^$$fuzz$$ -fuzztime=$(FUZZTIME) $$pkg || exit $$?; \
+		done; \
+	done
 
 coverage-profile: test-race
 
@@ -215,6 +229,12 @@ bench-codec:
 
 bench-smoke:
 	$(GO) test -bench=Benchmark -benchtime=100ms -count=1 -run=^$$ $(BENCH_PKGS) $(BENCH_FACADE_PKGS) $(BENCH_CODEC_PKGS)
+
+benchstat:
+	@test -n "$(BENCH_BASELINE)" || (echo "BENCH_BASELINE is required" >&2; exit 2)
+	@test -n "$(BENCH_CURRENT)" || (echo "BENCH_CURRENT is required" >&2; exit 2)
+	@command -v benchstat >/dev/null 2>&1 || (echo "benchstat not found; run: go install golang.org/x/perf/cmd/benchstat@latest" >&2; exit 2)
+	benchstat "$(BENCH_BASELINE)" "$(BENCH_CURRENT)"
 
 check: full-check
 

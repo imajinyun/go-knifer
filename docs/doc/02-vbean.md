@@ -13,7 +13,7 @@ Choose the helper by the mapping direction and how much conversion metadata the 
 | Copy trusted Go values between compatible shapes | `Copy`, `CopyProperties` | Use when source and destination are already trusted Go values and conversion policy is simple. |
 | Track matched and unused fields | `DecodeResult`, `MergeResult` | Use metadata when callers must reject unused input or explain mapping decisions. |
 | Merge layered sources into an existing destination | `Merge`, `MergeWithOptions`, `MergeResultWithOptions` | Later sources override earlier sources; keep that precedence visible at the call site. |
-| Customize matching or conversion | `WithTagNames`, `WithCaseInsensitive`, `WithWeaklyTyped`, parser options | Prefer explicit options over hidden global conversion policy. |
+| Customize matching or conversion | `WithTagNames`, `WithCaseInsensitive`, `WithWeaklyTyped`, parser options, `WithDecodeHook` | Prefer explicit per-call options over hidden global conversion policy. |
 
 ## Mapping safety checklist
 
@@ -23,6 +23,12 @@ Choose the helper by the mapping direction and how much conversion metadata the 
 - Keep tag-name precedence explicit with `WithTagNames` when JSON, DB, form, or config tags differ.
 - Be deliberate with `WithIgnoreEmpty` and `WithIgnoreZero`; they can preserve existing values but can also hide intentional zero-value updates.
 - Treat map inputs from users or config files as untrusted until required fields, unused fields, and type conversions have been checked.
+
+## Decode hook and field-path errors
+
+`WithDecodeHook` adds a per-call conversion hook for cases such as string-to-time, string-to-domain enum, or provider-backed value normalization. Hooks receive the source type, destination type, and current value. Return the original value unchanged when the hook does not handle the conversion. Do not use package-level mutable registries; keep conversion policy local to the boundary call so reviews and tests can see it.
+
+Decode and copy errors include the destination field path as human-readable context. Nested slice, map, and struct failures add fragments such as `bean: set field Items`, `index 0`, `map key`, `map value`, and the nested field name. Tests should assert both `errors.Is(err, knifer.ErrCodeInvalidInput)` and the relevant path fragments when adding a new mapping path.
 
 ## When not to use vbean
 

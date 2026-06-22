@@ -1,9 +1,9 @@
 {
-  "schema": "1.5",
+  "schema": "1.6",
   "module": "github.com/imajinyun/go-knifer",
   "summary": {
     "package_count": 54,
-    "function_count": 2604,
+    "function_count": 2606,
     "functions_with_examples": 1253,
     "context_aware_functions": 36,
     "returns_error_functions": 603,
@@ -12,11 +12,11 @@
       "compatibility": 22,
       "deprecated": 0,
       "experimental": 0,
-      "recommended": 2582
+      "recommended": 2584
     },
     "synopsis_sources": {
       "empty": 0,
-      "facade": 1962,
+      "facade": 1964,
       "internal": 642
     }
   },
@@ -41,6 +41,23 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "Chat",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "New",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "Redact",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "Chat",
@@ -199,21 +216,38 @@
       "name": "vbean",
       "synopsis": "Package vbean provides public APIs for struct and map property mapping.",
       "summary": {
-        "function_count": 22,
+        "function_count": 23,
         "functions_with_examples": 7,
-        "example_coverage_percent": 31.8,
+        "example_coverage_percent": 30.4,
         "status_counts": {
           "compatibility": 1,
           "deprecated": 0,
           "experimental": 0,
-          "recommended": 21
+          "recommended": 22
         },
         "synopsis_sources": {
           "empty": 0,
-          "facade": 22,
+          "facade": 23,
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "CopyProperties",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "NewOptions",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        },
+        {
+          "name": "Copy",
+          "profile": "compatibility",
+          "rationale": "Compatibility API; use only when preserving existing call-site semantics."
+        }
+      ],
       "functions": [
         {
           "name": "Copy",
@@ -578,6 +612,25 @@
           "variadic": false
         },
         {
+          "name": "WithDecodeHook",
+          "signature": "func WithDecodeHook(hook func(from reflect.Type, to reflect.Type, value any) (any, error)) Option",
+          "synopsis": "WithDecodeHook sets a per-call hook for custom type-to-type conversions.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "hook",
+              "type": "func(from reflect.Type, to reflect.Type, value any) (any, error)"
+            }
+          ],
+          "results": [
+            "Option"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
           "name": "WithFloatParser",
           "signature": "func WithFloatParser(parser func(string, int) (float64, error)) Option",
           "synopsis": "WithFloatParser sets the parser used during weak string-to-floating-point conversion.",
@@ -751,6 +804,23 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "InitFromFileWithOptions",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "NewBitMapBloomFilterWithOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "BloomFNVHash",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "ApHash",
@@ -2033,6 +2103,13 @@
           "internal": 4
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "And",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "And",
@@ -2144,6 +2221,18 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "NewFIFOWithOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "NewFIFO",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "NewFIFO",
@@ -2642,6 +2731,23 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "Output",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "Colorize",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "WithColorMode",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "Colorize",
@@ -3039,6 +3145,18 @@
           "internal": 14
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "Base64Decode",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "Base64Encode",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "Base64Decode",
@@ -3343,21 +3461,38 @@
       "name": "vconf",
       "synopsis": "Package vconf provides configuration file reading and grouped configuration utilities.",
       "summary": {
-        "function_count": 38,
+        "function_count": 39,
         "functions_with_examples": 8,
-        "example_coverage_percent": 21.1,
+        "example_coverage_percent": 20.5,
         "status_counts": {
           "compatibility": 0,
           "deprecated": 0,
           "experimental": 0,
-          "recommended": 38
+          "recommended": 39
         },
         "synopsis_sources": {
           "empty": 0,
-          "facade": 38,
+          "facade": 39,
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "LoadRemoteSafe",
+          "profile": "safe",
+          "rationale": "Prefer when inputs cross trust boundaries or need explicit safety checks."
+        },
+        {
+          "name": "Base64Decrypt",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "Merge",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "Base64Decrypt",
@@ -3959,6 +4094,25 @@
           "variadic": false
         },
         {
+          "name": "WithBindDecodeHook",
+          "signature": "func WithBindDecodeHook(hook func(from reflect.Type, to reflect.Type, value any) (any, error)) BindOption",
+          "synopsis": "WithBindDecodeHook sets a per-call hook for custom bind type conversions.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "hook",
+              "type": "func(from reflect.Type, to reflect.Type, value any) (any, error)"
+            }
+          ],
+          "results": [
+            "BindOption"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
           "name": "WithBindFloatParser",
           "signature": "func WithBindFloatParser(parser func(string, int) (float64, error)) BindOption",
           "synopsis": "WithBindFloatParser sets the floating-point parser used by Conf.BindWithOptions and Conf.BindGroupWithOptions.",
@@ -4212,6 +4366,23 @@
           "internal": 35
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "ToBoolE",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "ToBoolDefaultWithOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "ToBool",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "ToBool",
@@ -5114,6 +5285,28 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "CronRestart",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "ConfigureDefaultScheduler",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "NewCronError",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        },
+        {
+          "name": "MustNewPattern",
+          "profile": "compatibility",
+          "rationale": "Compatibility API; use only when preserving existing call-site semantics."
+        }
+      ],
       "functions": [
         {
           "name": "ConfigureDefaultScheduler",
@@ -6165,6 +6358,23 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "AESDecryptGCM",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "WithGCMRandomOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "ConstantTimeEqual",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "AESDecryptGCM",
@@ -8118,6 +8328,18 @@
           "internal": 23
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "ForEach",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "MapsToRecords",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "ForEach",
@@ -8674,6 +8896,23 @@
           "internal": 29
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "Parse",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "NowWithOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "BeginOfDay",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "BeginOfDay",
@@ -9340,6 +9579,28 @@
           "internal": 36
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "IsSafeIdentifier",
+          "profile": "safe",
+          "rationale": "Prefer when inputs cross trust boundaries or need explicit safety checks."
+        },
+        {
+          "name": "AssignEntity",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "NewBuilder",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "BuildLikeValue",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "AndGroup",
@@ -10472,6 +10733,23 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "FilterAny",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "ContainsAnyWithOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "Contains",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "ConfigureAsyncRunner",
@@ -11379,6 +11657,28 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "Recover",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "GetStackTraceWithOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "ErrorIs",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        },
+        {
+          "name": "MustExit",
+          "profile": "compatibility",
+          "rationale": "Compatibility API; use only when preserving existing call-site semantics."
+        }
+      ],
       "functions": [
         {
           "name": "ConfigureDefaultLogFunc",
@@ -12463,6 +12763,23 @@
           "internal": 6
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "AppendFileString",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "ExistsWithOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "CloseQuietly",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "AppendFileString",
@@ -13949,6 +14266,18 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "IsChineseWithOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "IsEmail",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "IsChinese",
@@ -14349,6 +14678,23 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "Download",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "New",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "WithProvider",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "Download",
@@ -14509,6 +14855,23 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "Convert",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "New",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "WithProvider",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "Convert",
@@ -14638,6 +15001,13 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "AdditiveHash",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "AdditiveHash",
@@ -14988,6 +15358,28 @@
           "internal": 5
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "DeleteSafe",
+          "profile": "safe",
+          "rationale": "Prefer when inputs cross trust boundaries or need explicit safety checks."
+        },
+        {
+          "name": "Download",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "CleanHTMLWithOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "AddGlobalHeader",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "AddGlobalHeader",
@@ -18473,6 +18865,23 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "ConfigureDefaultSnowflake",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "GetSnowflakeNextID",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        },
+        {
+          "name": "FastSimpleUUID",
+          "profile": "compatibility",
+          "rationale": "Compatibility API; use only when preserving existing call-site semantics."
+        }
+      ],
       "functions": [
         {
           "name": "ConfigureDefaultFallbackRandomSourceProvider",
@@ -19495,6 +19904,18 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "AgeWithOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "AgeAt",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "Age",
@@ -20561,6 +20982,23 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "BarcodeASCII",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "GenMathGeneratorWithOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "CanDecodeBarcodeFormat",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "BarcodeASCII",
@@ -22877,6 +23315,18 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "NewMapE",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "NewBatch",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "NewBatch",
@@ -23127,6 +23577,23 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "Parse",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "FormatWithOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "CreateConfig",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "CreateConfig",
@@ -24710,6 +25177,28 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "CreateJWTToken",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "ES256WithOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "AlgorithmName",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        },
+        {
+          "name": "MustHMACSigner",
+          "profile": "compatibility",
+          "rationale": "Compatibility API; use only when preserving existing call-site semantics."
+        }
+      ],
       "functions": [
         {
           "name": "AlgorithmName",
@@ -26579,6 +27068,23 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "LogAtE",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "DebugWithOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "GetDefault",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "Debug",
@@ -27684,6 +28190,23 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "NewAddress",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "WithQuickClientOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "WithHeader",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "NewAddress",
@@ -28952,6 +29475,18 @@
           "internal": 61
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "FilterErr",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "Assign",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "Assign",
@@ -30578,6 +31113,13 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "BankCard",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "Address",
@@ -31006,6 +31548,23 @@
           "internal": 113
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "AddRootCABytes",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "GetHardwareAddressWithOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "CreateAddress",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "AddRootCABytes",
@@ -34709,6 +35268,23 @@
           "internal": 131
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "AbsIntegerE",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "DecimalFormatMoneyWithOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "Add",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "AbsFloat32",
@@ -38044,6 +38620,28 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "Clone",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "CloneIfPossibleWithOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "Apply",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        },
+        {
+          "name": "Equals",
+          "profile": "compatibility",
+          "rationale": "Compatibility API; use only when preserving existing call-site semantics."
+        }
+      ],
       "functions": [
         {
           "name": "Accept",
@@ -39146,6 +39744,13 @@
           "internal": 5
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "Analyze",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "Analyze",
@@ -39279,6 +39884,23 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "ReadRows",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "WithOpenOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "WithReadSheet",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "IsValidSheetName",
@@ -39926,6 +40548,28 @@
           "internal": 11
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "BytesWithOptions",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "BoolWithOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "Ele",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        },
+        {
+          "name": "WithRandomSource",
+          "profile": "compatibility",
+          "rationale": "Compatibility API; use only when preserving existing call-site semantics."
+        }
+      ],
       "functions": [
         {
           "name": "Bool",
@@ -40543,6 +41187,28 @@
           "internal": 62
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "Invoke",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "GetFieldValueWithOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "GetFieldValue",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        },
+        {
+          "name": "GetConstructorsDirectly",
+          "profile": "compatibility",
+          "rationale": "Compatibility API; use only when preserving existing call-site semantics."
+        }
+      ],
       "functions": [
         {
           "name": "GetConstructor",
@@ -42085,6 +42751,18 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "ContainsWithOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "Contains",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "Contains",
@@ -44459,6 +45137,28 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "DeleteSafe",
+          "profile": "safe",
+          "rationale": "Prefer when inputs cross trust boundaries or need explicit safety checks."
+        },
+        {
+          "name": "Download",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "Delete",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "AddGlobalHeader",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "AddGlobalHeader",
@@ -47232,6 +47932,18 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "NewE",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "New",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "New",
@@ -47300,6 +48012,13 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "New",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "New",
@@ -47544,6 +48263,23 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "ChannelDial",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "NewSocketConfigWithOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "GetRemoteAddress",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "ChannelDial",
@@ -48700,6 +49436,23 @@
           "internal": 43
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "FilterErr",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "Associate",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        },
+        {
+          "name": "SliceToMap",
+          "profile": "compatibility",
+          "rationale": "Compatibility API; use only when preserving existing call-site semantics."
+        }
+      ],
       "functions": [
         {
           "name": "Associate",
@@ -49819,6 +50572,23 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "Download",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "New",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "WithProvider",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "Download",
@@ -50010,6 +50780,18 @@
           "internal": 64
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "ContainsEmojiWithOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "AddPrefixIfNot",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "AddPrefixIfNot",
@@ -51593,6 +52375,18 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "CurrentPIDWithOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "DumpSystemInfoTo",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "CurrentPID",
@@ -53784,6 +54578,23 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "Keywords",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "New",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "WithProvider",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "Keywords",
@@ -53913,6 +54724,23 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "Render",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "NewHTMLEngine",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "WithFuncMap",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "NewHTMLEngine",
@@ -54283,6 +55111,28 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "ContentLengthSafe",
+          "profile": "safe",
+          "rationale": "Prefer when inputs cross trust boundaries or need explicit safety checks."
+        },
+        {
+          "name": "Complete",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "EncodePathSegmentWithOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "AppendQuery",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "AppendQuery",
@@ -56253,6 +57103,18 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "MatchElWithDelimiterErr",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "AnyMatch",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "AnyMatch",
@@ -56556,6 +57418,23 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "Format",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "CleanCommentWithOptions",
+          "profile": "options",
+          "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
+        },
+        {
+          "name": "Append",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "Append",
@@ -58508,6 +59387,18 @@
           "internal": 0
         }
       },
+      "recommended_entrypoints": [
+        {
+          "name": "Append",
+          "profile": "error",
+          "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
+        },
+        {
+          "name": "NewWriter",
+          "profile": "day-one",
+          "rationale": "Start here for concise, trusted-input use cases in this package."
+        }
+      ],
       "functions": [
         {
           "name": "Append",

@@ -29,6 +29,7 @@ type bindConfig struct {
 	parseInt   func(string, int, int) (int64, error)
 	parseUint  func(string, int, int) (uint64, error)
 	parseFloat func(string, int) (float64, error)
+	decodeHook DecodeHookFunc
 }
 
 type schemaConfig struct {
@@ -45,6 +46,9 @@ type ValueOption func(*valueConfig)
 
 // BindOption customizes struct binding per call.
 type BindOption func(*bindConfig)
+
+// DecodeHookFunc can transform a configuration text value before bind assignment.
+type DecodeHookFunc func(from reflect.Type, to reflect.Type, value any) (any, error)
 
 // SchemaOption customizes schema validation per call.
 type SchemaOption func(*schemaConfig)
@@ -109,6 +113,13 @@ func WithBindFloatParser(parser func(string, int) (float64, error)) BindOption {
 		if parser != nil {
 			c.parseFloat = parser
 		}
+	}
+}
+
+// WithBindDecodeHook sets a per-call hook for custom bind type conversions.
+func WithBindDecodeHook(hook DecodeHookFunc) BindOption {
+	return func(c *bindConfig) {
+		c.decodeHook = hook
 	}
 }
 
@@ -682,6 +693,28 @@ func confFieldName(field reflect.StructField) (string, bool) {
 func setReflectValue(v reflect.Value, text string, cfg bindConfig) error {
 	if !v.CanSet() {
 		return nil
+	}
+	if cfg.decodeHook != nil {
+		value, err := cfg.decodeHook(reflect.TypeOf(text), v.Type(), text)
+		if err != nil {
+			return err
+		}
+		if value != nil {
+			converted := reflect.ValueOf(value)
+			if converted.Type().AssignableTo(v.Type()) {
+				v.Set(converted)
+				return nil
+			}
+			if converted.Type().ConvertibleTo(v.Type()) {
+				v.Set(converted.Convert(v.Type()))
+				return nil
+			}
+			textValue, ok := value.(string)
+			if !ok {
+				return fmt.Errorf("decode hook returned %s for %s", converted.Type(), v.Type())
+			}
+			text = textValue
+		}
 	}
 	switch v.Kind() {
 	case reflect.String:

@@ -13,6 +13,8 @@
     "architecture_rules",
     "generated_artifacts",
     "ai_tooling",
+    "dependency_tiers",
+    "v1_readiness",
     "coverage_gates",
     "public_facades",
     "security_sensitive_packages"
@@ -87,7 +89,7 @@
     },
     "ai_tooling": {
       "type": "object",
-      "required": ["api_catalog", "human_catalog", "agent_import_rules", "selection_rules", "top_entrypoints", "metadata_refresh_triggers"],
+      "required": ["api_catalog", "human_catalog", "agent_import_rules", "selection_rules", "top_entrypoints", "api_decision_card_template", "metadata_refresh_triggers"],
       "properties": {
         "api_catalog": { "$ref": "#/$defs/api_catalog" },
         "human_catalog": { "$ref": "#/$defs/human_catalog" },
@@ -97,6 +99,7 @@
           "type": "array",
           "items": { "$ref": "#/$defs/tooling_entrypoint" }
         },
+        "api_decision_card_template": { "$ref": "#/$defs/string_array" },
         "metadata_refresh_triggers": { "$ref": "#/$defs/string_array" }
       },
       "additionalProperties": false
@@ -111,6 +114,27 @@
           "type": "object",
           "additionalProperties": { "type": "number", "exclusiveMinimum": 0, "maximum": 100 }
         }
+      },
+      "additionalProperties": false
+    },
+    "dependency_tiers": {
+      "type": "object",
+      "required": ["core_facades", "heavy_extension_facades", "provider_contract_facades", "notes"],
+      "properties": {
+        "core_facades": { "$ref": "#/$defs/string_array" },
+        "heavy_extension_facades": { "$ref": "#/$defs/string_array" },
+        "provider_contract_facades": { "$ref": "#/$defs/string_array" },
+        "notes": { "$ref": "#/$defs/string_array" }
+      },
+      "additionalProperties": false
+    },
+    "v1_readiness": {
+      "type": "object",
+      "required": ["checklist", "check_commands", "blocking_exit_criteria"],
+      "properties": {
+        "checklist": { "$ref": "#/$defs/string_array" },
+        "check_commands": { "$ref": "#/$defs/string_array" },
+        "blocking_exit_criteria": { "$ref": "#/$defs/string_array" }
       },
       "additionalProperties": false
     },
@@ -194,6 +218,7 @@
       "required": [
         "path",
         "schema",
+        "recommended_profile_schema",
         "package_count",
         "function_count",
         "functions_with_examples",
@@ -207,6 +232,7 @@
       "properties": {
         "path": { "type": "string", "minLength": 1 },
         "schema": { "type": "string", "minLength": 1 },
+        "recommended_profile_schema": { "type": "string", "minLength": 1 },
         "package_count": { "type": "number", "exclusiveMinimum": 0 },
         "function_count": { "type": "number", "exclusiveMinimum": 0 },
         "functions_with_examples": { "type": "number" },

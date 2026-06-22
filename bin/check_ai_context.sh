@@ -392,6 +392,10 @@ ai_tooling = require_mapping(data.get("ai_tooling"), "ai_tooling")
 api_catalog = require_mapping(ai_tooling.get("api_catalog"), "ai_tooling.api_catalog")
 api_catalog_path = require_string(api_catalog.get("path"), "ai_tooling.api_catalog.path")
 api_catalog_schema = require_string(api_catalog.get("schema"), "ai_tooling.api_catalog.schema")
+recommended_profile_schema = require_string(
+    api_catalog.get("recommended_profile_schema"),
+    "ai_tooling.api_catalog.recommended_profile_schema",
+)
 api_catalog_regenerate_command = require_string(
     api_catalog.get("regenerate_command"),
     "ai_tooling.api_catalog.regenerate_command",
@@ -478,6 +482,47 @@ if tools_catalog_data:
                 f"ai_tooling.api_catalog.synopsis_sources.{key} must match "
                 f"{api_catalog_path}.summary.synopsis_sources.{key} ({actual!r})"
             )
+    allowed_recommended_profiles = {"day-one", "safe", "error", "options", "compatibility"}
+    if recommended_profile_schema:
+        for profile in sorted(allowed_recommended_profiles):
+            if profile not in recommended_profile_schema:
+                add_error(f"ai_tooling.api_catalog.recommended_profile_schema must mention {profile!r}")
+    for package_index, package in enumerate(tools_catalog_data.get("packages", [])):
+        package = require_mapping(package, f"{api_catalog_path}.packages[{package_index}]")
+        package_name = require_string(package.get("name"), f"{api_catalog_path}.packages[{package_index}].name")
+        functions = require_mapping(
+            {fn.get("name"): fn for fn in package.get("functions", []) if isinstance(fn, dict)},
+            f"{api_catalog_path}.packages[{package_index}].functions_by_name",
+        )
+        entrypoints = package.get("recommended_entrypoints")
+        if not isinstance(entrypoints, list) or not entrypoints:
+            add_error(f"{api_catalog_path}.packages[{package_index}] {package_name!r} must declare recommended_entrypoints")
+            continue
+        seen_profiles = set()
+        for entrypoint_index, entrypoint in enumerate(entrypoints):
+            entrypoint = require_mapping(
+                entrypoint,
+                f"{api_catalog_path}.packages[{package_index}].recommended_entrypoints[{entrypoint_index}]",
+            )
+            name = require_string(
+                entrypoint.get("name"),
+                f"{api_catalog_path}.packages[{package_index}].recommended_entrypoints[{entrypoint_index}].name",
+            )
+            profile = require_string(
+                entrypoint.get("profile"),
+                f"{api_catalog_path}.packages[{package_index}].recommended_entrypoints[{entrypoint_index}].profile",
+            )
+            require_string(
+                entrypoint.get("rationale"),
+                f"{api_catalog_path}.packages[{package_index}].recommended_entrypoints[{entrypoint_index}].rationale",
+            )
+            if name not in functions:
+                add_error(f"{api_catalog_path}.{package_name}.recommended_entrypoints contains unknown function {name!r}")
+            if profile not in allowed_recommended_profiles:
+                add_error(f"{api_catalog_path}.{package_name}.{name} has unknown recommended profile {profile!r}")
+            if profile in seen_profiles:
+                add_error(f"{api_catalog_path}.{package_name} repeats recommended profile {profile!r}")
+            seen_profiles.add(profile)
 
 human_catalog = require_mapping(ai_tooling.get("human_catalog"), "ai_tooling.human_catalog")
 human_catalog_path = require_string(human_catalog.get("path"), "ai_tooling.human_catalog.path")
@@ -493,6 +538,10 @@ metadata_refresh_triggers = require_string_list(
     ai_tooling.get("metadata_refresh_triggers"),
     "ai_tooling.metadata_refresh_triggers",
 )
+api_decision_card_template = require_string_list(
+    ai_tooling.get("api_decision_card_template"),
+    "ai_tooling.api_decision_card_template",
+)
 if len(agent_import_rules) < 3:
     add_error("ai_tooling.agent_import_rules should include import boundary, selection, and safety guidance")
 if len(selection_rules) < 5:
@@ -502,6 +551,10 @@ if "tools_update" not in metadata_refresh_text and "make tools-gen" not in metad
     add_error("ai_tooling.metadata_refresh_triggers must mention tools_update or make tools-gen")
 if "ai-context-check" not in metadata_refresh_text:
     add_error("ai_tooling.metadata_refresh_triggers must mention make ai-context-check")
+decision_card_text = " ".join(api_decision_card_template).lower()
+for required_term in ("problem", "package", "proposed api", "alternatives", "safety", "validation"):
+    if required_term not in decision_card_text:
+        add_error(f"ai_tooling.api_decision_card_template must mention {required_term!r}")
 
 top_entrypoints = ai_tooling.get("top_entrypoints")
 if not isinstance(top_entrypoints, list):
@@ -554,6 +607,20 @@ for index, entry in enumerate(public_facades):
         add_error(f"public_facades contains duplicate package {package}")
     declared_facades.add(package)
 
+dependency_tiers = require_mapping(data.get("dependency_tiers"), "dependency_tiers")
+dependency_tier_names = ("core_facades", "heavy_extension_facades", "provider_contract_facades")
+declared_tier_packages = set()
+for tier_name in dependency_tier_names:
+    packages = require_string_list(dependency_tiers.get(tier_name), f"dependency_tiers.{tier_name}")
+    duplicate_packages = sorted({package for package in packages if packages.count(package) > 1})
+    if duplicate_packages:
+        add_error(f"dependency_tiers.{tier_name} contains duplicate package(s): " + ", ".join(duplicate_packages))
+    for package in packages:
+        if package in declared_tier_packages:
+            add_error(f"dependency_tiers contains package {package!r} in more than one tier")
+        declared_tier_packages.add(package)
+require_string_list(dependency_tiers.get("notes"), "dependency_tiers.notes")
+
 actual_facades = {
     entry
     for entry in os.listdir(root_dir)
@@ -568,6 +635,13 @@ if missing_facades:
     add_error("public_facades is missing package(s): " + ", ".join(missing_facades))
 if stale_facades:
     add_error("public_facades contains stale package(s): " + ", ".join(stale_facades))
+
+unknown_tier_packages = sorted(declared_tier_packages - declared_facades)
+missing_tier_packages = sorted(declared_facades - declared_tier_packages)
+if unknown_tier_packages:
+    add_error("dependency_tiers contains unknown package(s): " + ", ".join(unknown_tier_packages))
+if missing_tier_packages:
+    add_error("dependency_tiers is missing package(s): " + ", ".join(missing_tier_packages))
 
 for index, entrypoint in enumerate(top_entrypoints):
     if not isinstance(entrypoint, dict):
@@ -605,6 +679,21 @@ for name, domain in sorted(security_domains.items()):
 missing_domain_packages = sorted(security_sensitive - declared_security_domain_packages)
 if security_sensitive and missing_domain_packages:
     add_error("security_domains does not classify security-sensitive package(s): " + ", ".join(missing_domain_packages))
+
+v1_readiness = require_mapping(data.get("v1_readiness"), "v1_readiness")
+v1_checklist = require_string_list(v1_readiness.get("checklist"), "v1_readiness.checklist")
+v1_check_commands = require_string_list(v1_readiness.get("check_commands"), "v1_readiness.check_commands")
+v1_blocking_exit_criteria = require_string_list(
+    v1_readiness.get("blocking_exit_criteria"),
+    "v1_readiness.blocking_exit_criteria",
+)
+if len(v1_checklist) < 5:
+    add_error("v1_readiness.checklist must include at least five readiness items")
+if len(v1_blocking_exit_criteria) < 3:
+    add_error("v1_readiness.blocking_exit_criteria must include at least three blocking criteria")
+for command_name in v1_check_commands:
+    if command_name not in command_names:
+        add_error(f"v1_readiness.check_commands references unknown command {command_name!r}")
 
 if errors:
     for error in errors:

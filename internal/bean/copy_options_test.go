@@ -1,8 +1,11 @@
 package bean
 
 import (
+	"reflect"
 	"strconv"
+	"strings"
 	"testing"
+	"time"
 )
 
 func TestCopyPropertiesWithParserOptions(t *testing.T) {
@@ -55,6 +58,51 @@ func TestCopyPropertiesWithParserOptions(t *testing.T) {
 	}
 	if intCalled != 1 || boolCalled != 1 || floatCalled != 1 || uintCalled != 1 {
 		t.Fatalf("parser calls int=%d bool=%d float=%d uint=%d", intCalled, boolCalled, floatCalled, uintCalled)
+	}
+}
+
+func TestDecodeWithDecodeHook(t *testing.T) {
+	type target struct {
+		Created time.Time
+	}
+	var dst target
+	called := 0
+	err := Decode(map[string]any{"created": "2026-06-22"}, &dst,
+		WithDecodeHook(func(from, to reflect.Type, value any) (any, error) {
+			called++
+			if from.Kind() == reflect.String && to == reflect.TypeOf(time.Time{}) {
+				return time.Parse(time.DateOnly, value.(string))
+			}
+			return value, nil
+		}),
+	)
+	if err != nil {
+		t.Fatalf("Decode() with hook error = %v", err)
+	}
+	if called != 1 {
+		t.Fatalf("hook calls = %d, want 1", called)
+	}
+	if got := dst.Created.Format(time.DateOnly); got != "2026-06-22" {
+		t.Fatalf("Created = %q", got)
+	}
+}
+
+func TestDecodeReportsNestedFieldPath(t *testing.T) {
+	type item struct {
+		Count int
+	}
+	type target struct {
+		Items []item
+	}
+	var dst target
+	err := Decode(map[string]any{"items": []any{map[string]any{"count": "bad"}}}, &dst)
+	if err == nil {
+		t.Fatal("Decode() error = nil, want nested conversion error")
+	}
+	for _, want := range []string{"bean: set field Items", "index 0", "bean: set field Count"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Fatalf("Decode() error = %q, want path fragment %q", err.Error(), want)
+		}
 	}
 }
 
@@ -151,4 +199,40 @@ func TestWithStrictUnusedOption(t *testing.T) {
 	if cfg.StrictUnused {
 		t.Fatal("WithStrictUnused(false) did not disable strict unused handling")
 	}
+}
+
+func TestBeanCopyDecodeMergeSemanticMatrix(t *testing.T) {
+	type profile struct {
+		Name string
+		Age  int
+	}
+
+	var copied profile
+	if err := CopyProperties(profile{Name: "alice", Age: 30}, &copied); err != nil {
+		t.Fatalf("CopyProperties() error = %v", err)
+	}
+	if copied != (profile{Name: "alice", Age: 30}) {
+		t.Fatalf("CopyProperties() copied = %+v", copied)
+	}
+
+	var decoded profile
+	result, err := DecodeResult(map[string]any{"name": "bob", "age": "40", "extra": true}, &decoded)
+	if err != nil {
+		t.Fatalf("DecodeResult() error = %v", err)
+	}
+	if decoded != (profile{Name: "bob", Age: 40}) {
+		t.Fatalf("DecodeResult() decoded = %+v", decoded)
+	}
+	assertEqualStrings(t, []string{"age", "name"}, result.Matched)
+	assertEqualStrings(t, []string{"extra"}, result.Unused)
+
+	merged := profile{Name: "base", Age: 10}
+	mergeResult, err := MergeResult(&merged, map[string]any{"name": "first"}, map[string]any{"age": "50"})
+	if err != nil {
+		t.Fatalf("MergeResult() error = %v", err)
+	}
+	if merged != (profile{Name: "first", Age: 50}) {
+		t.Fatalf("MergeResult() merged = %+v", merged)
+	}
+	assertEqualStrings(t, []string{"age", "name"}, mergeResult.Matched)
 }

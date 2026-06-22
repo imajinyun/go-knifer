@@ -342,6 +342,25 @@
       "network_required": false,
       "risk_level": "low",
       "notes": "Runs the short benchmark health gate used by CI and release workflows. Output is evidence, not a performance claim."
+    },
+    "fuzz_smoke": {
+      "cmd": "make fuzz-smoke",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": false,
+      "risk_level": "low",
+      "notes": "Runs short fuzz/property smoke checks for packages with Fuzz targets. Increase FUZZTIME for deeper local exploration."
+    },
+    "benchstat_compare": {
+      "cmd": "make benchstat BENCH_BASELINE=/tmp/go-knifer-old.bench BENCH_CURRENT=/tmp/go-knifer-new.bench",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": false,
+      "risk_level": "low",
+      "reads_artifacts": ["/tmp/go-knifer-old.bench", "/tmp/go-knifer-new.bench"],
+      "notes": "Compares repeated benchmark outputs with benchstat. Requires benchmark files produced by separate runs and a local benchstat binary."
     }
   },
   "change_type_policies": {
@@ -452,9 +471,10 @@
   "ai_tooling": {
     "api_catalog": {
       "path": "docs/api/tools.json",
-      "schema": "1.5",
+      "schema": "1.6",
+      "recommended_profile_schema": "recommended_entrypoints profiles: day-one, safe, error, options, compatibility",
       "package_count": 54,
-      "function_count": 2604,
+      "function_count": 2606,
       "functions_with_examples": 1253,
       "context_aware_functions": 36,
       "returns_error_functions": 603,
@@ -462,11 +482,11 @@
         "compatibility": 22,
         "deprecated": 0,
         "experimental": 0,
-        "recommended": 2582
+        "recommended": 2584
       },
       "synopsis_sources": {
         "empty": 0,
-        "facade": 1962,
+        "facade": 1964,
         "internal": 642
       },
       "regenerate_command": "tools_update",
@@ -502,11 +522,50 @@
       { "intent": "configuration and struct binding", "packages": ["vconf", "vbean", "vform"] },
       { "intent": "cache, IDs, logging, and application helpers", "packages": ["vcache", "vid", "vlog", "vcli"] }
     ],
+    "api_decision_card_template": [
+      "Problem: what user workflow or compatibility gap requires a public API change?",
+      "Package boundary: which v* facade owns the behavior, and why not a neighboring package?",
+      "Proposed API: names, signatures, option types, error behavior, and Recommended/Compatibility/Experimental/Deprecated status.",
+      "Alternatives considered: standard library, existing go-knifer helper, internal-only helper, or external package.",
+      "Safety and errors: trust-boundary handling, context/cancellation needs, panic policy, and errors.Is/errors.As contract.",
+      "Examples and docs: godoc, Example functions, quickstart matrix, docs/api/tools.json, and ai-context metadata updates.",
+      "Validation: focused tests, fuzz/property checks when applicable, API snapshot update, tools generation, and benchmark/benchstat evidence for hot paths."
+    ],
     "metadata_refresh_triggers": [
       "Run make tools-gen after intentional facade, doc comment, or Example changes.",
       "Run make ai-context-check after ai-context.json, ai-context.schema.json, Makefile, workflow, facade inventory, security domain, or coverage gate changes.",
       "Run make docs-quickstart-check after docs/doc quickstart or public_facades changes.",
       "Run UPDATE_API=1 make api-check only after confirming an intentional public API change."
+    ]
+  },
+  "dependency_tiers": {
+    "core_facades": [
+      "vbean", "vblf", "vbool", "vcache", "vcli", "vcodec", "vconf", "vconv", "vcron", "vcrypto", "vcsv", "vdate", "vdb", "vdfa", "vfile", "vform", "vhash", "vhttp", "vid", "vident", "vjob", "vjson", "vjwt", "vlog", "vmail", "vmap", "vmask", "vnet", "vnum", "vobj", "vpass", "vrand", "vref", "vregex", "vsem", "vset", "vskt", "vslice", "vstr", "vsys", "vtpl", "vurl", "vver", "vxml", "vzip"
+    ],
+    "heavy_extension_facades": ["verr", "vimg", "vpoi", "vresty"],
+    "provider_contract_facades": ["vai", "vftp", "vhan", "vssh", "vtok"],
+    "notes": [
+      "Core facades should avoid third-party runtime dependencies unless explicitly allowlisted by bin/check_arch.sh.",
+      "Heavy extension facades isolate optional integrations such as Sentry, Logrus, Excelize, Resty, and barcode/image adapters.",
+      "Provider contract facades expose interfaces and adapters while keeping concrete clients, credentials, dictionaries, or NLP engines outside core."
+    ]
+  },
+  "v1_readiness": {
+    "checklist": [
+      "Public API snapshot is intentional and current in docs/api/exports.txt.",
+      "docs/api/tools.json and docs/api/tools.md expose Recommended API profiles for every public facade.",
+      "ai-context.json validates command metadata, dependency tiers, security domains, coverage gates, and v1 checklist ownership.",
+      "Quickstart docs cover helper choice, related packages, benchmarks/trade-offs, FAQ, conversion/decode/copy semantics, and dependency tiers.",
+      "Security-sensitive packages meet coverage gates and use Safe/E/WithOptions variants at trust boundaries.",
+      "Benchmark claims are backed by repeated benchmark runs and benchstat output.",
+      "Fuzz/property smoke checks pass for packages with fuzz targets."
+    ],
+    "check_commands": ["release_notes_check", "full_check", "ci_workflow_check", "fuzz_smoke", "bench_smoke"],
+    "blocking_exit_criteria": [
+      "No stale generated artifacts or public API snapshots.",
+      "No architecture-rule violations or heavy dependency bleed-through.",
+      "No unresolved lint, govulncheck, coverage, fuzz smoke, or release-note readiness failures.",
+      "No undocumented public API additions or unclassified recommended entrypoints."
     ]
   },
   "coverage_gates": {

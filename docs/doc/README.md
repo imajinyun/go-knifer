@@ -313,6 +313,32 @@ Selection rules:
 | Generated IDs such as UUID, Snowflake, and NanoId | `vid` | Use `vident` for legal identity number parsing/validation, not generated service identifiers. |
 | Provider-neutral AI, FTP, SSH/SFTP, pinyin, or tokenization contracts | `vai`, `vftp`, `vssh`, `vhan`, `vtok` | Use a dedicated provider/client package outside core when real network clients, credentials, dictionaries, or NLP engines are required. |
 
+### Dependency tier matrix
+
+`go-knifer` keeps the default utility surface lightweight. Core facades should not pull optional heavy dependencies into common slice/map/string/config/crypto workflows; extension facades isolate heavier adapters and provider contracts.
+
+| Tier | Packages | Dependency rule |
+| --- | --- | --- |
+| Core facades | `vbean`, `vconv`, `vconf`, `vcrypto`, `vfile`, `vhttp`, `vjson`, `vmap`, `vslice`, `vstr`, and other standard utility facades | Standard-library-first; third-party imports must be explicitly allowlisted and are checked by `make arch`. |
+| Heavy extension facades | `verr`, `vimg`, `vpoi`, `vresty` | Optional integrations such as Sentry, Logrus, image/barcode adapters, Excelize, and Resty stay in their owning facade/internal package family. |
+| Provider contract facades | `vai`, `vftp`, `vhan`, `vssh`, `vtok` | Public API exposes provider interfaces and call contracts; concrete clients, credentials, dictionaries, or NLP engines belong outside the lightweight core. |
+
+The tier inventory is machine-readable in `ai-context.json` under `dependency_tiers` and is validated by `make ai-context-check`. Heavy dependency bleed-through is blocked by `make arch`.
+
+### API decision card
+
+Before adding or reshaping a public facade API, write a short decision card in the PR description or design note. The machine-readable template lives in `ai-context.json` under `ai_tooling.api_decision_card_template`.
+
+| Field | Question to answer |
+| --- | --- |
+| Problem | What user workflow, compatibility gap, or safety issue requires a public API change? |
+| Package boundary | Which `v*` facade owns the behavior, and why not a neighboring package or the standard library? |
+| Proposed API | What names, signatures, options, error behavior, and API status are being introduced? |
+| Alternatives | Which existing helper, internal-only helper, direct standard-library call, or external library was considered? |
+| Safety and errors | How are trust boundaries, cancellation, panic policy, and `errors.Is` / `errors.As` handled? |
+| Examples and docs | Which godoc, Example tests, quickstart matrices, generated catalogs, and AI metadata need updates? |
+| Validation | Which focused tests, fuzz/property checks, API snapshots, generated docs, and benchmark/benchstat evidence prove the decision? |
+
 ### vbean / vconf / vobj boundary rule
 
 These packages are intentionally adjacent but not interchangeable:
@@ -324,6 +350,21 @@ These packages are intentionally adjacent but not interchangeable:
 | A dynamic `any` value that needs nil/empty checks, length/membership checks, defaulting, comparison, type inspection, or serialization-based cloning | `vobj` | It owns generic object-level convenience helpers, not domain mapping or configuration loading. |
 
 When a workflow crosses boundaries, keep each step explicit: load and validate with `vconf`, bind or map with `vbean`, then use `vobj` only for generic object checks or cloning. Do not add configuration parsing to `vbean`, struct binding policy to `vobj`, or broad object helpers to `vconf`.
+
+### Copy / Decode / Merge / Clone semantic matrix
+
+Use this matrix when a workflow can be implemented by several reflection/object helpers. Prefer the helper whose mutation, conversion, and error semantics match the call site instead of choosing the shortest name.
+
+| Operation | Package | Mutates destination | Conversion policy | Metadata | Failure style | Use when |
+| --- | --- | --- | --- | --- | --- | --- |
+| `Copy` / `CopyProperties` | `vbean` | Yes, caller-owned struct pointer or `map[string]any` | Assignable/convertible values plus configured weak conversion | No | Returns error; `Copy` is compatibility alias of `CopyProperties` | Trusted Go values need property-level copy between struct/map shapes. |
+| `Decode` | `vbean` | Yes, caller-owned struct pointer or `map[string]any` | Weak string/numeric/bool conversion and optional `WithDecodeHook` | No | Returns first field-path error | Boundary data needs map/struct binding and invalid conversions must be visible. |
+| `DecodeResult` | `vbean` | Yes | Same as `Decode` | `Matched`, `Skipped`, `Unused` | Returns metadata plus first error | Callers must reject or explain unused input. |
+| `Merge` / `MergeWithOptions` | `vbean` | Yes, existing destination | Same as `CopyProperties`; later sources override earlier sources | No | Returns first source error | Layered Go values should update one destination with visible precedence. |
+| `MergeResult` / `MergeResultWithOptions` | `vbean` | Yes | Same as `Merge` | Aggregate `Matched`, `Skipped`, `Unused` | Returns aggregate metadata plus first error | Layered boundary payloads need unused-field reporting. |
+| `Clone` / `CloneWithOptions` | `vobj` | No, returns a new value | Serialization codec round trip | No | Returns codec error | A deep copy is needed and serialization semantics are acceptable. |
+| `CloneIfPossible` | `vobj` | No, returns a new or original-compatible value | Serialization codec round trip when possible | No | Swallows clone failure and returns fallback | Best-effort compatibility paths where failure should not interrupt work. |
+| `CloneByStream` / `CloneByStreamWithOptions` | `vobj` | No, returns a new value | Stream codec round trip | No | Returns codec error | Large values should avoid keeping the full encoded payload in an intermediate byte slice. |
 
 <a id="practical-cookbook"></a>
 
@@ -407,9 +448,18 @@ make bench-core
 make bench-facade
 make bench-codec
 make bench-core BENCHCOUNT=10 BENCHTIME=3s
+make benchstat BENCH_BASELINE=/tmp/go-knifer-old.bench BENCH_CURRENT=/tmp/go-knifer-new.bench
 ```
 
 Use `make bench-smoke` to verify benchmark health quickly after changing hot paths. Use `make bench-core`, `make bench-facade`, and `make bench-codec` for stable package groups. Treat single-run benchmark output as a baseline only; use repeated runs and `benchstat` before documenting an improvement or regression.
+
+Performance budget workflow:
+
+| Change type | Required measurement | Budget rule |
+| --- | --- | --- |
+| Hot-path implementation change in slice/map/string/codec/bean/json/xml helpers | Run the relevant `make bench-* BENCHCOUNT=10 BENCHTIME=3s` target before and after the change, then compare with `make benchstat`. | Do not claim a speedup unless `benchstat` reports a statistically significant improvement. Investigate regressions above 10% in `ns/op`, `B/op`, or `allocs/op`. |
+| Facade-only wrapper change | Run `make bench-smoke`; run focused facade benchmarks only if the wrapper adds allocation, reflection, parsing, or provider dispatch. | Facade overhead should stay below measurement noise for pure delegation. |
+| Documentation-only benchmark claim | Include the exact command, package list, Go version, and benchstat output near the claim. | Never publish performance comparisons from a single benchmark run. |
 
 Refresh the API snapshot after an intentional exported API change:
 
@@ -431,6 +481,19 @@ make generate
 ```
 
 GitHub Actions reuses the Makefile targets for module verification, vet, tidy checks, diff cleanliness, architecture checks, race/shuffle tests, coverage gates, API compatibility checks, generated tool-catalog checks, and AI metadata checks. It also runs `golangci-lint`, `govulncheck`, CodeQL, benchmark smoke tests, and OpenSSF Scorecard. Dependabot is configured for Go modules and GitHub Actions updates.
+
+### v1 readiness checklist
+
+Use this release gate before declaring a v1-ready surface:
+
+| Area | Exit criteria |
+| --- | --- |
+| Public API | `docs/api/exports.txt` is current and every public API addition has an API decision card. |
+| Catalogs and AI metadata | `docs/api/tools.json`, `docs/api/tools.md`, and `ai-context.json` are current; every facade has recommended entrypoints and dependency-tier metadata. |
+| Semantics | Conversion, decode hook, field-path errors, Copy/Decode/Merge/Clone behavior, and package boundary matrices are documented and tested. |
+| Safety | Security-sensitive packages use Safe/E/WithOptions variants at trust boundaries and pass coverage gates. |
+| Reliability | `make release-check`, `make fuzz-smoke`, and `make bench-smoke` pass; benchmark claims include repeated runs and `benchstat`. |
+| Blocking failures | No stale generated artifacts, architecture violations, heavy dependency bleed-through, unresolved lint/govulncheck findings, or undocumented public APIs remain. |
 
 Format code:
 

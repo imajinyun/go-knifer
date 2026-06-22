@@ -47,6 +47,31 @@ func TestCloneConvenienceAndFallbacks(t *testing.T) {
 	}
 }
 
+func TestCloneSemanticMatrix(t *testing.T) {
+	type profile struct {
+		Name string
+		Tags []string
+	}
+	src := profile{Name: "alice", Tags: []string{"admin"}}
+
+	clone, err := Clone(src)
+	if err != nil {
+		t.Fatalf("Clone() error = %v", err)
+	}
+	clone.Tags[0] = "user"
+	if src.Tags[0] != "admin" {
+		t.Fatalf("Clone() did not isolate nested slice, src = %+v", src)
+	}
+
+	streamClone, err := CloneByStream(src)
+	if err != nil {
+		t.Fatalf("CloneByStream() error = %v", err)
+	}
+	if streamClone.Name != src.Name || len(streamClone.Tags) != 1 || streamClone.Tags[0] != "admin" {
+		t.Fatalf("CloneByStream() = %+v, want %+v", streamClone, src)
+	}
+}
+
 func TestSerializeDeserializeConvenienceAndErrors(t *testing.T) {
 	src := sample{Name: "n", Tags: []string{"a"}}
 	if data := SerializeOrNil(src); len(data) == 0 {

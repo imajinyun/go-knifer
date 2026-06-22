@@ -13,7 +13,7 @@ Choose the helper by source format, layering needs, and how strictly configurati
 | Parse YAML or TOML | `ParseYAML`, `ParseYAMLFull`, `ParseTOML` | Use the full parser variants when nested structures matter. |
 | Load one or more files | `Load`, `LoadFiles`, `LoadWithOptions` | Use ordered file lists to make precedence reviewable. |
 | Apply environment or profile overrides | `GetExpandedWithOptions`, `ApplyProfile`, `LoadProfile` | Inject env lookup in tests for deterministic expansion. |
-| Bind configuration to structs | `Bind`, `BindGroup`, bind options | Prefer binding before application startup code uses configuration values. |
+| Bind configuration to structs | `Bind`, `BindGroup`, bind options, `WithBindDecodeHook` | Prefer binding before application startup code uses configuration values; keep custom conversions local to the bind call. |
 | Validate configuration | `SchemaFromStruct`, validation helpers | Validate required fields, ranges, and type expectations before starting long-running work. |
 | Watch a file for changes | `Watch`, `WatchWithOptions` | Ensure callbacks are idempotent and safe to run more than once. |
 | Load remote configuration | `LoadRemoteSafe`, `LoadRemoteSafeWithOptions` | Prefer safe remote helpers for URLs from config, users, or service discovery. |
@@ -26,6 +26,12 @@ Choose the helper by source format, layering needs, and how strictly configurati
 - Validate required fields and ranges before starting services, opening network listeners, or launching background workers.
 - Treat decrypted or expanded values as secrets when they contain credentials; do not log raw configuration maps.
 - Make file watchers resilient: callbacks should tolerate partial writes, repeated events, and invalid intermediate config.
+
+## Bind hook and key-path errors
+
+`WithBindDecodeHook` adds a per-call conversion hook for binding text values into custom destination types such as `time.Time`, enum wrappers, or domain-specific identifiers. Hooks receive the source type, destination type, and current value. Return the original string unchanged when the hook does not handle the conversion. Avoid global bind registries; configuration conversion policy should be visible beside the `BindWithOptions` or `BindGroupWithOptions` call.
+
+Bind errors include the configuration key path. Nested struct binding reports keys such as `server.port`, and schema validation reports the failing key from the rule. Tests for new bind paths should assert both the error code and the key path so users can fix configuration without stepping through reflection code.
 
 ## When not to use vconf
 

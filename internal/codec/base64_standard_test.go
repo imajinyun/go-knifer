@@ -57,3 +57,19 @@ func TestBase64RoundTrip(t *testing.T) {
 		t.Fatalf("Base64DecodeStr(Base64EncodeStr(%q)) = %q, want %q", src, dec, src)
 	}
 }
+
+func FuzzBase64RoundTrip(f *testing.F) {
+	for _, seed := range []string{"", "hello", "Hello, 世界", "\x00\x01\xff"} {
+		f.Add(seed)
+	}
+	f.Fuzz(func(t *testing.T, src string) {
+		enc := Base64EncodeStr(src)
+		dec, err := Base64DecodeStr(enc)
+		if err != nil {
+			t.Fatalf("Base64DecodeStr(Base64EncodeStr(%q)) error = %v", src, err)
+		}
+		if dec != src {
+			t.Fatalf("Base64DecodeStr(Base64EncodeStr(%q)) = %q, want %q", src, dec, src)
+		}
+	})
+}

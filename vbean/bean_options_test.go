@@ -1,7 +1,9 @@
 package vbean_test
 
 import (
+	"reflect"
 	"testing"
+	"time"
 
 	"github.com/imajinyun/go-knifer/vbean"
 )
@@ -78,6 +80,33 @@ func TestFacadeBeanParserOptions(t *testing.T) {
 	opt4 := vbean.WithFloatParser(parser4)
 	if opt4 == nil {
 		t.Fatal("WithFloatParser returned nil")
+	}
+
+	opt5 := vbean.WithDecodeHook(func(from, to reflect.Type, value any) (any, error) {
+		return value, nil
+	})
+	if opt5 == nil {
+		t.Fatal("WithDecodeHook returned nil")
+	}
+}
+
+func TestFacadeBeanDecodeHookApplied(t *testing.T) {
+	type target struct {
+		Created time.Time
+	}
+	var dst target
+	if err := vbean.Decode(map[string]any{"created": "2026-06-22"}, &dst,
+		vbean.WithDecodeHook(func(from, to reflect.Type, value any) (any, error) {
+			if from.Kind() == reflect.String && to == reflect.TypeOf(time.Time{}) {
+				return time.Parse(time.DateOnly, value.(string))
+			}
+			return value, nil
+		}),
+	); err != nil {
+		t.Fatalf("Decode() with hook error = %v", err)
+	}
+	if got := dst.Created.Format(time.DateOnly); got != "2026-06-22" {
+		t.Fatalf("Created = %q", got)
 	}
 }
 

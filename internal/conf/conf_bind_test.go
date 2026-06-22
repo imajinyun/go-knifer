@@ -3,7 +3,9 @@ package conf
 import (
 	"reflect"
 	"strconv"
+	"strings"
 	"testing"
+	"time"
 )
 
 func TestBindWithOptionsUsesParsers(t *testing.T) {
@@ -60,5 +62,52 @@ func TestBindWithOptionsUsesParsers(t *testing.T) {
 	}
 	if intCalled != 1 || boolCalled != 1 || floatCalled != 1 || uintCalled != 2 {
 		t.Fatalf("parser calls int=%d bool=%d float=%d uint=%d", intCalled, boolCalled, floatCalled, uintCalled)
+	}
+}
+
+func TestBindWithDecodeHook(t *testing.T) {
+	s := New()
+	s.Set("start", "2026-06-22")
+	type target struct {
+		Start time.Time `conf:"start"`
+	}
+	var cfg target
+	called := 0
+	err := s.BindWithOptions(&cfg,
+		WithBindDecodeHook(func(from, to reflect.Type, value any) (any, error) {
+			called++
+			if from.Kind() == reflect.String && to == reflect.TypeOf(time.Time{}) {
+				return time.Parse(time.DateOnly, value.(string))
+			}
+			return value, nil
+		}),
+	)
+	if err != nil {
+		t.Fatalf("BindWithOptions() with hook error = %v", err)
+	}
+	if called != 1 {
+		t.Fatalf("hook calls = %d, want 1", called)
+	}
+	if got := cfg.Start.Format(time.DateOnly); got != "2026-06-22" {
+		t.Fatalf("Start = %q", got)
+	}
+}
+
+func TestBindReportsNestedFieldPath(t *testing.T) {
+	s := New()
+	s.Set("server.port", "bad")
+	type server struct {
+		Port int `conf:"port"`
+	}
+	type target struct {
+		Server server `conf:"server"`
+	}
+	var cfg target
+	err := s.Bind(&cfg)
+	if err == nil {
+		t.Fatal("Bind() error = nil, want nested parse error")
+	}
+	if got := err.Error(); !strings.Contains(got, "bind server.port") {
+		t.Fatalf("Bind() error = %q, want nested key path", got)
 	}
 }

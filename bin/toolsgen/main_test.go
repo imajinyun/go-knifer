@@ -122,6 +122,26 @@ func Hidden() {}
 	if !reflect.DeepEqual(pkg.Summary, wantPackageSummary) {
 		t.Fatalf("package summary = %#v, want %#v", pkg.Summary, wantPackageSummary)
 	}
+	wantEntrypoints := []RecommendedEntrypoint{
+		{
+			Name:      "Run",
+			Profile:   "error",
+			Rationale: "Prefer when callers must distinguish invalid input or provider failure from default values.",
+		},
+		{
+			Name:      "AddToCounter",
+			Profile:   "day-one",
+			Rationale: "Start here for concise, trusted-input use cases in this package.",
+		},
+		{
+			Name:      "Copy",
+			Profile:   "compatibility",
+			Rationale: "Compatibility API; use only when preserving existing call-site semantics.",
+		},
+	}
+	if !reflect.DeepEqual(pkg.RecommendedEntrypoints, wantEntrypoints) {
+		t.Fatalf("recommended entrypoints = %#v, want %#v", pkg.RecommendedEntrypoints, wantEntrypoints)
+	}
 	if !strings.Contains(pkg.Synopsis, "Package vtool exposes test facade helpers.") {
 		t.Fatalf("package synopsis = %q", pkg.Synopsis)
 	}
@@ -287,6 +307,59 @@ func TestToolsCatalogNamingContracts(t *testing.T) {
 	}
 	if len(violations) > 0 {
 		t.Fatalf("naming contract violations:\n%s", strings.Join(violations, "\n"))
+	}
+}
+
+func TestToolsCatalogRecommendedEntrypoints(t *testing.T) {
+	root := repositoryRoot(t)
+	doc, err := generateToolsDoc(root)
+	if err != nil {
+		t.Fatalf("generateToolsDoc(%q) error = %v", root, err)
+	}
+
+	violations := []string{}
+	for _, pkg := range doc.Packages {
+		if len(pkg.RecommendedEntrypoints) == 0 {
+			violations = append(violations, pkg.Name+": missing recommended entrypoints")
+			continue
+		}
+		functions := map[string]FuncDoc{}
+		for _, fn := range pkg.Functions {
+			functions[fn.Name] = fn
+		}
+		seenProfiles := map[string]struct{}{}
+		for _, entrypoint := range pkg.RecommendedEntrypoints {
+			fn, ok := functions[entrypoint.Name]
+			if !ok {
+				violations = append(violations, pkg.Name+"."+entrypoint.Name+": unknown recommended entrypoint")
+				continue
+			}
+			if strings.TrimSpace(entrypoint.Rationale) == "" {
+				violations = append(violations, pkg.Name+"."+entrypoint.Name+": missing rationale")
+			}
+			if _, ok := seenProfiles[entrypoint.Profile]; ok {
+				violations = append(violations, pkg.Name+": duplicate recommended profile "+entrypoint.Profile)
+			}
+			seenProfiles[entrypoint.Profile] = struct{}{}
+			if !validRecommendedProfile(entrypoint.Profile) {
+				violations = append(violations, pkg.Name+"."+entrypoint.Name+": unknown profile "+entrypoint.Profile)
+			}
+			if fn.Status == apiStatusDeprecated || fn.Status == apiStatusExperimental {
+				violations = append(violations, pkg.Name+"."+entrypoint.Name+": unstable API cannot be recommended")
+			}
+		}
+	}
+	if len(violations) > 0 {
+		t.Fatalf("recommended entrypoint violations:\n%s", strings.Join(violations, "\n"))
+	}
+}
+
+func validRecommendedProfile(profile string) bool {
+	switch profile {
+	case "day-one", "safe", "error", "options", "compatibility":
+		return true
+	default:
+		return false
 	}
 }
 

@@ -1,9 +1,16 @@
 package vbean
 
-import beanimpl "github.com/imajinyun/go-knifer/internal/bean"
+import (
+	"reflect"
+
+	beanimpl "github.com/imajinyun/go-knifer/internal/bean"
+)
 
 // Option customizes bean mapping behavior.
 type Option = beanimpl.Option
+
+// DecodeHookFunc can transform a source value before weak assignment.
+type DecodeHookFunc = beanimpl.DecodeHookFunc
 
 // Options controls struct/map property mapping.
 type Options = beanimpl.Options
@@ -53,6 +60,11 @@ func WithUintParser(parser func(string, int, int) (uint64, error)) Option {
 // WithFloatParser sets the parser used during weak string-to-floating-point conversion.
 func WithFloatParser(parser func(string, int) (float64, error)) Option {
 	return beanimpl.WithFloatParser(parser)
+}
+
+// WithDecodeHook sets a per-call hook for custom type-to-type conversions.
+func WithDecodeHook(hook func(from reflect.Type, to reflect.Type, value any) (any, error)) Option {
+	return beanimpl.WithDecodeHook(hook)
 }
 
 // ToMap converts a struct or map to map[string]any using field tags and aliases.

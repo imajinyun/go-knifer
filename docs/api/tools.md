@@ -8,19 +8,19 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 
 | Metric | Value |
 | --- | ---: |
-| Schema | 1.5 |
+| Schema | 1.6 |
 | Module | `github.com/imajinyun/go-knifer` |
 | Packages | 54 |
-| Functions | 2604 |
+| Functions | 2606 |
 | Functions with examples | 1253 |
 | Context-aware functions | 36 |
 | Functions returning error | 603 |
 | Variadic functions | 776 |
-| API status: recommended | 2582 |
+| API status: recommended | 2584 |
 | API status: compatibility | 22 |
 | API status: experimental | 0 |
 | API status: deprecated | 0 |
-| Synopsis source: facade | 1962 |
+| Synopsis source: facade | 1964 |
 | Synopsis source: internal | 642 |
 | Synopsis source: empty | 0 |
 
@@ -33,6 +33,14 @@ Import path: `github.com/imajinyun/go-knifer/vai`
 Package vai provides provider-neutral AI chat and embedding helpers.
 
 Quality: 6 functions · 6 with examples · 100.0% example coverage · statuses: recommended=6, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=6, internal=0, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `Chat` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `New` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `Redact` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -49,7 +57,15 @@ Import path: `github.com/imajinyun/go-knifer/vbean`
 
 Package vbean provides public APIs for struct and map property mapping.
 
-Quality: 22 functions · 7 with examples · 31.8% example coverage · statuses: recommended=21, compatibility=1, experimental=0, deprecated=0 · synopsis sources: facade=22, internal=0, empty=0
+Quality: 23 functions · 7 with examples · 30.4% example coverage · statuses: recommended=22, compatibility=1, experimental=0, deprecated=0 · synopsis sources: facade=23, internal=0, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `CopyProperties` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `NewOptions` | day-one | Start here for concise, trusted-input use cases in this package. |
+| `Copy` | compatibility | Compatibility API; use only when preserving existing call-site semantics. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -67,6 +83,7 @@ Quality: 22 functions · 7 with examples · 31.8% example coverage · statuses: 
 | `ToStruct` | `func ToStruct(src any, dst any, opts ...Option) error` | recommended | ToStruct copies properties from src into dst, which must be a pointer to struct. | facade | `ExampleToStruct`, `ExampleToStruct_withOptions` |
 | `WithBoolParser` | `func WithBoolParser(parser func(string) (bool, error)) Option` | recommended | WithBoolParser sets the parser used during weak string-to-bool conversion. | facade | — |
 | `WithCaseInsensitive` | `func WithCaseInsensitive(enable bool) Option` | recommended | WithCaseInsensitive controls case-insensitive name matching. | facade | — |
+| `WithDecodeHook` | `func WithDecodeHook(hook func(from reflect.Type, to reflect.Type, value any) (any, error)) Option` | recommended | WithDecodeHook sets a per-call hook for custom type-to-type conversions. | facade | — |
 | `WithFloatParser` | `func WithFloatParser(parser func(string, int) (float64, error)) Option` | recommended | WithFloatParser sets the parser used during weak string-to-floating-point conversion. | facade | — |
 | `WithIgnoreEmpty` | `func WithIgnoreEmpty(enable bool) Option` | recommended | WithIgnoreEmpty skips empty source values. | facade | — |
 | `WithIgnoreZero` | `func WithIgnoreZero(enable bool) Option` | recommended | WithIgnoreZero skips zero source values. | facade | — |
@@ -83,6 +100,14 @@ Import path: `github.com/imajinyun/go-knifer/vblf`
 Package vblf provides public APIs for Bloom filter utilities.
 
 Quality: 60 functions · 17 with examples · 28.3% example coverage · statuses: recommended=60, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=60, internal=0, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `InitFromFileWithOptions` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `NewBitMapBloomFilterWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `BloomFNVHash` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -155,6 +180,12 @@ Package vbool provides public APIs for boolean utilities.
 
 Quality: 4 functions · 4 with examples · 100.0% example coverage · statuses: recommended=4, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=0, internal=4, empty=0
 
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `And` | day-one | Start here for concise, trusted-input use cases in this package. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `And` | `func And(bs ...bool) bool` | recommended | And returns true only when all inputs are true. | internal | `ExampleAnd` |
@@ -169,6 +200,13 @@ Import path: `github.com/imajinyun/go-knifer/vcache`
 Package vcache provides public APIs for cache utilities.
 
 Quality: 24 functions · 5 with examples · 20.8% example coverage · statuses: recommended=24, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=24, internal=0, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `NewFIFOWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `NewFIFO` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -205,6 +243,14 @@ Package vcli provides public APIs for lightweight command-line helpers.
 
 Quality: 15 functions · 15 with examples · 100.0% example coverage · statuses: recommended=15, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=15, internal=0, empty=0
 
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `Output` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `Colorize` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `WithColorMode` | day-one | Start here for concise, trusted-input use cases in this package. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Colorize` | `func Colorize(text string, color Color, opts ...ColorOption) string` | recommended | Colorize wraps text in ANSI escape codes when enabled. | facade | `ExampleColorize` |
@@ -231,6 +277,13 @@ Package vcodec provides public APIs for encoding and decoding utilities.
 
 Quality: 14 functions · 5 with examples · 35.7% example coverage · statuses: recommended=14, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=0, internal=14, empty=0
 
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `Base64Decode` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `Base64Encode` | day-one | Start here for concise, trusted-input use cases in this package. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Base64Decode` | `func Base64Decode(s string) ([]byte, error)` | recommended | Base64Decode decodes a standard Base64 string. | internal | `ExampleBase64Decode` |
@@ -254,7 +307,15 @@ Import path: `github.com/imajinyun/go-knifer/vconf`
 
 Package vconf provides configuration file reading and grouped configuration utilities.
 
-Quality: 38 functions · 8 with examples · 21.1% example coverage · statuses: recommended=38, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=38, internal=0, empty=0
+Quality: 39 functions · 8 with examples · 20.5% example coverage · statuses: recommended=39, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=39, internal=0, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `LoadRemoteSafe` | safe | Prefer when inputs cross trust boundaries or need explicit safety checks. |
+| `Base64Decrypt` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `Merge` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -284,6 +345,7 @@ Quality: 38 functions · 8 with examples · 21.1% example coverage · statuses: 
 | `Watch` | `func Watch(path string, interval time.Duration, onChange func(*Conf, error)) (func(), error)` | recommended | Watch polls path and calls onChange after successful reloads. | facade | — |
 | `WatchWithOptions` | `func WatchWithOptions(path string, opts WatchOptions, onChange func(*Conf, error)) (func(), error)` | recommended | WatchWithOptions polls path with options and calls onChange after successful reloads. | facade | — |
 | `WithBindBoolParser` | `func WithBindBoolParser(parser func(string) (bool, error)) BindOption` | recommended | WithBindBoolParser sets the bool parser used by Conf.BindWithOptions and Conf.BindGroupWithOptions. | facade | — |
+| `WithBindDecodeHook` | `func WithBindDecodeHook(hook func(from reflect.Type, to reflect.Type, value any) (any, error)) BindOption` | recommended | WithBindDecodeHook sets a per-call hook for custom bind type conversions. | facade | — |
 | `WithBindFloatParser` | `func WithBindFloatParser(parser func(string, int) (float64, error)) BindOption` | recommended | WithBindFloatParser sets the floating-point parser used by Conf.BindWithOptions and Conf.BindGroupWithOptions. | facade | — |
 | `WithBindIntParser` | `func WithBindIntParser(parser func(string, int, int) (int64, error)) BindOption` | recommended | WithBindIntParser sets the signed integer parser used by Conf.BindWithOptions and Conf.BindGroupWithOptions. | facade | — |
 | `WithBindUintParser` | `func WithBindUintParser(parser func(string, int, int) (uint64, error)) BindOption` | recommended | WithBindUintParser sets the unsigned integer parser used by Conf.BindWithOptions and Conf.BindGroupWithOptions. | facade | — |
@@ -304,6 +366,14 @@ Import path: `github.com/imajinyun/go-knifer/vconv`
 Package vconv provides public APIs for permissive type conversion.
 
 Quality: 35 functions · 35 with examples · 100.0% example coverage · statuses: recommended=35, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=0, internal=35, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `ToBoolE` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `ToBoolDefaultWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `ToBool` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -350,6 +420,15 @@ Import path: `github.com/imajinyun/go-knifer/vcron`
 Package vcron provides public APIs for cron scheduling utilities.
 
 Quality: 51 functions · 8 with examples · 15.7% example coverage · statuses: recommended=50, compatibility=1, experimental=0, deprecated=0 · synopsis sources: facade=51, internal=0, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `CronRestart` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `ConfigureDefaultScheduler` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `NewCronError` | day-one | Start here for concise, trusted-input use cases in this package. |
+| `MustNewPattern` | compatibility | Compatibility API; use only when preserving existing call-site semantics. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -412,6 +491,14 @@ Import path: `github.com/imajinyun/go-knifer/vcrypto`
 Package vcrypto provides public APIs for cryptographic utilities.
 
 Quality: 71 functions · 71 with examples · 100.0% example coverage · statuses: recommended=71, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=71, internal=0, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `AESDecryptGCM` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `WithGCMRandomOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `ConstantTimeEqual` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -495,6 +582,13 @@ Package vcsv provides public APIs for CSV reading and writing.
 
 Quality: 23 functions · 5 with examples · 21.7% example coverage · statuses: recommended=23, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=0, internal=23, empty=0
 
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `ForEach` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `MapsToRecords` | day-one | Start here for concise, trusted-input use cases in this package. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `ForEach` | `func ForEach(r io.Reader, handle func([]string) error, opts ...ReadOption) error` | recommended | ForEach reads CSV records from r and invokes handle for each record. | internal | — |
@@ -528,6 +622,14 @@ Import path: `github.com/imajinyun/go-knifer/vdate`
 Package vdate provides public APIs for date/time utilities.
 
 Quality: 29 functions · 16 with examples · 55.2% example coverage · statuses: recommended=29, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=0, internal=29, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `Parse` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `NowWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `BeginOfDay` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -568,6 +670,15 @@ Import path: `github.com/imajinyun/go-knifer/vdb`
 Package vdb exposes database/sql helper APIs for SQL execution, query building, entities, conditions, pagination, transactions, named parameters, and lightweight metadata lookup.
 
 Quality: 51 functions · 10 with examples · 19.6% example coverage · statuses: recommended=51, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=15, internal=36, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `IsSafeIdentifier` | safe | Prefer when inputs cross trust boundaries or need explicit safety checks. |
+| `AssignEntity` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `NewBuilder` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `BuildLikeValue` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -631,6 +742,14 @@ Package vdfa exposes deterministic-finite-automaton text matching APIs.
 
 Quality: 41 functions · 9 with examples · 22.0% example coverage · statuses: recommended=41, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=41, internal=0, empty=0
 
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `FilterAny` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `ContainsAnyWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `Contains` | day-one | Start here for concise, trusted-input use cases in this package. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `ConfigureAsyncRunner` | `func ConfigureAsyncRunner(runner func(func()))` | recommended | ConfigureAsyncRunner sets the runner used by asynchronous package-level matcher initialization. | facade | — |
@@ -682,6 +801,15 @@ Import path: `github.com/imajinyun/go-knifer/verr`
 Package verr exposes error handling, panic recovery, and stack helpers.
 
 Quality: 53 functions · 8 with examples · 15.1% example coverage · statuses: recommended=51, compatibility=2, experimental=0, deprecated=0 · synopsis sources: facade=53, internal=0, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `Recover` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `GetStackTraceWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `ErrorIs` | day-one | Start here for concise, trusted-input use cases in this package. |
+| `MustExit` | compatibility | Compatibility API; use only when preserving existing call-site semantics. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -746,6 +874,14 @@ Import path: `github.com/imajinyun/go-knifer/vfile`
 Package vfile provides public APIs for file and IO utilities.
 
 Quality: 59 functions · 59 with examples · 100.0% example coverage · statuses: recommended=59, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=53, internal=6, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `AppendFileString` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `ExistsWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `CloseQuietly` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -817,6 +953,13 @@ Package vform provides public APIs for form and input validation utilities.
 
 Quality: 18 functions · 5 with examples · 27.8% example coverage · statuses: recommended=18, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=18, internal=0, empty=0
 
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `IsChineseWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `IsEmail` | day-one | Start here for concise, trusted-input use cases in this package. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `IsChinese` | `func IsChinese(s string) bool` | recommended | IsChinese reports whether s consists only of Chinese Han characters. | facade | — |
@@ -846,6 +989,14 @@ Package vftp provides provider-neutral FTP list, download, and upload helpers.
 
 Quality: 5 functions · 5 with examples · 100.0% example coverage · statuses: recommended=5, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=5, internal=0, empty=0
 
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `Download` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `New` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `WithProvider` | day-one | Start here for concise, trusted-input use cases in this package. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Download` | `func Download(ctx context.Context, provider Provider, request DownloadRequest) (DownloadResponse, error)` | recommended | Download validates request and delegates to provider through a short-lived Client. | facade | `ExampleDownload` |
@@ -862,6 +1013,14 @@ Package vhan provides provider-neutral Han text romanization helpers.
 
 Quality: 4 functions · 4 with examples · 100.0% example coverage · statuses: recommended=4, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=4, internal=0, empty=0
 
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `Convert` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `New` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `WithProvider` | day-one | Start here for concise, trusted-input use cases in this package. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Convert` | `func Convert(ctx context.Context, provider Provider, request ConvertRequest) (ConvertResponse, error)` | recommended | Convert validates request and delegates to provider through a short-lived Client. | facade | `ExampleConvert` |
@@ -876,6 +1035,12 @@ Import path: `github.com/imajinyun/go-knifer/vhash`
 Package vhash provides public APIs for hash utilities.
 
 Quality: 16 functions · 5 with examples · 31.3% example coverage · statuses: recommended=16, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=16, internal=0, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `AdditiveHash` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -903,6 +1068,15 @@ Import path: `github.com/imajinyun/go-knifer/vhttp`
 Package vhttp provides public APIs for HTTP utilities.
 
 Quality: 161 functions · 52 with examples · 32.3% example coverage · statuses: recommended=161, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=156, internal=5, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `DeleteSafe` | safe | Prefer when inputs cross trust boundaries or need explicit safety checks. |
+| `Download` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `CleanHTMLWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `AddGlobalHeader` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -1076,6 +1250,14 @@ Package vid provides public APIs for ID generation utilities.
 
 Quality: 53 functions · 9 with examples · 17.0% example coverage · statuses: recommended=48, compatibility=5, experimental=0, deprecated=0 · synopsis sources: facade=53, internal=0, empty=0
 
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `ConfigureDefaultSnowflake` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `GetSnowflakeNextID` | day-one | Start here for concise, trusted-input use cases in this package. |
+| `FastSimpleUUID` | compatibility | Compatibility API; use only when preserving existing call-site semantics. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `ConfigureDefaultFallbackRandomSourceProvider` | `func ConfigureDefaultFallbackRandomSourceProvider(provider func() *rand.Rand)` | recommended | ConfigureDefaultFallbackRandomSourceProvider sets the provider used to lazily create the package-level fallback PRNG. | facade | — |
@@ -1140,6 +1322,13 @@ Package vident provides identity and legal identifier helpers.
 
 Quality: 48 functions · 11 with examples · 22.9% example coverage · statuses: recommended=48, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=48, internal=0, empty=0
 
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `AgeWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `AgeAt` | day-one | Start here for concise, trusted-input use cases in this package. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Age` | `func Age(idCard string) (int, bool)` | recommended | Age returns the current age encoded in idCard. | facade | — |
@@ -1198,6 +1387,14 @@ Import path: `github.com/imajinyun/go-knifer/vimg`
 Package vimg provides public APIs for image utilities.
 
 Quality: 91 functions · 91 with examples · 100.0% example coverage · statuses: recommended=91, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=91, internal=0, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `BarcodeASCII` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `GenMathGeneratorWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `CanDecodeBarcodeFormat` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -1301,6 +1498,13 @@ Package vjob provides public APIs for sliceable job execution.
 
 Quality: 9 functions · 5 with examples · 55.6% example coverage · statuses: recommended=9, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=9, internal=0, empty=0
 
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `NewMapE` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `NewBatch` | day-one | Start here for concise, trusted-input use cases in this package. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `NewBatch` | `func NewBatch[T any](run func(context.Context, []T) (Merge, error), vals []T) *Batch[T]` | recommended | NewBatch creates a typed slice job. | facade | `ExampleNewBatch` |
@@ -1320,6 +1524,14 @@ Import path: `github.com/imajinyun/go-knifer/vjson`
 Package vjson provides public APIs for JSON utilities.
 
 Quality: 65 functions · 65 with examples · 100.0% example coverage · statuses: recommended=65, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=65, internal=0, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `Parse` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `FormatWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `CreateConfig` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -1396,6 +1608,15 @@ Import path: `github.com/imajinyun/go-knifer/vjwt`
 Package vjwt provides public APIs for JWT utilities.
 
 Quality: 72 functions · 72 with examples · 100.0% example coverage · statuses: recommended=71, compatibility=1, experimental=0, deprecated=0 · synopsis sources: facade=72, internal=0, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `CreateJWTToken` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `ES256WithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `AlgorithmName` | day-one | Start here for concise, trusted-input use cases in this package. |
+| `MustHMACSigner` | compatibility | Compatibility API; use only when preserving existing call-site semantics. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -1480,6 +1701,14 @@ Package vlog provides public APIs for logging utilities.
 
 Quality: 54 functions · 8 with examples · 14.8% example coverage · statuses: recommended=54, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=54, internal=0, empty=0
 
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `LogAtE` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `DebugWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `GetDefault` | day-one | Start here for concise, trusted-input use cases in this package. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Debug` | `func Debug(args ...any)` | recommended | Debug logs debug-level output through the static logger. | facade | — |
@@ -1545,6 +1774,14 @@ Package vmail exposes email message construction, MIME attachment, and SMTP send
 
 Quality: 51 functions · 7 with examples · 13.7% example coverage · statuses: recommended=51, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=51, internal=0, empty=0
 
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `NewAddress` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `WithQuickClientOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `WithHeader` | day-one | Start here for concise, trusted-input use cases in this package. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `NewAddress` | `func NewAddress(name string, email string) (*Address, error)` | recommended | NewAddress validates and returns a mailbox address. | facade | `ExampleNewAddress` |
@@ -1606,6 +1843,13 @@ Import path: `github.com/imajinyun/go-knifer/vmap`
 Package vmap provides public APIs for map utilities.
 
 Quality: 65 functions · 65 with examples · 100.0% example coverage · statuses: recommended=65, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=4, internal=61, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `FilterErr` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `Assign` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -1683,6 +1927,12 @@ Package vmask provides data masking (desensitization) utilities.
 
 Quality: 20 functions · 5 with examples · 25.0% example coverage · statuses: recommended=20, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=20, internal=0, empty=0
 
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `BankCard` | day-one | Start here for concise, trusted-input use cases in this package. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Address` | `func Address(address string, sensitiveSize int) string` | recommended | Address masks the last sensitiveSize characters of an address. | facade | — |
@@ -1713,6 +1963,14 @@ Import path: `github.com/imajinyun/go-knifer/vnet`
 Package vnet provides public APIs for network, IP, URL-encoding, TLS, and multipart utilities.
 
 Quality: 166 functions · 47 with examples · 28.3% example coverage · statuses: recommended=166, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=53, internal=113, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `AddRootCABytes` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `GetHardwareAddressWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `CreateAddress` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -1891,6 +2149,14 @@ Package vnum provides public APIs for numeric utilities.
 
 Quality: 146 functions · 23 with examples · 15.8% example coverage · statuses: recommended=146, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=15, internal=131, empty=0
 
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `AbsIntegerE` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `DecimalFormatMoneyWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `Add` | day-one | Start here for concise, trusted-input use cases in this package. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `AbsFloat32` | `func AbsFloat32(x float32) float32` | recommended | AbsFloat32 returns the absolute value of x without widening to float64. | facade | — |
@@ -2048,6 +2314,15 @@ Package vobj provides object utilities.
 
 Quality: 49 functions · 11 with examples · 22.4% example coverage · statuses: recommended=44, compatibility=5, experimental=0, deprecated=0 · synopsis sources: facade=49, internal=0, empty=0
 
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `Clone` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `CloneIfPossibleWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `Apply` | day-one | Start here for concise, trusted-input use cases in this package. |
+| `Equals` | compatibility | Compatibility API; use only when preserving existing call-site semantics. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Accept` | `func Accept[T any](source *T, consumer func(T))` | recommended | Accept calls consumer when source is not nil. | facade | — |
@@ -2108,6 +2383,12 @@ Package vpass provides password strength helpers.
 
 Quality: 5 functions · 5 with examples · 100.0% example coverage · statuses: recommended=5, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=0, internal=5, empty=0
 
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `Analyze` | day-one | Start here for concise, trusted-input use cases in this package. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Analyze` | `func Analyze(password string) Analysis` | recommended | Analyze evaluates password strength using local deterministic rules. | internal | `ExampleAnalyze` |
@@ -2123,6 +2404,14 @@ Import path: `github.com/imajinyun/go-knifer/vpoi`
 Package vpoi provides office-document utilities.
 
 Quality: 28 functions · 6 with examples · 21.4% example coverage · statuses: recommended=28, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=28, internal=0, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `ReadRows` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `WithOpenOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `WithReadSheet` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2163,6 +2452,15 @@ Package vrand provides public APIs for random value utilities.
 
 Quality: 29 functions · 9 with examples · 31.0% example coverage · statuses: recommended=28, compatibility=1, experimental=0, deprecated=0 · synopsis sources: facade=18, internal=11, empty=0
 
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `BytesWithOptions` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `BoolWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `Ele` | day-one | Start here for concise, trusted-input use cases in this package. |
+| `WithRandomSource` | compatibility | Compatibility API; use only when preserving existing call-site semantics. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Bool` | `func Bool() bool` | recommended | Bool returns a pseudo-random boolean. | facade | — |
@@ -2202,6 +2500,15 @@ Import path: `github.com/imajinyun/go-knifer/vref`
 Package vref provides public APIs for reflection utilities.
 
 Quality: 67 functions · 24 with examples · 35.8% example coverage · statuses: recommended=62, compatibility=5, experimental=0, deprecated=0 · synopsis sources: facade=5, internal=62, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `Invoke` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `GetFieldValueWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `GetFieldValue` | day-one | Start here for concise, trusted-input use cases in this package. |
+| `GetConstructorsDirectly` | compatibility | Compatibility API; use only when preserving existing call-site semantics. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2280,6 +2587,13 @@ Import path: `github.com/imajinyun/go-knifer/vregex`
 Package vregex provides public APIs for regular-expression utilities.
 
 Quality: 89 functions · 30 with examples · 33.7% example coverage · statuses: recommended=89, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=89, internal=0, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `ContainsWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `Contains` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2380,6 +2694,15 @@ Import path: `github.com/imajinyun/go-knifer/vresty`
 Package vresty provides convenient HTTP client wrappers backed by resty.
 
 Quality: 120 functions · 74 with examples · 61.7% example coverage · statuses: recommended=120, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=120, internal=0, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `DeleteSafe` | safe | Prefer when inputs cross trust boundaries or need explicit safety checks. |
+| `Download` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `Delete` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `AddGlobalHeader` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2512,6 +2835,13 @@ Package vsem provides public APIs for semaphore utilities.
 
 Quality: 2 functions · 2 with examples · 100.0% example coverage · statuses: recommended=2, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=2, internal=0, empty=0
 
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `NewE` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `New` | day-one | Start here for concise, trusted-input use cases in this package. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `New` | `func New(capacity int) *Semaphore` | recommended | New creates a semaphore with capacity permits. | facade | `ExampleNew` |
@@ -2524,6 +2854,12 @@ Import path: `github.com/imajinyun/go-knifer/vset`
 Package vset provides public APIs for set utilities.
 
 Quality: 10 functions · 10 with examples · 100.0% example coverage · statuses: recommended=10, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=10, internal=0, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `New` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2545,6 +2881,14 @@ Import path: `github.com/imajinyun/go-knifer/vskt`
 Package vskt provides public APIs for socket utilities.
 
 Quality: 50 functions · 11 with examples · 22.0% example coverage · statuses: recommended=50, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=50, internal=0, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `ChannelDial` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `NewSocketConfigWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `GetRemoteAddress` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2607,6 +2951,14 @@ Package vslice provides public APIs for slice utilities.
 
 Quality: 43 functions · 43 with examples · 100.0% example coverage · statuses: recommended=42, compatibility=1, experimental=0, deprecated=0 · synopsis sources: facade=0, internal=43, empty=0
 
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `FilterErr` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `Associate` | day-one | Start here for concise, trusted-input use cases in this package. |
+| `SliceToMap` | compatibility | Compatibility API; use only when preserving existing call-site semantics. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Associate` | `func Associate[T any, K comparable, V any](a []T, transform func(T) (K, V)) map[K]V` | recommended | Associate builds a map from transform(item). | internal | `ExampleAssociate` |
@@ -2661,6 +3013,14 @@ Package vssh provides provider-neutral SSH command and SFTP transfer helpers.
 
 Quality: 6 functions · 6 with examples · 100.0% example coverage · statuses: recommended=6, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=6, internal=0, empty=0
 
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `Download` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `New` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `WithProvider` | day-one | Start here for concise, trusted-input use cases in this package. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Download` | `func Download(ctx context.Context, provider Provider, request DownloadRequest) (DownloadResponse, error)` | recommended | Download validates request and delegates to provider through a short-lived Client. | facade | `ExampleDownload` |
@@ -2677,6 +3037,13 @@ Import path: `github.com/imajinyun/go-knifer/vstr`
 Package vstr provides public APIs for string and text utilities.
 
 Quality: 64 functions · 64 with examples · 100.0% example coverage · statuses: recommended=64, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=0, internal=64, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `ContainsEmojiWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `AddPrefixIfNot` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2752,6 +3119,13 @@ Import path: `github.com/imajinyun/go-knifer/vsys`
 Package vsys provides public APIs for system information utilities.
 
 Quality: 111 functions · 47 with examples · 42.3% example coverage · statuses: recommended=111, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=111, internal=0, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `CurrentPIDWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `DumpSystemInfoTo` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2875,6 +3249,14 @@ Package vtok provides provider-neutral text tokenization helpers.
 
 Quality: 4 functions · 4 with examples · 100.0% example coverage · statuses: recommended=4, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=4, internal=0, empty=0
 
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `Keywords` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `New` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `WithProvider` | day-one | Start here for concise, trusted-input use cases in this package. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `Keywords` | `func Keywords(ctx context.Context, provider Provider, request KeywordsRequest) (KeywordsResponse, error)` | recommended | Keywords validates request and delegates to provider through a short-lived Client. | facade | `ExampleKeywords` |
@@ -2889,6 +3271,14 @@ Import path: `github.com/imajinyun/go-knifer/vtpl`
 Package vtpl provides Go html/template rendering utilities.
 
 Quality: 15 functions · 6 with examples · 40.0% example coverage · statuses: recommended=15, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=15, internal=0, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `Render` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `NewHTMLEngine` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `WithFuncMap` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2915,6 +3305,15 @@ Import path: `github.com/imajinyun/go-knifer/vurl`
 Package vurl provides URL and URI utilities.
 
 Quality: 83 functions · 83 with examples · 100.0% example coverage · statuses: recommended=83, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=83, internal=0, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `ContentLengthSafe` | safe | Prefer when inputs cross trust boundaries or need explicit safety checks. |
+| `Complete` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `EncodePathSegmentWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `AppendQuery` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -3010,6 +3409,13 @@ Package vver provides version comparison and expression matching utilities.
 
 Quality: 11 functions · 5 with examples · 45.5% example coverage · statuses: recommended=11, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=11, internal=0, empty=0
 
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `MatchElWithDelimiterErr` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `AnyMatch` | day-one | Start here for concise, trusted-input use cases in this package. |
+
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `AnyMatch` | `func AnyMatch(currentVersion string, compareVersions ...string) bool` | recommended | AnyMatch reports whether currentVersion matches any expression in compareVersions. | facade | `ExampleAnyMatch` |
@@ -3031,6 +3437,14 @@ Import path: `github.com/imajinyun/go-knifer/vxml`
 Package vxml provides public APIs for XML utilities.
 
 Quality: 86 functions · 24 with examples · 27.9% example coverage · statuses: recommended=86, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=86, internal=0, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `Format` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `CleanCommentWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
+| `Append` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -3128,6 +3542,13 @@ Import path: `github.com/imajinyun/go-knifer/vzip`
 Package vzip provides ZIP, gzip, and zlib utilities.
 
 Quality: 92 functions · 22 with examples · 23.9% example coverage · statuses: recommended=92, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=92, internal=0, empty=0
+
+Recommended entrypoints:
+
+| Function | Profile | Rationale |
+| --- | --- | --- |
+| `Append` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `NewWriter` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |

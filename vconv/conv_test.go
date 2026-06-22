@@ -110,3 +110,66 @@ func TestConvFacadeErrorReturningHelpers(t *testing.T) {
 		}
 	}
 }
+
+func TestConvFacadeConversionMatrix(t *testing.T) {
+	tests := []struct {
+		name      string
+		value     any
+		wantInt   int
+		wantBool  bool
+		wantFloat float64
+		wantStr   string
+	}{
+		{name: "string integer", value: "42", wantInt: 42, wantBool: false, wantFloat: 42, wantStr: "42"},
+		{name: "string float truncates", value: "42.9", wantInt: 42, wantBool: false, wantFloat: 42.9, wantStr: "42.9"},
+		{name: "bool true", value: true, wantInt: 1, wantBool: true, wantFloat: 1, wantStr: "true"},
+		{name: "named string bool", value: facadeNamedString("yes"), wantInt: -1, wantBool: true, wantFloat: -1, wantStr: "yes"},
+		{name: "bytes parse through string", value: []byte("7"), wantInt: -1, wantBool: false, wantFloat: -1, wantStr: "7"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ToString(tt.value); got != tt.wantStr {
+				t.Fatalf("ToString(%#v) = %q, want %q", tt.value, got, tt.wantStr)
+			}
+			if tt.wantInt >= 0 {
+				if got, err := ToIntE(tt.value); err != nil || got != tt.wantInt {
+					t.Fatalf("ToIntE(%#v) = %d, %v; want %d, nil", tt.value, got, err, tt.wantInt)
+				}
+			}
+			if tt.wantFloat >= 0 {
+				if got, err := ToFloat64E(tt.value); err != nil || got != tt.wantFloat {
+					t.Fatalf("ToFloat64E(%#v) = %v, %v; want %v, nil", tt.value, got, err, tt.wantFloat)
+				}
+			}
+			if got, err := ToBoolE(tt.value); tt.wantBool && (err != nil || !got) {
+				t.Fatalf("ToBoolE(%#v) = %v, %v; want true, nil", tt.value, got, err)
+			}
+		})
+	}
+}
+
+func TestConvFacadeExplicitErrorsRejectMatrixFailures(t *testing.T) {
+	tests := []struct {
+		name string
+		fn   func() error
+	}{
+		{name: "nil to int", fn: func() error { _, err := ToIntE(nil); return err }},
+		{name: "overflow uint to int64", fn: func() error { _, err := ToInt64E(uint64(math.MaxInt64) + 1); return err }},
+		{name: "inf to int64", fn: func() error { _, err := ToInt64E(math.Inf(1)); return err }},
+		{name: "bad bool", fn: func() error { _, err := ToBoolE("maybe"); return err }},
+		{name: "bad float", fn: func() error { _, err := ToFloat64E("not-float"); return err }},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.fn()
+			if !errors.Is(err, ErrInvalidConversion) {
+				t.Fatalf("error = %v, want ErrInvalidConversion", err)
+			}
+			if !errors.Is(err, knifer.ErrCodeInvalidInput) {
+				t.Fatalf("error = %v, want ErrCodeInvalidInput", err)
+			}
+		})
+	}
+}

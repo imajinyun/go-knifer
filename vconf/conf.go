@@ -1,6 +1,7 @@
 package vconf
 
 import (
+	"reflect"
 	"time"
 
 	confimpl "github.com/imajinyun/go-knifer/internal/conf"
@@ -23,6 +24,8 @@ type (
 	ValueOption = confimpl.ValueOption
 	// BindOption customizes struct binding per call.
 	BindOption = confimpl.BindOption
+	// DecodeHookFunc can transform a configuration text value before bind assignment.
+	DecodeHookFunc = confimpl.DecodeHookFunc
 	// SchemaOption customizes schema validation per call.
 	SchemaOption = confimpl.SchemaOption
 	// ParseOption customizes ParseByExt and full YAML parsing helpers per call.
@@ -128,6 +131,11 @@ func WithBindUintParser(parser func(string, int, int) (uint64, error)) BindOptio
 // WithBindFloatParser sets the floating-point parser used by Conf.BindWithOptions and Conf.BindGroupWithOptions.
 func WithBindFloatParser(parser func(string, int) (float64, error)) BindOption {
 	return confimpl.WithBindFloatParser(parser)
+}
+
+// WithBindDecodeHook sets a per-call hook for custom bind type conversions.
+func WithBindDecodeHook(hook func(from reflect.Type, to reflect.Type, value any) (any, error)) BindOption {
+	return confimpl.WithBindDecodeHook(hook)
 }
 
 // WithSchemaBoolParser sets the bool parser used by Conf.ValidateSchemaWithOptions and Conf.ValidateStructWithOptions.
