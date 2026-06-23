@@ -738,7 +738,7 @@ func recommendedEntrypoints(functions []FuncDoc) []RecommendedEntrypoint {
 		candidate := RecommendedEntrypoint{
 			Name:      fn.Name,
 			Profile:   profile,
-			Rationale: recommendedRationale(fn, profile),
+			Rationale: recommendedRationale(profile),
 		}
 		current, ok := byProfile[profile]
 		if !ok || betterRecommendedEntrypoint(candidate, current, functions) {
@@ -774,7 +774,7 @@ func recommendedProfile(fn FuncDoc) string {
 	return "day-one"
 }
 
-func recommendedRationale(fn FuncDoc, profile string) string {
+func recommendedRationale(profile string) string {
 	switch profile {
 	case "safe":
 		return "Prefer when inputs cross trust boundaries or need explicit safety checks."
