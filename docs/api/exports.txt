@@ -7,7 +7,9 @@ github.com/imajinyun/go-knifer
   const ErrCodeInternal ErrCode = "GK_INTERNAL"
   const ErrCodeInvalidInput ErrCode = "GK_INVALID_INPUT"
   const ErrCodeNotFound ErrCode = "GK_NOT_FOUND"
+  const ErrCodeProviderFailure ErrCode = "GK_PROVIDER_FAILURE"
   const ErrCodeTimeout ErrCode = "GK_TIMEOUT"
+  const ErrCodeUnsafeResource ErrCode = "GK_UNSAFE_RESOURCE"
   const ErrCodeUnsupported ErrCode = "GK_UNSUPPORTED"
   func CodeOf(err error) (ErrCode, bool)
   func Errorf(code ErrCode, format string, args ...any) *Error

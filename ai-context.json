@@ -234,6 +234,24 @@
       "risk_level": "low",
       "notes": "Validates ai-context.json schema, command side-effect metadata, facade inventory, and security-sensitive package references."
     },
+    "governance_maturity_check": {
+      "cmd": "make governance-maturity-check",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": false,
+      "risk_level": "low",
+      "notes": "Validates API convergence, package lifecycle, error taxonomy, threat model, dependency isolation, and benchmark regression metadata."
+    },
+    "bench_regression_check": {
+      "cmd": "make bench-regression-check",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": false,
+      "risk_level": "low",
+      "notes": "Validates benchmark regression metadata, tracked package coverage, and benchstat threshold declarations without running benchmarks."
+    },
     "ci_workflow_check": {
       "cmd": "make ci-workflow-check",
       "safe_for_agent_auto_run": true,
@@ -421,7 +439,7 @@
       "notes": "Documentation-only changes should still pass metadata, API snapshot, tools catalog, and whitespace checks."
     },
     "ci_governance": {
-      "required_commands": ["change_policy_check", "agent_check", "ai_context_check", "docs_check", "agent_evidence", "agent_evidence_check"],
+      "required_commands": ["change_policy_check", "agent_check", "ai_context_check", "governance_maturity_check", "bench_regression_check", "docs_check", "agent_evidence", "agent_evidence_check"],
       "coverage_required": false,
       "security_review_required": false,
       "notes": "CI and governance changes must keep Makefile targets and AI metadata synchronized."
@@ -456,7 +474,7 @@
         "path": ".github/workflows/go.yml",
         "required_jobs": ["agent-governance", "test", "lint", "govulncheck", "benchmark-smoke", "codeql", "scorecard"],
         "agent_governance": {
-          "required_commands": ["make ci-agent-governance"],
+          "required_commands": ["make governance-maturity-check", "make bench-regression-check", "make ci-agent-governance"],
           "required_env": ["AGENT_CHANGE_BASE_REF", "AGENT_EVIDENCE_FILE"],
           "required_artifacts": ["agent-validation-evidence"]
         }
@@ -465,7 +483,7 @@
         "path": ".github/workflows/release.yml",
         "required_jobs": ["release"],
         "agent_governance": {
-          "required_commands": ["make release-check", "make bench-smoke"],
+          "required_commands": ["make release-check", "make governance-maturity-check", "make bench-regression-check", "make bench-smoke"],
           "required_env": [],
           "required_artifacts": []
         }
@@ -623,6 +641,149 @@
       "Heavy extension facades isolate optional integrations such as Sentry, Logrus, Excelize, Resty, and barcode/image adapters.",
       "Provider contract facades expose interfaces and adapters while keeping concrete clients, credentials, dictionaries, or NLP engines outside core."
     ]
+  },
+  "api_convergence": {
+    "max_golden_path_per_facade": 7,
+    "required_classifications": ["primary", "advanced", "compatibility", "avoid"],
+    "facades": {
+      "vai": { "primary": ["Chat", "New", "Redact", "Embed", "WithChatProvider", "WithEmbeddingProvider"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vbean": { "primary": ["CopyProperties", "ComposeDecodeHook", "Copy", "Decode", "DecodeResult", "FillMap", "Merge"], "advanced": [], "compatibility": ["Copy"], "avoid": [], "decision": "Prefer primary APIs; use compatibility only during migration." },
+      "vblf": { "primary": ["InitFromFileWithOptions", "NewBitMapBloomFilterWithOptions", "BloomFNVHash", "ApHash", "BkdrHash", "BloomBKDRHash", "BloomDJBHash"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vbool": { "primary": ["And", "Negate", "Or", "ToInt"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vcache": { "primary": ["NewFIFOWithOptions", "NewFIFO", "NewFIFOWithTimeout", "NewLFU", "NewLFUWithOptions", "NewLFUWithTimeout", "NewLRU"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vcli": { "primary": ["Output", "Colorize", "WithColorMode", "NewFlagParser", "RenderHelp", "Run", "WithDir"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vcodec": { "primary": ["Base64Decode", "Base64Encode", "Base64DecodeStr", "Base64DecodeWithEncoding", "Base64EncodeStr", "Base64EncodeWithEncoding", "Base64RawURLDecode"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vconf": { "primary": ["LoadRemoteSafe", "Base64Decrypt", "Merge", "Load", "LoadFiles", "LoadFilesWithOptions", "LoadProfile"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vconv": { "primary": ["ToBoolE", "ToBoolDefaultWithOptions", "ToBool", "ToBoolDefault", "ToBoolEWithOptions", "ToBoolWithOptions", "ToBytes"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vcron": { "primary": ["CronRestart", "ConfigureDefaultScheduler", "NewCronError", "MustNewPattern", "CronLaunchingCount", "CronRemove", "CronRemoveWithOptions"], "advanced": [], "compatibility": ["MustNewPattern"], "avoid": [], "decision": "Prefer primary APIs; use compatibility only during migration." },
+      "vcrypto": { "primary": ["AESDecryptGCM", "WithGCMRandomOptions", "ConstantTimeEqual", "AESDecryptGCMWithOptions", "AESEncryptGCM", "AESEncryptGCMWithOptions", "AESOpenGCM"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vcsv": { "primary": ["ForEach", "MapsToRecords", "Read", "ReadMaps", "ReadString", "ReadStringMaps", "RecordsToMaps"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vdate": { "primary": ["Parse", "NowWithOptions", "BeginOfDay", "BeginOfMonth", "BeginOfYear", "BetweenDays", "EndOfDay"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vdb": { "primary": ["IsSafeIdentifier", "AssignEntity", "NewBuilder", "BuildLikeValue", "AndGroup", "Asc", "Between"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vdfa": { "primary": ["FilterAny", "ContainsAnyWithOptions", "Contains", "ConfigureAsyncRunner", "ContainsAny", "ContainsWithOptions", "DefaultProcessor"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "verr": { "primary": ["Recover", "GetStackTraceWithOptions", "ErrorIs", "MustExit", "ConfigureDefaultLogFunc", "GetStack", "GetStackTrace"], "advanced": [], "compatibility": ["MustExit", "MustExitWithOptions"], "avoid": [], "decision": "Prefer primary APIs; use compatibility only during migration." },
+      "vfile": { "primary": ["AppendFileString", "ExistsWithOptions", "CloseQuietly", "AppendFileStringWithOptions", "Copy", "CopyFile", "CopyFileWithOptions"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vform": { "primary": ["IsChineseWithOptions", "IsEmail", "IsChinese", "IsEmailWithOptions", "IsIDCard", "IsIDCardWithOptions", "IsIPv4"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vftp": { "primary": ["Download", "New", "WithProvider", "List", "Upload"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vhash": { "primary": ["AdditiveHash", "ApHash", "BkdrHash", "DjbHash", "ElfHash", "FnvHash", "FnvHashString"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vhttp": { "primary": ["DeleteSafe", "Download", "CleanHTMLWithOptions", "AddGlobalHeader", "BuildBasicAuth", "BuildContentType", "CleanHTML"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vid": { "primary": ["ConfigureDefaultSnowflake", "GetSnowflakeNextID", "FastSimpleUUID", "ConfigureDefaultFallbackRandomSourceProvider", "CreateSnowflake", "CreateSnowflakeWithOptions", "GetDataCenterID"], "advanced": [], "compatibility": ["FastSimpleUUID", "FastSimpleUUIDWithOptions", "FastUUID", "FastUUIDWithOptions", "UUID"], "avoid": [], "decision": "Prefer primary APIs; use compatibility only during migration." },
+      "vident": { "primary": ["AgeWithOptions", "AgeAt", "Age", "BirthDate", "BirthDateWithOptions", "BirthString", "BirthStringWithOptions"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vimg": { "primary": ["BarcodeASCII", "GenMathGeneratorWithOptions", "CanDecodeBarcodeFormat", "BarcodeASCIIWithChars", "BarcodeBase64Data", "BarcodeBytes", "BarcodeImage"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vjob": { "primary": ["NewMapE", "NewBatch", "NewBatchSingle", "NewMap", "NewMapKeys", "NewSlice", "NewSliceSingle"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vjson": { "primary": ["Parse", "FormatWithOptions", "CreateConfig", "Format", "GetByPath", "GetByPathOr", "IsArray"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vjwt": { "primary": ["CreateJWTToken", "ES256WithOptions", "AlgorithmName", "MustHMACSigner", "CreateJWTTokenWithSigner", "CreateSigner", "CreateSignerStrict"], "advanced": [], "compatibility": ["MustHMACSigner"], "avoid": [], "decision": "Prefer primary APIs; use compatibility only during migration." },
+      "vlog": { "primary": ["LogAtE", "DebugWithOptions", "GetDefault", "Debug", "Debugf", "DebugfWithOptions", "DefaultLogger"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vmail": { "primary": ["NewAddress", "WithQuickClientOptions", "WithHeader", "NewAttachment", "NewAttachmentFile", "NewAttachmentReader", "NewClient"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vmap": { "primary": ["FilterErr", "Assign", "Clear", "Clone", "ContainsKey", "ContainsValue", "CountBy"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vmask": { "primary": ["BankCard", "Address", "CarLicense", "ChineseName", "Clear", "ClearToNil", "CreditCode"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vnet": { "primary": ["AddRootCABytes", "GetHardwareAddressWithOptions", "CreateAddress", "AddRootCAFileWithOptions", "AddRootCAReader", "AddRootCAReaderWithOptions", "BeginIP"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vnum": { "primary": ["AbsIntegerE", "DecimalFormatMoneyWithOptions", "Add", "AbsFloat32", "AbsFloat64", "AbsInteger", "AddStr"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vobj": { "primary": ["Clone", "CloneIfPossibleWithOptions", "Apply", "Equals", "Accept", "CloneByStream", "CloneByStreamWithOptions"], "advanced": [], "compatibility": ["Equals", "HasNull", "IsNotNull", "IsNull", "MustDeserialize"], "avoid": [], "decision": "Prefer primary APIs; use compatibility only during migration." },
+      "vpass": { "primary": ["Analyze", "IsStrong", "IsWeak", "Score", "StrengthOf"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vhan": { "primary": ["Convert", "New", "WithProvider", "Initials"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vpoi": { "primary": ["ReadRows", "WithOpenOptions", "WithReadSheet", "IsValidSheetName", "ReadRowsFromReader", "ReadSheetRows", "ReadSheetRowsWithOptions"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vrand": { "primary": ["BytesWithOptions", "BoolWithOptions", "Ele", "WithRandomSource", "Bool", "ConfigureDefaultRandomSourceProvider", "EleWithOptions"], "advanced": [], "compatibility": ["WithRandomSource"], "avoid": [], "decision": "Prefer primary APIs; use compatibility only during migration." },
+      "vref": { "primary": ["Invoke", "GetFieldValueWithOptions", "GetFieldValue", "GetConstructorsDirectly", "GetConstructor", "GetConstructors", "GetField"], "advanced": [], "compatibility": ["GetConstructorsDirectly", "GetFieldName", "IsOuterClassField", "RemoveFinalModify", "SetFieldValueWithOptions"], "avoid": [], "decision": "Prefer primary APIs; use compatibility only during migration." },
+      "vregex": { "primary": ["ContainsWithOptions", "Contains", "ContainsRe", "Count", "CountRe", "CountWithOptions", "DelAll"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vresty": { "primary": ["DeleteSafe", "Download", "Delete", "AddGlobalHeader", "BuildBasicAuth", "BuildContentType", "CloneGlobalHeaders"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vsem": { "primary": ["NewE", "New"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vset": { "primary": ["New", "NewInt", "NewInt32", "NewInt64", "NewString", "NewUint", "NewUint32"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vskt": { "primary": ["ChannelDial", "NewSocketConfigWithOptions", "GetRemoteAddress", "ChannelDialWithOptions", "ChannelUtilDial", "NewAioClient", "NewAioClientWithConfig"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vslice": { "primary": ["FilterErr", "Associate", "SliceToMap", "Chunk", "Compact", "Concat", "Contains"], "advanced": [], "compatibility": ["SliceToMap"], "avoid": [], "decision": "Prefer primary APIs; use compatibility only during migration." },
+      "vssh": { "primary": ["Download", "New", "WithProvider", "List", "Run", "Upload"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vstr": { "primary": ["ContainsEmojiWithOptions", "AddPrefixIfNot", "AddSuffixIfNot", "AntPathMatch", "AntPathMatchWithSeparator", "Contains", "ContainsAll"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vsys": { "primary": ["CurrentPIDWithOptions", "DumpSystemInfoTo", "CurrentPID", "DumpSystemInfo", "DumpSystemInfoWithOptions", "Env", "EnvBool"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vtpl": { "primary": ["Render", "NewHTMLEngine", "WithFuncMap", "NewTextEngine", "RenderTemplate", "RenderWithEngine", "RenderWithOptions"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vtok": { "primary": ["Keywords", "New", "WithProvider", "Tokenize"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vurl": { "primary": ["ContentLengthSafe", "Complete", "EncodePathSegmentWithOptions", "AppendQuery", "BuildQuery", "ContentLength", "ContentLengthSafeWithOptions"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vver": { "primary": ["MatchElWithDelimiterErr", "AnyMatch", "AnyMatchSlice", "CompareVersion", "IsGreaterThan", "IsGreaterThanOrEqual", "IsLessThan"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vxml": { "primary": ["Format", "CleanCommentWithOptions", "Append", "AppendChild", "AppendText", "CleanComment", "CleanInvalid"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vzip": { "primary": ["Append", "NewWriter", "AppendWithOptions", "Get", "GetBytes", "GetBytesWithOptions", "GetStream"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." }
+    }
+  },
+  "package_lifecycle": {
+    "allowed_grades": ["core", "stable", "maintenance", "adapter", "heavy", "candidate-for-split", "candidate-for-deprecation"],
+    "packages": {
+      "vai": { "grade": "adapter", "rationale": "Provider contract facade for AI adapters; keeps concrete clients outside core." },
+      "vbean": { "grade": "core", "rationale": "Core facade for struct/map mapping; should avoid non-allowlisted runtime dependencies." },
+      "vblf": { "grade": "core", "rationale": "Core facade for bloom filter; should avoid non-allowlisted runtime dependencies." },
+      "vbool": { "grade": "core", "rationale": "Core facade for booleans; should avoid non-allowlisted runtime dependencies." },
+      "vcache": { "grade": "core", "rationale": "Core facade for caches; should avoid non-allowlisted runtime dependencies." },
+      "vcli": { "grade": "core", "rationale": "Core facade for CLI helpers; should avoid non-allowlisted runtime dependencies." },
+      "vcodec": { "grade": "core", "rationale": "Core facade for Base64/Hex encoding; should avoid non-allowlisted runtime dependencies." },
+      "vconf": { "grade": "core", "rationale": "Core facade for configuration; should avoid non-allowlisted runtime dependencies." },
+      "vconv": { "grade": "core", "rationale": "Core facade for type conversion; should avoid non-allowlisted runtime dependencies." },
+      "vcron": { "grade": "core", "rationale": "Core facade for cron scheduling; should avoid non-allowlisted runtime dependencies." },
+      "vcrypto": { "grade": "core", "rationale": "Core facade for cryptography and digests; should avoid non-allowlisted runtime dependencies." },
+      "vcsv": { "grade": "core", "rationale": "Core facade for CSV; should avoid non-allowlisted runtime dependencies." },
+      "vdate": { "grade": "core", "rationale": "Core facade for date/time; should avoid non-allowlisted runtime dependencies." },
+      "vdb": { "grade": "core", "rationale": "Core facade for database/SQL; should avoid non-allowlisted runtime dependencies." },
+      "vdfa": { "grade": "core", "rationale": "Core facade for DFA word-tree matching; should avoid non-allowlisted runtime dependencies." },
+      "verr": { "grade": "heavy", "rationale": "Heavy extension facade for optional Sentry and Logrus integrations." },
+      "vfile": { "grade": "core", "rationale": "Core facade for file and IO; should avoid non-allowlisted runtime dependencies." },
+      "vform": { "grade": "core", "rationale": "Core facade for form/input validation; should avoid non-allowlisted runtime dependencies." },
+      "vftp": { "grade": "adapter", "rationale": "Provider contract facade for FTP adapters; keeps concrete clients outside core." },
+      "vhash": { "grade": "core", "rationale": "Core facade for non-cryptographic hashes; should avoid non-allowlisted runtime dependencies." },
+      "vhttp": { "grade": "core", "rationale": "Core facade for HTTP; should avoid non-allowlisted runtime dependencies." },
+      "vid": { "grade": "core", "rationale": "Core facade for generated IDs; should avoid non-allowlisted runtime dependencies." },
+      "vident": { "grade": "core", "rationale": "Core facade for identity numbers; should avoid non-allowlisted runtime dependencies." },
+      "vimg": { "grade": "heavy", "rationale": "Heavy extension facade for optional image, captcha, and barcode integrations." },
+      "vjob": { "grade": "core", "rationale": "Core facade for job orchestration; should avoid non-allowlisted runtime dependencies." },
+      "vjson": { "grade": "core", "rationale": "Core facade for JSON; should avoid non-allowlisted runtime dependencies." },
+      "vjwt": { "grade": "core", "rationale": "Core facade for JWT; should avoid non-allowlisted runtime dependencies." },
+      "vlog": { "grade": "core", "rationale": "Core facade for logging; should avoid non-allowlisted runtime dependencies." },
+      "vmail": { "grade": "core", "rationale": "Core facade for email/SMTP; should avoid non-allowlisted runtime dependencies." },
+      "vmap": { "grade": "core", "rationale": "Core facade for maps; should avoid non-allowlisted runtime dependencies." },
+      "vmask": { "grade": "core", "rationale": "Core facade for data masking; should avoid non-allowlisted runtime dependencies." },
+      "vnet": { "grade": "core", "rationale": "Core facade for IP/port/network; should avoid non-allowlisted runtime dependencies." },
+      "vnum": { "grade": "core", "rationale": "Core facade for numeric helpers; should avoid non-allowlisted runtime dependencies." },
+      "vobj": { "grade": "core", "rationale": "Core facade for object helpers; should avoid non-allowlisted runtime dependencies." },
+      "vpass": { "grade": "core", "rationale": "Core facade for password strength; should avoid non-allowlisted runtime dependencies." },
+      "vhan": { "grade": "adapter", "rationale": "Provider contract facade for Han text romanization adapters; keeps concrete clients outside core." },
+      "vpoi": { "grade": "heavy", "rationale": "Heavy extension facade for optional Excelize office document integration." },
+      "vrand": { "grade": "core", "rationale": "Core facade for randomness; should avoid non-allowlisted runtime dependencies." },
+      "vref": { "grade": "core", "rationale": "Core facade for reflection; should avoid non-allowlisted runtime dependencies." },
+      "vregex": { "grade": "core", "rationale": "Core facade for regular expressions; should avoid non-allowlisted runtime dependencies." },
+      "vresty": { "grade": "heavy", "rationale": "Heavy extension facade for optional Resty HTTP integration." },
+      "vsem": { "grade": "core", "rationale": "Core facade for semaphores; should avoid non-allowlisted runtime dependencies." },
+      "vset": { "grade": "core", "rationale": "Core facade for sets; should avoid non-allowlisted runtime dependencies." },
+      "vskt": { "grade": "core", "rationale": "Core facade for sockets; should avoid non-allowlisted runtime dependencies." },
+      "vslice": { "grade": "core", "rationale": "Core facade for slices; should avoid non-allowlisted runtime dependencies." },
+      "vssh": { "grade": "adapter", "rationale": "Provider contract facade for SSH/SFTP adapters; keeps concrete clients outside core." },
+      "vstr": { "grade": "core", "rationale": "Core facade for strings/text; should avoid non-allowlisted runtime dependencies." },
+      "vsys": { "grade": "core", "rationale": "Core facade for system information; should avoid non-allowlisted runtime dependencies." },
+      "vtpl": { "grade": "core", "rationale": "Core facade for templates; should avoid non-allowlisted runtime dependencies." },
+      "vtok": { "grade": "adapter", "rationale": "Provider contract facade for tokenization adapters; keeps concrete clients outside core." },
+      "vurl": { "grade": "core", "rationale": "Core facade for URL/URI; should avoid non-allowlisted runtime dependencies." },
+      "vver": { "grade": "core", "rationale": "Core facade for version comparison; should avoid non-allowlisted runtime dependencies." },
+      "vxml": { "grade": "core", "rationale": "Core facade for XML; should avoid non-allowlisted runtime dependencies." },
+      "vzip": { "grade": "core", "rationale": "Core facade for archive/compression; should avoid non-allowlisted runtime dependencies." }
+    }
+  },
+  "benchmark_regression": {
+    "baseline_command": "make bench-baseline BENCHCOUNT=10 BENCHTIME=3s",
+    "compare_command": "make bench-compare BENCHCOUNT=10 BENCHTIME=3s",
+    "benchstat_required": true,
+    "thresholds": {
+      "ns_per_op_regression_percent": 10.0,
+      "bytes_per_op_regression_percent": 10.0,
+      "allocs_per_op_regression_percent": 5.0,
+      "minimum_count": 10
+    },
+    "tracked_packages": ["./internal/slice", "./internal/maps", "./internal/str", "./internal/num", "./internal/bean", "./internal/json", "./vbean", "./vjson", "./vmap", "./vslice", "./vstr"]
+  },
+  "error_model": {
+    "taxonomy": [
+      { "category": "invalid input", "code": "GK_INVALID_INPUT", "use_when": "Caller-provided arguments, payloads, or configuration values are malformed." },
+      { "category": "not found", "code": "GK_NOT_FOUND", "use_when": "Requested key, file, field, record, or resource does not exist." },
+      { "category": "unsupported type", "code": "GK_UNSUPPORTED", "use_when": "Input type, operation, algorithm, extension, or provider capability is unsupported." },
+      { "category": "unsafe resource", "code": "GK_UNSAFE_RESOURCE", "use_when": "URL, path, archive member, redirect, or remote resource fails a safety policy." },
+      { "category": "timeout", "code": "GK_TIMEOUT", "use_when": "Operation exceeds an explicit time budget or context deadline." },
+      { "category": "provider failure", "code": "GK_PROVIDER_FAILURE", "use_when": "Injected provider, filesystem, transport, codec, random source, or adapter fails after valid input." },
+      { "category": "internal", "code": "GK_INTERNAL", "use_when": "Unexpected implementation failure that does not fit a caller-actionable category." }
+    ],
+    "contract_tests": ["errors_test.go:TestUnifiedErrorTaxonomyCodes", "internal/bean/error_contract_test.go", "internal/db/error_contract_test.go", "vdb/error_contract_test.go"]
   },
   "v1_readiness": {
     "checklist": [
@@ -790,6 +951,87 @@
       "packages": ["vftp", "vssh"],
       "threats": ["credential exposure", "remote path traversal", "unbounded transfer", "host verification mistakes"],
       "required_review_focus": ["credential redaction", "path validation", "transfer limits", "provider-backed tests"]
+    }
+  },
+  "threat_model": {
+    "methodology": "STRIDE with DREAD severity scoring at each trust boundary; every security-sensitive facade must keep misuse tests for its highest-risk input paths.",
+    "misuse_tests": [
+      "internal/httpx/contract_safe_url_test.go:TestHTTPContractSafeURLRejectsUnsafeTargets",
+      "internal/conf/load_remote_safe_hosts_test.go:TestLoadRemoteSafeRejectsPrivateHosts",
+      "internal/conf/load_include_safety_test.go:TestLoadWithOptionsIncludeRejectsPathTraversal",
+      "internal/httpx/internal/shared/util_test.go:TestSafeDownloadedFilenameAndJoin",
+      "internal/zip/security_test.go:TestUnzipRejectsPathTraversal",
+      "internal/jwt/jwt_key_set_test.go:TestSetKeyRejectsNone",
+      "internal/crypto/random_test.go:TestRandomProviderFallbacksAndErrors",
+      "internal/db/types_test.go:TestIdentifierSafety"
+    ],
+    "domains": {
+      "network_clients": {
+        "packages": ["vhttp", "vresty", "vurl"],
+        "threats": ["SSRF", "open redirects", "unbounded response reads", "unsafe downloads"],
+        "contract_tests": {
+          "SSRF": ["internal/httpx/contract_safe_url_test.go:TestHTTPContractSafeURLRejectsUnsafeTargets", "internal/httpx/http/safe_request_test.go:TestSafeRequestRejectsPrivateAndUnsafeRedirects", "internal/httpx/resty/safe_request_test.go:TestSafeRequestRejectsPrivateAndUnsafeRedirects"],
+          "open redirects": ["internal/httpx/http/safe_request_test.go:TestSafeRequestRejectsPrivateAndUnsafeRedirects", "internal/httpx/resty/safe_request_test.go:TestSafeRequestRejectsPrivateAndUnsafeRedirects"],
+          "unbounded response reads": ["internal/url/safe_resource_limit_test.go:TestOpenSafeMaxBytes", "internal/httpx/http/download_safe_test.go:TestDownloadFileSafeWithOptions"],
+          "unsafe downloads": ["internal/httpx/internal/shared/util_test.go:TestSafeDownloadedFilenameAndJoin", "internal/httpx/http/save_as_content_disposition_test.go:TestSaveAsRejectsUnsafeContentDispositionFilename"]
+        },
+        "misuse_tests": ["internal/httpx/contract_safe_url_test.go", "internal/httpx/http/safe_request_test.go", "internal/httpx/resty/safe_request_test.go"]
+      },
+      "configuration_and_ai": {
+        "packages": ["vconf", "vai"],
+        "threats": ["remote configuration SSRF", "secret disclosure", "provider input abuse", "unbounded reads"],
+        "contract_tests": {
+          "remote configuration SSRF": ["internal/conf/load_remote_safe_hosts_test.go:TestLoadRemoteSafeRejectsPrivateHosts", "internal/conf/load_remote_safe_roundtrip_test.go:TestLoadRemoteSafeRevalidatesHostAtRoundTrip"],
+          "secret disclosure": ["internal/conf/load_include_safety_test.go:TestLoadWithOptionsIncludeRejectsPathTraversal", "internal/ai/client_test.go:TestRedactReplacesSensitiveValues"],
+          "provider input abuse": ["internal/ai/client_test.go:TestClientChatValidatesBeforeProvider", "internal/ai/client_test.go:TestClientEmbedValidatesBeforeProvider"],
+          "unbounded reads": ["internal/conf/load_remote_safe_success_test.go:TestLoadRemoteSafeAllowsAllowedPublicHost", "internal/conf/load_include_safety_test.go:TestLoadWithOptionsIncludeRootAllowsConfiguredDirectory"]
+        },
+        "misuse_tests": ["internal/conf/load_remote_safe_hosts_test.go", "internal/conf/load_remote_safe_roundtrip_test.go", "internal/ai/client_test.go"]
+      },
+      "filesystem_and_archives": {
+        "packages": ["vfile", "vzip"],
+        "threats": ["path traversal", "zip slip", "unsafe overwrite", "archive decompression exhaustion"],
+        "contract_tests": {
+          "path traversal": ["internal/conf/load_include_safety_test.go:TestLoadWithOptionsIncludeRejectsPathTraversal", "internal/httpx/internal/shared/util_test.go:TestSafeDownloadedFilenameAndJoin"],
+          "zip slip": ["internal/zip/security_test.go:TestUnzipRejectsPathTraversal", "internal/zip/security_test.go:TestUnzipRejectsSymlinkEscape", "internal/zip/security_test.go:TestUnzipSymlinkArchiveEntryDoesNotCreateSymlink"],
+          "unsafe overwrite": ["internal/zip/archive_overwrite_test.go:TestArchiveOverwriteOption", "internal/httpx/http/save_as_content_disposition_test.go:TestSaveAsRejectsUnsafeContentDispositionFilename"],
+          "archive decompression exhaustion": ["internal/zip/compression_decompress_limit_test.go:TestDecompressHelpersEnforceConfiguredLimit", "internal/zip/zip_unzip_limit_test.go:TestUnzipEnforcesActualCopiedBytes"]
+        },
+        "misuse_tests": ["internal/conf/load_include_safety_test.go", "internal/httpx/internal/shared/util_test.go", "internal/zip/security_test.go"]
+      },
+      "crypto_identity_randomness": {
+        "packages": ["vcrypto", "vjwt", "vrand", "vid"],
+        "threats": ["weak randomness", "key or token misuse", "signature validation bypass", "identifier predictability"],
+        "contract_tests": {
+          "weak randomness": ["internal/crypto/random_test.go:TestRandomProviderFallbacksAndErrors"],
+          "key or token misuse": ["internal/jwt/jwt_key_set_test.go:TestSetKeyStrictWithMinLength", "internal/crypto/aes_test.go:TestAESGCMProviderAndSecurityBoundaries"],
+          "signature validation bypass": ["internal/jwt/jwt_key_set_test.go:TestSetKeyRejectsNone", "internal/jwt/jwt_sign_verify_test.go:TestVerifyWithRejectsAlgorithmMismatch"],
+          "identifier predictability": ["internal/id/uuid_test.go:TestDefaultFallbackRandomSourceProviderCanBeConfiguredAndReset"]
+        },
+        "misuse_tests": ["internal/crypto/random_test.go", "internal/crypto/aes_test.go", "internal/jwt/error_more_test.go", "internal/id/uuid_test.go"]
+      },
+      "data_and_cli_boundaries": {
+        "packages": ["vdb", "vcli"],
+        "threats": ["SQL injection", "unsafe command execution", "argument injection", "transaction misuse"],
+        "contract_tests": {
+          "SQL injection": ["internal/db/types_test.go:TestIdentifierSafety", "internal/db/builder_select_test.go:TestSQLBuilderRejectsUnsafeIdentifiers", "internal/db/condition_test.go:TestSQLBuilderRejectsUnsafeConditionOperator"],
+          "unsafe command execution": ["internal/cli/exec_test.go:TestRunUsesInjectedRunnerAndClonesMutableInputs", "internal/cli/exec_test.go:TestRunRejectsEmptyCommandName"],
+          "argument injection": ["internal/cli/command_test.go:TestCommandExecuteRejectsUnexpectedArgsWhenNoRun", "internal/cli/exec_test.go:TestRunUsesInjectedRunnerAndClonesMutableInputs"],
+          "transaction misuse": ["internal/db/types_test.go:TestIdentifierSafety"]
+        },
+        "misuse_tests": ["internal/db/types_test.go", "internal/cli/exec_test.go", "internal/cli/command_test.go"]
+      },
+      "remote_file_transports": {
+        "packages": ["vftp", "vssh"],
+        "threats": ["credential exposure", "remote path traversal", "unbounded transfer", "host verification mistakes"],
+        "contract_tests": {
+          "credential exposure": ["internal/ftp/client_test.go:TestClientValidatesBeforeProvider", "internal/ssh/client_test.go:TestClientValidatesBeforeProvider"],
+          "remote path traversal": ["internal/ftp/client_test.go:TestClientValidatesBeforeProvider", "internal/ssh/client_test.go:TestClientValidatesBeforeProvider"],
+          "unbounded transfer": ["internal/ftp/client_test.go:TestClientDownloadEnforcesTransferLimit", "internal/ssh/client_test.go:TestClientDownloadEnforcesTransferLimit"],
+          "host verification mistakes": ["internal/ssh/client_test.go:TestClientRequiresProvider", "internal/ssh/client_test.go:TestClientValidatesBeforeProvider"]
+        },
+        "misuse_tests": ["internal/ftp/client_test.go", "internal/ssh/client_test.go"]
+      }
     }
   }
 }

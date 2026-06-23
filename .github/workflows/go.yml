@@ -34,6 +34,11 @@ jobs:
             echo "AGENT_CHANGE_BASE_REF=${{ github.event.before }}" >> "${GITHUB_ENV}"
           fi
 
+      - name: Run v1 governance maturity gates
+        run: |
+          make governance-maturity-check
+          make bench-regression-check
+
       - name: Run Agent governance workflow
         env:
           AGENT_EVIDENCE_FILE: go-knifer-agent-validation.json

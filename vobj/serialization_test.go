@@ -104,3 +104,53 @@ func TestFacadeSerializationOptionsAndValidation(t *testing.T) {
 		t.Fatal("ValidateAcceptedTypes rejected type error = nil")
 	}
 }
+
+func TestDynamicObjectContractMatrix(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    any
+		isNil    bool
+		isEmpty  bool
+		toString string
+		typeName string
+	}{
+		{name: "nil", input: nil, isNil: true, isEmpty: true, toString: "null", typeName: ""},
+		{name: "empty string", input: "", isNil: false, isEmpty: true, toString: "", typeName: "string"},
+		{name: "number", input: 42, isNil: false, isEmpty: false, toString: "42", typeName: "int"},
+		{name: "slice", input: []string{"go"}, isNil: false, isEmpty: false, toString: "[go]", typeName: "[]string"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := vobj.IsNil(tt.input); got != tt.isNil {
+				t.Fatalf("IsNil(%#v) = %v, want %v", tt.input, got, tt.isNil)
+			}
+			if got := vobj.IsEmpty(tt.input); got != tt.isEmpty {
+				t.Fatalf("IsEmpty(%#v) = %v, want %v", tt.input, got, tt.isEmpty)
+			}
+			if got := vobj.ToString(tt.input); got != tt.toString {
+				t.Fatalf("ToString(%#v) = %q, want %q", tt.input, got, tt.toString)
+			}
+			if got := vobj.TypeName(tt.input); got != tt.typeName {
+				t.Fatalf("TypeName(%#v) = %q, want %q", tt.input, got, tt.typeName)
+			}
+		})
+	}
+}
+
+func FuzzDynamicObjectStringContract(f *testing.F) {
+	f.Add("")
+	f.Add("go-knifer")
+	f.Add("42")
+	f.Fuzz(func(t *testing.T, input string) {
+		if vobj.IsNil(input) {
+			t.Fatal("string input must not be nil")
+		}
+		if got := vobj.ToString(input); got != input {
+			t.Fatalf("ToString(%q) = %q", input, got)
+		}
+		if vobj.TypeOf(input).Kind() != reflect.String {
+			t.Fatalf("TypeOf(%q).Kind() != string", input)
+		}
+	})
+}

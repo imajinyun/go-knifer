@@ -27,8 +27,14 @@ const (
 	ErrCodeNotFound ErrCode = "GK_NOT_FOUND"
 	// ErrCodeUnsupported indicates the requested operation is not supported.
 	ErrCodeUnsupported ErrCode = "GK_UNSUPPORTED"
+	// ErrCodeUnsafeResource indicates the requested file, URL, archive entry, or
+	// remote resource failed a safety policy such as traversal or SSRF checks.
+	ErrCodeUnsafeResource ErrCode = "GK_UNSAFE_RESOURCE"
 	// ErrCodeTimeout indicates the operation exceeded its time budget.
 	ErrCodeTimeout ErrCode = "GK_TIMEOUT"
+	// ErrCodeProviderFailure indicates an injected provider, transport, codec,
+	// filesystem, random source, or external adapter failed after input was valid.
+	ErrCodeProviderFailure ErrCode = "GK_PROVIDER_FAILURE"
 	// ErrCodeInternal indicates an unexpected internal failure.
 	ErrCodeInternal ErrCode = "GK_INTERNAL"
 )
@@ -140,7 +146,9 @@ func CodeOf(err error) (ErrCode, bool) {
 		ErrCodeInvalidInput,
 		ErrCodeNotFound,
 		ErrCodeUnsupported,
+		ErrCodeUnsafeResource,
 		ErrCodeTimeout,
+		ErrCodeProviderFailure,
 		ErrCodeInternal,
 	} {
 		if errors.Is(err, code) {

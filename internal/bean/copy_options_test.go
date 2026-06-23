@@ -311,3 +311,63 @@ func TestCopyContractFieldTagsAndRequiredGaps(t *testing.T) {
 	assertEqualStrings(t, []string{"full_name"}, result.Matched)
 	assertEqualStrings(t, []string{}, result.Unused)
 }
+
+func TestDecodeContractEmbeddedPointerNilAndUnused(t *testing.T) {
+	type embedded struct {
+		Name string `bean:"name"`
+	}
+	type target struct {
+		embedded
+		Age  *int `bean:"age"`
+		Note any  `bean:"note"`
+	}
+
+	var dst target
+	result, err := DecodeResult(map[string]any{
+		"name":  "carol",
+		"age":   "33",
+		"note":  nil,
+		"extra": true,
+	}, &dst)
+	if err != nil {
+		t.Fatalf("DecodeResult() embedded/pointer/nil contract error = %v", err)
+	}
+	if dst.Name != "carol" || dst.Age == nil || *dst.Age != 33 || dst.Note != nil {
+		t.Fatalf("DecodeResult() embedded/pointer/nil dst = %+v", dst)
+	}
+	assertEqualStrings(t, []string{"age", "name", "note"}, result.Matched)
+	assertEqualStrings(t, []string{"extra"}, result.Unused)
+
+	var strict target
+	if _, err := DecodeResult(map[string]any{"extra": true}, &strict, WithStrictUnused(true)); err == nil {
+		t.Fatal("DecodeResult() strict unused error = nil")
+	}
+}
+
+func TestMergeContractEmptySkipAndMapReplace(t *testing.T) {
+	type target struct {
+		Name  string
+		Attrs map[string]int
+	}
+
+	dst := target{Name: "base", Attrs: map[string]int{"old": 1}}
+	result, err := MergeResultWithOptions(&dst, []any{
+		map[string]any{"name": "", "attrs": map[string]int{}},
+	}, WithIgnoreEmpty(true))
+	if err != nil {
+		t.Fatalf("MergeResultWithOptions() ignore empty contract error = %v", err)
+	}
+	if dst.Name != "base" || dst.Attrs["old"] != 1 {
+		t.Fatalf("MergeResultWithOptions() ignore empty dst = %+v", dst)
+	}
+	assertEqualStrings(t, []string{"attrs", "name"}, result.Skipped)
+
+	result, err = MergeResult(&dst, map[string]any{"attrs": map[string]int{"new": 2}})
+	if err != nil {
+		t.Fatalf("MergeResult() map replace contract error = %v", err)
+	}
+	if len(dst.Attrs) != 1 || dst.Attrs["new"] != 2 {
+		t.Fatalf("MergeResult() map replace dst = %+v", dst)
+	}
+	assertEqualStrings(t, []string{"attrs"}, result.Matched)
+}

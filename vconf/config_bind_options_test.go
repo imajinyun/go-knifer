@@ -103,3 +103,64 @@ func TestFacadeBindDecodeHookApplied(t *testing.T) {
 		t.Fatalf("Start = %q", got)
 	}
 }
+
+func TestDynamicConfigContractMatrix(t *testing.T) {
+	cfg, err := vconf.Parse(`
+name=go-knifer
+[server]
+port=8080
+enabled=true
+tags=api,admin
+`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name string
+		got  any
+		want any
+	}{
+		{name: "string", got: cfg.Get("name"), want: "go-knifer"},
+		{name: "missing default", got: cfg.GetOrDefault("missing", "fallback"), want: "fallback"},
+		{name: "group int", got: cfg.GetIntByGroup("server", "port", 0), want: 8080},
+		{name: "group bool", got: cfg.GetBoolByGroup("server", "enabled", false), want: true},
+		{name: "group string", got: cfg.GetByGroup("server", "tags"), want: "api,admin"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if !reflect.DeepEqual(tt.got, tt.want) {
+				t.Fatalf("got %#v, want %#v", tt.got, tt.want)
+			}
+		})
+	}
+
+	type serverConfig struct {
+		Port    int      `conf:"port"`
+		Enabled bool     `conf:"enabled"`
+		Tags    []string `conf:"tags"`
+	}
+	var bound serverConfig
+	if err := cfg.BindGroup("server", &bound); err != nil {
+		t.Fatalf("BindGroup() error = %v", err)
+	}
+	if !reflect.DeepEqual(bound, serverConfig{Port: 8080, Enabled: true, Tags: []string{"api", "admin"}}) {
+		t.Fatalf("BindGroup() = %#v", bound)
+	}
+}
+
+func FuzzDynamicConfigScalarContract(f *testing.F) {
+	f.Add("42")
+	f.Add("true")
+	f.Add("go-knifer")
+	f.Fuzz(func(t *testing.T, value string) {
+		cfg := vconf.New()
+		cfg.Set("value", value)
+		if got := cfg.Get("value"); got != value {
+			t.Fatalf("Get(value) = %q, want %q", got, value)
+		}
+		_ = cfg.GetInt("value", -1)
+		_ = cfg.GetBool("value", false)
+	})
+}

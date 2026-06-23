@@ -1,0 +1,302 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+BENCH_ONLY=0
+if [ "${1:-}" = "--bench-only" ]; then
+	BENCH_ONLY=1
+fi
+
+python3 - "${BENCH_ONLY}" <<'PY'
+from __future__ import annotations
+
+import json
+import os
+import re
+import sys
+from pathlib import Path
+
+bench_only = sys.argv[1] == "1"
+root = Path.cwd()
+errors: list[str] = []
+
+
+def add_error(message: str) -> None:
+	errors.append(message)
+
+
+def require_mapping(value: object, path: str) -> dict:
+	if not isinstance(value, dict):
+		add_error(f"{path} must be an object")
+		return {}
+	return value
+
+
+def require_string_list(value: object, path: str) -> list[str]:
+	if not isinstance(value, list):
+		add_error(f"{path} must be a list")
+		return []
+	items: list[str] = []
+	for index, item in enumerate(value):
+		if not isinstance(item, str) or not item.strip():
+			add_error(f"{path}[{index}] must be a non-empty string")
+			continue
+		items.append(item)
+	return items
+
+
+def file_exists(reference: str) -> bool:
+	path = reference.split(":", 1)[0]
+	return (root / path).exists()
+
+
+def reference_exists(reference: str) -> bool:
+	path, separator, symbol = reference.partition(":")
+	file_path = root / path
+	if not file_path.exists():
+		return False
+	if not separator or not re.match(r"^[A-Za-z_]\w*$", symbol):
+		return True
+	try:
+		text = file_path.read_text(encoding="utf-8")
+	except UnicodeDecodeError:
+		return False
+	return re.search(rf"^func\s+{re.escape(symbol)}\s*\(", text, flags=re.MULTILINE) is not None
+
+
+def references_function(reference: str) -> bool:
+	_, separator, symbol = reference.partition(":")
+	return bool(separator and re.match(r"^[A-Za-z_]\w*$", symbol))
+
+
+with open("ai-context.json", "r", encoding="utf-8") as f:
+	ai_context = json.load(f)
+
+with open("docs/api/tools.json", "r", encoding="utf-8") as f:
+	tools = json.load(f)
+
+with open("Makefile", "r", encoding="utf-8") as f:
+	makefile = f.read()
+
+commands = require_mapping(ai_context.get("commands"), "commands")
+for command_name in ("governance_maturity_check", "bench_regression_check"):
+	if command_name not in commands:
+		add_error(f"commands.{command_name} must declare command side effects")
+	elif commands[command_name].get("safe_for_agent_auto_run") is not True:
+		add_error(f"commands.{command_name}.safe_for_agent_auto_run must be true")
+
+public_facade_names = [item.get("package") for item in ai_context.get("public_facades", []) if isinstance(item, dict)]
+public_facades = set(name for name in public_facade_names if isinstance(name, str) and name)
+tool_packages = {pkg.get("name"): pkg for pkg in tools.get("packages", []) if isinstance(pkg, dict)}
+
+
+def validate_benchmark_regression() -> None:
+	bench = require_mapping(ai_context.get("benchmark_regression"), "benchmark_regression")
+	if bench.get("benchstat_required") is not True:
+		add_error("benchmark_regression.benchstat_required must be true")
+	for field in ("baseline_command", "compare_command"):
+		value = bench.get(field)
+		if not isinstance(value, str) or not value.startswith("make bench-"):
+			add_error(f"benchmark_regression.{field} must start with a make bench-* target")
+	thresholds = require_mapping(bench.get("thresholds"), "benchmark_regression.thresholds")
+	for key in ("ns_per_op_regression_percent", "bytes_per_op_regression_percent", "allocs_per_op_regression_percent"):
+		value = thresholds.get(key)
+		if not isinstance(value, (int, float)) or isinstance(value, bool) or value <= 0:
+			add_error(f"benchmark_regression.thresholds.{key} must be a positive number")
+	minimum_count = thresholds.get("minimum_count")
+	if not isinstance(minimum_count, (int, float)) or isinstance(minimum_count, bool) or minimum_count < 10:
+		add_error("benchmark_regression.thresholds.minimum_count must be at least 10")
+	tracked = require_string_list(bench.get("tracked_packages"), "benchmark_regression.tracked_packages")
+	if len(tracked) < 5:
+		add_error("benchmark_regression.tracked_packages must include representative core and facade packages")
+	for pkg in tracked:
+		if pkg.startswith("./") and not (root / pkg[2:]).is_dir():
+			add_error(f"benchmark_regression.tracked_packages references missing package directory {pkg}")
+	for target in ("bench-baseline", "bench-compare", "bench-regression-check", "benchstat"):
+		if not re.search(rf"^{re.escape(target)}:(?:\s|$)", makefile, flags=re.MULTILINE):
+			add_error(f"Makefile must define benchmark target {target}")
+
+
+def validate_api_convergence() -> None:
+	api_convergence = require_mapping(ai_context.get("api_convergence"), "api_convergence")
+	max_golden = api_convergence.get("max_golden_path_per_facade")
+	if not isinstance(max_golden, (int, float)) or isinstance(max_golden, bool) or int(max_golden) != 7:
+		add_error("api_convergence.max_golden_path_per_facade must be 7")
+	max_golden = 7
+	required = set(require_string_list(api_convergence.get("required_classifications"), "api_convergence.required_classifications"))
+	for name in ("primary", "advanced", "compatibility", "avoid"):
+		if name not in required:
+			add_error(f"api_convergence.required_classifications must include {name}")
+	facades = require_mapping(api_convergence.get("facades"), "api_convergence.facades")
+	missing = sorted(public_facades - set(facades))
+	if missing:
+		add_error("api_convergence.facades missing public facade(s): " + ", ".join(missing))
+	for package_name in sorted(public_facades):
+		entry = require_mapping(facades.get(package_name), f"api_convergence.facades.{package_name}")
+		pkg = tool_packages.get(package_name)
+		if not pkg:
+			add_error(f"docs/api/tools.json missing package {package_name}")
+			continue
+		function_names = {fn.get("name") for fn in pkg.get("functions", []) if isinstance(fn, dict)}
+		compatibility_functions = {fn.get("name") for fn in pkg.get("functions", []) if isinstance(fn, dict) and fn.get("status") == "compatibility"}
+		golden = [item.get("name") for item in pkg.get("golden_path", []) if isinstance(item, dict)]
+		if not golden:
+			add_error(f"{package_name} must expose at least one golden_path entry")
+		if len(golden) > max_golden:
+			add_error(f"{package_name} golden_path has {len(golden)} entries; max is {max_golden}")
+		primary = require_string_list(entry.get("primary"), f"api_convergence.facades.{package_name}.primary")
+		if not primary or len(primary) > max_golden:
+			add_error(f"api_convergence.facades.{package_name}.primary must contain 1-{max_golden} APIs")
+		if set(primary) != set(golden):
+			add_error(f"api_convergence.facades.{package_name}.primary must match docs/api/tools.json golden_path")
+		for bucket in ("primary", "advanced", "compatibility", "avoid"):
+			values = require_string_list(entry.get(bucket), f"api_convergence.facades.{package_name}.{bucket}")
+			if len(values) != len(set(values)):
+				add_error(f"api_convergence.facades.{package_name}.{bucket} must not contain duplicates")
+			for fn_name in values:
+				if fn_name not in function_names:
+					add_error(f"api_convergence.facades.{package_name}.{bucket} references unknown API {fn_name}")
+		for fn_name in require_string_list(entry.get("compatibility"), f"api_convergence.facades.{package_name}.compatibility"):
+			if fn_name not in compatibility_functions:
+				add_error(f"api_convergence.facades.{package_name}.compatibility includes non-compatibility API {fn_name}")
+		if not isinstance(entry.get("decision"), str) or not entry["decision"].strip():
+			add_error(f"api_convergence.facades.{package_name}.decision must be non-empty")
+
+
+def validate_lifecycle() -> None:
+	lifecycle = require_mapping(ai_context.get("package_lifecycle"), "package_lifecycle")
+	allowed = set(require_string_list(lifecycle.get("allowed_grades"), "package_lifecycle.allowed_grades"))
+	for grade in ("core", "stable", "maintenance", "adapter", "heavy", "candidate-for-split", "candidate-for-deprecation"):
+		if grade not in allowed:
+			add_error(f"package_lifecycle.allowed_grades must include {grade}")
+	packages = require_mapping(lifecycle.get("packages"), "package_lifecycle.packages")
+	missing = sorted(public_facades - set(packages))
+	if missing:
+		add_error("package_lifecycle.packages missing public facade(s): " + ", ".join(missing))
+	dependency_tiers = require_mapping(ai_context.get("dependency_tiers"), "dependency_tiers")
+	heavy = set(require_string_list(dependency_tiers.get("heavy_extension_facades"), "dependency_tiers.heavy_extension_facades"))
+	adapters = set(require_string_list(dependency_tiers.get("provider_contract_facades"), "dependency_tiers.provider_contract_facades"))
+	core = set(require_string_list(dependency_tiers.get("core_facades"), "dependency_tiers.core_facades"))
+	for package_name, entry_value in sorted(packages.items()):
+		entry = require_mapping(entry_value, f"package_lifecycle.packages.{package_name}")
+		grade = entry.get("grade")
+		if grade not in allowed:
+			add_error(f"package_lifecycle.packages.{package_name}.grade must be an allowed lifecycle grade")
+		if not isinstance(entry.get("rationale"), str) or not entry["rationale"].strip():
+			add_error(f"package_lifecycle.packages.{package_name}.rationale must be non-empty")
+		if package_name in heavy and grade != "heavy":
+			add_error(f"package_lifecycle.packages.{package_name}.grade must be heavy")
+		if package_name in adapters and grade != "adapter":
+			add_error(f"package_lifecycle.packages.{package_name}.grade must be adapter")
+		if package_name in core and grade not in {"core", "stable", "maintenance", "candidate-for-split", "candidate-for-deprecation"}:
+			add_error(f"package_lifecycle.packages.{package_name}.grade must remain core-compatible")
+
+
+def validate_dependency_isolation() -> None:
+	heavy_imports = {
+		"github.com/getsentry/sentry-go": {"internal/errx", "verr"},
+		"github.com/sirupsen/logrus": {"internal/errx", "verr"},
+		"github.com/makiuchi-d/gozxing": {"internal/imgx", "vimg"},
+		"github.com/xuri/excelize/v2": {"internal/poi", "vpoi"},
+		"resty.dev/v3": {"internal/httpx/resty", "vresty"},
+	}
+	for path in root.rglob("*.go"):
+		if path.name.endswith("_test.go") or "/.git/" in path.as_posix():
+			continue
+		rel = path.relative_to(root).as_posix()
+		text = path.read_text(encoding="utf-8")
+		for import_path, allowed_prefixes in heavy_imports.items():
+			if f'"{import_path}' not in text:
+				continue
+			if not any(rel.startswith(prefix + "/") or rel == prefix + ".go" for prefix in allowed_prefixes):
+				add_error(f"{rel} imports heavy dependency {import_path} outside isolated facade/internal package")
+
+
+def validate_error_model() -> None:
+	error_model = require_mapping(ai_context.get("error_model"), "error_model")
+	taxonomy = error_model.get("taxonomy")
+	if not isinstance(taxonomy, list):
+		add_error("error_model.taxonomy must be a list")
+		taxonomy = []
+	codes = set()
+	for index, item in enumerate(taxonomy):
+		entry = require_mapping(item, f"error_model.taxonomy[{index}]")
+		for key in ("category", "code", "use_when"):
+			if not isinstance(entry.get(key), str) or not entry[key].strip():
+				add_error(f"error_model.taxonomy[{index}].{key} must be non-empty")
+		if isinstance(entry.get("code"), str):
+			codes.add(entry["code"])
+	expected_codes = {"GK_INVALID_INPUT", "GK_NOT_FOUND", "GK_UNSUPPORTED", "GK_UNSAFE_RESOURCE", "GK_TIMEOUT", "GK_PROVIDER_FAILURE", "GK_INTERNAL"}
+	if codes != expected_codes:
+		add_error("error_model.taxonomy must cover exactly: " + ", ".join(sorted(expected_codes)))
+	errors_go = (root / "errors.go").read_text(encoding="utf-8")
+	for constant_name in ("ErrCodeInvalidInput", "ErrCodeNotFound", "ErrCodeUnsupported", "ErrCodeUnsafeResource", "ErrCodeTimeout", "ErrCodeProviderFailure", "ErrCodeInternal"):
+		if constant_name not in errors_go:
+			add_error(f"errors.go must define {constant_name}")
+	for reference in require_string_list(error_model.get("contract_tests"), "error_model.contract_tests"):
+		if not reference_exists(reference):
+			add_error(f"error_model.contract_tests references missing file {reference}")
+
+
+def validate_threat_model() -> None:
+	threat_model = require_mapping(ai_context.get("threat_model"), "threat_model")
+	methodology = threat_model.get("methodology")
+	if not isinstance(methodology, str) or "STRIDE" not in methodology or "DREAD" not in methodology:
+		add_error("threat_model.methodology must mention STRIDE and DREAD")
+	for reference in require_string_list(threat_model.get("misuse_tests"), "threat_model.misuse_tests"):
+		if not references_function(reference):
+			add_error(f"threat_model.misuse_tests must reference explicit test functions, got {reference}")
+		if not reference_exists(reference):
+			add_error(f"threat_model.misuse_tests references missing file or function {reference}")
+	domains = require_mapping(threat_model.get("domains"), "threat_model.domains")
+	covered_packages: set[str] = set()
+	for domain_name, domain_value in sorted(domains.items()):
+		domain = require_mapping(domain_value, f"threat_model.domains.{domain_name}")
+		packages = require_string_list(domain.get("packages"), f"threat_model.domains.{domain_name}.packages")
+		covered_packages.update(packages)
+		threats = require_string_list(domain.get("threats"), f"threat_model.domains.{domain_name}.threats")
+		if not threats:
+			add_error(f"threat_model.domains.{domain_name}.threats must be non-empty")
+		contract_tests = require_mapping(domain.get("contract_tests"), f"threat_model.domains.{domain_name}.contract_tests")
+		missing_threat_contracts = sorted(set(threats) - set(contract_tests))
+		if missing_threat_contracts:
+			add_error(f"threat_model.domains.{domain_name}.contract_tests missing threat(s): " + ", ".join(missing_threat_contracts))
+		for threat, references_value in sorted(contract_tests.items()):
+			if threat not in threats:
+				add_error(f"threat_model.domains.{domain_name}.contract_tests declares unknown threat {threat}")
+			references = require_string_list(references_value, f"threat_model.domains.{domain_name}.contract_tests.{threat}")
+			if not references:
+				add_error(f"threat_model.domains.{domain_name}.contract_tests.{threat} must be non-empty")
+			if not any(references_function(reference) for reference in references):
+				add_error(f"threat_model.domains.{domain_name}.contract_tests.{threat} must reference at least one explicit test function")
+			for reference in references:
+				if not reference_exists(reference):
+					add_error(f"threat_model.domains.{domain_name}.contract_tests.{threat} references missing file or function {reference}")
+		for reference in require_string_list(domain.get("misuse_tests"), f"threat_model.domains.{domain_name}.misuse_tests"):
+			if not reference_exists(reference):
+				add_error(f"threat_model.domains.{domain_name}.misuse_tests references missing file {reference}")
+	security_sensitive = set(require_string_list(ai_context.get("security_sensitive_packages"), "security_sensitive_packages"))
+	missing = sorted(security_sensitive - covered_packages)
+	if missing:
+		add_error("threat_model.domains do not cover security-sensitive package(s): " + ", ".join(missing))
+
+
+validate_benchmark_regression()
+if not bench_only:
+	validate_api_convergence()
+	validate_lifecycle()
+	validate_dependency_isolation()
+	validate_error_model()
+	validate_threat_model()
+
+if errors:
+	for error in errors:
+		print(f"governance maturity check error: {error}", file=sys.stderr)
+	sys.exit(1)
+
+if bench_only:
+	print("benchmark regression metadata is valid")
+else:
+	print("governance maturity metadata is valid")
+PY

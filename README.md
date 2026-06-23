@@ -68,13 +68,27 @@ go get github.com/imajinyun/go-knifer
 
 ## ⭐ Start with these packages
 
-If you are new to `go-knifer`, start with the three domains that provide the clearest day-one value:
+If you are new to `go-knifer`, make the decision in three minutes: use the standard library when it is explicit and short; use `go-knifer` when a repeated workflow needs safety policy, error-returning convenience, provider injection, or documented dynamic data contracts.
 
 | Need | Start here | Why |
 | --- | --- | --- |
 | Safe HTTP and downloads | [`vhttp`](docs/doc/22-vhttp.md), [`vresty`](docs/doc/41-vresty.md), [`vurl`](docs/doc/51-vurl.md) | Common request helpers plus explicit safe paths for untrusted URLs and files. |
 | Safe crypto workflows | [`vcrypto`](docs/doc/11-vcrypto.md), [`vrand`](docs/doc/38-vrand.md), [`vjwt`](docs/doc/28-vjwt.md) | Recommended hashing, HMAC, encryption, secure random bytes, and signed-token entry points. |
 | Daily JSON and file workflows | [`vjson`](docs/doc/27-vjson.md), [`vfile`](docs/doc/17-vfile.md) | Cookbook-style helpers for common object, formatting, read/write, copy, and explicit-error flows. |
+| Dynamic config and mapping | [`vconf`](docs/doc/08-vconf.md), [`vbean`](docs/doc/02-vbean.md), [`vconv`](docs/doc/09-vconv.md), [`vobj`](docs/doc/35-vobj.md) | Config loading, weak conversion, decode metadata, and generic object checks with executable contracts. |
+| Collection and text helpers | [`vslice`](docs/doc/47-vslice.md), [`vmap`](docs/doc/31-vmap.md), [`vstr`](docs/doc/46-vstr.md) | Reusable transforms, predicates, grouping, pagination, and string cleanup when a local loop becomes repeated. |
+
+Stdlib-first decision table:
+
+| Scenario | Prefer stdlib | Prefer `go-knifer` |
+| --- | --- | --- |
+| Slice/map/string basics | Plain `for`, `slices`, `maps`, `strings`, `strconv`, or `regexp` is shorter and local. | Repeated `Map`/`Filter`/`GroupBy`/`Pick`/case/predicate workflows need shared semantics. |
+| JSON | `encoding/json` streaming, `Decoder.UseNumber`, or direct struct marshaling is the contract. | Dynamic object/array helpers, path lookup, defaults, formatting, or map-like JSON are the contract. |
+| HTTP/URL | Trusted URL and full `net/http` transport/request control are clearer. | User/config-provided URLs need SSRF-aware allow-lists, private-host rejection, redirects, or bounded reads. |
+| Crypto/random/JWT | You need direct primitive composition and full `crypto/*` control. | You need reviewed HMAC, AES-GCM, RSA, JWT signing, secure token, or deterministic provider-injected helpers. |
+| Config/mapping/conversion | Direct assignment, `flag`, `os.LookupEnv`, or typed decoding keeps shape explicit. | Tag-aware binding, profile overlays, weak conversion, `DecodeResult`, or remote config safety are needed. |
+| Files/archives | Small trusted file operations fit `os`, `io`, `archive/zip`, and `path/filepath`. | Untrusted paths, ZIP entries, downloads, overwrite policy, or bounded IO need explicit safety helpers. |
+| SQL/CLI boundaries | Parameterized `database/sql` or `exec.Command` args already express the whole operation. | Identifier validation, builder conventions, command output capture, or reusable option policies reduce review risk. |
 
 ### Safe HTTP request
 

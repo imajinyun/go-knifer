@@ -17,11 +17,29 @@ func TestUtilityTypes(t *testing.T) {
 	if got := WrapperForDialect(DialectMySQL).Wrap("users.name"); got != "`users`.`name`" {
 		t.Fatalf("wrapped = %q", got)
 	}
-	if !IsSafeIdentifier("users.name") || !IsSafeIdentifier("users.*") || !IsSafeIdentifier("`users`.`name`") {
-		t.Fatal("expected safe identifiers to be accepted")
+}
+
+func TestIdentifierSafety(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want bool
+	}{
+		{name: "plain identifier", in: "users", want: true},
+		{name: "qualified identifier", in: "users.name", want: true},
+		{name: "qualified wildcard", in: "users.*", want: true},
+		{name: "wrapped identifier", in: "`users`.`name`", want: true},
+		{name: "statement injection", in: "users; drop table users", want: false},
+		{name: "function expression", in: "COUNT(*)", want: false},
+		{name: "whitespace separated", in: "users name", want: false},
+		{name: "comment injection", in: "users--", want: false},
 	}
-	if IsSafeIdentifier("users; drop table users") || IsSafeIdentifier("COUNT(*)") || IsSafeIdentifier("users name") {
-		t.Fatal("expected unsafe identifiers to be rejected")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsSafeIdentifier(tt.in); got != tt.want {
+				t.Fatalf("IsSafeIdentifier(%q) = %v, want %v", tt.in, got, tt.want)
+			}
+		})
 	}
 }
 

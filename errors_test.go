@@ -138,3 +138,30 @@ func TestCodeOfFallbacks(t *testing.T) {
 		t.Fatalf("CodeOf(plain) = %q, %v", code, ok)
 	}
 }
+
+func TestUnifiedErrorTaxonomyCodes(t *testing.T) {
+	tests := []struct {
+		name string
+		code knifer.ErrCode
+	}{
+		{name: "invalid input", code: knifer.ErrCodeInvalidInput},
+		{name: "not found", code: knifer.ErrCodeNotFound},
+		{name: "unsupported type", code: knifer.ErrCodeUnsupported},
+		{name: "unsafe resource", code: knifer.ErrCodeUnsafeResource},
+		{name: "timeout", code: knifer.ErrCodeTimeout},
+		{name: "provider failure", code: knifer.ErrCodeProviderFailure},
+		{name: "internal", code: knifer.ErrCodeInternal},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := fmt.Errorf("boundary: %w", knifer.WrapError(tt.code, tt.name, errors.New("cause")))
+			if !errors.Is(err, tt.code) {
+				t.Fatalf("errors.Is(%v, %v) = false", err, tt.code)
+			}
+			if code, ok := knifer.CodeOf(err); !ok || code != tt.code {
+				t.Fatalf("CodeOf(%v) = %q, %v", err, code, ok)
+			}
+		})
+	}
+}

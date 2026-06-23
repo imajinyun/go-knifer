@@ -1,4 +1,4 @@
-.PHONY: help doctor install-hooks uninstall-hooks worktree-check change-policy-check security-sensitive-diff agent-evidence agent-evidence-check test test-race race-test shuffle-test fuzz-smoke coverage-profile coverage-report coverage-check release-notes-check api-check api-freeze-check tools-check tools-gen tools-report docs-quickstart-check ai-context-check ci-workflow-check docs-gen docs-check generate mod-verify tidy-check mod-check diff-whitespace diff-clean diff-check vet arch lint govulncheck quick-check security-check full-check release-check agent-check agent-full-check agent-security-check ci-agent-governance bench bench-core bench-facade bench-codec bench-smoke bench-baseline bench-compare benchstat check ci-test
+.PHONY: help doctor install-hooks uninstall-hooks worktree-check change-policy-check security-sensitive-diff agent-evidence agent-evidence-check test test-race race-test shuffle-test fuzz-smoke coverage-profile coverage-report coverage-check release-notes-check api-check api-freeze-check governance-maturity-check tools-check tools-gen tools-report docs-quickstart-check ai-context-check ci-workflow-check docs-gen docs-check generate mod-verify tidy-check mod-check diff-whitespace diff-clean diff-check vet arch lint govulncheck quick-check security-check full-check release-check agent-check agent-full-check agent-security-check ci-agent-governance bench bench-core bench-facade bench-codec bench-smoke bench-baseline bench-compare bench-regression-check benchstat check ci-test
 
 GO ?= go
 GOLANGCI_LINT ?= golangci-lint
@@ -29,12 +29,14 @@ help:
 	@echo "  coverage-check  Enforce repository and package coverage gates"
 	@echo "  release-notes-check Verify changelog release-note readiness"
 	@echo "  api-freeze-check Verify v1 API freeze/deprecation governance"
+	@echo "  governance-maturity-check Verify API convergence, lifecycle, error, threat, and benchmark governance"
 	@echo "  bench-core      Run core benchmark baselines"
 	@echo "  bench-facade    Run facade benchmark baselines"
 	@echo "  bench-codec     Run JSON/XML benchmark baselines"
 	@echo "  bench-smoke     Run a short core benchmark smoke check"
 	@echo "  bench-baseline  Write repeated benchmark baseline to BENCH_BASELINE_OUT"
 	@echo "  bench-compare   Write repeated benchmark current output and compare with benchstat"
+	@echo "  bench-regression-check Verify benchmark regression metadata and thresholds"
 	@echo "  benchstat       Compare BENCH_BASELINE and BENCH_CURRENT files with benchstat"
 	@echo "  doctor          Diagnose local Go/tooling/Git environment"
 	@echo "  install-hooks   Enable optional local Git validation hooks"
@@ -155,6 +157,9 @@ api-check:
 api-freeze-check: api-check tools-check
 	bash bin/check_api_freeze.sh
 
+governance-maturity-check: ai-context-check tools-check
+	bash bin/check_governance_maturity.sh
+
 tools-check:
 	$(GO) test ./bin/toolsgen
 
@@ -174,7 +179,7 @@ docs-check: tools-check docs-quickstart-check
 ai-context-check:
 	bash bin/check_ai_context.sh
 
-ci-workflow-check: ai-context-check
+ci-workflow-check: bench-regression-check
 
 generate:
 	$(GO) generate ./...
@@ -244,6 +249,9 @@ bench-baseline:
 bench-compare:
 	$(GO) test -bench=$(BENCH) -benchmem -benchtime=$(BENCHTIME) -count=$(BENCHCOUNT) -run=^$$ $(BENCH_PKGS) $(BENCH_FACADE_PKGS) $(BENCH_CODEC_PKGS) | tee "$(BENCH_CURRENT_OUT)"
 	$(MAKE) benchstat BENCH_BASELINE="$(BENCH_BASELINE_OUT)" BENCH_CURRENT="$(BENCH_CURRENT_OUT)"
+
+bench-regression-check: governance-maturity-check
+	bash bin/check_governance_maturity.sh --bench-only
 
 benchstat:
 	@test -n "$(BENCH_BASELINE)" || (echo "BENCH_BASELINE is required" >&2; exit 2)

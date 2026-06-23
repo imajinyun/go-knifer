@@ -43,6 +43,11 @@ jobs:
       - name: Verify release gates
         run: make release-check COVERAGE_FILE=/tmp/go-knifer-release-coverage.out
 
+      - name: Verify v1 governance maturity gates
+        run: |
+          make governance-maturity-check
+          make bench-regression-check
+
       - name: Verify benchmark smoke gate
         run: make bench-smoke
 
