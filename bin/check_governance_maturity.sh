@@ -89,6 +89,8 @@ for command_name in ("governance_maturity_check", "bench_regression_check"):
 public_facade_names = [item.get("package") for item in ai_context.get("public_facades", []) if isinstance(item, dict)]
 public_facades = set(name for name in public_facade_names if isinstance(name, str) and name)
 tool_packages = {pkg.get("name"): pkg for pkg in tools.get("packages", []) if isinstance(pkg, dict)}
+if len(public_facade_names) != len(public_facades):
+	add_error("public_facades must not contain duplicate package names")
 
 
 def validate_benchmark_regression() -> None:
@@ -110,6 +112,10 @@ def validate_benchmark_regression() -> None:
 	tracked = require_string_list(bench.get("tracked_packages"), "benchmark_regression.tracked_packages")
 	if len(tracked) < 5:
 		add_error("benchmark_regression.tracked_packages must include representative core and facade packages")
+	if not any(pkg.startswith("./internal/") for pkg in tracked):
+		add_error("benchmark_regression.tracked_packages must include at least one internal package")
+	if not any(pkg.startswith("./v") for pkg in tracked):
+		add_error("benchmark_regression.tracked_packages must include at least one public facade package")
 	for pkg in tracked:
 		if pkg.startswith("./") and not (root / pkg[2:]).is_dir():
 			add_error(f"benchmark_regression.tracked_packages references missing package directory {pkg}")
@@ -132,6 +138,9 @@ def validate_api_convergence() -> None:
 	missing = sorted(public_facades - set(facades))
 	if missing:
 		add_error("api_convergence.facades missing public facade(s): " + ", ".join(missing))
+	extra = sorted(set(facades) - public_facades)
+	if extra:
+		add_error("api_convergence.facades includes non-public facade(s): " + ", ".join(extra))
 	for package_name in sorted(public_facades):
 		entry = require_mapping(facades.get(package_name), f"api_convergence.facades.{package_name}")
 		pkg = tool_packages.get(package_name)
@@ -150,13 +159,19 @@ def validate_api_convergence() -> None:
 			add_error(f"api_convergence.facades.{package_name}.primary must contain 1-{max_golden} APIs")
 		if set(primary) != set(golden):
 			add_error(f"api_convergence.facades.{package_name}.primary must match docs/api/tools.json golden_path")
+		bucket_values: dict[str, set[str]] = {}
 		for bucket in ("primary", "advanced", "compatibility", "avoid"):
 			values = require_string_list(entry.get(bucket), f"api_convergence.facades.{package_name}.{bucket}")
+			bucket_values[bucket] = set(values)
 			if len(values) != len(set(values)):
 				add_error(f"api_convergence.facades.{package_name}.{bucket} must not contain duplicates")
 			for fn_name in values:
 				if fn_name not in function_names:
 					add_error(f"api_convergence.facades.{package_name}.{bucket} references unknown API {fn_name}")
+		for left, right in (("primary", "advanced"), ("primary", "avoid"), ("advanced", "compatibility"), ("advanced", "avoid"), ("compatibility", "avoid")):
+			overlap = sorted(bucket_values[left] & bucket_values[right])
+			if overlap:
+				add_error(f"api_convergence.facades.{package_name}.{left} and {right} overlap: " + ", ".join(overlap))
 		for fn_name in require_string_list(entry.get("compatibility"), f"api_convergence.facades.{package_name}.compatibility"):
 			if fn_name not in compatibility_functions:
 				add_error(f"api_convergence.facades.{package_name}.compatibility includes non-compatibility API {fn_name}")
@@ -174,10 +189,19 @@ def validate_lifecycle() -> None:
 	missing = sorted(public_facades - set(packages))
 	if missing:
 		add_error("package_lifecycle.packages missing public facade(s): " + ", ".join(missing))
+	extra = sorted(set(packages) - public_facades)
+	if extra:
+		add_error("package_lifecycle.packages includes non-public facade(s): " + ", ".join(extra))
 	dependency_tiers = require_mapping(ai_context.get("dependency_tiers"), "dependency_tiers")
 	heavy = set(require_string_list(dependency_tiers.get("heavy_extension_facades"), "dependency_tiers.heavy_extension_facades"))
 	adapters = set(require_string_list(dependency_tiers.get("provider_contract_facades"), "dependency_tiers.provider_contract_facades"))
 	core = set(require_string_list(dependency_tiers.get("core_facades"), "dependency_tiers.core_facades"))
+	for tier_name, tier_values in (("heavy_extension_facades", heavy), ("provider_contract_facades", adapters), ("core_facades", core)):
+		unknown = sorted(tier_values - public_facades)
+		if unknown:
+			add_error(f"dependency_tiers.{tier_name} includes non-public facade(s): " + ", ".join(unknown))
+	if heavy & adapters or heavy & core or adapters & core:
+		add_error("dependency_tiers facade sets must be mutually exclusive")
 	for package_name, entry_value in sorted(packages.items()):
 		entry = require_mapping(entry_value, f"package_lifecycle.packages.{package_name}")
 		grade = entry.get("grade")
@@ -277,9 +301,15 @@ def validate_threat_model() -> None:
 			if not reference_exists(reference):
 				add_error(f"threat_model.domains.{domain_name}.misuse_tests references missing file {reference}")
 	security_sensitive = set(require_string_list(ai_context.get("security_sensitive_packages"), "security_sensitive_packages"))
+	unknown_sensitive = sorted(security_sensitive - public_facades)
+	if unknown_sensitive:
+		add_error("security_sensitive_packages includes non-public facade(s): " + ", ".join(unknown_sensitive))
 	missing = sorted(security_sensitive - covered_packages)
 	if missing:
 		add_error("threat_model.domains do not cover security-sensitive package(s): " + ", ".join(missing))
+	unexpected = sorted(covered_packages - security_sensitive)
+	if unexpected:
+		add_error("threat_model.domains cover non-security-sensitive package(s): " + ", ".join(unexpected))
 
 
 validate_benchmark_regression()
