@@ -326,8 +326,8 @@ func TestToolsCatalogRecommendedEntrypoints(t *testing.T) {
 		if len(pkg.GoldenPath) == 0 {
 			violations = append(violations, pkg.Name+": missing golden path APIs")
 		}
-		if len(pkg.GoldenPath) > 7 {
-			violations = append(violations, pkg.Name+": golden path has more than 7 APIs")
+		if len(pkg.GoldenPath) > maxGoldenPathEntrypoints {
+			violations = append(violations, pkg.Name+": golden path exceeds max budget")
 		}
 		functions := map[string]FuncDoc{}
 		for _, fn := range pkg.Functions {

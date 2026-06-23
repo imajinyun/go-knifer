@@ -40,6 +40,53 @@ expected_statuses = {"recommended", "compatibility", "experimental", "deprecated
 if allowed_statuses != expected_statuses:
     add_error("api_freeze.allowed_statuses must match recommended, compatibility, experimental, deprecated")
 
+decision_cards = api_freeze.get("decision_cards", [])
+if not isinstance(decision_cards, list):
+    add_error("api_freeze.decision_cards must be a list")
+    decision_cards = []
+if api_freeze.get("decision_card_required", False) and len(decision_cards) < 5:
+    add_error("api_freeze.decision_cards must contain at least five v1 decision cards")
+
+public_facades = {item.get("package") for item in ai_context.get("public_facades", []) if isinstance(item, dict)}
+expected_card_ids = {
+    "v1-public-api-entry-budget",
+    "v1-dynamic-contract-matrix",
+    "v1-heavy-dependency-isolation",
+    "v1-error-taxonomy",
+    "v1-security-threat-model",
+}
+seen_card_ids: set[str] = set()
+for index, item in enumerate(decision_cards):
+    if not isinstance(item, dict):
+        add_error(f"api_freeze.decision_cards[{index}] must be an object")
+        continue
+    card_id = item.get("id")
+    if not isinstance(card_id, str) or not card_id:
+        add_error(f"api_freeze.decision_cards[{index}].id must be non-empty")
+    elif card_id in seen_card_ids:
+        add_error(f"api_freeze.decision_cards duplicate id {card_id}")
+    else:
+        seen_card_ids.add(card_id)
+    if item.get("status") not in expected_statuses:
+        add_error(f"api_freeze.decision_cards[{index}].status must be an allowed API status")
+    for field in ("decision", "rationale"):
+        if not isinstance(item.get(field), str) or not item[field].strip():
+            add_error(f"api_freeze.decision_cards[{index}].{field} must be non-empty")
+    packages = item.get("packages")
+    if not isinstance(packages, list) or not packages:
+        add_error(f"api_freeze.decision_cards[{index}].packages must be non-empty")
+    else:
+        unknown_packages = sorted(package for package in packages if package != "all" and package not in public_facades)
+        if unknown_packages:
+            add_error(f"api_freeze.decision_cards[{index}].packages contains unknown facade(s): " + ", ".join(unknown_packages))
+    validation = item.get("validation")
+    if not isinstance(validation, list) or len(validation) < 2:
+        add_error(f"api_freeze.decision_cards[{index}].validation must contain at least two validation entries")
+
+missing_card_ids = sorted(expected_card_ids - seen_card_ids)
+if missing_card_ids:
+    add_error("api_freeze.decision_cards missing required v1 decision card(s): " + ", ".join(missing_card_ids))
+
 freeze_checks = api_freeze.get("freeze_checks", [])
 if not isinstance(freeze_checks, list) or len(freeze_checks) < 4:
     add_error("api_freeze.freeze_checks must document at least four freeze checks")

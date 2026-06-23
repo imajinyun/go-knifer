@@ -26,10 +26,11 @@ const modulePath = "github.com/imajinyun/go-knifer"
 const schemaVersion = "1.7"
 
 const (
-	apiStatusRecommended   = "recommended"
-	apiStatusCompatibility = "compatibility"
-	apiStatusExperimental  = "experimental"
-	apiStatusDeprecated    = "deprecated"
+	apiStatusRecommended     = "recommended"
+	apiStatusCompatibility   = "compatibility"
+	apiStatusExperimental    = "experimental"
+	apiStatusDeprecated      = "deprecated"
+	maxGoldenPathEntrypoints = 5
 )
 
 // ToolsDoc is the top-level machine-readable tool catalog.
@@ -665,7 +666,7 @@ func goldenPathEntrypoints(packageName string, functions []FuncDoc, recommended 
 	for _, fn := range functions {
 		functionsByName[fn.Name] = fn
 	}
-	out := make([]GoldenPathEntrypoint, 0, min(7, len(recommended)))
+	out := make([]GoldenPathEntrypoint, 0, min(maxGoldenPathEntrypoints, len(recommended)))
 	seen := map[string]struct{}{}
 	for _, entrypoint := range recommended {
 		if _, ok := functionsByName[entrypoint.Name]; !ok {
@@ -677,12 +678,12 @@ func goldenPathEntrypoints(packageName string, functions []FuncDoc, recommended 
 			AvoidWhen: goldenPathAvoidWhen(packageName, entrypoint.Profile),
 		})
 		seen[entrypoint.Name] = struct{}{}
-		if len(out) == 7 {
+		if len(out) == maxGoldenPathEntrypoints {
 			return out
 		}
 	}
 	for _, fn := range functions {
-		if len(out) == 7 {
+		if len(out) == maxGoldenPathEntrypoints {
 			break
 		}
 		if fn.Status != apiStatusRecommended {

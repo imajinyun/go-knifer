@@ -51,7 +51,6 @@ Golden path API set:
 | `Redact` | Use first for concise trusted-input workflows in vai. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vai. |
 | `Embed` | Use first for concise trusted-input workflows in vai. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vai. |
 | `WithChatProvider` | Use first for concise trusted-input workflows in vai. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vai. |
-| `WithEmbeddingProvider` | Use first for concise trusted-input workflows in vai. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vai. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -87,8 +86,6 @@ Golden path API set:
 | `Copy` | Use only to preserve existing call-site behavior during migration. | Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists. |
 | `Decode` | Use first for concise trusted-input workflows in vbean. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vbean. |
 | `DecodeResult` | Use first for concise trusted-input workflows in vbean. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vbean. |
-| `FillMap` | Use first for concise trusted-input workflows in vbean. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vbean. |
-| `Merge` | Use first for concise trusted-input workflows in vbean. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vbean. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -144,8 +141,6 @@ Golden path API set:
 | `BloomFNVHash` | Use first for concise trusted-input workflows in vblf. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vblf. |
 | `ApHash` | Use first for concise trusted-input workflows in vblf. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vblf. |
 | `BkdrHash` | Use first for concise trusted-input workflows in vblf. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vblf. |
-| `BloomBKDRHash` | Use first for concise trusted-input workflows in vblf. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vblf. |
-| `BloomDJBHash` | Use first for concise trusted-input workflows in vblf. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vblf. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -264,8 +259,6 @@ Golden path API set:
 | `NewFIFOWithTimeout` | Use first for concise trusted-input workflows in vcache. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcache. |
 | `NewLFU` | Use first for concise trusted-input workflows in vcache. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcache. |
 | `NewLFUWithOptions` | Use first for concise trusted-input workflows in vcache. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcache. |
-| `NewLFUWithTimeout` | Use first for concise trusted-input workflows in vcache. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcache. |
-| `NewLRU` | Use first for concise trusted-input workflows in vcache. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcache. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -319,8 +312,6 @@ Golden path API set:
 | `WithColorMode` | Use first for concise trusted-input workflows in vcli. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcli. |
 | `NewFlagParser` | Use first for concise trusted-input workflows in vcli. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcli. |
 | `RenderHelp` | Use first for concise trusted-input workflows in vcli. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcli. |
-| `Run` | Use first for concise trusted-input workflows in vcli. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcli. |
-| `WithDir` | Use first for concise trusted-input workflows in vcli. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcli. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -364,8 +355,6 @@ Golden path API set:
 | `Base64DecodeStr` | Use first for concise trusted-input workflows in vcodec. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcodec. |
 | `Base64DecodeWithEncoding` | Use first for concise trusted-input workflows in vcodec. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcodec. |
 | `Base64EncodeStr` | Use first for concise trusted-input workflows in vcodec. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcodec. |
-| `Base64EncodeWithEncoding` | Use first for concise trusted-input workflows in vcodec. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcodec. |
-| `Base64RawURLDecode` | Use first for concise trusted-input workflows in vcodec. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcodec. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -409,8 +398,6 @@ Golden path API set:
 | `Merge` | Use first for concise trusted-input workflows in vconf. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconf. |
 | `Load` | Use first for concise trusted-input workflows in vconf. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconf. |
 | `LoadFiles` | Use first for concise trusted-input workflows in vconf. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconf. |
-| `LoadFilesWithOptions` | Use first for concise trusted-input workflows in vconf. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconf. |
-| `LoadProfile` | Use first for concise trusted-input workflows in vconf. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconf. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -479,8 +466,6 @@ Golden path API set:
 | `ToBool` | Use first for concise trusted-input workflows in vconv. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconv. |
 | `ToBoolDefault` | Use first for concise trusted-input workflows in vconv. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconv. |
 | `ToBoolEWithOptions` | Use first for concise trusted-input workflows in vconv. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconv. |
-| `ToBoolWithOptions` | Use first for concise trusted-input workflows in vconv. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconv. |
-| `ToBytes` | Use first for concise trusted-input workflows in vconv. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vconv. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -546,8 +531,6 @@ Golden path API set:
 | `NewCronError` | Use first for concise trusted-input workflows in vcron. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcron. |
 | `MustNewPattern` | Use only to preserve existing call-site behavior during migration. | Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists. |
 | `CronLaunchingCount` | Use first for concise trusted-input workflows in vcron. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcron. |
-| `CronRemove` | Use first for concise trusted-input workflows in vcron. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcron. |
-| `CronRemoveWithOptions` | Use first for concise trusted-input workflows in vcron. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcron. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -628,8 +611,6 @@ Golden path API set:
 | `ConstantTimeEqual` | Use first for concise trusted-input workflows in vcrypto. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcrypto. |
 | `AESDecryptGCMWithOptions` | Use first for concise trusted-input workflows in vcrypto. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcrypto. |
 | `AESEncryptGCM` | Use first for concise trusted-input workflows in vcrypto. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcrypto. |
-| `AESEncryptGCMWithOptions` | Use first for concise trusted-input workflows in vcrypto. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcrypto. |
-| `AESOpenGCM` | Use first for concise trusted-input workflows in vcrypto. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcrypto. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -729,8 +710,6 @@ Golden path API set:
 | `Read` | Use first for concise trusted-input workflows in vcsv. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcsv. |
 | `ReadMaps` | Use first for concise trusted-input workflows in vcsv. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcsv. |
 | `ReadString` | Use first for concise trusted-input workflows in vcsv. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcsv. |
-| `ReadStringMaps` | Use first for concise trusted-input workflows in vcsv. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcsv. |
-| `RecordsToMaps` | Use first for concise trusted-input workflows in vcsv. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vcsv. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -783,8 +762,6 @@ Golden path API set:
 | `BeginOfDay` | Use first for concise trusted-input workflows in vdate. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdate. |
 | `BeginOfMonth` | Use first for concise trusted-input workflows in vdate. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdate. |
 | `BeginOfYear` | Use first for concise trusted-input workflows in vdate. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdate. |
-| `BetweenDays` | Use first for concise trusted-input workflows in vdate. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdate. |
-| `EndOfDay` | Use first for concise trusted-input workflows in vdate. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdate. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -844,8 +821,6 @@ Golden path API set:
 | `NewBuilder` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
 | `BuildLikeValue` | Use first for concise trusted-input workflows in vdb. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdb. |
 | `AndGroup` | Use first for concise trusted-input workflows in vdb. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdb. |
-| `Asc` | Use first for concise trusted-input workflows in vdb. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdb. |
-| `Between` | Use first for concise trusted-input workflows in vdb. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdb. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -926,8 +901,6 @@ Golden path API set:
 | `Contains` | Use first for concise trusted-input workflows in vdfa. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdfa. |
 | `ConfigureAsyncRunner` | Use first for concise trusted-input workflows in vdfa. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdfa. |
 | `ContainsAny` | Use first for concise trusted-input workflows in vdfa. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdfa. |
-| `ContainsWithOptions` | Use first for concise trusted-input workflows in vdfa. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdfa. |
-| `DefaultProcessor` | Use first for concise trusted-input workflows in vdfa. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vdfa. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -999,8 +972,6 @@ Golden path API set:
 | `ErrorIs` | Use first for concise trusted-input workflows in verr. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in verr. |
 | `MustExit` | Use only to preserve existing call-site behavior during migration. | Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists. |
 | `ConfigureDefaultLogFunc` | Use first for concise trusted-input workflows in verr. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in verr. |
-| `GetStack` | Use first for concise trusted-input workflows in verr. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in verr. |
-| `GetStackTrace` | Use first for concise trusted-input workflows in verr. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in verr. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -1083,8 +1054,6 @@ Golden path API set:
 | `CloseQuietly` | Use first for concise trusted-input workflows in vfile. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vfile. |
 | `AppendFileStringWithOptions` | Use first for concise trusted-input workflows in vfile. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vfile. |
 | `Copy` | Use first for concise trusted-input workflows in vfile. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vfile. |
-| `CopyFile` | Use first for concise trusted-input workflows in vfile. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vfile. |
-| `CopyFileWithOptions` | Use first for concise trusted-input workflows in vfile. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vfile. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -1172,8 +1141,6 @@ Golden path API set:
 | `IsChinese` | Use first for concise trusted-input workflows in vform. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vform. |
 | `IsEmailWithOptions` | Use first for concise trusted-input workflows in vform. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vform. |
 | `IsIDCard` | Use first for concise trusted-input workflows in vform. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vform. |
-| `IsIDCardWithOptions` | Use first for concise trusted-input workflows in vform. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vform. |
-| `IsIPv4` | Use first for concise trusted-input workflows in vform. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vform. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -1285,8 +1252,6 @@ Golden path API set:
 | `BkdrHash` | Use first for concise trusted-input workflows in vhash. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhash. |
 | `DjbHash` | Use first for concise trusted-input workflows in vhash. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhash. |
 | `ElfHash` | Use first for concise trusted-input workflows in vhash. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhash. |
-| `FnvHash` | Use first for concise trusted-input workflows in vhash. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhash. |
-| `FnvHashString` | Use first for concise trusted-input workflows in vhash. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhash. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -1333,8 +1298,6 @@ Golden path API set:
 | `CleanHTMLWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
 | `AddGlobalHeader` | Use first for concise trusted-input workflows in vhttp. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhttp. |
 | `BuildBasicAuth` | Use first for concise trusted-input workflows in vhttp. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhttp. |
-| `BuildContentType` | Use first for concise trusted-input workflows in vhttp. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhttp. |
-| `CleanHTML` | Use first for concise trusted-input workflows in vhttp. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vhttp. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -1525,8 +1488,6 @@ Golden path API set:
 | `FastSimpleUUID` | Use only to preserve existing call-site behavior during migration. | Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists. |
 | `ConfigureDefaultFallbackRandomSourceProvider` | Use first for concise trusted-input workflows in vid. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vid. |
 | `CreateSnowflake` | Use first for concise trusted-input workflows in vid. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vid. |
-| `CreateSnowflakeWithOptions` | Use first for concise trusted-input workflows in vid. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vid. |
-| `GetDataCenterID` | Use first for concise trusted-input workflows in vid. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vid. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -1608,8 +1569,6 @@ Golden path API set:
 | `Age` | Use first for concise trusted-input workflows in vident. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vident. |
 | `BirthDate` | Use first for concise trusted-input workflows in vident. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vident. |
 | `BirthDateWithOptions` | Use first for concise trusted-input workflows in vident. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vident. |
-| `BirthString` | Use first for concise trusted-input workflows in vident. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vident. |
-| `BirthStringWithOptions` | Use first for concise trusted-input workflows in vident. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vident. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -1687,8 +1646,6 @@ Golden path API set:
 | `CanDecodeBarcodeFormat` | Use first for concise trusted-input workflows in vimg. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vimg. |
 | `BarcodeASCIIWithChars` | Use first for concise trusted-input workflows in vimg. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vimg. |
 | `BarcodeBase64Data` | Use first for concise trusted-input workflows in vimg. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vimg. |
-| `BarcodeBytes` | Use first for concise trusted-input workflows in vimg. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vimg. |
-| `BarcodeImage` | Use first for concise trusted-input workflows in vimg. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vimg. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -1808,8 +1765,6 @@ Golden path API set:
 | `NewBatchSingle` | Use first for concise trusted-input workflows in vjob. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjob. |
 | `NewMap` | Use first for concise trusted-input workflows in vjob. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjob. |
 | `NewMapKeys` | Use first for concise trusted-input workflows in vjob. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjob. |
-| `NewSlice` | Use first for concise trusted-input workflows in vjob. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjob. |
-| `NewSliceSingle` | Use first for concise trusted-input workflows in vjob. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjob. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -1848,8 +1803,6 @@ Golden path API set:
 | `CreateConfig` | Use first for concise trusted-input workflows in vjson. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjson. |
 | `Format` | Use first for concise trusted-input workflows in vjson. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjson. |
 | `GetByPath` | Use first for concise trusted-input workflows in vjson. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjson. |
-| `GetByPathOr` | Use first for concise trusted-input workflows in vjson. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjson. |
-| `IsArray` | Use first for concise trusted-input workflows in vjson. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjson. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -1945,8 +1898,6 @@ Golden path API set:
 | `AlgorithmName` | Use first for concise trusted-input workflows in vjwt. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjwt. |
 | `MustHMACSigner` | Use only to preserve existing call-site behavior during migration. | Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists. |
 | `CreateJWTTokenWithSigner` | Use first for concise trusted-input workflows in vjwt. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjwt. |
-| `CreateSigner` | Use first for concise trusted-input workflows in vjwt. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjwt. |
-| `CreateSignerStrict` | Use first for concise trusted-input workflows in vjwt. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vjwt. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2048,8 +1999,6 @@ Golden path API set:
 | `GetDefault` | Use first for concise trusted-input workflows in vlog. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vlog. |
 | `Debug` | Use first for concise trusted-input workflows in vlog. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vlog. |
 | `Debugf` | Use first for concise trusted-input workflows in vlog. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vlog. |
-| `DebugfWithOptions` | Use first for concise trusted-input workflows in vlog. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vlog. |
-| `DefaultLogger` | Use first for concise trusted-input workflows in vlog. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vlog. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2133,8 +2082,6 @@ Golden path API set:
 | `WithHeader` | Use first for concise trusted-input workflows in vmail. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmail. |
 | `NewAttachment` | Use first for concise trusted-input workflows in vmail. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmail. |
 | `NewAttachmentFile` | Use first for concise trusted-input workflows in vmail. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmail. |
-| `NewAttachmentReader` | Use first for concise trusted-input workflows in vmail. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmail. |
-| `NewClient` | Use first for concise trusted-input workflows in vmail. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmail. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2214,8 +2161,6 @@ Golden path API set:
 | `Clear` | Use first for concise trusted-input workflows in vmap. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmap. |
 | `Clone` | Use first for concise trusted-input workflows in vmap. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmap. |
 | `ContainsKey` | Use first for concise trusted-input workflows in vmap. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmap. |
-| `ContainsValue` | Use first for concise trusted-input workflows in vmap. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmap. |
-| `CountBy` | Use first for concise trusted-input workflows in vmap. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmap. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2308,8 +2253,6 @@ Golden path API set:
 | `CarLicense` | Use first for concise trusted-input workflows in vmask. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmask. |
 | `ChineseName` | Use first for concise trusted-input workflows in vmask. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmask. |
 | `Clear` | Use first for concise trusted-input workflows in vmask. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmask. |
-| `ClearToNil` | Use first for concise trusted-input workflows in vmask. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmask. |
-| `CreditCode` | Use first for concise trusted-input workflows in vmask. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vmask. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2359,8 +2302,6 @@ Golden path API set:
 | `CreateAddress` | Use first for concise trusted-input workflows in vnet. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnet. |
 | `AddRootCAFileWithOptions` | Use first for concise trusted-input workflows in vnet. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnet. |
 | `AddRootCAReader` | Use first for concise trusted-input workflows in vnet. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnet. |
-| `AddRootCAReaderWithOptions` | Use first for concise trusted-input workflows in vnet. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnet. |
-| `BeginIP` | Use first for concise trusted-input workflows in vnet. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnet. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2556,8 +2497,6 @@ Golden path API set:
 | `Add` | Use first for concise trusted-input workflows in vnum. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnum. |
 | `AbsFloat32` | Use first for concise trusted-input workflows in vnum. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnum. |
 | `AbsFloat64` | Use first for concise trusted-input workflows in vnum. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnum. |
-| `AbsInteger` | Use first for concise trusted-input workflows in vnum. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnum. |
-| `AddStr` | Use first for concise trusted-input workflows in vnum. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnum. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2734,8 +2673,6 @@ Golden path API set:
 | `Apply` | Use first for concise trusted-input workflows in vobj. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vobj. |
 | `Equals` | Use only to preserve existing call-site behavior during migration. | Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists. |
 | `Accept` | Use first for concise trusted-input workflows in vobj. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vobj. |
-| `CloneByStream` | Use first for concise trusted-input workflows in vobj. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vobj. |
-| `CloneByStreamWithOptions` | Use first for concise trusted-input workflows in vobj. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vobj. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2846,8 +2783,6 @@ Golden path API set:
 | `WithReadSheet` | Use first for concise trusted-input workflows in vpoi. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpoi. |
 | `IsValidSheetName` | Use first for concise trusted-input workflows in vpoi. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpoi. |
 | `ReadRowsFromReader` | Use first for concise trusted-input workflows in vpoi. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpoi. |
-| `ReadSheetRows` | Use first for concise trusted-input workflows in vpoi. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpoi. |
-| `ReadSheetRowsWithOptions` | Use first for concise trusted-input workflows in vpoi. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpoi. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2906,8 +2841,6 @@ Golden path API set:
 | `Ele` | Use first for concise trusted-input workflows in vrand. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vrand. |
 | `WithRandomSource` | Use only to preserve existing call-site behavior during migration. | Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists. |
 | `Bool` | Use first for concise trusted-input workflows in vrand. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vrand. |
-| `ConfigureDefaultRandomSourceProvider` | Use first for concise trusted-input workflows in vrand. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vrand. |
-| `EleWithOptions` | Use first for concise trusted-input workflows in vrand. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vrand. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -2967,8 +2900,6 @@ Golden path API set:
 | `GetFieldValue` | Use first for concise trusted-input workflows in vref. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vref. |
 | `GetConstructorsDirectly` | Use only to preserve existing call-site behavior during migration. | Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists. |
 | `GetConstructor` | Use first for concise trusted-input workflows in vref. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vref. |
-| `GetConstructors` | Use first for concise trusted-input workflows in vref. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vref. |
-| `GetField` | Use first for concise trusted-input workflows in vref. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vref. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -3064,8 +2995,6 @@ Golden path API set:
 | `ContainsRe` | Use first for concise trusted-input workflows in vregex. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vregex. |
 | `Count` | Use first for concise trusted-input workflows in vregex. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vregex. |
 | `CountRe` | Use first for concise trusted-input workflows in vregex. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vregex. |
-| `CountWithOptions` | Use first for concise trusted-input workflows in vregex. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vregex. |
-| `DelAll` | Use first for concise trusted-input workflows in vregex. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vregex. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -3185,8 +3114,6 @@ Golden path API set:
 | `Delete` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
 | `AddGlobalHeader` | Use first for concise trusted-input workflows in vresty. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vresty. |
 | `BuildBasicAuth` | Use first for concise trusted-input workflows in vresty. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vresty. |
-| `BuildContentType` | Use first for concise trusted-input workflows in vresty. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vresty. |
-| `CloneGlobalHeaders` | Use first for concise trusted-input workflows in vresty. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vresty. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -3361,8 +3288,6 @@ Golden path API set:
 | `NewInt32` | Use first for concise trusted-input workflows in vset. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vset. |
 | `NewInt64` | Use first for concise trusted-input workflows in vset. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vset. |
 | `NewString` | Use first for concise trusted-input workflows in vset. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vset. |
-| `NewUint` | Use first for concise trusted-input workflows in vset. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vset. |
-| `NewUint32` | Use first for concise trusted-input workflows in vset. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vset. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -3402,8 +3327,6 @@ Golden path API set:
 | `GetRemoteAddress` | Use first for concise trusted-input workflows in vskt. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vskt. |
 | `ChannelDialWithOptions` | Use first for concise trusted-input workflows in vskt. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vskt. |
 | `ChannelUtilDial` | Use first for concise trusted-input workflows in vskt. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vskt. |
-| `NewAioClient` | Use first for concise trusted-input workflows in vskt. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vskt. |
-| `NewAioClientWithConfig` | Use first for concise trusted-input workflows in vskt. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vskt. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -3483,8 +3406,6 @@ Golden path API set:
 | `SliceToMap` | Use only to preserve existing call-site behavior during migration. | Avoid for new code when a Recommended, Safe, E, or WithOptions variant exists. |
 | `Chunk` | Use first for concise trusted-input workflows in vslice. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vslice. |
 | `Compact` | Use first for concise trusted-input workflows in vslice. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vslice. |
-| `Concat` | Use first for concise trusted-input workflows in vslice. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vslice. |
-| `Contains` | Use first for concise trusted-input workflows in vslice. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vslice. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -3557,7 +3478,6 @@ Golden path API set:
 | `WithProvider` | Use first for concise trusted-input workflows in vssh. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vssh. |
 | `List` | Use first for concise trusted-input workflows in vssh. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vssh. |
 | `Run` | Use first for concise trusted-input workflows in vssh. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vssh. |
-| `Upload` | Use first for concise trusted-input workflows in vssh. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vssh. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -3592,8 +3512,6 @@ Golden path API set:
 | `AddSuffixIfNot` | Use first for concise trusted-input workflows in vstr. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vstr. |
 | `AntPathMatch` | Use first for concise trusted-input workflows in vstr. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vstr. |
 | `AntPathMatchWithSeparator` | Use first for concise trusted-input workflows in vstr. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vstr. |
-| `Contains` | Use first for concise trusted-input workflows in vstr. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vstr. |
-| `ContainsAll` | Use first for concise trusted-input workflows in vstr. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vstr. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -3686,8 +3604,6 @@ Golden path API set:
 | `CurrentPID` | Use first for concise trusted-input workflows in vsys. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vsys. |
 | `DumpSystemInfo` | Use first for concise trusted-input workflows in vsys. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vsys. |
 | `DumpSystemInfoWithOptions` | Use first for concise trusted-input workflows in vsys. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vsys. |
-| `Env` | Use first for concise trusted-input workflows in vsys. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vsys. |
-| `EnvBool` | Use first for concise trusted-input workflows in vsys. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vsys. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -3860,8 +3776,6 @@ Golden path API set:
 | `WithFuncMap` | Use first for concise trusted-input workflows in vtpl. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vtpl. |
 | `NewTextEngine` | Use first for concise trusted-input workflows in vtpl. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vtpl. |
 | `RenderTemplate` | Use first for concise trusted-input workflows in vtpl. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vtpl. |
-| `RenderWithEngine` | Use first for concise trusted-input workflows in vtpl. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vtpl. |
-| `RenderWithOptions` | Use first for concise trusted-input workflows in vtpl. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vtpl. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -3907,8 +3821,6 @@ Golden path API set:
 | `EncodePathSegmentWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
 | `AppendQuery` | Use first for concise trusted-input workflows in vurl. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vurl. |
 | `BuildQuery` | Use first for concise trusted-input workflows in vurl. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vurl. |
-| `ContentLength` | Use first for concise trusted-input workflows in vurl. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vurl. |
-| `ContentLengthSafeWithOptions` | Use first for concise trusted-input workflows in vurl. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vurl. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -4020,8 +3932,6 @@ Golden path API set:
 | `AnyMatchSlice` | Use first for concise trusted-input workflows in vver. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vver. |
 | `CompareVersion` | Use first for concise trusted-input workflows in vver. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vver. |
 | `IsGreaterThan` | Use first for concise trusted-input workflows in vver. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vver. |
-| `IsGreaterThanOrEqual` | Use first for concise trusted-input workflows in vver. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vver. |
-| `IsLessThan` | Use first for concise trusted-input workflows in vver. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vver. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -4062,8 +3972,6 @@ Golden path API set:
 | `Append` | Use first for concise trusted-input workflows in vxml. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vxml. |
 | `AppendChild` | Use first for concise trusted-input workflows in vxml. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vxml. |
 | `AppendText` | Use first for concise trusted-input workflows in vxml. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vxml. |
-| `CleanComment` | Use first for concise trusted-input workflows in vxml. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vxml. |
-| `CleanInvalid` | Use first for concise trusted-input workflows in vxml. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vxml. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
@@ -4178,8 +4086,6 @@ Golden path API set:
 | `AppendWithOptions` | Use first for concise trusted-input workflows in vzip. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vzip. |
 | `Get` | Use first for concise trusted-input workflows in vzip. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vzip. |
 | `GetBytes` | Use first for concise trusted-input workflows in vzip. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vzip. |
-| `GetBytesWithOptions` | Use first for concise trusted-input workflows in vzip. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vzip. |
-| `GetStream` | Use first for concise trusted-input workflows in vzip. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vzip. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |

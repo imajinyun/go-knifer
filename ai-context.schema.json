@@ -18,6 +18,7 @@
     "package_lifecycle",
     "benchmark_regression",
     "error_model",
+    "dynamic_semantic_contracts",
     "v1_readiness",
     "api_freeze",
     "coverage_gates",
@@ -129,11 +130,16 @@
     },
     "dependency_tiers": {
       "type": "object",
-      "required": ["core_facades", "heavy_extension_facades", "provider_contract_facades", "notes"],
+      "required": ["core_facades", "heavy_extension_facades", "provider_contract_facades", "heavy_dependency_allowlist", "notes"],
       "properties": {
         "core_facades": { "$ref": "#/$defs/string_array" },
         "heavy_extension_facades": { "$ref": "#/$defs/string_array" },
         "provider_contract_facades": { "$ref": "#/$defs/string_array" },
+        "heavy_dependency_allowlist": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "$ref": "#/$defs/string_array" }
+        },
         "notes": { "$ref": "#/$defs/string_array" }
       },
       "additionalProperties": false
@@ -142,7 +148,7 @@
       "type": "object",
       "required": ["max_golden_path_per_facade", "required_classifications", "facades"],
       "properties": {
-        "max_golden_path_per_facade": { "type": "number", "exclusiveMinimum": 0, "maximum": 7 },
+        "max_golden_path_per_facade": { "type": "number", "exclusiveMinimum": 0, "maximum": 5 },
         "required_classifications": { "$ref": "#/$defs/string_array" },
         "facades": {
           "type": "object",
@@ -190,6 +196,19 @@
       },
       "additionalProperties": false
     },
+    "dynamic_semantic_contracts": {
+      "type": "object",
+      "required": ["required_domains", "domains"],
+      "properties": {
+        "required_domains": { "$ref": "#/$defs/string_array" },
+        "domains": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "$ref": "#/$defs/dynamic_semantic_domain" }
+        }
+      },
+      "additionalProperties": false
+    },
     "v1_readiness": {
       "type": "object",
       "required": ["checklist", "check_commands", "blocking_exit_criteria"],
@@ -202,12 +221,16 @@
     },
     "api_freeze": {
       "type": "object",
-      "required": ["v1_candidate", "decision_card_required", "replacement_required_for_deprecation", "allowed_statuses", "freeze_checks", "deprecations"],
+      "required": ["v1_candidate", "decision_card_required", "replacement_required_for_deprecation", "allowed_statuses", "decision_cards", "freeze_checks", "deprecations"],
       "properties": {
         "v1_candidate": { "type": "boolean" },
         "decision_card_required": { "type": "boolean" },
         "replacement_required_for_deprecation": { "type": "boolean" },
         "allowed_statuses": { "$ref": "#/$defs/string_array" },
+        "decision_cards": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/api_decision_card" }
+        },
         "freeze_checks": { "$ref": "#/$defs/string_array" },
         "deprecations": {
           "type": "array",
@@ -376,6 +399,19 @@
       },
       "additionalProperties": false
     },
+    "api_decision_card": {
+      "type": "object",
+      "required": ["id", "packages", "status", "decision", "rationale", "validation"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "packages": { "$ref": "#/$defs/string_array" },
+        "status": { "type": "string", "minLength": 1 },
+        "decision": { "type": "string", "minLength": 1 },
+        "rationale": { "type": "string", "minLength": 1 },
+        "validation": { "$ref": "#/$defs/string_array" }
+      },
+      "additionalProperties": false
+    },
     "api_convergence_facade": {
       "type": "object",
       "required": ["primary", "advanced", "compatibility", "avoid", "decision"],
@@ -415,6 +451,17 @@
         "category": { "type": "string", "minLength": 1 },
         "code": { "type": "string", "minLength": 1 },
         "use_when": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "dynamic_semantic_domain": {
+      "type": "object",
+      "required": ["packages", "guarantees", "contract_tests", "fuzz_tests"],
+      "properties": {
+        "packages": { "$ref": "#/$defs/string_array" },
+        "guarantees": { "$ref": "#/$defs/string_array" },
+        "contract_tests": { "$ref": "#/$defs/string_array" },
+        "fuzz_tests": { "$ref": "#/$defs/string_array" }
       },
       "additionalProperties": false
     },
