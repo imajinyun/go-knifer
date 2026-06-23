@@ -16,6 +16,7 @@
     "dependency_tiers",
     "api_convergence",
     "package_lifecycle",
+    "capability_domains",
     "benchmark_regression",
     "error_model",
     "dynamic_semantic_contracts",
@@ -170,6 +171,11 @@
         }
       },
       "additionalProperties": false
+    },
+    "capability_domains": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/capability_domain" }
     },
     "benchmark_regression": {
       "type": "object",
@@ -430,6 +436,16 @@
       "properties": {
         "grade": { "type": "string", "minLength": 1 },
         "rationale": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "capability_domain": {
+      "type": "object",
+      "required": ["purpose", "packages", "required_focus"],
+      "properties": {
+        "purpose": { "type": "string", "minLength": 1 },
+        "packages": { "$ref": "#/$defs/string_array" },
+        "required_focus": { "$ref": "#/$defs/string_array" }
       },
       "additionalProperties": false
     },

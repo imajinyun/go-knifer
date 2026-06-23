@@ -243,6 +243,52 @@ def validate_lifecycle() -> None:
 			add_error(f"package_lifecycle.packages.{package_name}.grade must remain core-compatible")
 
 
+def validate_capability_domains() -> None:
+	domains = require_mapping(ai_context.get("capability_domains"), "capability_domains")
+	expected_domains = {
+		"data_transform",
+		"collections",
+		"text_parsing",
+		"trust_boundary",
+		"security_primitives",
+		"runtime_adapters",
+		"domain_helpers",
+	}
+	missing_domains = sorted(expected_domains - set(domains))
+	if missing_domains:
+		add_error("capability_domains missing required domain(s): " + ", ".join(missing_domains))
+	extra_domains = sorted(set(domains) - expected_domains)
+	if extra_domains:
+		add_error("capability_domains includes unknown domain(s): " + ", ".join(extra_domains))
+	covered_packages: set[str] = set()
+	for domain_name, domain_value in sorted(domains.items()):
+		domain = require_mapping(domain_value, f"capability_domains.{domain_name}")
+		purpose = domain.get("purpose")
+		if not isinstance(purpose, str) or not purpose.strip():
+			add_error(f"capability_domains.{domain_name}.purpose must be non-empty")
+		packages = require_string_list(domain.get("packages"), f"capability_domains.{domain_name}.packages")
+		if len(packages) < 2:
+			add_error(f"capability_domains.{domain_name}.packages must include at least 2 facades")
+		unknown = sorted(set(packages) - public_facades)
+		if unknown:
+			add_error(f"capability_domains.{domain_name}.packages includes non-public facade(s): " + ", ".join(unknown))
+		covered_packages.update(packages)
+		if len(require_string_list(domain.get("required_focus"), f"capability_domains.{domain_name}.required_focus")) < 2:
+			add_error(f"capability_domains.{domain_name}.required_focus must include at least 2 focus areas")
+	missing_packages = sorted(public_facades - covered_packages)
+	if missing_packages:
+		add_error("capability_domains do not cover public facade(s): " + ", ".join(missing_packages))
+
+	security_sensitive = set(require_string_list(ai_context.get("security_sensitive_packages"), "security_sensitive_packages"))
+	trust_boundary = set(require_string_list(require_mapping(domains.get("trust_boundary"), "capability_domains.trust_boundary").get("packages"), "capability_domains.trust_boundary.packages"))
+	security_primitives = set(require_string_list(require_mapping(domains.get("security_primitives"), "capability_domains.security_primitives").get("packages"), "capability_domains.security_primitives.packages"))
+	runtime_adapters = set(require_string_list(require_mapping(domains.get("runtime_adapters"), "capability_domains.runtime_adapters").get("packages"), "capability_domains.runtime_adapters.packages"))
+	covered_sensitive = trust_boundary | security_primitives | runtime_adapters
+	missing_sensitive = sorted(security_sensitive - covered_sensitive)
+	if missing_sensitive:
+		add_error("security-sensitive facades must be represented by trust_boundary, security_primitives, or runtime_adapters: " + ", ".join(missing_sensitive))
+
+
 def validate_dependency_isolation() -> None:
 	dependency_tiers = require_mapping(ai_context.get("dependency_tiers"), "dependency_tiers")
 	heavy_dependency_allowlist = require_mapping(dependency_tiers.get("heavy_dependency_allowlist"), "dependency_tiers.heavy_dependency_allowlist")
@@ -392,6 +438,7 @@ if not bench_only:
 	validate_local_governance_gates()
 	validate_api_convergence()
 	validate_lifecycle()
+	validate_capability_domains()
 	validate_dependency_isolation()
 	validate_error_model()
 	validate_dynamic_semantic_contracts()

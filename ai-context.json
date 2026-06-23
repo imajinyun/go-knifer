@@ -768,6 +768,43 @@
       "vzip": { "grade": "core", "rationale": "Core facade for archive/compression; should avoid non-allowlisted runtime dependencies." }
     }
   },
+  "capability_domains": {
+    "data_transform": {
+      "purpose": "Dynamic data conversion, object shaping, structured serialization, and configuration binding.",
+      "packages": ["vbean", "vconf", "vconv", "vjson", "vobj", "vxml"],
+      "required_focus": ["semantic contract tests", "fuzz/property coverage for dynamic inputs", "explicit error taxonomy"]
+    },
+    "collections": {
+      "purpose": "Typed collection helpers for slices, maps, and sets.",
+      "packages": ["vmap", "vset", "vslice"],
+      "required_focus": ["stdlib-first API convergence", "allocation-aware benchmarks", "generic type behavior tests"]
+    },
+    "text_parsing": {
+      "purpose": "String processing, regular expressions, matching, tokenization, and language text adapters.",
+      "packages": ["vdfa", "vhan", "vregex", "vstr", "vtok"],
+      "required_focus": ["unicode and malformed-input tests", "provider contract validation", "deterministic examples"]
+    },
+    "trust_boundary": {
+      "purpose": "Helpers that cross URL, HTTP, filesystem, archive, CLI, and configuration trust boundaries.",
+      "packages": ["vcli", "vconf", "vfile", "vhttp", "vresty", "vurl", "vzip"],
+      "required_focus": ["threat-model mapped misuse tests", "Safe/E/WithOptions consistency", "bounded IO and fail-closed defaults"]
+    },
+    "security_primitives": {
+      "purpose": "Cryptography, token, random, identifier, masking, and password safety primitives.",
+      "packages": ["vcrypto", "vid", "vjwt", "vmask", "vpass", "vrand"],
+      "required_focus": ["weak-input rejection tests", "secret handling guarantees", "algorithm and random-source policy"]
+    },
+    "runtime_adapters": {
+      "purpose": "Runtime integration helpers, provider-backed adapters, external protocols, and heavier optional integrations.",
+      "packages": ["vai", "vcron", "vdb", "verr", "vftp", "vimg", "vjob", "vlog", "vmail", "vnet", "vpoi", "vresty", "vskt", "vsys", "vtpl", "vssh"],
+      "required_focus": ["context cancellation", "provider injection", "dependency isolation and lifecycle metadata"]
+    },
+    "domain_helpers": {
+      "purpose": "Focused small-domain helpers with narrow behavior and low dependency expectations.",
+      "packages": ["vblf", "vbool", "vcache", "vcodec", "vcsv", "vdate", "vform", "vhash", "vident", "vnum", "vref", "vsem", "vver"],
+      "required_focus": ["package-level examples", "edge-case tests", "core dependency discipline"]
+    }
+  },
   "benchmark_regression": {
     "baseline_command": "make bench-baseline BENCHCOUNT=10 BENCHTIME=3s",
     "compare_command": "make bench-compare BENCHCOUNT=10 BENCHTIME=3s",

@@ -353,6 +353,22 @@ Generic collection contract:
 | Generated IDs such as UUID, Snowflake, and NanoId | `vid` | Use `vident` for legal identity number parsing/validation, not generated service identifiers. |
 | Provider-neutral AI, FTP, SSH/SFTP, pinyin, or tokenization contracts | `vai`, `vftp`, `vssh`, `vhan`, `vtok` | Use a dedicated provider/client package outside core when real network clients, credentials, dictionaries, or NLP engines are required. |
 
+### Capability domain map
+
+Use capability domains for planning and review. They group packages by the engineering capability that must stay consistent across facades, so changes can be validated against shared contracts instead of package names alone.
+
+| Capability domain | Packages | Governance focus |
+| --- | --- | --- |
+| Data transform | `vbean`, `vconf`, `vconv`, `vjson`, `vobj`, `vxml` | Dynamic semantic contracts, fuzz/property coverage for untyped input, and explicit error taxonomy. |
+| Collections | `vmap`, `vset`, `vslice` | Standard-library-first API convergence, allocation-aware benchmarks, and generic type behavior. |
+| Text parsing | `vdfa`, `vhan`, `vregex`, `vstr`, `vtok` | Unicode and malformed-input tests, provider validation, and deterministic examples. |
+| Trust boundary | `vcli`, `vconf`, `vfile`, `vhttp`, `vresty`, `vurl`, `vzip` | Threat-model mapped misuse tests, `Safe`/`E`/`WithOptions` consistency, bounded IO, and fail-closed defaults. |
+| Security primitives | `vcrypto`, `vid`, `vjwt`, `vmask`, `vpass`, `vrand` | Weak-input rejection, secret handling guarantees, algorithm policy, and random-source policy. |
+| Runtime adapters | `vai`, `vcron`, `vdb`, `verr`, `vftp`, `vimg`, `vjob`, `vlog`, `vmail`, `vnet`, `vpoi`, `vresty`, `vskt`, `vsys`, `vtpl`, `vssh` | Context cancellation, provider injection, dependency isolation, and lifecycle metadata. |
+| Domain helpers | `vblf`, `vbool`, `vcache`, `vcodec`, `vcsv`, `vdate`, `vform`, `vhash`, `vident`, `vnum`, `vref`, `vsem`, `vver` | Package-level examples, edge-case tests, and core dependency discipline. |
+
+The capability map is machine-readable in `ai-context.json` under `capability_domains` and is validated by `make governance-maturity-check`. Every public facade must be covered by at least one capability domain.
+
 ### Dependency tier matrix
 
 `go-knifer` keeps the default utility surface lightweight. Core facades should not pull optional heavy dependencies into common slice/map/string/config/crypto workflows; extension facades isolate heavier adapters and provider contracts.
