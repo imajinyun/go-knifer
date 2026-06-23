@@ -357,17 +357,17 @@ Generic collection contract:
 
 Use capability domains for planning and review. They group packages by the engineering capability that must stay consistent across facades, so changes can be validated against shared contracts instead of package names alone.
 
-| Capability domain | Packages | Governance focus |
-| --- | --- | --- |
-| Data transform | `vbean`, `vconf`, `vconv`, `vjson`, `vobj`, `vxml` | Dynamic semantic contracts, fuzz/property coverage for untyped input, and explicit error taxonomy. |
-| Collections | `vmap`, `vset`, `vslice` | Standard-library-first API convergence, allocation-aware benchmarks, and generic type behavior. |
-| Text parsing | `vdfa`, `vhan`, `vregex`, `vstr`, `vtok` | Unicode and malformed-input tests, provider validation, and deterministic examples. |
-| Trust boundary | `vcli`, `vconf`, `vfile`, `vhttp`, `vresty`, `vurl`, `vzip` | Threat-model mapped misuse tests, `Safe`/`E`/`WithOptions` consistency, bounded IO, and fail-closed defaults. |
-| Security primitives | `vcrypto`, `vid`, `vjwt`, `vmask`, `vpass`, `vrand` | Weak-input rejection, secret handling guarantees, algorithm policy, and random-source policy. |
-| Runtime adapters | `vai`, `vcron`, `vdb`, `verr`, `vftp`, `vimg`, `vjob`, `vlog`, `vmail`, `vnet`, `vpoi`, `vresty`, `vskt`, `vsys`, `vtpl`, `vssh` | Context cancellation, provider injection, dependency isolation, and lifecycle metadata. |
-| Domain helpers | `vblf`, `vbool`, `vcache`, `vcodec`, `vcsv`, `vdate`, `vform`, `vhash`, `vident`, `vnum`, `vref`, `vsem`, `vver` | Package-level examples, edge-case tests, and core dependency discipline. |
+| Capability domain | Packages | Governance focus | Required tests |
+| --- | --- | --- | --- |
+| Data transform | `vbean`, `vconf`, `vconv`, `vjson`, `vobj`, `vxml` | Dynamic semantic contracts, fuzz/property coverage for untyped input, and explicit error taxonomy. | contract, fuzz, error contract, example |
+| Collections | `vmap`, `vset`, `vslice` | Standard-library-first API convergence, allocation-aware benchmarks, and generic type behavior. | contract, benchmark, example |
+| Text parsing | `vdfa`, `vhan`, `vregex`, `vstr`, `vtok` | Unicode and malformed-input tests, provider validation, and deterministic examples. | contract, fuzz, provider contract, example |
+| Trust boundary | `vcli`, `vconf`, `vfile`, `vhttp`, `vresty`, `vurl`, `vzip` | Threat-model mapped misuse tests, `Safe`/`E`/`WithOptions` consistency, bounded IO, and fail-closed defaults. | contract, security, misuse, fuzz, error contract |
+| Security primitives | `vcrypto`, `vid`, `vjwt`, `vmask`, `vpass`, `vrand` | Weak-input rejection, secret handling guarantees, algorithm policy, and random-source policy. | contract, security, misuse, error contract, benchmark |
+| Runtime adapters | `vai`, `vcron`, `vdb`, `verr`, `vftp`, `vimg`, `vjob`, `vlog`, `vmail`, `vnet`, `vpoi`, `vresty`, `vskt`, `vsys`, `vtpl`, `vssh` | Context cancellation, provider injection, dependency isolation, and lifecycle metadata. | contract, provider contract, security, benchmark, example |
+| Domain helpers | `vblf`, `vbool`, `vcache`, `vcodec`, `vcsv`, `vdate`, `vform`, `vhash`, `vident`, `vnum`, `vref`, `vsem`, `vver` | Package-level examples, edge-case tests, and core dependency discipline. | contract, example, benchmark |
 
-The capability map is machine-readable in `ai-context.json` under `capability_domains` and is validated by `make governance-maturity-check`. Every public facade must be covered by at least one capability domain.
+The capability map is machine-readable in `ai-context.json` under `capability_domains` and is validated by `make governance-maturity-check`. Every public facade must be covered by at least one capability domain, and each domain must declare the test responsibility types expected for future work.
 
 ### Dependency tier matrix
 

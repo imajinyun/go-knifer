@@ -441,11 +441,18 @@
     },
     "capability_domain": {
       "type": "object",
-      "required": ["purpose", "packages", "required_focus"],
+      "required": ["purpose", "packages", "required_focus", "required_tests"],
       "properties": {
         "purpose": { "type": "string", "minLength": 1 },
         "packages": { "$ref": "#/$defs/string_array" },
-        "required_focus": { "$ref": "#/$defs/string_array" }
+        "required_focus": { "$ref": "#/$defs/string_array" },
+        "required_tests": {
+          "type": "array",
+          "items": {
+            "enum": ["benchmark", "contract", "error_contract", "example", "fuzz", "misuse", "provider_contract", "security"]
+          },
+          "uniqueItems": true
+        }
       },
       "additionalProperties": false
     },

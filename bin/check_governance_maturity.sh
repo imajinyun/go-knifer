@@ -261,6 +261,16 @@ def validate_capability_domains() -> None:
 	if extra_domains:
 		add_error("capability_domains includes unknown domain(s): " + ", ".join(extra_domains))
 	covered_packages: set[str] = set()
+	allowed_test_types = {"benchmark", "contract", "error_contract", "example", "fuzz", "misuse", "provider_contract", "security"}
+	required_test_matrix = {
+		"data_transform": {"contract", "fuzz", "error_contract"},
+		"collections": {"contract", "benchmark"},
+		"text_parsing": {"contract", "fuzz", "provider_contract"},
+		"trust_boundary": {"contract", "security", "misuse", "fuzz", "error_contract"},
+		"security_primitives": {"contract", "security", "misuse", "error_contract"},
+		"runtime_adapters": {"contract", "provider_contract"},
+		"domain_helpers": {"contract", "example"},
+	}
 	for domain_name, domain_value in sorted(domains.items()):
 		domain = require_mapping(domain_value, f"capability_domains.{domain_name}")
 		purpose = domain.get("purpose")
@@ -275,6 +285,15 @@ def validate_capability_domains() -> None:
 		covered_packages.update(packages)
 		if len(require_string_list(domain.get("required_focus"), f"capability_domains.{domain_name}.required_focus")) < 2:
 			add_error(f"capability_domains.{domain_name}.required_focus must include at least 2 focus areas")
+		required_tests = set(require_string_list(domain.get("required_tests"), f"capability_domains.{domain_name}.required_tests"))
+		if not required_tests:
+			add_error(f"capability_domains.{domain_name}.required_tests must be non-empty")
+		unknown_tests = sorted(required_tests - allowed_test_types)
+		if unknown_tests:
+			add_error(f"capability_domains.{domain_name}.required_tests includes unknown test type(s): " + ", ".join(unknown_tests))
+		missing_tests = sorted(required_test_matrix.get(domain_name, set()) - required_tests)
+		if missing_tests:
+			add_error(f"capability_domains.{domain_name}.required_tests missing required test type(s): " + ", ".join(missing_tests))
 	missing_packages = sorted(public_facades - covered_packages)
 	if missing_packages:
 		add_error("capability_domains do not cover public facade(s): " + ", ".join(missing_packages))

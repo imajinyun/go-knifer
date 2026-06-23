@@ -772,37 +772,44 @@
     "data_transform": {
       "purpose": "Dynamic data conversion, object shaping, structured serialization, and configuration binding.",
       "packages": ["vbean", "vconf", "vconv", "vjson", "vobj", "vxml"],
-      "required_focus": ["semantic contract tests", "fuzz/property coverage for dynamic inputs", "explicit error taxonomy"]
+      "required_focus": ["semantic contract tests", "fuzz/property coverage for dynamic inputs", "explicit error taxonomy"],
+      "required_tests": ["contract", "fuzz", "error_contract", "example"]
     },
     "collections": {
       "purpose": "Typed collection helpers for slices, maps, and sets.",
       "packages": ["vmap", "vset", "vslice"],
-      "required_focus": ["stdlib-first API convergence", "allocation-aware benchmarks", "generic type behavior tests"]
+      "required_focus": ["stdlib-first API convergence", "allocation-aware benchmarks", "generic type behavior tests"],
+      "required_tests": ["contract", "benchmark", "example"]
     },
     "text_parsing": {
       "purpose": "String processing, regular expressions, matching, tokenization, and language text adapters.",
       "packages": ["vdfa", "vhan", "vregex", "vstr", "vtok"],
-      "required_focus": ["unicode and malformed-input tests", "provider contract validation", "deterministic examples"]
+      "required_focus": ["unicode and malformed-input tests", "provider contract validation", "deterministic examples"],
+      "required_tests": ["contract", "fuzz", "provider_contract", "example"]
     },
     "trust_boundary": {
       "purpose": "Helpers that cross URL, HTTP, filesystem, archive, CLI, and configuration trust boundaries.",
       "packages": ["vcli", "vconf", "vfile", "vhttp", "vresty", "vurl", "vzip"],
-      "required_focus": ["threat-model mapped misuse tests", "Safe/E/WithOptions consistency", "bounded IO and fail-closed defaults"]
+      "required_focus": ["threat-model mapped misuse tests", "Safe/E/WithOptions consistency", "bounded IO and fail-closed defaults"],
+      "required_tests": ["contract", "security", "misuse", "fuzz", "error_contract"]
     },
     "security_primitives": {
       "purpose": "Cryptography, token, random, identifier, masking, and password safety primitives.",
       "packages": ["vcrypto", "vid", "vjwt", "vmask", "vpass", "vrand"],
-      "required_focus": ["weak-input rejection tests", "secret handling guarantees", "algorithm and random-source policy"]
+      "required_focus": ["weak-input rejection tests", "secret handling guarantees", "algorithm and random-source policy"],
+      "required_tests": ["contract", "security", "misuse", "error_contract", "benchmark"]
     },
     "runtime_adapters": {
       "purpose": "Runtime integration helpers, provider-backed adapters, external protocols, and heavier optional integrations.",
       "packages": ["vai", "vcron", "vdb", "verr", "vftp", "vimg", "vjob", "vlog", "vmail", "vnet", "vpoi", "vresty", "vskt", "vsys", "vtpl", "vssh"],
-      "required_focus": ["context cancellation", "provider injection", "dependency isolation and lifecycle metadata"]
+      "required_focus": ["context cancellation", "provider injection", "dependency isolation and lifecycle metadata"],
+      "required_tests": ["contract", "provider_contract", "security", "benchmark", "example"]
     },
     "domain_helpers": {
       "purpose": "Focused small-domain helpers with narrow behavior and low dependency expectations.",
       "packages": ["vblf", "vbool", "vcache", "vcodec", "vcsv", "vdate", "vform", "vhash", "vident", "vnum", "vref", "vsem", "vver"],
-      "required_focus": ["package-level examples", "edge-case tests", "core dependency discipline"]
+      "required_focus": ["package-level examples", "edge-case tests", "core dependency discipline"],
+      "required_tests": ["contract", "example", "benchmark"]
     }
   },
   "benchmark_regression": {
