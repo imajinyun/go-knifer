@@ -43,7 +43,7 @@
       "writes_git_config": false,
       "network_required": false,
       "risk_level": "low",
-      "notes": "Fast local gate; includes worktree-check, module verification, vet, architecture, tests, API snapshot, documentation checks, AI context, and whitespace diff checks."
+      "notes": "Fast local gate; includes worktree-check, module verification, vet, architecture, tests, API snapshot, documentation checks, governance maturity, benchmark metadata, and whitespace diff checks."
     },
     "agent_check": {
       "cmd": "make agent-check",
@@ -139,7 +139,7 @@
       "network_required": true,
       "risk_level": "medium",
       "creates_artifacts": ["/tmp/go-knifer-coverage.out"],
-      "notes": "Full local pre-push gate; govulncheck may require vulnerability database access."
+      "notes": "Full local pre-push gate; includes race coverage, governance maturity, benchmark metadata, lint, and govulncheck. govulncheck may require vulnerability database access."
     },
     "security_check": {
       "cmd": "make security-check",

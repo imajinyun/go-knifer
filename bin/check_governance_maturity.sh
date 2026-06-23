@@ -79,6 +79,26 @@ with open("docs/api/tools.json", "r", encoding="utf-8") as f:
 with open("Makefile", "r", encoding="utf-8") as f:
 	makefile = f.read()
 
+
+def make_target_dependencies(target: str) -> list[str]:
+	match = re.search(rf"^{re.escape(target)}:[ \t]*(.*)$", makefile, flags=re.MULTILINE)
+	if not match:
+		add_error(f"Makefile must define target {target}")
+		return []
+	return [item for item in match.group(1).split() if item and not item.startswith("$")]
+
+
+def make_target_depends_on(target: str, dependency: str, seen: set[str] | None = None) -> bool:
+	if seen is None:
+		seen = set()
+	if target in seen:
+		return False
+	seen.add(target)
+	deps = make_target_dependencies(target)
+	if dependency in deps:
+		return True
+	return any(make_target_depends_on(dep, dependency, seen) for dep in deps if re.match(r"^[A-Za-z0-9_.-]+$", dep))
+
 commands = require_mapping(ai_context.get("commands"), "commands")
 for command_name in ("governance_maturity_check", "bench_regression_check"):
 	if command_name not in commands:
@@ -122,6 +142,12 @@ def validate_benchmark_regression() -> None:
 	for target in ("bench-baseline", "bench-compare", "bench-regression-check", "benchstat"):
 		if not re.search(rf"^{re.escape(target)}:(?:\s|$)", makefile, flags=re.MULTILINE):
 			add_error(f"Makefile must define benchmark target {target}")
+
+
+def validate_local_governance_gates() -> None:
+	for target in ("quick-check", "full-check", "ci-workflow-check", "release-check"):
+		if not make_target_depends_on(target, "bench-regression-check"):
+			add_error(f"Makefile target {target} must depend on bench-regression-check")
 
 
 def validate_api_convergence() -> None:
@@ -314,6 +340,7 @@ def validate_threat_model() -> None:
 
 validate_benchmark_regression()
 if not bench_only:
+	validate_local_governance_gates()
 	validate_api_convergence()
 	validate_lifecycle()
 	validate_dependency_isolation()

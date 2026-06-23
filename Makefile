@@ -213,11 +213,11 @@ lint:
 govulncheck:
 	$(GO) tool govulncheck $(PKGS)
 
-quick-check: worktree-check mod-verify vet arch test api-check docs-check ai-context-check diff-whitespace
+quick-check: worktree-check mod-verify vet arch test api-check docs-check bench-regression-check diff-whitespace
 
 security-check: lint govulncheck
 
-full-check: worktree-check mod-verify vet arch test-race coverage-check api-check docs-check ai-context-check lint govulncheck diff-whitespace
+full-check: worktree-check mod-verify vet arch test-race coverage-check api-check docs-check bench-regression-check lint govulncheck diff-whitespace
 
 release-check: release-notes-check full-check ci-workflow-check
 
