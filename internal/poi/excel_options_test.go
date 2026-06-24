@@ -39,6 +39,61 @@ func TestReadWriteOptions(t *testing.T) {
 	}
 }
 
+func TestReadRangeOptions(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "book.xlsx")
+	rows := [][]string{
+		{"id", "name", "score"},
+		{"1", "go", "100"},
+		{"2", "tool", "98"},
+		{"3", "agent", "97"},
+	}
+	if err := WriteSheetRows(path, "Data", rows); err != nil {
+		t.Fatalf("WriteSheetRows: %v", err)
+	}
+
+	got, err := ReadRows(path, WithReadSheet("Data"), WithReadStartCell(2, 2), WithReadLimit(2, 2))
+	if err != nil {
+		t.Fatalf("ReadRows with range options: %v", err)
+	}
+	want := [][]string{{"go", "100"}, {"tool", "98"}}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("ReadRows with range options = %#v, want %#v", got, want)
+	}
+
+	got, err = ReadSheetRowsWithOptions(path, "Data", WithReadStartCell(3, 1), WithReadLimit(1, 2))
+	if err != nil {
+		t.Fatalf("ReadSheetRowsWithOptions with range options: %v", err)
+	}
+	want = [][]string{{"2", "tool"}}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("ReadSheetRowsWithOptions with range options = %#v, want %#v", got, want)
+	}
+}
+
+func TestReadRangeOptionsOutOfRange(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "book.xlsx")
+	if err := WriteRows(path, [][]string{{"a", "b"}, {"c", "d"}}); err != nil {
+		t.Fatalf("WriteRows: %v", err)
+	}
+
+	got, err := ReadRows(path, WithReadStartCell(4, 1))
+	if err != nil {
+		t.Fatalf("ReadRows past last row: %v", err)
+	}
+	if len(got) != 0 {
+		t.Fatalf("ReadRows past last row = %#v, want empty rows", got)
+	}
+
+	got, err = ReadRows(path, WithReadStartCell(1, 4), WithReadLimit(2, 1))
+	if err != nil {
+		t.Fatalf("ReadRows past last col: %v", err)
+	}
+	want := [][]string{{}, {}}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("ReadRows past last col = %#v, want %#v", got, want)
+	}
+}
+
 func TestWriteProviderOptions(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "nested", "book.xlsx")
 	var mkdirPath string

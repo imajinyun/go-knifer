@@ -13,6 +13,8 @@ Choose helpers by where the workbook lives and whether you need one sheet, multi
 | Write a simple workbook file | `WriteRows` | Good for single-sheet exports with default worksheet behavior. |
 | Read rows from a workbook file | `ReadRows` | Use when the file path is already trusted and available on disk. |
 | Write to a named worksheet or start cell | `WriteSheetRows`, `WithStartCell` | Validate user-supplied worksheet names before writing. |
+| Read a bounded region | `WithReadStartCell`, `WithReadLimit` | Use for previews, imports with known header offsets, or defensive partial reads. |
+| Preserve typed values on write | `WriteAnyRows`, `ReadCells` | Use when numbers, booleans, dates, or nil cells should not be forced through string writes. |
 | List workbook worksheets | `SheetNames` | Use to inspect incoming files before selecting a sheet. |
 | Validate worksheet names | `ValidateSheetName`, `IsValidSheetName` | Run before using names from users, reports, or external systems. |
 | Work entirely in memory | `WriteRowsToBuffer`, `ReadRowsFromReader` | Useful for HTTP responses, tests, and pipelines that should avoid temporary files. |
@@ -121,6 +123,74 @@ func main() {
 		panic(err)
 	}
 	fmt.Println(names)
+}
+```
+
+## Read a bounded region
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/imajinyun/go-knifer/vpoi"
+)
+
+func main() {
+	path := filepath.Join(os.TempDir(), "region-users.xlsx")
+	rows := [][]string{
+		{"id", "name", "score"},
+		{"1", "alice", "100"},
+		{"2", "bob", "98"},
+	}
+	if err := vpoi.WriteRows(path, rows, vpoi.WithOverwrite(true)); err != nil {
+		panic(err)
+	}
+	got, err := vpoi.ReadRows(path,
+		vpoi.WithReadStartCell(2, 2),
+		vpoi.WithReadLimit(2, 2),
+	)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(got)
+}
+```
+
+## Write typed values and inspect cell metadata
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/imajinyun/go-knifer/vpoi"
+)
+
+func main() {
+	path := filepath.Join(os.TempDir(), "typed-users.xlsx")
+	rows := [][]any{
+		{"name", "score", "active"},
+		{"alice", 100, true},
+	}
+	if err := vpoi.WriteAnyRows(path, rows, vpoi.WithOverwrite(true)); err != nil {
+		panic(err)
+	}
+	cells, err := vpoi.ReadCells(path,
+		vpoi.WithReadStartCell(2, 2),
+		vpoi.WithReadLimit(1, 2),
+	)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(cells[0][0].Value)
+	fmt.Println(cells[0][0].Type == vpoi.CellTypeNumber)
 }
 ```
 

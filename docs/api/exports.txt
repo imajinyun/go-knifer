@@ -2516,10 +2516,22 @@ github.com/imajinyun/go-knifer/vpass
   type Strength = github.com/imajinyun/go-knifer/internal/pass.Strength
 
 github.com/imajinyun/go-knifer/vpoi
+  const CellTypeBool github.com/xuri/excelize/v2.CellType = 1
+  const CellTypeDate github.com/xuri/excelize/v2.CellType = 2
+  const CellTypeError github.com/xuri/excelize/v2.CellType = 3
+  const CellTypeFormula github.com/xuri/excelize/v2.CellType = 4
+  const CellTypeInlineString github.com/xuri/excelize/v2.CellType = 5
+  const CellTypeNumber github.com/xuri/excelize/v2.CellType = 6
+  const CellTypeSharedString github.com/xuri/excelize/v2.CellType = 7
+  const CellTypeUnset github.com/xuri/excelize/v2.CellType = 0
   const DefaultSheetName untyped string = "Sheet1"
   func IsValidSheetName(sheet string) bool
+  func ReadCells(path string, opts ...ReadOption) ([][]Cell, error)
+  func ReadCellsFromReader(r io.Reader, opts ...ReadOption) ([][]Cell, error)
   func ReadRows(path string, opts ...ReadOption) ([][]string, error)
   func ReadRowsFromReader(r io.Reader, opts ...ReadOption) ([][]string, error)
+  func ReadSheetCells(path string, sheet string) ([][]Cell, error)
+  func ReadSheetCellsWithOptions(path string, sheet string, opts ...ReadOption) ([][]Cell, error)
   func ReadSheetRows(path string, sheet string) ([][]string, error)
   func ReadSheetRowsWithOptions(path string, sheet string, opts ...ReadOption) ([][]string, error)
   func SheetNames(path string) ([]string, error)
@@ -2535,16 +2547,23 @@ github.com/imajinyun/go-knifer/vpoi
   func WithOpenOptions(opts ...github.com/xuri/excelize/v2.Options) ReadOption
   func WithOpenReaderFunc(openReader OpenReaderFunc) ReadOption
   func WithOverwrite(overwrite bool) WriteOption
+  func WithReadLimit(maxRows int, maxCols int) ReadOption
   func WithReadSheet(sheet string) ReadOption
+  func WithReadStartCell(row int, col int) ReadOption
   func WithSaveAsFunc(saveAs SaveAsFunc) WriteOption
   func WithSaveOptions(opts ...github.com/xuri/excelize/v2.Options) WriteOption
   func WithStartCell(row int, col int) WriteOption
   func WithStat(stat func(string) (os.FileInfo, error)) WriteOption
   func WithWriteSheet(sheet string) WriteOption
+  func WriteAnyRows(path string, rows [][]any, opts ...WriteOption) error
+  func WriteAnyRowsToBuffer(sheet string, rows [][]any, opts ...WriteOption) (*bytes.Buffer, error)
   func WriteRows(path string, rows [][]string, opts ...WriteOption) error
   func WriteRowsToBuffer(sheet string, rows [][]string, opts ...WriteOption) (*bytes.Buffer, error)
+  func WriteSheetAnyRows(path string, sheet string, rows [][]any, opts ...WriteOption) error
   func WriteSheetRows(path string, sheet string, rows [][]string, opts ...WriteOption) error
   func WriteSheets(path string, sheets map[string][][]string, opts ...WriteOption) error
+  type Cell = github.com/imajinyun/go-knifer/internal/poi.Cell
+  type CellType = github.com/imajinyun/go-knifer/internal/poi.CellType
   type NewFileFunc = github.com/imajinyun/go-knifer/internal/poi.NewFileFunc
   type OpenFileFunc = github.com/imajinyun/go-knifer/internal/poi.OpenFileFunc
   type OpenReaderFunc = github.com/imajinyun/go-knifer/internal/poi.OpenReaderFunc

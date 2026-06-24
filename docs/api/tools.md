@@ -11,16 +11,16 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Schema | 1.7 |
 | Module | `github.com/imajinyun/go-knifer` |
 | Packages | 54 |
-| Functions | 2609 |
+| Functions | 2618 |
 | Functions with examples | 1253 |
 | Context-aware functions | 36 |
-| Functions returning error | 603 |
-| Variadic functions | 777 |
-| API status: recommended | 2587 |
+| Functions returning error | 610 |
+| Variadic functions | 783 |
+| API status: recommended | 2596 |
 | API status: compatibility | 22 |
 | API status: experimental | 0 |
 | API status: deprecated | 0 |
-| Synopsis source: facade | 1967 |
+| Synopsis source: facade | 1976 |
 | Synopsis source: internal | 642 |
 | Synopsis source: empty | 0 |
 
@@ -2764,13 +2764,13 @@ Import path: `github.com/imajinyun/go-knifer/vpoi`
 
 Package vpoi provides office-document utilities.
 
-Quality: 28 functions · 6 with examples · 21.4% example coverage · statuses: recommended=28, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=28, internal=0, empty=0
+Quality: 37 functions · 6 with examples · 16.2% example coverage · statuses: recommended=37, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=37, internal=0, empty=0
 
 Recommended entrypoints:
 
 | Function | Profile | Rationale |
 | --- | --- | --- |
-| `ReadRows` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `ReadCells` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `WithOpenOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `WithReadSheet` | day-one | Start here for concise, trusted-input use cases in this package. |
 
@@ -2778,17 +2778,21 @@ Golden path API set:
 
 | Function | Use when | Avoid when |
 | --- | --- | --- |
-| `ReadRows` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `ReadCells` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
 | `WithOpenOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
 | `WithReadSheet` | Use first for concise trusted-input workflows in vpoi. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpoi. |
 | `IsValidSheetName` | Use first for concise trusted-input workflows in vpoi. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpoi. |
-| `ReadRowsFromReader` | Use first for concise trusted-input workflows in vpoi. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpoi. |
+| `ReadCellsFromReader` | Use first for concise trusted-input workflows in vpoi. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpoi. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `IsValidSheetName` | `func IsValidSheetName(sheet string) bool` | recommended | IsValidSheetName reports whether sheet can be used as an Excel worksheet name. | facade | — |
+| `ReadCells` | `func ReadCells(path string, opts ...ReadOption) ([][]Cell, error)` | recommended | ReadCells reads typed cell metadata from the first worksheet in path. | facade | — |
+| `ReadCellsFromReader` | `func ReadCellsFromReader(r io.Reader, opts ...ReadOption) ([][]Cell, error)` | recommended | ReadCellsFromReader reads typed cell metadata from the first worksheet in r. | facade | — |
 | `ReadRows` | `func ReadRows(path string, opts ...ReadOption) ([][]string, error)` | recommended | ReadRows reads rows from the first worksheet in path. | facade | — |
 | `ReadRowsFromReader` | `func ReadRowsFromReader(r io.Reader, opts ...ReadOption) ([][]string, error)` | recommended | ReadRowsFromReader reads rows from the first worksheet in r. | facade | `ExampleReadRowsFromReader`, `ExampleReadRowsFromReader_withReadSheet`, `ExampleReadRowsFromReader_withValidatedSheet` |
+| `ReadSheetCells` | `func ReadSheetCells(path string, sheet string) ([][]Cell, error)` | recommended | ReadSheetCells reads typed cell metadata from sheet in path. | facade | — |
+| `ReadSheetCellsWithOptions` | `func ReadSheetCellsWithOptions(path string, sheet string, opts ...ReadOption) ([][]Cell, error)` | recommended | ReadSheetCellsWithOptions reads typed cell metadata from sheet in path. | facade | — |
 | `ReadSheetRows` | `func ReadSheetRows(path string, sheet string) ([][]string, error)` | recommended | ReadSheetRows reads rows from sheet in path. | facade | — |
 | `ReadSheetRowsWithOptions` | `func ReadSheetRowsWithOptions(path string, sheet string, opts ...ReadOption) ([][]string, error)` | recommended | ReadSheetRowsWithOptions reads rows from sheet in path with custom open options. | facade | — |
 | `SheetNames` | `func SheetNames(path string) ([]string, error)` | recommended | SheetNames returns all worksheet names in path. | facade | `ExampleSheetNames` |
@@ -2804,14 +2808,19 @@ Golden path API set:
 | `WithOpenOptions` | `func WithOpenOptions(opts ...excelize.Options) ReadOption` | recommended | WithOpenOptions sets excelize options used when opening workbooks. | facade | — |
 | `WithOpenReaderFunc` | `func WithOpenReaderFunc(openReader OpenReaderFunc) ReadOption` | recommended | WithOpenReaderFunc sets the workbook opener used by reader-based read helpers. | facade | — |
 | `WithOverwrite` | `func WithOverwrite(overwrite bool) WriteOption` | recommended | WithOverwrite controls whether an existing workbook may be replaced. | facade | — |
+| `WithReadLimit` | `func WithReadLimit(maxRows int, maxCols int) ReadOption` | recommended | WithReadLimit limits the number of rows and columns returned by row-reading helpers. | facade | — |
 | `WithReadSheet` | `func WithReadSheet(sheet string) ReadOption` | recommended | WithReadSheet selects the worksheet read by read helpers. | facade | `ExampleWithReadSheet` |
+| `WithReadStartCell` | `func WithReadStartCell(row int, col int) ReadOption` | recommended | WithReadStartCell sets the 1-based start row and column used by row-reading helpers. | facade | — |
 | `WithSaveAsFunc` | `func WithSaveAsFunc(saveAs SaveAsFunc) WriteOption` | recommended | WithSaveAsFunc sets the workbook saver used by write helpers. | facade | — |
 | `WithSaveOptions` | `func WithSaveOptions(opts ...excelize.Options) WriteOption` | recommended | WithSaveOptions sets excelize options used when saving workbooks. | facade | — |
 | `WithStartCell` | `func WithStartCell(row int, col int) WriteOption` | recommended | WithStartCell sets the 1-based start row and column used by row-writing helpers. | facade | — |
 | `WithStat` | `func WithStat(stat func(string) (os.FileInfo, error)) WriteOption` | recommended | WithStat sets the stat provider used when checking workbook overwrite behavior. | facade | — |
 | `WithWriteSheet` | `func WithWriteSheet(sheet string) WriteOption` | recommended | WithWriteSheet selects the worksheet written by write helpers. | facade | `ExampleWithWriteSheet` |
+| `WriteAnyRows` | `func WriteAnyRows(path string, rows [][]any, opts ...WriteOption) error` | recommended | WriteAnyRows writes typed cell values into path using the default worksheet name. | facade | — |
+| `WriteAnyRowsToBuffer` | `func WriteAnyRowsToBuffer(sheet string, rows [][]any, opts ...WriteOption) (*bytes.Buffer, error)` | recommended | WriteAnyRowsToBuffer writes typed cell values into an in-memory XLSX workbook. | facade | — |
 | `WriteRows` | `func WriteRows(path string, rows [][]string, opts ...WriteOption) error` | recommended | WriteRows writes rows into path using the default worksheet name. | facade | — |
 | `WriteRowsToBuffer` | `func WriteRowsToBuffer(sheet string, rows [][]string, opts ...WriteOption) (*bytes.Buffer, error)` | recommended | WriteRowsToBuffer writes rows into an in-memory XLSX workbook. | facade | `ExampleWriteRowsToBuffer`, `ExampleWriteRowsToBuffer_emptySheetName` |
+| `WriteSheetAnyRows` | `func WriteSheetAnyRows(path string, sheet string, rows [][]any, opts ...WriteOption) error` | recommended | WriteSheetAnyRows writes typed cell values into path using sheet. | facade | — |
 | `WriteSheetRows` | `func WriteSheetRows(path string, sheet string, rows [][]string, opts ...WriteOption) error` | recommended | WriteSheetRows writes rows into path using sheet. | facade | — |
 | `WriteSheets` | `func WriteSheets(path string, sheets map[string][][]string, opts ...WriteOption) error` | recommended | WriteSheets writes multiple worksheets into path. | facade | — |
 

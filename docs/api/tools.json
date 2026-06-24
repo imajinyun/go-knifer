@@ -3,20 +3,20 @@
   "module": "github.com/imajinyun/go-knifer",
   "summary": {
     "package_count": 54,
-    "function_count": 2609,
+    "function_count": 2618,
     "functions_with_examples": 1253,
     "context_aware_functions": 36,
-    "returns_error_functions": 603,
-    "variadic_functions": 777,
+    "returns_error_functions": 610,
+    "variadic_functions": 783,
     "status_counts": {
       "compatibility": 22,
       "deprecated": 0,
       "experimental": 0,
-      "recommended": 2587
+      "recommended": 2596
     },
     "synopsis_sources": {
       "empty": 0,
-      "facade": 1967,
+      "facade": 1976,
       "internal": 642
     }
   },
@@ -40882,24 +40882,24 @@
       "name": "vpoi",
       "synopsis": "Package vpoi provides office-document utilities.",
       "summary": {
-        "function_count": 28,
+        "function_count": 37,
         "functions_with_examples": 6,
-        "example_coverage_percent": 21.4,
+        "example_coverage_percent": 16.2,
         "status_counts": {
           "compatibility": 0,
           "deprecated": 0,
           "experimental": 0,
-          "recommended": 28
+          "recommended": 37
         },
         "synopsis_sources": {
           "empty": 0,
-          "facade": 28,
+          "facade": 37,
           "internal": 0
         }
       },
       "golden_path": [
         {
-          "name": "ReadRows",
+          "name": "ReadCells",
           "use_when": "Use first when callers must observe invalid input or provider failure.",
           "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
         },
@@ -40919,14 +40919,14 @@
           "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpoi."
         },
         {
-          "name": "ReadRowsFromReader",
+          "name": "ReadCellsFromReader",
           "use_when": "Use first for concise trusted-input workflows in vpoi.",
           "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vpoi."
         }
       ],
       "recommended_entrypoints": [
         {
-          "name": "ReadRows",
+          "name": "ReadCells",
           "profile": "error",
           "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
         },
@@ -40960,6 +40960,54 @@
           "returns_error": false,
           "context_aware": false,
           "variadic": false
+        },
+        {
+          "name": "ReadCells",
+          "signature": "func ReadCells(path string, opts ...ReadOption) ([][]Cell, error)",
+          "synopsis": "ReadCells reads typed cell metadata from the first worksheet in path.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "opts",
+              "type": "...ReadOption"
+            }
+          ],
+          "results": [
+            "[][]Cell",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": true
+        },
+        {
+          "name": "ReadCellsFromReader",
+          "signature": "func ReadCellsFromReader(r io.Reader, opts ...ReadOption) ([][]Cell, error)",
+          "synopsis": "ReadCellsFromReader reads typed cell metadata from the first worksheet in r.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "r",
+              "type": "io.Reader"
+            },
+            {
+              "name": "opts",
+              "type": "...ReadOption"
+            }
+          ],
+          "results": [
+            "[][]Cell",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": true
         },
         {
           "name": "ReadRows",
@@ -41013,6 +41061,58 @@
             "ExampleReadRowsFromReader_withReadSheet",
             "ExampleReadRowsFromReader_withValidatedSheet"
           ]
+        },
+        {
+          "name": "ReadSheetCells",
+          "signature": "func ReadSheetCells(path string, sheet string) ([][]Cell, error)",
+          "synopsis": "ReadSheetCells reads typed cell metadata from sheet in path.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "sheet",
+              "type": "string"
+            }
+          ],
+          "results": [
+            "[][]Cell",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "ReadSheetCellsWithOptions",
+          "signature": "func ReadSheetCellsWithOptions(path string, sheet string, opts ...ReadOption) ([][]Cell, error)",
+          "synopsis": "ReadSheetCellsWithOptions reads typed cell metadata from sheet in path.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "sheet",
+              "type": "string"
+            },
+            {
+              "name": "opts",
+              "type": "...ReadOption"
+            }
+          ],
+          "results": [
+            "[][]Cell",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": true
         },
         {
           "name": "ReadSheetRows",
@@ -41326,6 +41426,29 @@
           "variadic": false
         },
         {
+          "name": "WithReadLimit",
+          "signature": "func WithReadLimit(maxRows int, maxCols int) ReadOption",
+          "synopsis": "WithReadLimit limits the number of rows and columns returned by row-reading helpers.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "maxRows",
+              "type": "int"
+            },
+            {
+              "name": "maxCols",
+              "type": "int"
+            }
+          ],
+          "results": [
+            "ReadOption"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
           "name": "WithReadSheet",
           "signature": "func WithReadSheet(sheet string) ReadOption",
           "synopsis": "WithReadSheet selects the worksheet read by read helpers.",
@@ -41346,6 +41469,29 @@
           "examples": [
             "ExampleWithReadSheet"
           ]
+        },
+        {
+          "name": "WithReadStartCell",
+          "signature": "func WithReadStartCell(row int, col int) ReadOption",
+          "synopsis": "WithReadStartCell sets the 1-based start row and column used by row-reading helpers.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "row",
+              "type": "int"
+            },
+            {
+              "name": "col",
+              "type": "int"
+            }
+          ],
+          "results": [
+            "ReadOption"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
         },
         {
           "name": "WithSaveAsFunc",
@@ -41450,6 +41596,61 @@
           ]
         },
         {
+          "name": "WriteAnyRows",
+          "signature": "func WriteAnyRows(path string, rows [][]any, opts ...WriteOption) error",
+          "synopsis": "WriteAnyRows writes typed cell values into path using the default worksheet name.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "rows",
+              "type": "[][]any"
+            },
+            {
+              "name": "opts",
+              "type": "...WriteOption"
+            }
+          ],
+          "results": [
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": true
+        },
+        {
+          "name": "WriteAnyRowsToBuffer",
+          "signature": "func WriteAnyRowsToBuffer(sheet string, rows [][]any, opts ...WriteOption) (*bytes.Buffer, error)",
+          "synopsis": "WriteAnyRowsToBuffer writes typed cell values into an in-memory XLSX workbook.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "sheet",
+              "type": "string"
+            },
+            {
+              "name": "rows",
+              "type": "[][]any"
+            },
+            {
+              "name": "opts",
+              "type": "...WriteOption"
+            }
+          ],
+          "results": [
+            "*bytes.Buffer",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": true
+        },
+        {
           "name": "WriteRows",
           "signature": "func WriteRows(path string, rows [][]string, opts ...WriteOption) error",
           "synopsis": "WriteRows writes rows into path using the default worksheet name.",
@@ -41507,6 +41708,37 @@
             "ExampleWriteRowsToBuffer",
             "ExampleWriteRowsToBuffer_emptySheetName"
           ]
+        },
+        {
+          "name": "WriteSheetAnyRows",
+          "signature": "func WriteSheetAnyRows(path string, sheet string, rows [][]any, opts ...WriteOption) error",
+          "synopsis": "WriteSheetAnyRows writes typed cell values into path using sheet.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "sheet",
+              "type": "string"
+            },
+            {
+              "name": "rows",
+              "type": "[][]any"
+            },
+            {
+              "name": "opts",
+              "type": "...WriteOption"
+            }
+          ],
+          "results": [
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": true
         },
         {
           "name": "WriteSheetRows",

@@ -28,8 +28,39 @@ type NewFileFunc = poiimpl.NewFileFunc
 // SaveAsFunc saves an Excel workbook to path.
 type SaveAsFunc = poiimpl.SaveAsFunc
 
+// CellType identifies the workbook cell value type reported by Excelize.
+type CellType = poiimpl.CellType
+
+// Cell contains a worksheet cell value with its type and 1-based position.
+type Cell = poiimpl.Cell
+
+const (
+	// CellTypeUnset indicates that a cell has no explicit value type.
+	CellTypeUnset = excelize.CellTypeUnset
+	// CellTypeBool indicates a boolean cell.
+	CellTypeBool = excelize.CellTypeBool
+	// CellTypeDate indicates a date cell.
+	CellTypeDate = excelize.CellTypeDate
+	// CellTypeError indicates an error cell.
+	CellTypeError = excelize.CellTypeError
+	// CellTypeFormula indicates a formula cell.
+	CellTypeFormula = excelize.CellTypeFormula
+	// CellTypeInlineString indicates an inline string cell.
+	CellTypeInlineString = excelize.CellTypeInlineString
+	// CellTypeNumber indicates a numeric cell.
+	CellTypeNumber = excelize.CellTypeNumber
+	// CellTypeSharedString indicates a shared string cell.
+	CellTypeSharedString = excelize.CellTypeSharedString
+)
+
 // WithReadSheet selects the worksheet read by read helpers.
 func WithReadSheet(sheet string) ReadOption { return poiimpl.WithReadSheet(sheet) }
+
+// WithReadStartCell sets the 1-based start row and column used by row-reading helpers.
+func WithReadStartCell(row, col int) ReadOption { return poiimpl.WithReadStartCell(row, col) }
+
+// WithReadLimit limits the number of rows and columns returned by row-reading helpers.
+func WithReadLimit(maxRows, maxCols int) ReadOption { return poiimpl.WithReadLimit(maxRows, maxCols) }
 
 // WithOpenOptions sets excelize options used when opening workbooks.
 func WithOpenOptions(opts ...excelize.Options) ReadOption { return poiimpl.WithOpenOptions(opts...) }
@@ -128,6 +159,26 @@ func ReadRowsFromReader(r io.Reader, opts ...ReadOption) ([][]string, error) {
 	return poiimpl.ReadRowsFromReader(r, opts...)
 }
 
+// ReadCells reads typed cell metadata from the first worksheet in path.
+func ReadCells(path string, opts ...ReadOption) ([][]Cell, error) {
+	return poiimpl.ReadCells(path, opts...)
+}
+
+// ReadSheetCells reads typed cell metadata from sheet in path.
+func ReadSheetCells(path, sheet string) ([][]Cell, error) {
+	return ReadSheetCellsWithOptions(path, sheet)
+}
+
+// ReadSheetCellsWithOptions reads typed cell metadata from sheet in path.
+func ReadSheetCellsWithOptions(path, sheet string, opts ...ReadOption) ([][]Cell, error) {
+	return poiimpl.ReadSheetCellsWithOptions(path, sheet, opts...)
+}
+
+// ReadCellsFromReader reads typed cell metadata from the first worksheet in r.
+func ReadCellsFromReader(r io.Reader, opts ...ReadOption) ([][]Cell, error) {
+	return poiimpl.ReadCellsFromReader(r, opts...)
+}
+
 // WriteRows writes rows into path using the default worksheet name.
 func WriteRows(path string, rows [][]string, opts ...WriteOption) error {
 	return poiimpl.WriteRows(path, rows, opts...)
@@ -138,6 +189,16 @@ func WriteSheetRows(path, sheet string, rows [][]string, opts ...WriteOption) er
 	return poiimpl.WriteSheetRows(path, sheet, rows, opts...)
 }
 
+// WriteAnyRows writes typed cell values into path using the default worksheet name.
+func WriteAnyRows(path string, rows [][]any, opts ...WriteOption) error {
+	return poiimpl.WriteAnyRows(path, rows, opts...)
+}
+
+// WriteSheetAnyRows writes typed cell values into path using sheet.
+func WriteSheetAnyRows(path, sheet string, rows [][]any, opts ...WriteOption) error {
+	return poiimpl.WriteSheetAnyRows(path, sheet, rows, opts...)
+}
+
 // WriteSheets writes multiple worksheets into path.
 func WriteSheets(path string, sheets map[string][][]string, opts ...WriteOption) error {
 	return poiimpl.WriteSheets(path, sheets, opts...)
@@ -146,4 +207,9 @@ func WriteSheets(path string, sheets map[string][][]string, opts ...WriteOption)
 // WriteRowsToBuffer writes rows into an in-memory XLSX workbook.
 func WriteRowsToBuffer(sheet string, rows [][]string, opts ...WriteOption) (*bytes.Buffer, error) {
 	return poiimpl.WriteRowsToBuffer(sheet, rows, opts...)
+}
+
+// WriteAnyRowsToBuffer writes typed cell values into an in-memory XLSX workbook.
+func WriteAnyRowsToBuffer(sheet string, rows [][]any, opts ...WriteOption) (*bytes.Buffer, error) {
+	return poiimpl.WriteAnyRowsToBuffer(sheet, rows, opts...)
 }

@@ -58,8 +58,24 @@ var invalidSheetNameChars = strings.NewReplacer(
 	"]", "",
 )
 
+// CellType identifies the workbook cell value type reported by Excelize.
+type CellType = excelize.CellType
+
+// Cell contains a worksheet cell value with its type and 1-based position.
+type Cell struct {
+	Value string
+	Type  CellType
+	Axis  string
+	Row   int
+	Col   int
+}
+
 type readConfig struct {
 	sheet       string
+	startRow    int
+	startCol    int
+	maxRows     int
+	maxCols     int
 	openOptions []excelize.Options
 	openFile    OpenFileFunc
 	openReader  OpenReaderFunc
@@ -118,7 +134,7 @@ func invalidWorkbookError() error {
 }
 
 func defaultReadConfig() readConfig {
-	return readConfig{openFile: defaultOpenFile, openReader: defaultOpenReader}
+	return readConfig{startRow: 1, startCol: 1, openFile: defaultOpenFile, openReader: defaultOpenReader}
 }
 
 func defaultWriteConfig() writeConfig {
@@ -127,6 +143,30 @@ func defaultWriteConfig() writeConfig {
 
 // WithReadSheet selects the worksheet read by read helpers.
 func WithReadSheet(sheet string) ReadOption { return func(c *readConfig) { c.sheet = sheet } }
+
+// WithReadStartCell sets the 1-based start row and column used by row-reading helpers.
+func WithReadStartCell(row, col int) ReadOption {
+	return func(c *readConfig) {
+		if row > 0 {
+			c.startRow = row
+		}
+		if col > 0 {
+			c.startCol = col
+		}
+	}
+}
+
+// WithReadLimit limits the number of rows and columns returned by row-reading helpers.
+func WithReadLimit(maxRows, maxCols int) ReadOption {
+	return func(c *readConfig) {
+		if maxRows > 0 {
+			c.maxRows = maxRows
+		}
+		if maxCols > 0 {
+			c.maxCols = maxCols
+		}
+	}
+}
 
 // WithOpenOptions sets excelize options used when opening workbooks.
 func WithOpenOptions(opts ...excelize.Options) ReadOption {
@@ -337,7 +377,7 @@ func ReadSheetRowsWithOptions(path, sheet string, opts ...ReadOption) ([][]strin
 		return nil, invalidWorkbookError()
 	}
 	defer func() { _ = f.Close() }()
-	return readSheetRows(f, sheet)
+	return readSheetRowsWithConfig(f, sheet, cfg)
 }
 
 // ReadRowsFromReader reads rows from the first worksheet in r.
@@ -359,6 +399,61 @@ func ReadRowsFromReader(r io.Reader, opts ...ReadOption) ([][]string, error) {
 	return readRowsWithConfig(f, cfg)
 }
 
+// ReadCells reads typed cell metadata from the first worksheet in path.
+func ReadCells(path string, opts ...ReadOption) ([][]Cell, error) {
+	cfg := applyReadOptions(opts)
+	if cfg.sheet != "" {
+		if err := ValidateSheetName(cfg.sheet); err != nil {
+			return nil, err
+		}
+	}
+	f, err := cfg.openFile(path, cfg.openOptions...)
+	if err != nil {
+		return nil, err
+	}
+	if f == nil {
+		return nil, invalidWorkbookError()
+	}
+	defer func() { _ = f.Close() }()
+	return readCellsWithConfig(f, cfg)
+}
+
+// ReadSheetCellsWithOptions reads typed cell metadata from sheet in path.
+func ReadSheetCellsWithOptions(path, sheet string, opts ...ReadOption) ([][]Cell, error) {
+	if err := ValidateSheetName(sheet); err != nil {
+		return nil, err
+	}
+	cfg := applyReadOptions(opts)
+	f, err := cfg.openFile(path, cfg.openOptions...)
+	if err != nil {
+		return nil, err
+	}
+	if f == nil {
+		return nil, invalidWorkbookError()
+	}
+	defer func() { _ = f.Close() }()
+	return readSheetCellsWithConfig(f, sheet, cfg)
+}
+
+// ReadCellsFromReader reads typed cell metadata from the first worksheet in r.
+func ReadCellsFromReader(r io.Reader, opts ...ReadOption) ([][]Cell, error) {
+	cfg := applyReadOptions(opts)
+	if cfg.sheet != "" {
+		if err := ValidateSheetName(cfg.sheet); err != nil {
+			return nil, err
+		}
+	}
+	f, err := cfg.openReader(r, cfg.openOptions...)
+	if err != nil {
+		return nil, err
+	}
+	if f == nil {
+		return nil, invalidWorkbookError()
+	}
+	defer func() { _ = f.Close() }()
+	return readCellsWithConfig(f, cfg)
+}
+
 // WriteRows writes rows into path using the default worksheet name.
 func WriteRows(path string, rows [][]string, opts ...WriteOption) error {
 	return writeRows(path, rows, applyWriteOptions(opts))
@@ -368,6 +463,17 @@ func WriteRows(path string, rows [][]string, opts ...WriteOption) error {
 func WriteSheetRows(path, sheet string, rows [][]string, opts ...WriteOption) error {
 	allOpts := append([]WriteOption{WithWriteSheet(sheet)}, opts...)
 	return writeRows(path, rows, applyWriteOptions(allOpts))
+}
+
+// WriteAnyRows writes typed cell values into path using the default worksheet name.
+func WriteAnyRows(path string, rows [][]any, opts ...WriteOption) error {
+	return writeAnyRows(path, rows, applyWriteOptions(opts))
+}
+
+// WriteSheetAnyRows writes typed cell values into path using sheet.
+func WriteSheetAnyRows(path, sheet string, rows [][]any, opts ...WriteOption) error {
+	allOpts := append([]WriteOption{WithWriteSheet(sheet)}, opts...)
+	return writeAnyRows(path, rows, applyWriteOptions(allOpts))
 }
 
 func writeRows(path string, rows [][]string, cfg writeConfig) error {
@@ -384,6 +490,30 @@ func writeRows(path string, rows [][]string, cfg writeConfig) error {
 		return err
 	}
 	if err := setRows(f, sheet, rows, cfg.startRow, cfg.startCol); err != nil {
+		return err
+	}
+	if cfg.createParents {
+		if err := ensureParentDir(path, cfg); err != nil {
+			return err
+		}
+	}
+	return saveWorkbook(f, path, cfg)
+}
+
+func writeAnyRows(path string, rows [][]any, cfg writeConfig) error {
+	sheet := cfg.sheet
+	if err := ValidateSheetName(sheet); err != nil {
+		return err
+	}
+	f := cfg.newFile()
+	if f == nil {
+		return invalidWorkbookError()
+	}
+	defer func() { _ = f.Close() }()
+	if err := replaceDefaultSheet(f, sheet); err != nil {
+		return err
+	}
+	if err := setAnyRows(f, sheet, rows, cfg.startRow, cfg.startCol); err != nil {
 		return err
 	}
 	if cfg.createParents {
@@ -466,6 +596,28 @@ func WriteRowsToBuffer(sheet string, rows [][]string, opts ...WriteOption) (*byt
 	return f.WriteToBuffer()
 }
 
+// WriteAnyRowsToBuffer writes typed cell values into an in-memory XLSX workbook.
+func WriteAnyRowsToBuffer(sheet string, rows [][]any, opts ...WriteOption) (*bytes.Buffer, error) {
+	allOpts := append([]WriteOption{WithWriteSheet(sheet)}, opts...)
+	cfg := applyWriteOptions(allOpts)
+	sheet = cfg.sheet
+	if err := ValidateSheetName(sheet); err != nil {
+		return nil, err
+	}
+	f := cfg.newFile()
+	if f == nil {
+		return nil, invalidWorkbookError()
+	}
+	defer func() { _ = f.Close() }()
+	if err := replaceDefaultSheet(f, sheet); err != nil {
+		return nil, err
+	}
+	if err := setAnyRows(f, sheet, rows, cfg.startRow, cfg.startCol); err != nil {
+		return nil, err
+	}
+	return f.WriteToBuffer()
+}
+
 func readFirstSheetRows(f *excelize.File) ([][]string, error) {
 	if f == nil {
 		return nil, invalidWorkbookError()
@@ -482,19 +634,150 @@ func readRowsWithConfig(f *excelize.File, cfg readConfig) ([][]string, error) {
 		return nil, invalidWorkbookError()
 	}
 	if cfg.sheet != "" {
-		return readSheetRows(f, cfg.sheet)
+		return readSheetRowsWithConfig(f, cfg.sheet, cfg)
 	}
-	return readFirstSheetRows(f)
+	sheets := f.GetSheetList()
+	if len(sheets) == 0 {
+		return nil, ErrNoSheet
+	}
+	return readSheetRowsWithConfig(f, sheets[0], cfg)
 }
 
 func readSheetRows(f *excelize.File, sheet string) ([][]string, error) {
+	return readSheetRowsWithConfig(f, sheet, defaultReadConfig())
+}
+
+func readSheetRowsWithConfig(f *excelize.File, sheet string, cfg readConfig) ([][]string, error) {
 	if f == nil {
 		return nil, invalidWorkbookError()
 	}
 	if err := ValidateSheetName(sheet); err != nil {
 		return nil, err
 	}
-	return f.GetRows(sheet)
+	rows, err := f.GetRows(sheet)
+	if err != nil {
+		return nil, err
+	}
+	return limitRows(rows, cfg), nil
+}
+
+func readCellsWithConfig(f *excelize.File, cfg readConfig) ([][]Cell, error) {
+	if f == nil {
+		return nil, invalidWorkbookError()
+	}
+	if cfg.sheet != "" {
+		return readSheetCellsWithConfig(f, cfg.sheet, cfg)
+	}
+	sheets := f.GetSheetList()
+	if len(sheets) == 0 {
+		return nil, ErrNoSheet
+	}
+	return readSheetCellsWithConfig(f, sheets[0], cfg)
+}
+
+func readSheetCellsWithConfig(f *excelize.File, sheet string, cfg readConfig) ([][]Cell, error) {
+	if f == nil {
+		return nil, invalidWorkbookError()
+	}
+	if err := ValidateSheetName(sheet); err != nil {
+		return nil, err
+	}
+	rows, err := f.GetRows(sheet)
+	if err != nil {
+		return nil, err
+	}
+	values := limitRows(rows, cfg)
+	return buildCells(f, sheet, values, cfg)
+}
+
+func limitRows(rows [][]string, cfg readConfig) [][]string {
+	if cfg.startRow <= 1 && cfg.startCol <= 1 && cfg.maxRows <= 0 && cfg.maxCols <= 0 {
+		return rows
+	}
+
+	startRow := cfg.startRow
+	if startRow <= 0 {
+		startRow = 1
+	}
+	startCol := cfg.startCol
+	if startCol <= 0 {
+		startCol = 1
+	}
+	if startRow > len(rows) {
+		return [][]string{}
+	}
+
+	out := rows[startRow-1:]
+	if cfg.maxRows > 0 && cfg.maxRows < len(out) {
+		out = out[:cfg.maxRows]
+	}
+
+	startColIndex := startCol - 1
+	limited := make([][]string, 0, len(out))
+	for _, row := range out {
+		if startColIndex >= len(row) {
+			limited = append(limited, []string{})
+			continue
+		}
+		cellValues := row[startColIndex:]
+		if cfg.maxCols > 0 && cfg.maxCols < len(cellValues) {
+			cellValues = cellValues[:cfg.maxCols]
+		}
+		limited = append(limited, slices.Clone(cellValues))
+	}
+	return limited
+}
+
+func readStartRow(cfg readConfig) int {
+	if cfg.startRow > 0 {
+		return cfg.startRow
+	}
+	return 1
+}
+
+func readStartCol(cfg readConfig) int {
+	if cfg.startCol > 0 {
+		return cfg.startCol
+	}
+	return 1
+}
+
+func buildCells(f *excelize.File, sheet string, rows [][]string, cfg readConfig) ([][]Cell, error) {
+	startRow := readStartRow(cfg)
+	startCol := readStartCol(cfg)
+	out := make([][]Cell, 0, len(rows))
+	for rowIndex, row := range rows {
+		cells := make([]Cell, 0, len(row))
+		for colIndex, value := range row {
+			rowNumber := startRow + rowIndex
+			colNumber := startCol + colIndex
+			axis, err := excelize.CoordinatesToCellName(colNumber, rowNumber)
+			if err != nil {
+				return nil, fmt.Errorf("poi: cell coordinates row=%d col=%d: %w", rowNumber, colNumber, err)
+			}
+			cellType, err := f.GetCellType(sheet, axis)
+			if err != nil {
+				return nil, err
+			}
+			cellType = normalizeCellType(value, cellType)
+			cells = append(cells, Cell{
+				Value: value,
+				Type:  cellType,
+				Axis:  axis,
+				Row:   rowNumber,
+				Col:   colNumber,
+			})
+		}
+		out = append(out, cells)
+	}
+	return out, nil
+}
+
+func normalizeCellType(value string, cellType CellType) CellType {
+	if cellType == excelize.CellTypeUnset && value != "" {
+		return excelize.CellTypeNumber
+	}
+	return cellType
 }
 
 func replaceDefaultSheet(f *excelize.File, sheet string) error {
@@ -527,6 +810,30 @@ func setRows(f *excelize.File, sheet string, rows [][]string, startRow, startCol
 				return fmt.Errorf("poi: cell coordinates row=%d col=%d: %w", rowIndex+1, colIndex+1, err)
 			}
 			if err := f.SetCellStr(sheet, cell, value); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func setAnyRows(f *excelize.File, sheet string, rows [][]any, startRow, startCol int) error {
+	if f == nil {
+		return invalidWorkbookError()
+	}
+	if startRow <= 0 {
+		startRow = 1
+	}
+	if startCol <= 0 {
+		startCol = 1
+	}
+	for rowIndex, row := range rows {
+		for colIndex, value := range row {
+			cell, err := excelize.CoordinatesToCellName(startCol+colIndex, startRow+rowIndex)
+			if err != nil {
+				return fmt.Errorf("poi: cell coordinates row=%d col=%d: %w", rowIndex+1, colIndex+1, err)
+			}
+			if err := f.SetCellValue(sheet, cell, value); err != nil {
 				return err
 			}
 		}

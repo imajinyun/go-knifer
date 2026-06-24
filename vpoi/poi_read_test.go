@@ -47,3 +47,24 @@ func TestExcelFacadeReadRoundTrip(t *testing.T) {
 		t.Fatalf("ReadSheetRowsWithOptions = %#v, want %#v", got, rows)
 	}
 }
+
+func TestExcelFacadeReadRangeOptions(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "book.xlsx")
+	rows := [][]string{
+		{"id", "name", "score"},
+		{"1", "go", "100"},
+		{"2", "tool", "98"},
+	}
+	if err := vpoi.WriteRows(path, rows); err != nil {
+		t.Fatalf("WriteRows: %v", err)
+	}
+
+	got, err := vpoi.ReadRows(path, vpoi.WithReadStartCell(2, 2), vpoi.WithReadLimit(2, 2))
+	if err != nil {
+		t.Fatalf("ReadRows with range options: %v", err)
+	}
+	want := [][]string{{"go", "100"}, {"tool", "98"}}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("ReadRows with range options = %#v, want %#v", got, want)
+	}
+}
