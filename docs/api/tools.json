@@ -4,7 +4,7 @@
   "summary": {
     "package_count": 55,
     "function_count": 2687,
-    "functions_with_examples": 1296,
+    "functions_with_examples": 1304,
     "context_aware_functions": 36,
     "returns_error_functions": 638,
     "variadic_functions": 787,
@@ -9579,8 +9579,8 @@
       "synopsis": "Package vdate provides public APIs for date/time utilities.",
       "summary": {
         "function_count": 40,
-        "functions_with_examples": 19,
-        "example_coverage_percent": 47.5,
+        "functions_with_examples": 27,
+        "example_coverage_percent": 67.5,
         "status_counts": {
           "compatibility": 0,
           "deprecated": 0,
@@ -9755,7 +9755,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleDayGanZhi"
+          ]
         },
         {
           "name": "EndOfDay",
@@ -9930,7 +9933,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsLeapMonth"
+          ]
         },
         {
           "name": "IsSameDay",
@@ -9975,7 +9981,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleLeapMonth"
+          ]
         },
         {
           "name": "LunarMonthDays",
@@ -10002,7 +10011,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleLunarMonthDays"
+          ]
         },
         {
           "name": "LunarToSolar",
@@ -10056,7 +10068,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleLunarYearDays"
+          ]
         },
         {
           "name": "MonthGanZhi",
@@ -10079,7 +10094,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleMonthGanZhi"
+          ]
         },
         {
           "name": "Now",
@@ -10532,7 +10550,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleYearGanZhi"
+          ]
         },
         {
           "name": "Zodiac",
@@ -10551,7 +10572,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleZodiac"
+          ]
         }
       ]
     },

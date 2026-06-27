@@ -148,6 +148,70 @@ func ExampleLunarToSolar() {
 	// <nil>
 }
 
+func ExampleLeapMonth() {
+	fmt.Println(vdate.LeapMonth(2020))
+	fmt.Println(vdate.LeapMonth(2024))
+	// Output:
+	// 4
+	// 0
+}
+
+func ExampleIsLeapMonth() {
+	fmt.Println(vdate.IsLeapMonth(2020, 4))
+	fmt.Println(vdate.IsLeapMonth(2024, 4))
+	// Output:
+	// true
+	// false
+}
+
+func ExampleLunarMonthDays() {
+	fmt.Println(vdate.LunarMonthDays(2020, 4, true))
+	fmt.Println(vdate.LunarMonthDays(2024, 1, false))
+	// Output:
+	// 29
+	// 29
+}
+
+func ExampleLunarYearDays() {
+	fmt.Println(vdate.LunarYearDays(2020))
+	fmt.Println(vdate.LunarYearDays(2024))
+	// Output:
+	// 384
+	// 354
+}
+
+func ExampleZodiac() {
+	fmt.Println(vdate.Zodiac(2024))
+	fmt.Println(vdate.Zodiac(2025))
+	// Output:
+	// 龙
+	// 蛇
+}
+
+func ExampleYearGanZhi() {
+	fmt.Println(vdate.YearGanZhi(2024))
+	fmt.Println(vdate.YearGanZhi(2025))
+	// Output:
+	// 甲辰
+	// 乙巳
+}
+
+func ExampleMonthGanZhi() {
+	fmt.Println(vdate.MonthGanZhi(2024, 2))
+	fmt.Println(vdate.MonthGanZhi(2024, 12))
+	// Output:
+	// 丁卯
+	// 丁丑
+}
+
+func ExampleDayGanZhi() {
+	fmt.Println(vdate.DayGanZhi(2024, 2, 10))
+	fmt.Println(vdate.DayGanZhi(2024, 4, 4))
+	// Output:
+	// 甲辰
+	// 戊戌
+}
+
 func ExampleSolarTerm() {
 	fmt.Println(vdate.SolarTerm(2024, 4, 4))
 	fmt.Println(vdate.SolarTerm(2024, 4, 5))

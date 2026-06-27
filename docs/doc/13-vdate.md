@@ -13,7 +13,7 @@ Choose helpers by the business rule you are expressing: formatting/parsing, cale
 | Calculate calendar boundaries | `BeginOfDay`, `EndOfDay`, `BeginOfMonth`, `EndOfYear` | Boundaries follow the `time.Time` location carried by the input. |
 | Move by calendar units | `OffsetDay`, `OffsetMonth`, related offset helpers | Calendar offsets are not always fixed durations because months and daylight-saving transitions vary. |
 | Compare business dates | `BetweenDays`, `IsSameDay`, related comparison helpers | Prefer semantic helpers over manual duration division when calendar days are intended. |
-| Work with Chinese lunar dates | `SolarToLunar`, `LunarToSolar`, `LeapMonth`, `SolarTerm` | Supports 1900-2100 with table-driven lunar month data and deterministic solar-term day lookup. |
+| Work with Chinese lunar dates | `SolarToLunar`, `LunarToSolar`, `LeapMonth`, `LunarMonthDays`, `YearGanZhi`, `Zodiac`, `SolarTerm` | Supports 1900-2100 with table-driven lunar month data and deterministic solar-term day lookup. |
 
 ## Date/time correctness checklist
 
@@ -204,6 +204,9 @@ import (
 func main() {
 	fmt.Println(vdate.LeapMonth(2020))
 	fmt.Println(vdate.IsLeapMonth(2020, 4))
+	fmt.Println(vdate.LunarMonthDays(2020, 4, true))
+	fmt.Println(vdate.LunarYearDays(2020))
+	fmt.Println(vdate.YearGanZhi(2024), vdate.Zodiac(2024))
 	fmt.Println(vdate.SolarTerm(2024, 4, 4))
 }
 ```
