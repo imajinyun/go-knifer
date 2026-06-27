@@ -180,6 +180,7 @@ ai-context-check:
 	bash bin/check_ai_context.sh
 
 ci-workflow-check: bench-regression-check
+	bash bin/check_ci_workflows.sh
 
 generate:
 	$(GO) generate ./...

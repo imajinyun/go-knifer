@@ -439,7 +439,7 @@
       "notes": "Documentation-only changes should still pass metadata, API snapshot, tools catalog, and whitespace checks."
     },
     "ci_governance": {
-      "required_commands": ["change_policy_check", "agent_check", "ai_context_check", "governance_maturity_check", "bench_regression_check", "docs_check", "agent_evidence", "agent_evidence_check"],
+      "required_commands": ["change_policy_check", "agent_check", "ai_context_check", "governance_maturity_check", "bench_regression_check", "ci_workflow_check", "docs_check", "agent_evidence", "agent_evidence_check"],
       "coverage_required": false,
       "security_review_required": false,
       "notes": "CI and governance changes must keep Makefile targets and AI metadata synchronized."
