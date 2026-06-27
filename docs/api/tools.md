@@ -12,7 +12,7 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Module | `github.com/imajinyun/knifer-go` |
 | Packages | 55 |
 | Functions | 2687 |
-| Functions with examples | 1289 |
+| Functions with examples | 1291 |
 | Context-aware functions | 36 |
 | Functions returning error | 638 |
 | Variadic functions | 787 |
@@ -1628,7 +1628,7 @@ Import path: `github.com/imajinyun/knifer-go/vident`
 
 Package vident provides identity and legal identifier helpers.
 
-Quality: 50 functions · 11 with examples · 22.0% example coverage · statuses: recommended=50, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=50, internal=0, empty=0
+Quality: 50 functions · 13 with examples · 26.0% example coverage · statuses: recommended=50, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=50, internal=0, empty=0
 
 Recommended entrypoints:
 
@@ -1670,7 +1670,7 @@ Golden path API set:
 | `Hide` | `func Hide(idCard string, start int, end int) string` | recommended | Hide replaces runes in [start, end) with '*'. | facade | `ExampleHide` |
 | `IsValidBirthday` | `func IsValidBirthday(s string) bool` | recommended | IsValidBirthday reports whether s is a valid yyyyMMdd date. | facade | — |
 | `IsValidBirthdayWithOptions` | `func IsValidBirthdayWithOptions(s string, opts ...BirthOption) bool` | recommended | IsValidBirthdayWithOptions reports whether s is a valid yyyyMMdd date using custom parsing options. | facade | — |
-| `IsValidCreditCode` | `func IsValidCreditCode(code string) bool` | recommended | IsValidCreditCode reports whether code is a valid unified social credit code. | facade | — |
+| `IsValidCreditCode` | `func IsValidCreditCode(code string) bool` | recommended | IsValidCreditCode reports whether code is a valid unified social credit code. | facade | `ExampleIsValidCreditCode` |
 | `IsValidHKIDCard` | `func IsValidHKIDCard(idCard string) bool` | recommended | IsValidHKIDCard reports whether idCard is a valid Hong Kong identity card number. | facade | — |
 | `IsValidHKIDCardWithOptions` | `func IsValidHKIDCardWithOptions(idCard string, opts ...IDCardOption) bool` | recommended | IsValidHKIDCardWithOptions reports whether idCard is a valid Hong Kong identity card number with options. | facade | — |
 | `IsValidIDCard` | `func IsValidIDCard(idCard string) bool` | recommended | IsValidIDCard reports whether idCard is a valid 18-digit, 15-digit, or Hong Kong/Macau/Taiwan card number. | facade | — |
@@ -1684,7 +1684,7 @@ Golden path API set:
 | `IsValidTWIDCard` | `func IsValidTWIDCard(idCard string) bool` | recommended | IsValidTWIDCard reports whether idCard is a valid Taiwan identity card number. | facade | — |
 | `IsValidTWIDCardWithOptions` | `func IsValidTWIDCardWithOptions(idCard string, opts ...IDCardOption) bool` | recommended | IsValidTWIDCardWithOptions reports whether idCard is a valid Taiwan identity card number with options. | facade | — |
 | `Month` | `func Month(idCard string) (int, bool)` | recommended | Month returns the birth month encoded in idCard. | facade | — |
-| `ParseCreditCode` | `func ParseCreditCode(code string) (CreditCodeInfo, error)` | recommended | ParseCreditCode validates and splits a unified social credit code. | facade | — |
+| `ParseCreditCode` | `func ParseCreditCode(code string) (CreditCodeInfo, error)` | recommended | ParseCreditCode validates and splits a unified social credit code. | facade | `ExampleParseCreditCode` |
 | `ParseIDCard` | `func ParseIDCard(idCard string) (IDCardInfo, bool)` | recommended | ParseIDCard parses a valid 15- or 18-digit mainland China identity card number. | facade | `ExampleParseIDCard` |
 | `ParseRegionCard` | `func ParseRegionCard(idCard string) (RegionCardInfo, bool)` | recommended | ParseRegionCard validates a Hong Kong, Macau or Taiwan identity card number. | facade | `ExampleParseRegionCard` |
 | `ParseRegionCardWithOptions` | `func ParseRegionCardWithOptions(idCard string, opts ...IDCardOption) (RegionCardInfo, bool)` | recommended | ParseRegionCardWithOptions validates a Hong Kong, Macau or Taiwan identity card number with options. | facade | — |

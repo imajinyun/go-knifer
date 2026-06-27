@@ -4,7 +4,7 @@
   "summary": {
     "package_count": 55,
     "function_count": 2687,
-    "functions_with_examples": 1289,
+    "functions_with_examples": 1291,
     "context_aware_functions": 36,
     "returns_error_functions": 638,
     "variadic_functions": 787,
@@ -21697,8 +21697,8 @@
       "synopsis": "Package vident provides identity and legal identifier helpers.",
       "summary": {
         "function_count": 50,
-        "functions_with_examples": 11,
-        "example_coverage_percent": 22,
+        "functions_with_examples": 13,
+        "example_coverage_percent": 26,
         "status_counts": {
           "compatibility": 0,
           "deprecated": 0,
@@ -22232,7 +22232,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsValidCreditCode"
+          ]
         },
         {
           "name": "IsValidHKIDCard",
@@ -22532,7 +22535,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleParseCreditCode"
+          ]
         },
         {
           "name": "ParseIDCard",

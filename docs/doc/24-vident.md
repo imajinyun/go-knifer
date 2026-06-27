@@ -1,6 +1,6 @@
 # vident Quickstart
 
-`vident` provides validation, conversion, birthdate/age/gender/region parsing, and masking helpers for mainland China resident ID cards and Hong Kong/Macau/Taiwan documents.
+`vident` provides validation, conversion, birthdate/age/gender/region parsing, and masking helpers for mainland China resident ID cards, Hong Kong/Macau/Taiwan documents, and unified social credit codes.
 
 ## Which helper should I use?
 
@@ -13,6 +13,7 @@ Choose helpers by document type and by whether you need validation, derived fiel
 | Parse birth date and age | `BirthString`, `BirthDate`, `Age`, `AgeAt`, `AgeWithOptions` | Prefer `AgeAt` or clock options in tests for deterministic results. |
 | Parse gender and region fields | `GenderOf`, `Province`, `CityCode`, `DistrictCode`, `ParseIDCard` | Region names depend on the package's region data and may not represent current administrative boundaries. |
 | Validate HK/Macau/Taiwan documents | `ParseRegionCard`, `IsValidTWIDCard`, `IsValidHKIDCard` | Use document-specific helpers when the expected region is known. |
+| Validate unified social credit codes | `IsValidCreditCode`, `ParseCreditCode` | Checks GB 32100-style character, length, and check-digit rules, then splits the registration fields. |
 | Mask document numbers | `Hide` | Redact before logging, displaying, or exporting identifiers. |
 | Inject matchers/parsers for tests | `WithDigitsMatcher`, region matcher options, birth and age options | Keeps edge cases deterministic without depending on process time or external data. |
 
@@ -20,6 +21,7 @@ Choose helpers by document type and by whether you need validation, derived fiel
 
 - Treat all document numbers as sensitive personal data. Mask before logs, screenshots, metrics, and support exports.
 - Always check the boolean return before using a converted, parsed, or derived value.
+- Treat unified social credit codes as organization identifiers that may still be sensitive in supplier, customer, and account workflows.
 - Use deterministic clocks (`AgeAt` or `WithAgeClock`) in tests and batch jobs that require reproducible output.
 - Validate the expected document region instead of accepting every supported regional format by default.
 - Do not treat parsed region or age fields as proof of identity; they are derived from a claimed document number.
@@ -149,3 +151,30 @@ func main() {
 	fmt.Println(vident.Hide("11010519491231002X", 6, 14))
 }
 ```
+
+## Validate unified social credit codes
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/imajinyun/knifer-go/vident"
+)
+
+func main() {
+	code := "91350211M000100Y46"
+	fmt.Println(vident.IsValidCreditCode(code))
+
+	info, err := vident.ParseCreditCode(code)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(info.AdminDept, info.OrgCategory, info.RegionCode)
+	fmt.Println(info.OrgCode, info.CheckDigit)
+}
+```
+
+`ParseCreditCode` normalizes surrounding space and letter case before validation. It validates format and checksum only; it does not confirm that the organization exists, is active, or owns the submitted code.

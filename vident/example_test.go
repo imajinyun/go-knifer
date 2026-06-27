@@ -42,6 +42,27 @@ func ExampleParseRegionCard() {
 	// Output: true 香港 true
 }
 
+func ExampleIsValidCreditCode() {
+	fmt.Println(vident.IsValidCreditCode("91350211M000100Y46"))
+	fmt.Println(vident.IsValidCreditCode("91350211M000100Y44"))
+	// Output:
+	// true
+	// false
+}
+
+func ExampleParseCreditCode() {
+	info, err := vident.ParseCreditCode("91350211M000100Y46")
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(info.AdminDept, info.OrgCategory, info.RegionCode)
+	fmt.Println(info.OrgCode, info.CheckDigit)
+	// Output:
+	// 9 1 350211
+	// M000100Y4 6
+}
+
 func ExampleAgeWithOptions() {
 	age, ok := vident.AgeWithOptions(
 		"11010519491231002X",
