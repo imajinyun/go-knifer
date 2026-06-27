@@ -57,6 +57,30 @@ func ExampleParseLayout() {
 	// <nil>
 }
 
+func ExampleParseWithOptions() {
+	loc := time.FixedZone("UTC+8", 8*60*60)
+	t, err := vdate.ParseWithOptions("2026-06-02", vdate.WithLocation(loc))
+	fmt.Println(vdate.FormatDateOnly(t))
+	fmt.Println(t.Location())
+	fmt.Println(err)
+	// Output:
+	// 2026-06-02
+	// UTC+8
+	// <nil>
+}
+
+func ExampleParseLayoutWithOptions() {
+	loc := time.FixedZone("UTC+8", 8*60*60)
+	t, err := vdate.ParseLayoutWithOptions("02/06/2026", "02/01/2006", vdate.WithLocation(loc))
+	fmt.Println(vdate.FormatDateOnly(t))
+	fmt.Println(t.Location())
+	fmt.Println(err)
+	// Output:
+	// 2026-06-02
+	// UTC+8
+	// <nil>
+}
+
 func ExampleFormat() {
 	t := time.Date(2026, 6, 2, 15, 4, 5, 0, time.UTC)
 
@@ -65,6 +89,38 @@ func ExampleFormat() {
 	// Output:
 	// 2026/06/02
 	// 15:04:05
+}
+
+func ExampleFormatDateOnly() {
+	t := time.Date(2026, 6, 2, 15, 4, 5, 0, time.UTC)
+	fmt.Println(vdate.FormatDateOnly(t))
+	// Output: 2026-06-02
+}
+
+func ExampleFormatTimeOnly() {
+	t := time.Date(2026, 6, 2, 15, 4, 5, 0, time.UTC)
+	fmt.Println(vdate.FormatTimeOnly(t))
+	// Output: 15:04:05
+}
+
+func ExampleNow() {
+	fmt.Println(!vdate.Now().IsZero())
+	// Output: true
+}
+
+func ExampleNowWithOptions() {
+	clock := func() time.Time {
+		return time.Date(2026, 6, 2, 15, 4, 5, 0, time.UTC)
+	}
+
+	fmt.Println(vdate.FormatNorm(vdate.NowWithOptions(vdate.WithClock(clock))))
+	// Output: 2026-06-02 15:04:05
+}
+
+func ExampleToday() {
+	today := vdate.Today()
+	fmt.Println(today.Hour(), today.Minute(), today.Second())
+	// Output: 0 0 0
 }
 
 func ExampleTodayWithOptions() {
@@ -111,11 +167,32 @@ func ExampleOffsetMonth() {
 	// Output: 2026-05-02
 }
 
+func ExampleOffsetYear() {
+	t := time.Date(2024, 2, 29, 0, 0, 0, 0, time.UTC)
+
+	fmt.Println(vdate.FormatDateOnly(vdate.OffsetYear(t, 1)))
+	// Output: 2025-03-01
+}
+
 func ExampleOffsetHour() {
 	t := time.Date(2026, 6, 2, 15, 4, 5, 0, time.UTC)
 
 	fmt.Println(vdate.FormatNorm(vdate.OffsetHour(t, 2)))
 	// Output: 2026-06-02 17:04:05
+}
+
+func ExampleOffsetMinute() {
+	t := time.Date(2026, 6, 2, 15, 4, 5, 0, time.UTC)
+
+	fmt.Println(vdate.FormatNorm(vdate.OffsetMinute(t, 30)))
+	// Output: 2026-06-02 15:34:05
+}
+
+func ExampleOffsetSecond() {
+	t := time.Date(2026, 6, 2, 15, 4, 5, 0, time.UTC)
+
+	fmt.Println(vdate.FormatNorm(vdate.OffsetSecond(t, -10)))
+	// Output: 2026-06-02 15:03:55
 }
 
 func ExampleIsSameDay() {
@@ -128,6 +205,42 @@ func ExampleIsSameDay() {
 	// Output:
 	// true
 	// false
+}
+
+func ExampleWithClock() {
+	clock := func() time.Time {
+		return time.Date(2026, 6, 2, 15, 4, 5, 0, time.UTC)
+	}
+
+	fmt.Println(vdate.FormatNorm(vdate.NowWithOptions(vdate.WithClock(clock))))
+	// Output: 2026-06-02 15:04:05
+}
+
+func ExampleWithLocation() {
+	loc := time.FixedZone("UTC+8", 8*60*60)
+	t, err := vdate.ParseLayoutWithOptions("2026-06-02 15:04:05", vdate.NormPattern, vdate.WithLocation(loc))
+	fmt.Println(t.Location())
+	fmt.Println(err)
+	// Output:
+	// UTC+8
+	// <nil>
+}
+
+func ExampleWithParseInLocationFunc() {
+	parser := func(layout, value string, location *time.Location) (time.Time, error) {
+		return time.Date(2026, 6, 2, 15, 4, 5, 0, location), nil
+	}
+	t, err := vdate.ParseLayoutWithOptions(
+		"ignored",
+		vdate.NormPattern,
+		vdate.WithLocation(time.UTC),
+		vdate.WithParseInLocationFunc(parser),
+	)
+	fmt.Println(vdate.FormatNorm(t))
+	fmt.Println(err)
+	// Output:
+	// 2026-06-02 15:04:05
+	// <nil>
 }
 
 func ExampleSolarToLunar() {

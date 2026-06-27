@@ -4,7 +4,7 @@
   "summary": {
     "package_count": 55,
     "function_count": 2687,
-    "functions_with_examples": 1304,
+    "functions_with_examples": 1317,
     "context_aware_functions": 36,
     "returns_error_functions": 638,
     "variadic_functions": 787,
@@ -9579,8 +9579,8 @@
       "synopsis": "Package vdate provides public APIs for date/time utilities.",
       "summary": {
         "function_count": 40,
-        "functions_with_examples": 27,
-        "example_coverage_percent": 67.5,
+        "functions_with_examples": 40,
+        "example_coverage_percent": 100,
         "status_counts": {
           "compatibility": 0,
           "deprecated": 0,
@@ -9869,7 +9869,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleFormatDateOnly"
+          ]
         },
         {
           "name": "FormatNorm",
@@ -9910,7 +9913,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleFormatTimeOnly"
+          ]
         },
         {
           "name": "IsLeapMonth",
@@ -10110,7 +10116,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNow"
+          ]
         },
         {
           "name": "NowWithOptions",
@@ -10129,7 +10138,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleNowWithOptions"
+          ]
         },
         {
           "name": "OffsetDay",
@@ -10204,7 +10216,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleOffsetMinute"
+          ]
         },
         {
           "name": "OffsetMonth",
@@ -10253,7 +10268,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleOffsetSecond"
+          ]
         },
         {
           "name": "OffsetYear",
@@ -10276,7 +10294,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleOffsetYear"
+          ]
         },
         {
           "name": "Parse",
@@ -10354,7 +10375,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleParseLayoutWithOptions"
+          ]
         },
         {
           "name": "ParseWithOptions",
@@ -10378,7 +10402,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleParseWithOptions"
+          ]
         },
         {
           "name": "SolarTerm",
@@ -10452,7 +10479,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleToday"
+          ]
         },
         {
           "name": "TodayWithOptions",
@@ -10493,7 +10523,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithClock"
+          ]
         },
         {
           "name": "WithLocation",
@@ -10512,7 +10545,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithLocation"
+          ]
         },
         {
           "name": "WithParseInLocationFunc",
@@ -10531,7 +10567,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithParseInLocationFunc"
+          ]
         },
         {
           "name": "YearGanZhi",

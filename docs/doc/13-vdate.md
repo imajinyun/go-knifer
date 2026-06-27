@@ -9,9 +9,9 @@ Choose helpers by the business rule you are expressing: formatting/parsing, cale
 | Need | Use | Notes |
 | --- | --- | --- |
 | Format a time with common layouts | `FormatNorm`, `FormatDateOnly`, `FormatTimeOnly`, `Format` | Use named helpers for project-wide conventional layouts; use `Format` when a specific layout is part of the protocol. |
-| Parse common date/time strings | `Parse`, `ParseLayoutWithOptions` | Use options such as `WithLocation` when local time semantics matter. |
+| Parse common date/time strings | `Parse`, `ParseWithOptions`, `ParseLayoutWithOptions` | Use options such as `WithLocation` and `WithParseInLocationFunc` when local time semantics or parser injection matter. |
 | Calculate calendar boundaries | `BeginOfDay`, `EndOfDay`, `BeginOfMonth`, `EndOfYear` | Boundaries follow the `time.Time` location carried by the input. |
-| Move by calendar units | `OffsetDay`, `OffsetMonth`, related offset helpers | Calendar offsets are not always fixed durations because months and daylight-saving transitions vary. |
+| Move by calendar units | `OffsetDay`, `OffsetMonth`, `OffsetYear`, `OffsetHour`, `OffsetMinute`, `OffsetSecond` | Calendar offsets are not always fixed durations because months and daylight-saving transitions vary. |
 | Compare business dates | `BetweenDays`, `IsSameDay`, related comparison helpers | Prefer semantic helpers over manual duration division when calendar days are intended. |
 | Work with Chinese lunar dates | `SolarToLunar`, `LunarToSolar`, `LeapMonth`, `LunarMonthDays`, `YearGanZhi`, `Zodiac`, `SolarTerm` | Supports 1900-2100 with table-driven lunar month data and deterministic solar-term day lookup. |
 
@@ -117,6 +117,18 @@ func main() {
 		panic(err)
 	}
 	fmt.Println(t.Location())
+
+	custom, err := vdate.ParseLayoutWithOptions(
+		"ignored",
+		vdate.NormPattern,
+		vdate.WithParseInLocationFunc(func(layout, value string, location *time.Location) (time.Time, error) {
+			return time.Date(2024, 5, 6, 7, 8, 9, 0, location), nil
+		}),
+	)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(vdate.FormatNorm(custom))
 }
 ```
 
@@ -158,9 +170,11 @@ func main() {
 	start := time.Date(2024, 5, 6, 7, 8, 9, 0, time.Local)
 	nextWeek := vdate.OffsetDay(start, 7)
 	nextMonth := vdate.OffsetMonth(start, 1)
+	nextMinute := vdate.OffsetMinute(start, 30)
 
 	fmt.Println(vdate.BetweenDays(start, nextWeek))
 	fmt.Println(vdate.IsSameDay(start, nextMonth))
+	fmt.Println(vdate.FormatTimeOnly(nextMinute))
 }
 ```
 

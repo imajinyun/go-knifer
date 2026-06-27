@@ -12,7 +12,7 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Module | `github.com/imajinyun/knifer-go` |
 | Packages | 55 |
 | Functions | 2687 |
-| Functions with examples | 1304 |
+| Functions with examples | 1317 |
 | Context-aware functions | 36 |
 | Functions returning error | 638 |
 | Variadic functions | 787 |
@@ -758,7 +758,7 @@ Import path: `github.com/imajinyun/knifer-go/vdate`
 
 Package vdate provides public APIs for date/time utilities.
 
-Quality: 40 functions · 27 with examples · 67.5% example coverage · statuses: recommended=40, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=0, internal=40, empty=0
+Quality: 40 functions · 40 with examples · 100.0% example coverage · statuses: recommended=40, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=0, internal=40, empty=0
 
 Recommended entrypoints:
 
@@ -789,9 +789,9 @@ Golden path API set:
 | `EndOfMonth` | `func EndOfMonth(t time.Time) time.Time` | recommended | EndOfMonth returns the last nanosecond of t's month. | internal | `ExampleEndOfMonth` |
 | `EndOfYear` | `func EndOfYear(t time.Time) time.Time` | recommended | EndOfYear returns the last nanosecond of t's year. | internal | `ExampleEndOfYear` |
 | `Format` | `func Format(t time.Time, layout string) string` | recommended | FormatDate formats t with layout. | internal | `ExampleFormat` |
-| `FormatDateOnly` | `func FormatDateOnly(t time.Time) string` | recommended | FormatDateOnly formats t as yyyy-MM-dd. | internal | — |
+| `FormatDateOnly` | `func FormatDateOnly(t time.Time) string` | recommended | FormatDateOnly formats t as yyyy-MM-dd. | internal | `ExampleFormatDateOnly` |
 | `FormatNorm` | `func FormatNorm(t time.Time) string` | recommended | FormatDateNorm formats t as yyyy-MM-dd HH:mm:ss. | internal | `ExampleFormatNorm` |
-| `FormatTimeOnly` | `func FormatTimeOnly(t time.Time) string` | recommended | FormatTimeOnly formats t as HH:mm:ss. | internal | — |
+| `FormatTimeOnly` | `func FormatTimeOnly(t time.Time) string` | recommended | FormatTimeOnly formats t as HH:mm:ss. | internal | `ExampleFormatTimeOnly` |
 | `IsLeapMonth` | `func IsLeapMonth(year int, month int) bool` | recommended | IsLeapMonth reports whether month is the leap month in the lunar year. | internal | `ExampleIsLeapMonth` |
 | `IsSameDay` | `func IsSameDay(a time.Time, b time.Time) bool` | recommended | IsSameDay reports whether two times fall on the same calendar day. | internal | `ExampleIsSameDay` |
 | `LeapMonth` | `func LeapMonth(year int) int` | recommended | LeapMonth returns the leap lunar month for year, or 0 when the year has none. | internal | `ExampleLeapMonth` |
@@ -799,25 +799,25 @@ Golden path API set:
 | `LunarToSolar` | `func LunarToSolar(year int, month int, day int, isLeapMonth bool) (SolarDate, error)` | recommended | LunarToSolar converts a Chinese lunar date to the Gregorian calendar. | internal | `ExampleLunarToSolar` |
 | `LunarYearDays` | `func LunarYearDays(year int) int` | recommended | LunarYearDays returns the day count for the lunar year. | internal | `ExampleLunarYearDays` |
 | `MonthGanZhi` | `func MonthGanZhi(year int, month int) string` | recommended | MonthGanZhi returns an approximate sexagenary cycle name for a Gregorian month. | internal | `ExampleMonthGanZhi` |
-| `Now` | `func Now() time.Time` | recommended | Now returns the current local time. | internal | — |
-| `NowWithOptions` | `func NowWithOptions(opts ...NowOption) time.Time` | recommended | NowWithOptions returns the current time using options. | internal | — |
+| `Now` | `func Now() time.Time` | recommended | Now returns the current local time. | internal | `ExampleNow` |
+| `NowWithOptions` | `func NowWithOptions(opts ...NowOption) time.Time` | recommended | NowWithOptions returns the current time using options. | internal | `ExampleNowWithOptions` |
 | `OffsetDay` | `func OffsetDay(t time.Time, days int) time.Time` | recommended | OffsetDay offsets t by days. | internal | `ExampleOffsetDay` |
 | `OffsetHour` | `func OffsetHour(t time.Time, hours int) time.Time` | recommended | OffsetHour offsets t by hours. | internal | `ExampleOffsetHour` |
-| `OffsetMinute` | `func OffsetMinute(t time.Time, minutes int) time.Time` | recommended | OffsetMinute offsets t by minutes. | internal | — |
+| `OffsetMinute` | `func OffsetMinute(t time.Time, minutes int) time.Time` | recommended | OffsetMinute offsets t by minutes. | internal | `ExampleOffsetMinute` |
 | `OffsetMonth` | `func OffsetMonth(t time.Time, months int) time.Time` | recommended | OffsetMonth offsets t by months. | internal | `ExampleOffsetMonth` |
-| `OffsetSecond` | `func OffsetSecond(t time.Time, seconds int) time.Time` | recommended | OffsetSecond offsets t by seconds. | internal | — |
-| `OffsetYear` | `func OffsetYear(t time.Time, years int) time.Time` | recommended | OffsetYear offsets t by years. | internal | — |
+| `OffsetSecond` | `func OffsetSecond(t time.Time, seconds int) time.Time` | recommended | OffsetSecond offsets t by seconds. | internal | `ExampleOffsetSecond` |
+| `OffsetYear` | `func OffsetYear(t time.Time, years int) time.Time` | recommended | OffsetYear offsets t by years. | internal | `ExampleOffsetYear` |
 | `Parse` | `func Parse(s string) (time.Time, error)` | recommended | ParseDate parses common date/time formats in the local time zone. | internal | `ExampleParse` |
 | `ParseLayout` | `func ParseLayout(s string, layout string) (time.Time, error)` | recommended | ParseDateLayout parses s with the specified Go layout in the local time zone. | internal | `ExampleParseLayout` |
-| `ParseLayoutWithOptions` | `func ParseLayoutWithOptions(s string, layout string, opts ...ParseOption) (time.Time, error)` | recommended | ParseDateLayoutWithOptions parses s with the specified Go layout and explicit options. | internal | — |
-| `ParseWithOptions` | `func ParseWithOptions(s string, opts ...ParseOption) (time.Time, error)` | recommended | ParseDateWithOptions parses common date/time formats with explicit options. | internal | — |
+| `ParseLayoutWithOptions` | `func ParseLayoutWithOptions(s string, layout string, opts ...ParseOption) (time.Time, error)` | recommended | ParseDateLayoutWithOptions parses s with the specified Go layout and explicit options. | internal | `ExampleParseLayoutWithOptions` |
+| `ParseWithOptions` | `func ParseWithOptions(s string, opts ...ParseOption) (time.Time, error)` | recommended | ParseDateWithOptions parses common date/time formats with explicit options. | internal | `ExampleParseWithOptions` |
 | `SolarTerm` | `func SolarTerm(year int, month int, day int) string` | recommended | SolarTerm returns the solar term name that falls on the Gregorian date. | internal | `ExampleSolarTerm` |
 | `SolarToLunar` | `func SolarToLunar(year int, month int, day int) (LunarDate, error)` | recommended | SolarToLunar converts a Gregorian date to the Chinese lunar calendar. | internal | `ExampleSolarToLunar` |
-| `Today` | `func Today() time.Time` | recommended | Today returns the start of the current day. | internal | — |
+| `Today` | `func Today() time.Time` | recommended | Today returns the start of the current day. | internal | `ExampleToday` |
 | `TodayWithOptions` | `func TodayWithOptions(opts ...NowOption) time.Time` | recommended | TodayWithOptions returns the start of the current day using options. | internal | `ExampleTodayWithOptions` |
-| `WithClock` | `func WithClock(clock func() time.Time) NowOption` | recommended | WithClock sets the time source used by NowWithOptions and TodayWithOptions. | internal | — |
-| `WithLocation` | `func WithLocation(location *time.Location) ParseOption` | recommended | WithLocation sets the time zone used when parsing layouts without zone information. | internal | — |
-| `WithParseInLocationFunc` | `func WithParseInLocationFunc(parser func(layout string, value string, location *time.Location) (time.Time, error)) ParseOption` | recommended | WithParseInLocationFunc sets the parser used for layout-based date parsing. | internal | — |
+| `WithClock` | `func WithClock(clock func() time.Time) NowOption` | recommended | WithClock sets the time source used by NowWithOptions and TodayWithOptions. | internal | `ExampleWithClock` |
+| `WithLocation` | `func WithLocation(location *time.Location) ParseOption` | recommended | WithLocation sets the time zone used when parsing layouts without zone information. | internal | `ExampleWithLocation` |
+| `WithParseInLocationFunc` | `func WithParseInLocationFunc(parser func(layout string, value string, location *time.Location) (time.Time, error)) ParseOption` | recommended | WithParseInLocationFunc sets the parser used for layout-based date parsing. | internal | `ExampleWithParseInLocationFunc` |
 | `YearGanZhi` | `func YearGanZhi(year int) string` | recommended | YearGanZhi returns the sexagenary cycle name for year. | internal | `ExampleYearGanZhi` |
 | `Zodiac` | `func Zodiac(year int) string` | recommended | Zodiac returns the Chinese zodiac animal for a Gregorian or lunar year. | internal | `ExampleZodiac` |
 
