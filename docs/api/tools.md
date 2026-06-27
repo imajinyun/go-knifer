@@ -12,7 +12,7 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Module | `github.com/imajinyun/knifer-go` |
 | Packages | 55 |
 | Functions | 2687 |
-| Functions with examples | 1291 |
+| Functions with examples | 1293 |
 | Context-aware functions | 36 |
 | Functions returning error | 638 |
 | Variadic functions | 787 |
@@ -1238,7 +1238,7 @@ Import path: `github.com/imajinyun/knifer-go/vgeo`
 
 Package vgeo provides public APIs for coordinate conversion utilities.
 
-Quality: 9 functions · 7 with examples · 77.8% example coverage · statuses: recommended=9, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=9, internal=0, empty=0
+Quality: 9 functions · 9 with examples · 100.0% example coverage · statuses: recommended=9, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=9, internal=0, empty=0
 
 Recommended entrypoints:
 
@@ -1264,9 +1264,9 @@ Golden path API set:
 | `Convert` | `func Convert(coord Coord, fromType CoordType, toType CoordType) (Coord, error)` | recommended | Convert converts coord between supported coordinate systems. | facade | `ExampleConvert` |
 | `Distance` | `func Distance(a Coord, b Coord) float64` | recommended | Distance returns the great-circle distance between two coordinates in meters. | facade | `ExampleDistance` |
 | `GCJ02ToBD09` | `func GCJ02ToBD09(coord Coord) Coord` | recommended | GCJ02ToBD09 converts GCJ-02 coordinates to BD-09. | facade | `ExampleGCJ02ToBD09` |
-| `GCJ02ToWGS84` | `func GCJ02ToWGS84(coord Coord) Coord` | recommended | GCJ02ToWGS84 converts GCJ-02 coordinates back to WGS-84. | facade | — |
+| `GCJ02ToWGS84` | `func GCJ02ToWGS84(coord Coord) Coord` | recommended | GCJ02ToWGS84 converts GCJ-02 coordinates back to WGS-84. | facade | `ExampleGCJ02ToWGS84` |
 | `InChina` | `func InChina(lng float64, lat float64) bool` | recommended | InChina reports whether a longitude/latitude pair falls inside a rough mainland China bounding box. | facade | `ExampleInChina` |
-| `WGS84ToBD09` | `func WGS84ToBD09(coord Coord) Coord` | recommended | WGS84ToBD09 converts WGS-84 coordinates to BD-09. | facade | — |
+| `WGS84ToBD09` | `func WGS84ToBD09(coord Coord) Coord` | recommended | WGS84ToBD09 converts WGS-84 coordinates to BD-09. | facade | `ExampleWGS84ToBD09` |
 | `WGS84ToGCJ02` | `func WGS84ToGCJ02(coord Coord) Coord` | recommended | WGS84ToGCJ02 converts GPS coordinates to GCJ-02. | facade | `ExampleWGS84ToGCJ02` |
 
 ### vhan

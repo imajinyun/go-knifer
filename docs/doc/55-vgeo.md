@@ -100,6 +100,29 @@ func main() {
 }
 ```
 
+## Convert Baidu BD-09 coordinates
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/imajinyun/knifer-go/vgeo"
+)
+
+func main() {
+	wgs := vgeo.Coord{Lng: 116.397389, Lat: 39.908722}
+	bd := vgeo.WGS84ToBD09(wgs)
+	back := vgeo.BD09ToWGS84(bd)
+
+	fmt.Printf("%.6f %.6f\n", bd.Lng, bd.Lat)
+	fmt.Printf("%.6f %.6f\n", back.Lng, back.Lat)
+}
+```
+
+BD-09 helpers are intended for map-provider interoperability. Round trips may differ by a few meters because GCJ-02 reverse conversion is approximate.
+
 ## Measure coordinate distance
 
 ```go

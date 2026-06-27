@@ -40,10 +40,22 @@ func ExampleGCJ02ToBD09() {
 	// Output: 116.410006 39.916465
 }
 
+func ExampleGCJ02ToWGS84() {
+	wgs := vgeo.GCJ02ToWGS84(vgeo.Coord{Lng: 116.403633, Lat: 39.910125})
+	fmt.Printf("%.5f %.5f\n", wgs.Lng, wgs.Lat)
+	// Output: 116.39739 39.90872
+}
+
 func ExampleBD09ToGCJ02() {
 	gcj := vgeo.BD09ToGCJ02(vgeo.Coord{Lng: 116.410008, Lat: 39.916471})
 	fmt.Printf("%.6f %.6f\n", gcj.Lng, gcj.Lat)
 	// Output: 116.403636 39.910131
+}
+
+func ExampleWGS84ToBD09() {
+	bd := vgeo.WGS84ToBD09(vgeo.Coord{Lng: 116.397389, Lat: 39.908722})
+	fmt.Printf("%.6f %.6f\n", bd.Lng, bd.Lat)
+	// Output: 116.410005 39.916465
 }
 
 func ExampleBD09ToWGS84() {

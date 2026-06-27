@@ -4,7 +4,7 @@
   "summary": {
     "package_count": 55,
     "function_count": 2687,
-    "functions_with_examples": 1291,
+    "functions_with_examples": 1293,
     "context_aware_functions": 36,
     "returns_error_functions": 638,
     "variadic_functions": 787,
@@ -16181,8 +16181,8 @@
       "synopsis": "Package vgeo provides public APIs for coordinate conversion utilities.",
       "summary": {
         "function_count": 9,
-        "functions_with_examples": 7,
-        "example_coverage_percent": 77.8,
+        "functions_with_examples": 9,
+        "example_coverage_percent": 100,
         "status_counts": {
           "compatibility": 0,
           "deprecated": 0,
@@ -16375,7 +16375,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleGCJ02ToWGS84"
+          ]
         },
         {
           "name": "InChina",
@@ -16420,7 +16423,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWGS84ToBD09"
+          ]
         },
         {
           "name": "WGS84ToGCJ02",
