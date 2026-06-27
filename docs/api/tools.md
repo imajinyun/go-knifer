@@ -12,7 +12,7 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Module | `github.com/imajinyun/knifer-go` |
 | Packages | 55 |
 | Functions | 2687 |
-| Functions with examples | 1278 |
+| Functions with examples | 1281 |
 | Context-aware functions | 36 |
 | Functions returning error | 638 |
 | Variadic functions | 787 |
@@ -1061,7 +1061,7 @@ Import path: `github.com/imajinyun/knifer-go/vfile`
 
 Package vfile provides public APIs for file and IO utilities.
 
-Quality: 68 functions · 59 with examples · 86.8% example coverage · statuses: recommended=68, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=62, internal=6, empty=0
+Quality: 68 functions · 62 with examples · 91.2% example coverage · statuses: recommended=68, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=62, internal=6, empty=0
 
 Recommended entrypoints:
 
@@ -1092,9 +1092,9 @@ Golden path API set:
 | `CopyWithOptions` | `func CopyWithOptions(dst io.Writer, src io.Reader, opts ...ReadOption) (int64, error)` | recommended | IoCopyWithOptions copies from src to dst using per-call read options. | internal | `ExampleCopyWithOptions` |
 | `Del` | `func Del(path string) error` | recommended | Del removes path recursively. | facade | `ExampleDel` |
 | `DelWithOptions` | `func DelWithOptions(path string, opts ...DeleteOption) error` | recommended | DelWithOptions removes path recursively using per-call delete options. | facade | `ExampleDelWithOptions` |
-| `DetectFileType` | `func DetectFileType(r io.Reader) (FileType, error)` | recommended | DetectFileType detects a file type from leading magic-number bytes. | facade | — |
-| `DetectFileTypeBytes` | `func DetectFileTypeBytes(data []byte) FileType` | recommended | DetectFileTypeBytes detects a file type from bytes already in memory. | facade | — |
-| `DetectFileTypeFromPath` | `func DetectFileTypeFromPath(path string) (FileType, error)` | recommended | DetectFileTypeFromPath detects a file type by opening path and reading its header. | facade | — |
+| `DetectFileType` | `func DetectFileType(r io.Reader) (FileType, error)` | recommended | DetectFileType detects a file type from leading magic-number bytes. | facade | `ExampleDetectFileType` |
+| `DetectFileTypeBytes` | `func DetectFileTypeBytes(data []byte) FileType` | recommended | DetectFileTypeBytes detects a file type from bytes already in memory. | facade | `ExampleDetectFileTypeBytes` |
+| `DetectFileTypeFromPath` | `func DetectFileTypeFromPath(path string) (FileType, error)` | recommended | DetectFileTypeFromPath detects a file type by opening path and reading its header. | facade | `ExampleDetectFileTypeFromPath` |
 | `Exists` | `func Exists(path string) bool` | recommended | Exists reports whether a file or directory exists at path. | facade | `ExampleExists` |
 | `ExistsWithOptions` | `func ExistsWithOptions(path string, opts ...StatOption) bool` | recommended | ExistsWithOptions reports whether a file or directory exists using per-call stat options. | facade | `ExampleExistsWithOptions` |
 | `Extension` | `func Extension(path string) string` | recommended | Extension returns the file extension without the leading dot, or an empty string when absent. | internal | `ExampleExtension` |

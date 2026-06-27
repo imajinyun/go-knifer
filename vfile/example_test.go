@@ -660,6 +660,49 @@ func ExampleWithUnlimitedRead() {
 	// Output: abcd
 }
 
+func ExampleDetectFileType() {
+	ft, err := vfile.DetectFileType(strings.NewReader("%PDF-1.7\n"))
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(ft.MIME)
+	fmt.Println(ft.Extension)
+	fmt.Println(vfile.IsDocument(ft))
+	// Output:
+	// application/pdf
+	// .pdf
+	// true
+}
+
+func ExampleDetectFileTypeBytes() {
+	ft := vfile.DetectFileTypeBytes([]byte{0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A})
+	unknown := vfile.DetectFileTypeBytes([]byte("plain text"))
+	fmt.Println(ft.Category, vfile.IsImage(ft))
+	fmt.Println(unknown == vfile.UnknownFileType)
+	// Output:
+	// image true
+	// true
+}
+
+func ExampleDetectFileTypeFromPath() {
+	dir, cleanup := exampleTempDir()
+	defer cleanup()
+
+	path := filepath.Join(dir, "archive.bin")
+	if err := os.WriteFile(path, []byte{'P', 'K', 0x03, 0x04, 0x00}, 0o600); err != nil {
+		panic(err)
+	}
+	ft, err := vfile.DetectFileTypeFromPath(path)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(ft.MIME)
+	fmt.Println(vfile.IsArchive(ft))
+	// Output:
+	// application/zip
+	// true
+}
+
 func exampleTempDir() (string, func()) {
 	dir, err := os.MkdirTemp("", "knifer-go-vfile-example-*")
 	if err != nil {

@@ -1,6 +1,6 @@
 # vfile Quickstart
 
-`vfile` provides helpers for file reading, writing, appending, directory creation, copying, deletion, filename parsing, and bounded reads with default size protection.
+`vfile` provides helpers for file reading, writing, appending, directory creation, copying, deletion, filename parsing, magic-number file type detection, and bounded reads with default size protection.
 
 Prefer temporary directories in tests. Keep user-controlled paths separate from trusted base directories. Use safe extraction or safe path helpers when dealing with archives or untrusted filenames. Do not ignore file I/O errors.
 
@@ -17,6 +17,7 @@ Choose the helper that makes the filesystem side effect explicit. Use temporary 
 | Check file state before optional work | `Exists`, `IsFile`, `IsDirectory`, `Size` | Treat checks as hints, not synchronization; another process can change the path after the check. |
 | Copy, move, or delete files | `CopyFile`, `Del` | Keep overwrite and deletion behavior visible at the call site. Do not ignore cleanup errors in production code. |
 | Inspect names and extensions | `MainName`, `Extension` | These are string/path helpers; they do not validate whether the path is safe to open. |
+| Detect a file family from bytes | `DetectFileType`, `DetectFileTypeBytes`, `DetectFileTypeFromPath` | Uses leading magic-number bytes to identify common images, archives, documents, audio/video, fonts, and executables. |
 
 ## Filesystem safety checklist
 
@@ -26,6 +27,8 @@ Choose the helper that makes the filesystem side effect explicit. Use temporary 
 - Check every returned error. A failed write, partial copy, or cleanup failure can leave stale data behind.
 - Be explicit about overwrite and permission policy. Defaults are convenient, but reviewers should be able to see destructive behavior.
 - Do not rely on `Exists` as an authorization or locking mechanism. It is useful for optional work, not for race-free decisions.
+- Treat magic-number detection as identification only. Do not use it as the only upload, malware, authorization, or content-safety control.
+- Do not trust file extensions alone. If routing depends on file family, inspect bytes and still enforce size, path, storage, and downstream parser limits.
 
 ## When not to use vfile
 
@@ -34,12 +37,14 @@ Choose the helper that makes the filesystem side effect explicit. Use temporary 
 - Use archive-specific helpers such as `vzip` when the path is coming from an archive entry and extraction policy matters.
 - Use streaming APIs instead of whole-file helpers for large, remote, or attacker-controlled content.
 - Avoid mutating package-level or shared filesystem locations in reusable libraries; accept explicit paths or injected provider functions.
+- Use a dedicated content scanning, sandboxing, or media validation service when accepting untrusted uploads in a security-sensitive workflow.
 
 ## Related packages
 
 - Use `vzip` when filesystem work crosses into archive creation, extraction, or zip-entry path policy.
 - Use `vcsv` or `vpoi` when files contain tabular data that needs CSV or XLSX parsing.
 - Use `vurl` when file paths are derived from URLs or need URL-specific normalization first.
+- Use `vimg` when detected image bytes need decoding, resizing, or transformation after the file family has been identified.
 
 ## Benchmarks and trade-offs
 
@@ -50,6 +55,8 @@ go test -bench=. -benchmem -run=^$ ./internal/file ./vfile
 ```
 
 Whole-file helpers are concise and easy to review, but they allocate enough memory for the content. Chunked reads and `CopyWithOptions` are better for large inputs and for call sites that need bounded memory use.
+
+Magic-number detection reads only a bounded header. It is useful before dispatching to a parser, but it is not a substitute for parser-level validation, archive safety checks, size limits, or content scanning.
 
 Provider options such as `WithOpen`, `WithOpenFile`, `WithStat`, `WithMkdirAll`, and `WithRemoveAll` make tests hermetic and reviewable. They add indirection, so keep production call sites simple unless injection is needed for policy, testing, or observability.
 
@@ -66,6 +73,10 @@ Use whole-file helpers for small, trusted inputs. Use `ReadChunksWithOptions` wh
 ### Why not ignore cleanup errors?
 
 Cleanup errors can hide permission issues, stale files, or partial deletion. Tests may use best-effort cleanup, but production paths should decide whether cleanup failure is observable or fatal.
+
+### Can magic-number detection prove a file is safe?
+
+No. It only identifies known byte signatures. A file can have a valid signature and still be malicious, malformed, oversized, or unsafe for a downstream parser. Use it as one input to routing and validation, not as a security boundary.
 
 ## Cookbook
 
@@ -169,6 +180,33 @@ if _, err := vfile.ReadFileString(missing); err != nil {
 	// Decide whether this is expected optional work or a hard failure.
 	panic(err)
 }
+```
+
+### Detect file type from bytes
+
+```go
+ft := vfile.DetectFileTypeBytes([]byte{0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A})
+fmt.Println(ft.MIME, ft.Extension, vfile.IsImage(ft))
+
+unknown := vfile.DetectFileTypeBytes([]byte("plain text"))
+fmt.Println(unknown == vfile.UnknownFileType)
+```
+
+### Detect file type from a path
+
+```go
+dir, cleanup := exampleTempDir()
+defer cleanup()
+
+path := filepath.Join(dir, "archive.bin")
+if err := os.WriteFile(path, []byte{'P', 'K', 0x03, 0x04, 0x00}, 0o600); err != nil {
+	panic(err)
+}
+ft, err := vfile.DetectFileTypeFromPath(path)
+if err != nil {
+	panic(err)
+}
+fmt.Println(ft.MIME, vfile.IsArchive(ft))
 ```
 
 ## Read and write text files
@@ -281,5 +319,51 @@ func main() {
 	fmt.Println(vfile.MainName(dst), vfile.Extension(dst))
 
 	_ = vfile.Del(filepath.Join("tmp", "backup"))
+}
+```
+
+## Detect file type by magic number
+
+```go
+package main
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/imajinyun/knifer-go/vfile"
+)
+
+func main() {
+	ft, err := vfile.DetectFileType(strings.NewReader("%PDF-1.7\n"))
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(ft.MIME)
+	fmt.Println(ft.Extension)
+	fmt.Println(vfile.IsDocument(ft))
+}
+```
+
+## Classify bytes before routing
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/imajinyun/knifer-go/vfile"
+)
+
+func main() {
+	ft := vfile.DetectFileTypeBytes([]byte{0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A})
+	if vfile.IsImage(ft) {
+		fmt.Println(ft.MIME)
+	}
+
+	unknown := vfile.DetectFileTypeBytes([]byte("plain text"))
+	fmt.Println(unknown == vfile.UnknownFileType)
 }
 ```

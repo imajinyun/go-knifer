@@ -4,7 +4,7 @@
   "summary": {
     "package_count": 55,
     "function_count": 2687,
-    "functions_with_examples": 1278,
+    "functions_with_examples": 1281,
     "context_aware_functions": 36,
     "returns_error_functions": 638,
     "variadic_functions": 787,
@@ -13826,8 +13826,8 @@
       "synopsis": "Package vfile provides public APIs for file and IO utilities.",
       "summary": {
         "function_count": 68,
-        "functions_with_examples": 59,
-        "example_coverage_percent": 86.8,
+        "functions_with_examples": 62,
+        "example_coverage_percent": 91.2,
         "status_counts": {
           "compatibility": 0,
           "deprecated": 0,
@@ -14148,7 +14148,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleDetectFileType"
+          ]
         },
         {
           "name": "DetectFileTypeBytes",
@@ -14167,7 +14170,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleDetectFileTypeBytes"
+          ]
         },
         {
           "name": "DetectFileTypeFromPath",
@@ -14187,7 +14193,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleDetectFileTypeFromPath"
+          ]
         },
         {
           "name": "Exists",
