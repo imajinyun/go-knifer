@@ -12,7 +12,7 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Module | `github.com/imajinyun/knifer-go` |
 | Packages | 55 |
 | Functions | 2687 |
-| Functions with examples | 1293 |
+| Functions with examples | 1296 |
 | Context-aware functions | 36 |
 | Functions returning error | 638 |
 | Variadic functions | 787 |
@@ -1707,7 +1707,7 @@ Import path: `github.com/imajinyun/knifer-go/vimg`
 
 Package vimg provides public APIs for image utilities.
 
-Quality: 101 functions · 98 with examples · 97.0% example coverage · statuses: recommended=101, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=101, internal=0, empty=0
+Quality: 101 functions · 101 with examples · 100.0% example coverage · statuses: recommended=101, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=101, internal=0, empty=0
 
 Recommended entrypoints:
 
@@ -1747,7 +1747,7 @@ Golden path API set:
 | `DecodeQRCode` | `func DecodeQRCode(r io.Reader, opts ...DecodeOption) (*DecodeResult, error)` | recommended | DecodeQRCode decodes one QR code from a raster image stream. | facade | `ExampleDecodeQRCode` |
 | `DecodeQRCodeImage` | `func DecodeQRCodeImage(img image.Image, opts ...DecodeOption) (*DecodeResult, error)` | recommended | DecodeQRCodeImage decodes one QR code from img. | facade | `ExampleDecodeQRCodeImage` |
 | `FlipHorizontal` | `func FlipHorizontal(img image.Image) (image.Image, error)` | recommended | FlipHorizontal mirrors img left-to-right. | facade | `ExampleFlipHorizontal` |
-| `FlipVertical` | `func FlipVertical(img image.Image) (image.Image, error)` | recommended | FlipVertical mirrors img top-to-bottom. | facade | — |
+| `FlipVertical` | `func FlipVertical(img image.Image) (image.Image, error)` | recommended | FlipVertical mirrors img top-to-bottom. | facade | `ExampleFlipVertical` |
 | `GenMathGeneratorWithOptions` | `func GenMathGeneratorWithOptions(generator *MathGenerator, opts ...GeneratorOption) string` | recommended | GenMathGeneratorWithOptions generates a math captcha string with per-call options. | facade | `ExampleGenMathGeneratorWithOptions` |
 | `GenRandomGeneratorWithOptions` | `func GenRandomGeneratorWithOptions(generator *RandomGenerator, opts ...GeneratorOption) string` | recommended | GenRandomGeneratorWithOptions generates a random captcha string with per-call options. | facade | `ExampleGenRandomGeneratorWithOptions` |
 | `Grayscale` | `func Grayscale(img image.Image) (image.Image, error)` | recommended | Grayscale returns a grayscale copy of img while preserving alpha. | facade | `ExampleGrayscale` |
@@ -1776,8 +1776,8 @@ Golden path API set:
 | `QRCodePNG` | `func QRCodePNG(content string, opts ...QRCodeOption) ([]byte, error)` | recommended | QRCodePNG returns PNG bytes for a QR code. | facade | `ExampleQRCodePNG` |
 | `QRCodeSVG` | `func QRCodeSVG(content string, opts ...QRCodeOption) (string, error)` | recommended | QRCodeSVG returns an SVG rendering for a QR code. | facade | `ExampleQRCodeSVG` |
 | `Resize` | `func Resize(img image.Image, width int, height int) (image.Image, error)` | recommended | Resize returns img scaled to width x height using nearest-neighbor sampling. | facade | `ExampleResize` |
-| `Rotate180` | `func Rotate180(img image.Image) (image.Image, error)` | recommended | Rotate180 rotates img 180 degrees. | facade | — |
-| `Rotate270` | `func Rotate270(img image.Image) (image.Image, error)` | recommended | Rotate270 rotates img 270 degrees clockwise. | facade | — |
+| `Rotate180` | `func Rotate180(img image.Image) (image.Image, error)` | recommended | Rotate180 rotates img 180 degrees. | facade | `ExampleRotate180` |
+| `Rotate270` | `func Rotate270(img image.Image) (image.Image, error)` | recommended | Rotate270 rotates img 270 degrees clockwise. | facade | `ExampleRotate270` |
 | `Rotate90` | `func Rotate90(img image.Image) (image.Image, error)` | recommended | Rotate90 rotates img 90 degrees clockwise. | facade | `ExampleRotate90` |
 | `SupportedDecodeBarcodeFormats` | `func SupportedDecodeBarcodeFormats() []BarcodeFormat` | recommended | SupportedDecodeBarcodeFormats returns the barcode formats supported for decoding. | facade | `ExampleSupportedDecodeBarcodeFormats` |
 | `SupportedEncodeBarcodeFormats` | `func SupportedEncodeBarcodeFormats() []BarcodeFormat` | recommended | SupportedEncodeBarcodeFormats returns the barcode formats supported for generation. | facade | `ExampleSupportedEncodeBarcodeFormats` |

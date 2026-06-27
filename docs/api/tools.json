@@ -4,7 +4,7 @@
   "summary": {
     "package_count": 55,
     "function_count": 2687,
-    "functions_with_examples": 1293,
+    "functions_with_examples": 1296,
     "context_aware_functions": 36,
     "returns_error_functions": 638,
     "variadic_functions": 787,
@@ -22858,8 +22858,8 @@
       "synopsis": "Package vimg provides public APIs for image utilities.",
       "summary": {
         "function_count": 101,
-        "functions_with_examples": 98,
-        "example_coverage_percent": 97,
+        "functions_with_examples": 101,
+        "example_coverage_percent": 100,
         "status_counts": {
           "compatibility": 0,
           "deprecated": 0,
@@ -23469,7 +23469,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleFlipVertical"
+          ]
         },
         {
           "name": "GenMathGeneratorWithOptions",
@@ -24267,7 +24270,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleRotate180"
+          ]
         },
         {
           "name": "Rotate270",
@@ -24287,7 +24293,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleRotate270"
+          ]
         },
         {
           "name": "Rotate90",

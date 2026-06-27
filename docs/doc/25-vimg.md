@@ -11,7 +11,7 @@ Captcha image bytes are returned as defensive copies, so callers can inspect or 
 | Read dimensions and format | `Info` | Decodes image configuration without transforming pixels. |
 | Convert image format | `ConvertFormat` | Use when the original dimensions should be preserved and only encoding changes. |
 | Generate thumbnails | `Thumbnail` | Resizes to a maximum edge and writes in the requested format. |
-| Transform pixels in memory | `Resize`, `Crop`, `CropCenter`, `FlipHorizontal`, `Rotate90`, `Grayscale` | Use for small in-memory operations before choosing the final encoder. |
+| Transform pixels in memory | `Resize`, `Crop`, `CropCenter`, `FlipHorizontal`, `FlipVertical`, `Rotate90`, `Rotate180`, `Rotate270`, `Grayscale` | Use for small in-memory operations before choosing the final encoder. |
 | Encode JPEG with explicit quality | `CompressJPEG` | Use when callers already have an `image.Image` and need direct JPEG quality control. |
 | Generate QR codes | `QRCodePNG`, `QRCodeSVG`, `QRCodeBytes`, `QRCodeImage` | QR helpers wrap barcode helpers with `BarcodeFormatQRCode`. |
 | Generate non-QR barcodes | `BarcodePNG`, `BarcodeSVG`, `BarcodeASCII`, `BarcodeBytes` | Check `CanEncodeBarcodeFormat` before exposing user-selected formats. |
@@ -128,7 +128,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	gray, err := vimg.Grayscale(rotated)
+	flipped, err := vimg.FlipVertical(rotated)
+	if err != nil {
+		panic(err)
+	}
+	gray, err := vimg.Grayscale(flipped)
 	if err != nil {
 		panic(err)
 	}

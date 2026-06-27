@@ -171,9 +171,30 @@ func ExampleFlipHorizontal() {
 	// Output: 2 1 <nil>
 }
 
+func ExampleFlipVertical() {
+	img := image.NewRGBA(image.Rect(0, 0, 2, 3))
+	flipped, err := vimg.FlipVertical(img)
+	fmt.Println(flipped.Bounds().Dx(), flipped.Bounds().Dy(), err)
+	// Output: 2 3 <nil>
+}
+
 func ExampleRotate90() {
 	img := image.NewRGBA(image.Rect(0, 0, 3, 2))
 	rotated, err := vimg.Rotate90(img)
+	fmt.Println(rotated.Bounds().Dx(), rotated.Bounds().Dy(), err)
+	// Output: 2 3 <nil>
+}
+
+func ExampleRotate180() {
+	img := image.NewRGBA(image.Rect(0, 0, 3, 2))
+	rotated, err := vimg.Rotate180(img)
+	fmt.Println(rotated.Bounds().Dx(), rotated.Bounds().Dy(), err)
+	// Output: 3 2 <nil>
+}
+
+func ExampleRotate270() {
+	img := image.NewRGBA(image.Rect(0, 0, 3, 2))
+	rotated, err := vimg.Rotate270(img)
 	fmt.Println(rotated.Bounds().Dx(), rotated.Bounds().Dy(), err)
 	// Output: 2 3 <nil>
 }
