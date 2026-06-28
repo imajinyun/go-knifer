@@ -43,7 +43,7 @@ These domains are the quickest way to evaluate whether `knifer-go` fits a projec
 | Need | Start here | Trust signals |
 | --- | --- | --- |
 | Safe HTTP and downloads | [`vhttp`](22-vhttp.md), [`vresty`](41-vresty.md), [`vurl`](51-vurl.md), [`Safe HTTP cookbook`](safe-http-cookbook.md) | Helper selection, safe URL policy checklist, cookbook recipes, benchmark commands, and stdlib/Resty boundary guidance. |
-| Safe crypto workflows | [`vcrypto`](11-vcrypto.md), [`vrand`](38-vrand.md), [`vjwt`](28-vjwt.md) | Recommended cryptographic entry points, secret-handling FAQ, benchmark commands, and direct-stdlib boundary guidance. |
+| Safe crypto workflows | [`vcrypto`](11-vcrypto.md), [`vrand`](38-vrand.md), [`vjwt`](28-vjwt.md), [`Safe Crypto cookbook`](safe-crypto-cookbook.md) | Recommended cryptographic entry points, secret-handling FAQ, cookbook recipes, benchmark commands, and direct-stdlib boundary guidance. |
 | Daily JSON and file workflows | [`vjson`](27-vjson.md), [`vfile`](17-vfile.md) | Cookbook examples for object/path/formatting/file I/O, filesystem safety guidance, and explicit error handling. |
 
 Comparison entry points:
@@ -445,7 +445,7 @@ Use these recipes as the shortest path from an application task to a reviewed pa
 | Fetch a URL controlled by users or config | `vurl`, then `vhttp` or `vresty` | Start from the [`Safe HTTP cookbook`](safe-http-cookbook.md). Validate/probe with `OpenSafe` or `ContentLengthSafe`, then use `GetStringSafeE`, `DownloadBytesSafeE`, or safe Resty equivalents when a request is needed. | `go test ./vurl ./vhttp ./vresty` and `make agent-security-check` |
 | Load configuration from local files or remote URLs | `vconf` | Use `Load` for local trusted files, `LoadRemoteSafe` for untrusted HTTP(S), and `LoadWithOptions` / `LoadRemoteSafeWithOptions` when limits or providers must be reviewable. | `go test ./vconf` |
 | Map structs and maps without JSON serialization | `vbean` | Use `ToStruct`, `ToMap`, `CopyProperties`, or `DecodeResult`; keep weak conversion and strict-unused behavior explicit through `WithWeaklyTyped` and `WithStrictUnused`. | `go test ./vbean` |
-| Choose crypto or random helpers | `vcrypto`, `vrand`, `vjwt` | Use AES-GCM, HMAC-SHA-2, RSA-OAEP/PSS, `SecureBytes`, and signed JWT helpers; do not use `vhash` for security decisions. | `go test ./vcrypto ./vrand ./vjwt` and `make agent-security-check` |
+| Choose crypto or random helpers | `vcrypto`, `vrand`, `vjwt` | Start from the [`Safe Crypto cookbook`](safe-crypto-cookbook.md). Use AES-GCM, HMAC-SHA-2, RSA-OAEP/PSS, `SecureBytes`, and signed JWT helpers; do not use `vhash` for security decisions. | `go test ./vcrypto ./vrand ./vjwt` and `make agent-security-check` |
 
 When adding a cookbook-backed public facade example, also run `make tools-gen` so `docs/api/tools.json` and `docs/api/tools.md` expose the new examples to AI agents.
 

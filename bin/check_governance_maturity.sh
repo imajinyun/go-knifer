@@ -366,6 +366,91 @@ def validate_safe_http_cookbook_governance() -> None:
 			add_error(f"{roadmap_path} Sprint 23 row missing package(s): " + ", ".join(missing_from_sprint))
 
 
+def validate_safe_crypto_cookbook_governance() -> None:
+	governance = require_mapping(ai_context.get("safe_crypto_cookbook_governance"), "safe_crypto_cookbook_governance")
+	roadmap_path = governance.get("roadmap_path")
+	if not isinstance(roadmap_path, str) or not roadmap_path.strip():
+		add_error("safe_crypto_cookbook_governance.roadmap_path must be non-empty")
+		roadmap_path = "docs/superpowers/plans/49-roadmap.md"
+	cookbook_path = governance.get("cookbook_path")
+	if not isinstance(cookbook_path, str) or not cookbook_path.strip():
+		add_error("safe_crypto_cookbook_governance.cookbook_path must be non-empty")
+		cookbook_path = "docs/doc/safe-crypto-cookbook.md"
+	sprint = governance.get("sprint")
+	if sprint != 24:
+		add_error("safe_crypto_cookbook_governance.sprint must be 24")
+	status = governance.get("status")
+	if status not in {"active", "completed"}:
+		add_error("safe_crypto_cookbook_governance.status must be active or completed")
+	packages = require_string_list(governance.get("packages"), "safe_crypto_cookbook_governance.packages")
+	expected_packages = ["vcrypto", "vrand", "vjwt"]
+	if packages != expected_packages:
+		add_error("safe_crypto_cookbook_governance.packages must be ordered as: " + ", ".join(expected_packages))
+	required_scenarios = require_string_list(governance.get("required_scenarios"), "safe_crypto_cookbook_governance.required_scenarios")
+	if len(required_scenarios) < 4:
+		add_error("safe_crypto_cookbook_governance.required_scenarios must include at least four cookbook scenarios")
+	required_checks = require_string_list(governance.get("required_checks"), "safe_crypto_cookbook_governance.required_checks")
+	for check in ("docs-check", "ai-context-check", "governance-maturity-check", "agent-security-check"):
+		if check not in required_checks:
+			add_error(f"safe_crypto_cookbook_governance.required_checks must include {check}")
+	for package_name in packages:
+		if package_name not in public_facades:
+			add_error(f"safe_crypto_cookbook_governance.packages references non-public facade {package_name}")
+	cookbook_file = root / cookbook_path
+	try:
+		cookbook_text = cookbook_file.read_text(encoding="utf-8")
+	except FileNotFoundError:
+		add_error(f"{cookbook_path} must exist")
+		cookbook_text = ""
+	if cookbook_text:
+		if not cookbook_text.startswith("# Safe Crypto Cookbook\n"):
+			add_error(f"{cookbook_path} must start with '# Safe Crypto Cookbook'")
+		for package_name in packages:
+			if f"`{package_name}`" not in cookbook_text and f"/{package_name}" not in cookbook_text:
+				add_error(f"{cookbook_path} must mention {package_name}")
+		for scenario in required_scenarios:
+			if scenario not in cookbook_text:
+				add_error(f"{cookbook_path} missing required scenario {scenario!r}")
+		for phrase in (
+			"Crypto Decision Matrix",
+			"Secret Boundary Checklist",
+			"SecureBytes",
+			"HMACEqual",
+			"AESSealGCM",
+			"AESOpenGCM",
+			"CreateTokenWithOptions",
+			"ValidateWithOptions",
+		):
+			if phrase not in cookbook_text:
+				add_error(f"{cookbook_path} must include {phrase!r}")
+		for check in required_checks:
+			if f"make {check}" not in cookbook_text:
+				add_error(f"{cookbook_path} validation section must mention make {check}")
+	roadmap_rows = extract_markdown_rows(root / roadmap_path, "90-Day Star Domain Scorecard")
+	safe_crypto_rows = [row for row in roadmap_rows if row.get("Domain") == "Safe crypto (`vcrypto`, `vrand`, `vjwt`)"]
+	if len(safe_crypto_rows) != 1:
+		add_error(f"{roadmap_path} scorecard must contain exactly one Safe crypto row")
+	else:
+		row = safe_crypto_rows[0]
+		for column in ("Comparison page status", "Cookbook status"):
+			status_text = row.get(column, "")
+			if cookbook_path not in status_text or "Present" not in status_text:
+				add_error(f"{roadmap_path} Safe crypto {column} must be Present and reference {cookbook_path}")
+	sprint_rows = extract_markdown_rows(root / roadmap_path, "Sprint order")
+	sprint_24_rows = [row for row in sprint_rows if row.get("Sprint") == "24"]
+	if len(sprint_24_rows) != 1:
+		add_error(f"{roadmap_path} Sprint order must contain exactly one Sprint 24 row")
+	else:
+		sprint_24 = sprint_24_rows[0]
+		expected_status = "Completed" if status == "completed" else "Active"
+		if sprint_24.get("Status") != expected_status:
+			add_error(f"{roadmap_path} Sprint 24 status must be {expected_status}")
+		sprint_text = " ".join(sprint_24.values())
+		missing_from_sprint = [package for package in packages if f"`{package}`" not in sprint_text]
+		if missing_from_sprint:
+			add_error(f"{roadmap_path} Sprint 24 row missing package(s): " + ", ".join(missing_from_sprint))
+
+
 def validate_example_depth_governance() -> None:
 	governance = require_mapping(ai_context.get("example_depth_governance"), "example_depth_governance")
 	sprint = governance.get("sprint")
@@ -763,6 +848,7 @@ if not bench_only:
 	validate_roadmap_catalog_baseline()
 	validate_roadmap_star_domain_scorecard()
 	validate_safe_http_cookbook_governance()
+	validate_safe_crypto_cookbook_governance()
 	validate_example_depth_governance()
 	validate_api_convergence()
 	validate_lifecycle()

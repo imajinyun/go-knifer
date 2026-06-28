@@ -878,13 +878,27 @@
     "roadmap_path": "docs/superpowers/plans/49-roadmap.md",
     "cookbook_path": "docs/doc/safe-http-cookbook.md",
     "sprint": 23,
-    "status": "active",
+    "status": "completed",
     "packages": ["vhttp", "vresty", "vurl"],
     "required_scenarios": [
       "Validate and Probe Before Requesting",
       "Fetch With Standard-Library Style Helpers",
       "Fetch Through Resty-Style Clients",
       "Download To Files"
+    ],
+    "required_checks": ["docs-check", "ai-context-check", "governance-maturity-check", "agent-security-check"]
+  },
+  "safe_crypto_cookbook_governance": {
+    "roadmap_path": "docs/superpowers/plans/49-roadmap.md",
+    "cookbook_path": "docs/doc/safe-crypto-cookbook.md",
+    "sprint": 24,
+    "status": "active",
+    "packages": ["vcrypto", "vrand", "vjwt"],
+    "required_scenarios": [
+      "Generate Secret Material",
+      "Authenticate Messages",
+      "Encrypt Data",
+      "Sign And Verify Tokens"
     ],
     "required_checks": ["docs-check", "ai-context-check", "governance-maturity-check", "agent-security-check"]
   },
