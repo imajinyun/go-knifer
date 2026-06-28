@@ -12,7 +12,7 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Module | `github.com/imajinyun/knifer-go` |
 | Packages | 55 |
 | Functions | 2687 |
-| Functions with examples | 1317 |
+| Functions with examples | 1346 |
 | Context-aware functions | 36 |
 | Functions returning error | 638 |
 | Variadic functions | 787 |
@@ -1628,7 +1628,7 @@ Import path: `github.com/imajinyun/knifer-go/vident`
 
 Package vident provides identity and legal identifier helpers.
 
-Quality: 50 functions · 13 with examples · 26.0% example coverage · statuses: recommended=50, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=50, internal=0, empty=0
+Quality: 50 functions · 42 with examples · 84.0% example coverage · statuses: recommended=50, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=50, internal=0, empty=0
 
 Recommended entrypoints:
 
@@ -1636,7 +1636,7 @@ Recommended entrypoints:
 | --- | --- | --- |
 | `ParseCreditCode` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `AgeWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
-| `AgeAt` | day-one | Start here for concise, trusted-input use cases in this package. |
+| `Age` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 Golden path API set:
 
@@ -1644,62 +1644,62 @@ Golden path API set:
 | --- | --- | --- |
 | `ParseCreditCode` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
 | `AgeWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
-| `AgeAt` | Use first for concise trusted-input workflows in vident. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vident. |
 | `Age` | Use first for concise trusted-input workflows in vident. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vident. |
+| `AgeAt` | Use first for concise trusted-input workflows in vident. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vident. |
 | `BirthDate` | Use first for concise trusted-input workflows in vident. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vident. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
-| `Age` | `func Age(idCard string) (int, bool)` | recommended | Age returns the current age encoded in idCard. | facade | — |
+| `Age` | `func Age(idCard string) (int, bool)` | recommended | Age returns the current age encoded in idCard. | facade | `ExampleAge` |
 | `AgeAt` | `func AgeAt(idCard string, at time.Time) (int, bool)` | recommended | AgeAt returns the age encoded in idCard at the specified time. | facade | `ExampleAgeAt` |
 | `AgeWithOptions` | `func AgeWithOptions(idCard string, opts ...AgeOption) (int, bool)` | recommended | AgeWithOptions returns the age encoded in idCard using custom time options. | facade | `ExampleAgeWithOptions` |
-| `BirthDate` | `func BirthDate(idCard string) (time.Time, bool)` | recommended | BirthDate returns the birthday encoded in idCard. | facade | — |
-| `BirthDateWithOptions` | `func BirthDateWithOptions(idCard string, opts ...BirthOption) (time.Time, bool)` | recommended | BirthDateWithOptions returns the birthday encoded in idCard using custom parsing options. | facade | — |
+| `BirthDate` | `func BirthDate(idCard string) (time.Time, bool)` | recommended | BirthDate returns the birthday encoded in idCard. | facade | `ExampleBirthDate` |
+| `BirthDateWithOptions` | `func BirthDateWithOptions(idCard string, opts ...BirthOption) (time.Time, bool)` | recommended | BirthDateWithOptions returns the birthday encoded in idCard using custom parsing options. | facade | `ExampleBirthDateWithOptions` |
 | `BirthString` | `func BirthString(idCard string) (string, bool)` | recommended | BirthString returns the birthday encoded in idCard as yyyyMMdd. | facade | `ExampleBirthString` |
-| `BirthStringWithOptions` | `func BirthStringWithOptions(idCard string, opts ...BirthOption) (string, bool)` | recommended | BirthStringWithOptions returns the birthday encoded in idCard as yyyyMMdd using custom parsing options. | facade | — |
+| `BirthStringWithOptions` | `func BirthStringWithOptions(idCard string, opts ...BirthOption) (string, bool)` | recommended | BirthStringWithOptions returns the birthday encoded in idCard as yyyyMMdd using custom parsing options. | facade | `ExampleBirthStringWithOptions` |
 | `CheckCode18` | `func CheckCode18(code17 string) byte` | recommended | CheckCode18 returns the 18th check code for a 17-digit identity card body. | facade | `ExampleCheckCode18` |
-| `CheckCode18WithOptions` | `func CheckCode18WithOptions(code17 string, opts ...IDCardOption) byte` | recommended | CheckCode18WithOptions returns the 18th check code for a 17-digit identity card body with options. | facade | — |
-| `CityCode` | `func CityCode(idCard string) (string, bool)` | recommended | CityCode returns the city-level code encoded in a 15- or 18-digit identity card number. | facade | — |
+| `CheckCode18WithOptions` | `func CheckCode18WithOptions(code17 string, opts ...IDCardOption) byte` | recommended | CheckCode18WithOptions returns the 18th check code for a 17-digit identity card body with options. | facade | `ExampleCheckCode18WithOptions` |
+| `CityCode` | `func CityCode(idCard string) (string, bool)` | recommended | CityCode returns the city-level code encoded in a 15- or 18-digit identity card number. | facade | `ExampleCityCode` |
 | `Convert15To18` | `func Convert15To18(idCard string) (string, bool)` | recommended | Convert15To18 converts a 15-digit mainland China identity card number to 18 digits. | facade | `ExampleConvert15To18` |
-| `Convert15To18WithOptions` | `func Convert15To18WithOptions(idCard string, opts ...IDCardOption) (string, bool)` | recommended | Convert15To18WithOptions converts a 15-digit mainland China identity card number to 18 digits with options. | facade | — |
+| `Convert15To18WithOptions` | `func Convert15To18WithOptions(idCard string, opts ...IDCardOption) (string, bool)` | recommended | Convert15To18WithOptions converts a 15-digit mainland China identity card number to 18 digits with options. | facade | `ExampleConvert15To18WithOptions` |
 | `Convert18To15` | `func Convert18To15(idCard string) (string, bool)` | recommended | Convert18To15 converts a valid 18-digit mainland China identity card number to 15 digits. | facade | `ExampleConvert18To15` |
-| `Convert18To15WithOptions` | `func Convert18To15WithOptions(idCard string, opts ...IDCardOption) (string, bool)` | recommended | Convert18To15WithOptions converts a valid 18-digit mainland China identity card number to 15 digits with options. | facade | — |
-| `Day` | `func Day(idCard string) (int, bool)` | recommended | Day returns the birth day encoded in idCard. | facade | — |
-| `DistrictCode` | `func DistrictCode(idCard string) (string, bool)` | recommended | DistrictCode returns the district-level code encoded in a 15- or 18-digit identity card number. | facade | — |
+| `Convert18To15WithOptions` | `func Convert18To15WithOptions(idCard string, opts ...IDCardOption) (string, bool)` | recommended | Convert18To15WithOptions converts a valid 18-digit mainland China identity card number to 15 digits with options. | facade | `ExampleConvert18To15WithOptions` |
+| `Day` | `func Day(idCard string) (int, bool)` | recommended | Day returns the birth day encoded in idCard. | facade | `ExampleDay` |
+| `DistrictCode` | `func DistrictCode(idCard string) (string, bool)` | recommended | DistrictCode returns the district-level code encoded in a 15- or 18-digit identity card number. | facade | `ExampleDistrictCode` |
 | `GenderOf` | `func GenderOf(idCard string) (Gender, bool)` | recommended | GenderOf returns the gender encoded in a 15- or 18-digit identity card number. | facade | `ExampleGenderOf` |
 | `Hide` | `func Hide(idCard string, start int, end int) string` | recommended | Hide replaces runes in [start, end) with '*'. | facade | `ExampleHide` |
-| `IsValidBirthday` | `func IsValidBirthday(s string) bool` | recommended | IsValidBirthday reports whether s is a valid yyyyMMdd date. | facade | — |
-| `IsValidBirthdayWithOptions` | `func IsValidBirthdayWithOptions(s string, opts ...BirthOption) bool` | recommended | IsValidBirthdayWithOptions reports whether s is a valid yyyyMMdd date using custom parsing options. | facade | — |
+| `IsValidBirthday` | `func IsValidBirthday(s string) bool` | recommended | IsValidBirthday reports whether s is a valid yyyyMMdd date. | facade | `ExampleIsValidBirthday` |
+| `IsValidBirthdayWithOptions` | `func IsValidBirthdayWithOptions(s string, opts ...BirthOption) bool` | recommended | IsValidBirthdayWithOptions reports whether s is a valid yyyyMMdd date using custom parsing options. | facade | `ExampleIsValidBirthdayWithOptions` |
 | `IsValidCreditCode` | `func IsValidCreditCode(code string) bool` | recommended | IsValidCreditCode reports whether code is a valid unified social credit code. | facade | `ExampleIsValidCreditCode` |
 | `IsValidHKIDCard` | `func IsValidHKIDCard(idCard string) bool` | recommended | IsValidHKIDCard reports whether idCard is a valid Hong Kong identity card number. | facade | — |
 | `IsValidHKIDCardWithOptions` | `func IsValidHKIDCardWithOptions(idCard string, opts ...IDCardOption) bool` | recommended | IsValidHKIDCardWithOptions reports whether idCard is a valid Hong Kong identity card number with options. | facade | — |
-| `IsValidIDCard` | `func IsValidIDCard(idCard string) bool` | recommended | IsValidIDCard reports whether idCard is a valid 18-digit, 15-digit, or Hong Kong/Macau/Taiwan card number. | facade | — |
-| `IsValidIDCard15` | `func IsValidIDCard15(idCard string) bool` | recommended | IsValidIDCard15 reports whether idCard is a valid 15-digit mainland China identity card number. | facade | — |
-| `IsValidIDCard15WithOptions` | `func IsValidIDCard15WithOptions(idCard string, opts ...IDCardOption) bool` | recommended | IsValidIDCard15WithOptions reports whether idCard is a valid 15-digit mainland China identity card number with options. | facade | — |
-| `IsValidIDCard18` | `func IsValidIDCard18(idCard string) bool` | recommended | IsValidIDCard18 reports whether idCard is a valid 18-digit mainland China identity card number. | facade | — |
-| `IsValidIDCard18WithIgnoreCase` | `func IsValidIDCard18WithIgnoreCase(idCard string, ignoreCase bool) bool` | recommended | IsValidIDCard18WithIgnoreCase validates an 18-digit identity card number and controls X/x comparison. | facade | — |
-| `IsValidIDCard18WithIgnoreCaseAndOptions` | `func IsValidIDCard18WithIgnoreCaseAndOptions(idCard string, ignoreCase bool, opts ...IDCardOption) bool` | recommended | IsValidIDCard18WithIgnoreCaseAndOptions validates an 18-digit identity card number with options. | facade | — |
-| `IsValidIDCard18WithOptions` | `func IsValidIDCard18WithOptions(idCard string, opts ...IDCardOption) bool` | recommended | IsValidIDCard18WithOptions reports whether idCard is a valid 18-digit mainland China identity card number with options. | facade | — |
-| `IsValidIDCardWithOptions` | `func IsValidIDCardWithOptions(idCard string, opts ...IDCardOption) bool` | recommended | IsValidIDCardWithOptions reports whether idCard is valid with options. | facade | — |
+| `IsValidIDCard` | `func IsValidIDCard(idCard string) bool` | recommended | IsValidIDCard reports whether idCard is a valid 18-digit, 15-digit, or Hong Kong/Macau/Taiwan card number. | facade | `ExampleIsValidIDCard` |
+| `IsValidIDCard15` | `func IsValidIDCard15(idCard string) bool` | recommended | IsValidIDCard15 reports whether idCard is a valid 15-digit mainland China identity card number. | facade | `ExampleIsValidIDCard15` |
+| `IsValidIDCard15WithOptions` | `func IsValidIDCard15WithOptions(idCard string, opts ...IDCardOption) bool` | recommended | IsValidIDCard15WithOptions reports whether idCard is a valid 15-digit mainland China identity card number with options. | facade | `ExampleIsValidIDCard15WithOptions` |
+| `IsValidIDCard18` | `func IsValidIDCard18(idCard string) bool` | recommended | IsValidIDCard18 reports whether idCard is a valid 18-digit mainland China identity card number. | facade | `ExampleIsValidIDCard18` |
+| `IsValidIDCard18WithIgnoreCase` | `func IsValidIDCard18WithIgnoreCase(idCard string, ignoreCase bool) bool` | recommended | IsValidIDCard18WithIgnoreCase validates an 18-digit identity card number and controls X/x comparison. | facade | `ExampleIsValidIDCard18WithIgnoreCase` |
+| `IsValidIDCard18WithIgnoreCaseAndOptions` | `func IsValidIDCard18WithIgnoreCaseAndOptions(idCard string, ignoreCase bool, opts ...IDCardOption) bool` | recommended | IsValidIDCard18WithIgnoreCaseAndOptions validates an 18-digit identity card number with options. | facade | `ExampleIsValidIDCard18WithIgnoreCaseAndOptions` |
+| `IsValidIDCard18WithOptions` | `func IsValidIDCard18WithOptions(idCard string, opts ...IDCardOption) bool` | recommended | IsValidIDCard18WithOptions reports whether idCard is a valid 18-digit mainland China identity card number with options. | facade | `ExampleIsValidIDCard18WithOptions` |
+| `IsValidIDCardWithOptions` | `func IsValidIDCardWithOptions(idCard string, opts ...IDCardOption) bool` | recommended | IsValidIDCardWithOptions reports whether idCard is valid with options. | facade | `ExampleIsValidIDCardWithOptions` |
 | `IsValidTWIDCard` | `func IsValidTWIDCard(idCard string) bool` | recommended | IsValidTWIDCard reports whether idCard is a valid Taiwan identity card number. | facade | — |
 | `IsValidTWIDCardWithOptions` | `func IsValidTWIDCardWithOptions(idCard string, opts ...IDCardOption) bool` | recommended | IsValidTWIDCardWithOptions reports whether idCard is a valid Taiwan identity card number with options. | facade | — |
-| `Month` | `func Month(idCard string) (int, bool)` | recommended | Month returns the birth month encoded in idCard. | facade | — |
+| `Month` | `func Month(idCard string) (int, bool)` | recommended | Month returns the birth month encoded in idCard. | facade | `ExampleMonth` |
 | `ParseCreditCode` | `func ParseCreditCode(code string) (CreditCodeInfo, error)` | recommended | ParseCreditCode validates and splits a unified social credit code. | facade | `ExampleParseCreditCode` |
 | `ParseIDCard` | `func ParseIDCard(idCard string) (IDCardInfo, bool)` | recommended | ParseIDCard parses a valid 15- or 18-digit mainland China identity card number. | facade | `ExampleParseIDCard` |
 | `ParseRegionCard` | `func ParseRegionCard(idCard string) (RegionCardInfo, bool)` | recommended | ParseRegionCard validates a Hong Kong, Macau or Taiwan identity card number. | facade | `ExampleParseRegionCard` |
 | `ParseRegionCardWithOptions` | `func ParseRegionCardWithOptions(idCard string, opts ...IDCardOption) (RegionCardInfo, bool)` | recommended | ParseRegionCardWithOptions validates a Hong Kong, Macau or Taiwan identity card number with options. | facade | — |
 | `Province` | `func Province(idCard string) (string, bool)` | recommended | Province returns the province name encoded in a 15- or 18-digit identity card number. | facade | `ExampleProvince` |
-| `ProvinceCode` | `func ProvinceCode(idCard string) (string, bool)` | recommended | ProvinceCode returns the province code encoded in a 15- or 18-digit identity card number. | facade | — |
-| `WithAgeClock` | `func WithAgeClock(clock func() time.Time) AgeOption` | recommended | WithAgeClock sets the clock used by AgeWithOptions. | facade | — |
-| `WithAgeTime` | `func WithAgeTime(at time.Time) AgeOption` | recommended | WithAgeTime sets the time used by AgeWithOptions. | facade | — |
-| `WithBirthDigitsMatcher` | `func WithBirthDigitsMatcher(matcher func(string) bool) BirthOption` | recommended | WithBirthDigitsMatcher sets the decimal-digits matcher used by birthday helpers. | facade | — |
-| `WithBirthLocation` | `func WithBirthLocation(location *time.Location) BirthOption` | recommended | WithBirthLocation sets the location used to parse yyyyMMdd birthdays. | facade | — |
-| `WithBirthParser` | `func WithBirthParser(parser func(layout string, value string, location *time.Location) (time.Time, error)) BirthOption` | recommended | WithBirthParser sets the date parser used by birthday helpers. | facade | — |
-| `WithDigitsMatcher` | `func WithDigitsMatcher(matcher func(string) bool) IDCardOption` | recommended | WithDigitsMatcher sets the decimal-digits matcher used by mainland ID card helpers. | facade | — |
+| `ProvinceCode` | `func ProvinceCode(idCard string) (string, bool)` | recommended | ProvinceCode returns the province code encoded in a 15- or 18-digit identity card number. | facade | `ExampleProvinceCode` |
+| `WithAgeClock` | `func WithAgeClock(clock func() time.Time) AgeOption` | recommended | WithAgeClock sets the clock used by AgeWithOptions. | facade | `ExampleWithAgeClock` |
+| `WithAgeTime` | `func WithAgeTime(at time.Time) AgeOption` | recommended | WithAgeTime sets the time used by AgeWithOptions. | facade | `ExampleWithAgeTime` |
+| `WithBirthDigitsMatcher` | `func WithBirthDigitsMatcher(matcher func(string) bool) BirthOption` | recommended | WithBirthDigitsMatcher sets the decimal-digits matcher used by birthday helpers. | facade | `ExampleWithBirthDigitsMatcher` |
+| `WithBirthLocation` | `func WithBirthLocation(location *time.Location) BirthOption` | recommended | WithBirthLocation sets the location used to parse yyyyMMdd birthdays. | facade | `ExampleWithBirthLocation` |
+| `WithBirthParser` | `func WithBirthParser(parser func(layout string, value string, location *time.Location) (time.Time, error)) BirthOption` | recommended | WithBirthParser sets the date parser used by birthday helpers. | facade | `ExampleWithBirthParser` |
+| `WithDigitsMatcher` | `func WithDigitsMatcher(matcher func(string) bool) IDCardOption` | recommended | WithDigitsMatcher sets the decimal-digits matcher used by mainland ID card helpers. | facade | `ExampleWithDigitsMatcher` |
 | `WithHKCardMatcher` | `func WithHKCardMatcher(matcher func(string) bool) IDCardOption` | recommended | WithHKCardMatcher sets the format matcher used by Hong Kong ID card helpers. | facade | — |
 | `WithMacauCardMatcher` | `func WithMacauCardMatcher(matcher func(string) bool) IDCardOption` | recommended | WithMacauCardMatcher sets the format matcher used by Macau ID card helpers. | facade | — |
 | `WithTWCardMatcher` | `func WithTWCardMatcher(matcher func(string) bool) IDCardOption` | recommended | WithTWCardMatcher sets the format matcher used by Taiwan ID card helpers. | facade | — |
-| `Year` | `func Year(idCard string) (int, bool)` | recommended | Year returns the birth year encoded in idCard. | facade | — |
+| `Year` | `func Year(idCard string) (int, bool)` | recommended | Year returns the birth year encoded in idCard. | facade | `ExampleYear` |
 
 ### vimg
 

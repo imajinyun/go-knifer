@@ -4,7 +4,7 @@
   "summary": {
     "package_count": 55,
     "function_count": 2687,
-    "functions_with_examples": 1317,
+    "functions_with_examples": 1346,
     "context_aware_functions": 36,
     "returns_error_functions": 638,
     "variadic_functions": 787,
@@ -21766,8 +21766,8 @@
       "synopsis": "Package vident provides identity and legal identifier helpers.",
       "summary": {
         "function_count": 50,
-        "functions_with_examples": 13,
-        "example_coverage_percent": 26,
+        "functions_with_examples": 42,
+        "example_coverage_percent": 84,
         "status_counts": {
           "compatibility": 0,
           "deprecated": 0,
@@ -21792,12 +21792,12 @@
           "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
         },
         {
-          "name": "AgeAt",
+          "name": "Age",
           "use_when": "Use first for concise trusted-input workflows in vident.",
           "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vident."
         },
         {
-          "name": "Age",
+          "name": "AgeAt",
           "use_when": "Use first for concise trusted-input workflows in vident.",
           "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vident."
         },
@@ -21819,7 +21819,7 @@
           "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
         },
         {
-          "name": "AgeAt",
+          "name": "Age",
           "profile": "day-one",
           "rationale": "Start here for concise, trusted-input use cases in this package."
         }
@@ -21843,7 +21843,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleAge"
+          ]
         },
         {
           "name": "AgeAt",
@@ -21917,7 +21920,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleBirthDate"
+          ]
         },
         {
           "name": "BirthDateWithOptions",
@@ -21941,7 +21947,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleBirthDateWithOptions"
+          ]
         },
         {
           "name": "BirthString",
@@ -21988,7 +21997,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleBirthStringWithOptions"
+          ]
         },
         {
           "name": "CheckCode18",
@@ -22033,7 +22045,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleCheckCode18WithOptions"
+          ]
         },
         {
           "name": "CityCode",
@@ -22053,7 +22068,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleCityCode"
+          ]
         },
         {
           "name": "Convert15To18",
@@ -22100,7 +22118,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleConvert15To18WithOptions"
+          ]
         },
         {
           "name": "Convert18To15",
@@ -22147,7 +22168,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleConvert18To15WithOptions"
+          ]
         },
         {
           "name": "Day",
@@ -22167,7 +22191,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleDay"
+          ]
         },
         {
           "name": "DistrictCode",
@@ -22187,7 +22214,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleDistrictCode"
+          ]
         },
         {
           "name": "GenderOf",
@@ -22259,7 +22289,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsValidBirthday"
+          ]
         },
         {
           "name": "IsValidBirthdayWithOptions",
@@ -22282,7 +22315,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleIsValidBirthdayWithOptions"
+          ]
         },
         {
           "name": "IsValidCreditCode",
@@ -22365,7 +22401,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsValidIDCard"
+          ]
         },
         {
           "name": "IsValidIDCard15",
@@ -22384,7 +22423,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsValidIDCard15"
+          ]
         },
         {
           "name": "IsValidIDCard15WithOptions",
@@ -22407,7 +22449,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleIsValidIDCard15WithOptions"
+          ]
         },
         {
           "name": "IsValidIDCard18",
@@ -22426,7 +22471,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsValidIDCard18"
+          ]
         },
         {
           "name": "IsValidIDCard18WithIgnoreCase",
@@ -22449,7 +22497,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsValidIDCard18WithIgnoreCase"
+          ]
         },
         {
           "name": "IsValidIDCard18WithIgnoreCaseAndOptions",
@@ -22476,7 +22527,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleIsValidIDCard18WithIgnoreCaseAndOptions"
+          ]
         },
         {
           "name": "IsValidIDCard18WithOptions",
@@ -22499,7 +22553,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleIsValidIDCard18WithOptions"
+          ]
         },
         {
           "name": "IsValidIDCardWithOptions",
@@ -22522,7 +22579,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleIsValidIDCardWithOptions"
+          ]
         },
         {
           "name": "IsValidTWIDCard",
@@ -22584,7 +22644,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleMonth"
+          ]
         },
         {
           "name": "ParseCreditCode",
@@ -22720,7 +22783,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleProvinceCode"
+          ]
         },
         {
           "name": "WithAgeClock",
@@ -22739,7 +22805,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithAgeClock"
+          ]
         },
         {
           "name": "WithAgeTime",
@@ -22758,7 +22827,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithAgeTime"
+          ]
         },
         {
           "name": "WithBirthDigitsMatcher",
@@ -22777,7 +22849,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithBirthDigitsMatcher"
+          ]
         },
         {
           "name": "WithBirthLocation",
@@ -22796,7 +22871,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithBirthLocation"
+          ]
         },
         {
           "name": "WithBirthParser",
@@ -22815,7 +22893,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithBirthParser"
+          ]
         },
         {
           "name": "WithDigitsMatcher",
@@ -22834,7 +22915,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithDigitsMatcher"
+          ]
         },
         {
           "name": "WithHKCardMatcher",
@@ -22911,7 +22995,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleYear"
+          ]
         }
       ]
     },

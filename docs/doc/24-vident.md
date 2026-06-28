@@ -82,6 +82,7 @@ func main() {
 	id15, ok := vident.Convert18To15("11010519491231002X")
 	fmt.Println(id15, ok)
 	fmt.Println(vident.IsValidIDCard("11010519491231002X"))
+	fmt.Println(vident.IsValidIDCard18WithIgnoreCase("11010519491231002x", true))
 }
 ```
 
@@ -105,8 +106,15 @@ func main() {
 	age, ok := vident.AgeAt(id, time.Date(2024, 12, 31, 0, 0, 0, 0, time.Local))
 	fmt.Println(age, ok)
 	fmt.Println(vident.IsValidBirthday("19491231"))
+
+	age, ok = vident.AgeWithOptions(id, vident.WithAgeClock(func() time.Time {
+		return time.Date(2024, 12, 30, 0, 0, 0, 0, time.Local)
+	}))
+	fmt.Println(age, ok)
 }
 ```
+
+Use `BirthDateWithOptions`, `BirthStringWithOptions`, `IsValidBirthdayWithOptions`, `WithBirthLocation`, `WithBirthParser`, and `WithBirthDigitsMatcher` when tests or import jobs need a fixed parser, a fixed location, or a custom digit policy.
 
 ## Parse gender and region information
 
@@ -129,6 +137,13 @@ func main() {
 	fmt.Println(info.Province, info.CityCode, info.DistrictCode)
 	fmt.Println(info.Gender == vident.GenderFemale)
 	fmt.Println(vident.Province(id))
+	fmt.Println(vident.ProvinceCode(id))
+	fmt.Println(vident.CityCode(id))
+	fmt.Println(vident.DistrictCode(id))
+	year, _ := vident.Year(id)
+	month, _ := vident.Month(id)
+	day, _ := vident.Day(id)
+	fmt.Println(year, month, day)
 }
 ```
 
@@ -149,6 +164,12 @@ func main() {
 
 	fmt.Println(vident.IsValidTWIDCard("A123456789"))
 	fmt.Println(vident.Hide("11010519491231002X", 6, 14))
+
+	rejected := vident.IsValidIDCard18WithOptions(
+		"11010519491231002X",
+		vident.WithDigitsMatcher(func(string) bool { return false }),
+	)
+	fmt.Println(rejected)
 }
 ```
 
