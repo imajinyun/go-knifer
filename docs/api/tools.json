@@ -4,7 +4,7 @@
   "summary": {
     "package_count": 55,
     "function_count": 2687,
-    "functions_with_examples": 1406,
+    "functions_with_examples": 1412,
     "context_aware_functions": 36,
     "returns_error_functions": 638,
     "variadic_functions": 787,
@@ -13946,8 +13946,8 @@
       "synopsis": "Package vfile provides public APIs for file and IO utilities.",
       "summary": {
         "function_count": 68,
-        "functions_with_examples": 62,
-        "example_coverage_percent": 91.2,
+        "functions_with_examples": 68,
+        "example_coverage_percent": 100,
         "status_counts": {
           "compatibility": 0,
           "deprecated": 0,
@@ -14405,7 +14405,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsArchive"
+          ]
         },
         {
           "name": "IsAudio",
@@ -14424,7 +14427,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsAudio"
+          ]
         },
         {
           "name": "IsDirectory",
@@ -14491,7 +14497,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsDocument"
+          ]
         },
         {
           "name": "IsFile",
@@ -14558,7 +14567,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsImage"
+          ]
         },
         {
           "name": "IsVideo",
@@ -14577,7 +14589,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsVideo"
+          ]
         },
         {
           "name": "MainName",
@@ -15226,7 +15241,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWithCharset"
+          ]
         },
         {
           "name": "WithCreateParents",

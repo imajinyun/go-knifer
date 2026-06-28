@@ -660,6 +660,18 @@ func ExampleWithUnlimitedRead() {
 	// Output: abcd
 }
 
+func ExampleWithCharset() {
+	content, err := vfile.ReadStringWithOptions(
+		strings.NewReader(string([]byte{0xE9})),
+		vfile.WithCharset("iso-8859-1"),
+	)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(content)
+	// Output: é
+}
+
 func ExampleDetectFileType() {
 	ft, err := vfile.DetectFileType(strings.NewReader("%PDF-1.7\n"))
 	if err != nil {
@@ -682,6 +694,36 @@ func ExampleDetectFileTypeBytes() {
 	// Output:
 	// image true
 	// true
+}
+
+func ExampleIsImage() {
+	ft := vfile.DetectFileTypeBytes([]byte{0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A})
+	fmt.Println(vfile.IsImage(ft))
+	// Output: true
+}
+
+func ExampleIsVideo() {
+	ft := vfile.DetectFileTypeBytes([]byte{0x00, 0x00, 0x00, 0x18, 'f', 't', 'y', 'p', 'm', 'p', '4', '2'})
+	fmt.Println(vfile.IsVideo(ft))
+	// Output: true
+}
+
+func ExampleIsAudio() {
+	ft := vfile.DetectFileTypeBytes([]byte("ID3"))
+	fmt.Println(vfile.IsAudio(ft))
+	// Output: true
+}
+
+func ExampleIsArchive() {
+	ft := vfile.DetectFileTypeBytes([]byte{'P', 'K', 0x03, 0x04})
+	fmt.Println(vfile.IsArchive(ft))
+	// Output: true
+}
+
+func ExampleIsDocument() {
+	ft := vfile.DetectFileTypeBytes([]byte("%PDF-1.7"))
+	fmt.Println(vfile.IsDocument(ft))
+	// Output: true
 }
 
 func ExampleDetectFileTypeFromPath() {

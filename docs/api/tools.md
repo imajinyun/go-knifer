@@ -12,7 +12,7 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Module | `github.com/imajinyun/knifer-go` |
 | Packages | 55 |
 | Functions | 2687 |
-| Functions with examples | 1406 |
+| Functions with examples | 1412 |
 | Context-aware functions | 36 |
 | Functions returning error | 638 |
 | Variadic functions | 787 |
@@ -1061,7 +1061,7 @@ Import path: `github.com/imajinyun/knifer-go/vfile`
 
 Package vfile provides public APIs for file and IO utilities.
 
-Quality: 68 functions · 62 with examples · 91.2% example coverage · statuses: recommended=68, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=62, internal=6, empty=0
+Quality: 68 functions · 68 with examples · 100.0% example coverage · statuses: recommended=68, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=62, internal=6, empty=0
 
 Recommended entrypoints:
 
@@ -1098,15 +1098,15 @@ Golden path API set:
 | `Exists` | `func Exists(path string) bool` | recommended | Exists reports whether a file or directory exists at path. | facade | `ExampleExists` |
 | `ExistsWithOptions` | `func ExistsWithOptions(path string, opts ...StatOption) bool` | recommended | ExistsWithOptions reports whether a file or directory exists using per-call stat options. | facade | `ExampleExistsWithOptions` |
 | `Extension` | `func Extension(path string) string` | recommended | Extension returns the file extension without the leading dot, or an empty string when absent. | internal | `ExampleExtension` |
-| `IsArchive` | `func IsArchive(ft FileType) bool` | recommended | IsArchive reports whether ft is an archive file type. | facade | — |
-| `IsAudio` | `func IsAudio(ft FileType) bool` | recommended | IsAudio reports whether ft is an audio file type. | facade | — |
+| `IsArchive` | `func IsArchive(ft FileType) bool` | recommended | IsArchive reports whether ft is an archive file type. | facade | `ExampleIsArchive` |
+| `IsAudio` | `func IsAudio(ft FileType) bool` | recommended | IsAudio reports whether ft is an audio file type. | facade | `ExampleIsAudio` |
 | `IsDirectory` | `func IsDirectory(path string) bool` | recommended | IsDirectory reports whether path exists and is a directory. | facade | `ExampleIsDirectory` |
 | `IsDirectoryWithOptions` | `func IsDirectoryWithOptions(path string, opts ...StatOption) bool` | recommended | IsDirectoryWithOptions reports whether path exists and is a directory using per-call stat options. | facade | `ExampleIsDirectoryWithOptions` |
-| `IsDocument` | `func IsDocument(ft FileType) bool` | recommended | IsDocument reports whether ft is a document file type. | facade | — |
+| `IsDocument` | `func IsDocument(ft FileType) bool` | recommended | IsDocument reports whether ft is a document file type. | facade | `ExampleIsDocument` |
 | `IsFile` | `func IsFile(path string) bool` | recommended | IsFile reports whether path exists and is a regular file. | facade | `ExampleIsFile` |
 | `IsFileWithOptions` | `func IsFileWithOptions(path string, opts ...StatOption) bool` | recommended | IsFileWithOptions reports whether path exists and is a regular file using per-call stat options. | facade | `ExampleIsFileWithOptions` |
-| `IsImage` | `func IsImage(ft FileType) bool` | recommended | IsImage reports whether ft is an image file type. | facade | — |
-| `IsVideo` | `func IsVideo(ft FileType) bool` | recommended | IsVideo reports whether ft is a video file type. | facade | — |
+| `IsImage` | `func IsImage(ft FileType) bool` | recommended | IsImage reports whether ft is an image file type. | facade | `ExampleIsImage` |
+| `IsVideo` | `func IsVideo(ft FileType) bool` | recommended | IsVideo reports whether ft is a video file type. | facade | `ExampleIsVideo` |
 | `MainName` | `func MainName(path string) string` | recommended | MainName returns the file name without its extension; parent directories are ignored. | internal | `ExampleMainName` |
 | `Mkdir` | `func Mkdir(dir string, opts ...DirOption) error` | recommended | Mkdir creates dir with directory options. | facade | `ExampleMkdir` |
 | `MkdirWithOptions` | `func MkdirWithOptions(dir string, opts ...DirOption) error` | recommended | MkdirWithOptions creates dir with per-call directory options. | facade | `ExampleMkdirWithOptions` |
@@ -1132,7 +1132,7 @@ Golden path API set:
 | `Touch` | `func Touch(path string, opts ...WriteOption) error` | recommended | Touch creates path when missing and updates its timestamp. | facade | `ExampleTouch` |
 | `TouchWithOptions` | `func TouchWithOptions(path string, opts ...WriteOption) error` | recommended | TouchWithOptions creates path when missing using per-call write options. | facade | `ExampleTouchWithOptions` |
 | `WithBufferSize` | `func WithBufferSize(n int) ReadOption` | recommended | WithBufferSize sets the buffer size used by chunk reads and limited copies. | facade | `ExampleWithBufferSize` |
-| `WithCharset` | `func WithCharset(charset string) ReadOption` | recommended | WithCharset converts file string and line reads from charset to UTF-8. | facade | — |
+| `WithCharset` | `func WithCharset(charset string) ReadOption` | recommended | WithCharset converts file string and line reads from charset to UTF-8. | facade | `ExampleWithCharset` |
 | `WithCreateParents` | `func WithCreateParents(create bool) WriteOption` | recommended | WithCreateParents controls whether parent directories are created automatically. | facade | `ExampleWithCreateParents` |
 | `WithDirPerm` | `func WithDirPerm(perm fs.FileMode) WriteOption` | recommended | WithDirPerm sets the parent-directory permission used when creating directories. | facade | `ExampleWithDirPerm` |
 | `WithFilePerm` | `func WithFilePerm(perm fs.FileMode) WriteOption` | recommended | WithFilePerm sets the file permission used when creating files. | facade | `ExampleWithFilePerm` |
