@@ -892,7 +892,7 @@
     "roadmap_path": "docs/superpowers/plans/49-roadmap.md",
     "cookbook_path": "docs/doc/safe-crypto-cookbook.md",
     "sprint": 24,
-    "status": "active",
+    "status": "completed",
     "packages": ["vcrypto", "vrand", "vjwt"],
     "required_scenarios": [
       "Generate Secret Material",

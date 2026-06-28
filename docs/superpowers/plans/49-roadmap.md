@@ -88,7 +88,7 @@ The Hutool gap-closure lane is implemented and the active work has moved from fe
 | 21 | Completed | Roadmap Governance Drift Control | Kept roadmap state synchronized with generated API catalog evidence and enforced baseline plus star-domain metric drift through governance gates. |
 | 22 | Completed | Large Facade Example Depth Governance | Enforced non-regression baselines for `vhttp`, `vnet`, `vnum`, `vresty`, and `vzip`; implementation passes raised `vnum` to 53, `vzip` to 68, `vnet` to 97, `vhttp` to 146, and `vresty` to 120 covered APIs. |
 | 23 | Completed | Safe HTTP Cookbook Governance | Added cookbook-grade scenario guidance for `vhttp`, `vresty`, and `vurl`, then guarded the lane with generated catalog and governance evidence. |
-| 24 | Active | Safe Crypto Cookbook Governance | Add cookbook-grade scenario and comparison guidance for `vcrypto`, `vrand`, and `vjwt`, then guard the lane with governance evidence. |
+| 24 | Completed | Safe Crypto Cookbook Governance | Added cookbook-grade scenario and comparison guidance for `vcrypto`, `vrand`, and `vjwt`, then guarded the lane with governance evidence. |
 
 ## Active workflow
 
@@ -96,7 +96,7 @@ Sprint 22 completed large-facade example-depth governance: `example_depth_govern
 
 Sprint 23 completed Safe HTTP cookbook depth: `safe_http_cookbook_governance` records the governed cookbook path, required scenarios, required checks, and scorecard status for `vhttp`, `vresty`, and `vurl`.
 
-Sprint 24 is now the active governance lane for Safe Crypto cookbook depth. It should turn the Safe crypto scorecard's missing comparison and cookbook status into machine-checked scenario guidance for `vcrypto`, `vrand`, and `vjwt`.
+Sprint 24 completed Safe Crypto cookbook depth: `safe_crypto_cookbook_governance` records the governed cookbook path, required scenarios, required checks, and scorecard status for `vcrypto`, `vrand`, and `vjwt`.
 
 Recommended roadmap loop:
 
