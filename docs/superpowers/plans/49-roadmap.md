@@ -1,0 +1,140 @@
+# knifer-go Next-Phase Capability Roadmap
+
+This roadmap tracks the next development phase after the tool catalog quality sprints. It prioritizes scenario mindshare, deeper high-value modules, documentation and benchmark trust, and explicit ecosystem adapter lanes.
+
+## Baseline
+
+This baseline is derived from `docs/api/tools.json.summary`. `make governance-maturity-check` validates the table so roadmap numbers cannot silently drift from the generated public API catalog.
+
+| Metric | Value |
+| --- | ---: |
+| Public facade packages | 55 |
+| Public functions | 2724 |
+| Functions with executable examples | 1425 |
+| Context-aware functions | 36 |
+| Functions returning errors | 666 |
+| Recommended public functions | 2702 |
+| Compatibility public functions | 22 |
+| Empty function synopses | 0 |
+| Facade-sourced function synopses | 2071 |
+| Internal-sourced function synopses | 653 |
+
+## 90-Day Star Domain Scorecard
+
+| Domain | Public functions | Examples | Example ratio | Internal coverage | Facade coverage | Benchmark count | Recommended API docs status | FAQ status | Comparison page status | Cookbook status |
+| --- | ---: | ---: | ---: | --- | --- | ---: | --- | --- | --- | --- |
+| Safe HTTP (`vhttp`, `vresty`, `vurl`) | 364 | 209 | 57.4% | `internal/httpx/http` 85.0%, `internal/httpx/resty` 80.4%, `internal/url` 87.7%, shared helpers 86.8% | `vhttp` 100.0%, `vresty` 100.0%, `vurl` 100.0% | 10 | Present in `docs/doc/README.md`, `docs/doc/22-vhttp.md`, and `docs/doc/41-vresty.md` | Present in `docs/doc/22-vhttp.md` and `docs/doc/41-vresty.md` | Present in `docs/doc/22-vhttp.md` and `docs/doc/41-vresty.md` | Missing |
+| Safe crypto (`vcrypto`, `vrand`, `vjwt`) | 211 | 187 | 88.6% | `internal/crypto` 94.1%, `internal/rand` 94.2%, `internal/jwt` 85.5% | `vcrypto` 100.0%, `vrand` 100.0%, `vjwt` 100.0% | 7 | Present in `docs/doc/11-vcrypto.md` and `docs/doc/38-vrand.md` | Present in `docs/doc/11-vcrypto.md` and `docs/doc/38-vrand.md` | Missing | Missing |
+| Daily JSON/file (`vjson`, `vfile`) | 133 | 133 | 100.0% | `internal/json` 88.9%, `internal/file` 88.6% | `vjson` 100.0%, `vfile` 100.0% | 4 | Present in `docs/doc/27-vjson.md` for JSON and `docs/doc/17-vfile.md` for file workflows | Missing | Present in `docs/doc/27-vjson.md` for JSON stdlib boundary; filesystem safety guidance present in `docs/doc/17-vfile.md` | Present in `docs/doc/27-vjson.md` and `docs/doc/17-vfile.md` |
+
+## Strategic themes
+
+1. **Scenario mindshare** — help users choose the right package for a concrete task before adding more APIs.
+2. **Deep modules** — improve high-value existing packages where users already expect depth.
+3. **Documentation and benchmark trust** — make claims testable through examples, benchmarks, release signals, and clear boundaries.
+4. **Ecosystem adapters** — schedule AI, FTP, SSH/SFTP, pinyin, tokenization, multi-template engines, and CLI utilities as explicit development lanes.
+
+## Recent capability closure
+
+The Hutool gap-closure lane is implemented and the active work has moved from feature parity to governance depth. Recent commits landed the main Chinese-market and high-frequency utility gaps:
+
+| Area | Package | Status | Evidence |
+| --- | --- | --- | --- |
+| SM2/SM3/SM4 national crypto | `vcrypto` | Completed | `b9f7459 feat(vcrypto): add SM2 SM3 SM4 helpers` |
+| Image rotation and watermarks | `vimg` | Completed | `6447fa7 feat(vimg): add rotation and watermark helpers` |
+| Consistent hashing contracts | `vhash` | Completed | `81aa58d test(vhash): harden consistent hash contracts` |
+| Magic-number file type detection | `vfile` | Completed | `e72742d test(vfile): expand file type detection coverage` |
+| BOM and charset contracts | `vstr` | Completed | `6e92a59 test(vstr): expand bom and charset contracts` |
+| Lunar calendar, credit code, coordinates, codec, weighted random | `vdate`, `vident`, `vgeo`, `vcodec`, `vrand` | Completed | Covered by facade docs, executable examples, generated catalog entries, and focused tests |
+
+## Capability matrix
+
+| Area | Current package | Gap | Priority | First deliverable |
+| --- | --- | --- | --- | --- |
+| Collections | `vslice`, `vmap` | Error-aware transforms and typed window/zip helpers are now implemented; remaining depth is advanced partitioning and benchmark comparison narrative | P1 | Completed Sprint 10 with tests, examples, benchmarks, and generated catalogs |
+| Bean mapping | `vbean`, `vmap` | copy/decode/merge semantics, deep copy, decode hooks, unused-key metadata, default merge | P1 | Define copy/decode/merge contract docs and focused tests |
+| Conversion | `vconv` | explicit error-returning scalar conversions, weak-input docs, overflow-safe integer narrowing, and named-type examples are implemented | P1 | Completed Sprint 19 with contract docs, examples, tests, and generated catalogs |
+| Validation | `vform`, `vident` | struct tag validation remains delegated; identity validation now includes unified social credit code parsing | P1 | Completed validation direction and credit-code helper coverage |
+| Benchmarks | existing benchmark files | public benchmark narrative and competitor-neutral baselines | P1 | Add benchmark trust section and stable benchmark commands |
+| Examples | all large facades | low function-level example ratio in large packages | P1 | Raise reader-facing examples in `vhttp`, `vnet`, `vnum`, `vresty`, and `vzip` |
+| CLI utilities | `vcli` | command args, environment helpers, process execution, terminal IO helpers | P1 | Completed `vcli` MVP with context-aware execution |
+| AI adapters | `vai` | provider abstraction for chat, embeddings, streaming, and tool calls | P1 | Completed provider-injected adapter foundation with fake-provider tests |
+| Multi-template engines | `vtpl` | engine abstraction beyond `html/template` | P2 | Define adapter interface and preserve the standard template baseline |
+| FTP | `vftp` | client helpers, upload/download/list, context support, provider injection | P2 | Completed provider-injected contract; remaining depth is real-client adapter examples |
+| SSH/SFTP | `vssh` | SSH command execution and SFTP file transfer helpers | P2 | Completed provider-injected contract; remaining depth is host-key and transfer examples |
+| Pinyin | `vhan` | Chinese transliteration helpers | P2 | Completed deterministic provider contract |
+| Tokenization | `vtok` | Chinese text segmentation adapters | P2 | Completed deterministic provider contract |
+| Database | `vdb` | context-first APIs, dialect depth, batch/upsert/scan helpers | P2 | Create a `vdb` deepening backlog and focused tests |
+| Crypto | `vcrypto`, `vjwt`, `vrand` | SM2/SM3/SM4 and weighted random are implemented; remaining depth is TOTP/HOTP, password hashing, and JWK/JWKS | P2 | Keep insecure or legacy algorithms behind explicit interoperability APIs |
+| Office | `vpoi` | streaming Excel, styles, formulas, images, Word/OFD scope decision | P2 | Decide the `vpoi` scope before adding broad Office dependencies |
+| Image | `vimg` | crop, resize, rotate, flip, grayscale, JPEG compression, and watermarks are implemented; remaining depth is EXIF/color profile/streaming scope | P3 | Add deterministic fixtures and benchmark notes for advanced image lanes |
+
+## Sprint order
+
+| Sprint | Status | Name | Outcome |
+| --- | --- | --- | --- |
+| 9 | Completed (`16a7e1b`) | Capability Matrix and Trust Roadmap | Published this roadmap and linked it from the documentation hub. |
+| 10 | Completed (`f9101b5`) | Collection Mindshare | Deepened `vslice` and `vmap` with error-aware transforms, typed windows/pairs, examples, benchmarks, docs, and generated catalogs. |
+| 11 | Completed (`72fbab1`) | Bean Copy/Decode/Merge Semantics | Split `vbean` behavior into documented copy, decode, and merge lanes. |
+| 12 | Completed | Validation Direction | Recorded the validation boundary and kept struct-tag validation delegated to `go-playground/validator/v10`. |
+| 13 | Completed (`4189f9e`) | Benchmark and Example Trust | Added benchmark-suite coverage, deterministic examples, benchmark-trust guidance, generated catalogs, and full governance validation. |
+| 14 | Completed (`17915cf`) | Developer Experience Adapters | Implemented the `vcli` MVP with context-aware execution, flag parsing, subcommand routing, examples, benchmarks, docs, and generated catalogs. |
+| 15 | Completed | Ecosystem Adapter Lane 1 | Implemented the `vai` AI adapter foundation with provider injection, context-aware chat and embedding APIs, examples, benchmarks, docs, and generated catalogs. |
+| 16 | Completed | Ecosystem Adapter Lane 2 | Implemented dependency-free `vftp`, `vssh`, `vhan`, and `vtok` adapter contracts with provider injection, limits, examples, benchmarks, docs, catalogs, and governance validation. |
+| 17 | Completed | Deep Business Modules | Completed `vdb`, `vcrypto`, `vpoi`, and `vimg` contract deepening with tests, examples, benchmarks, docs, generated catalogs, and governance validation. |
+| 18 | Completed | Multi-Template Adapter Lane | Deepened `vtpl` with engine-neutral adapters, explicit HTML/text engine selection, context-first rendering, and contract tests before any optional third-party adapters. |
+| 19 | Completed | Conversion Contract Clarity | Added explicit-error scalar conversions to `vconv`, documented weak-input semantics, added overflow-safe E integer narrowing, covered named scalar types, and kept zero/default helpers backward-compatible. |
+| 20 | Completed | Hutool Gap Capability Closure | Completed national crypto, lunar calendar, credit code, coordinate conversion, codec expansion, weighted random, file type detection, BOM/charset, image operations, and consistent hash coverage across facades, docs, examples, and tests. |
+| 21 | Active | Roadmap Governance Drift Control | Keep roadmap state synchronized with generated API catalog evidence and enforce baseline drift through governance gates. |
+
+## Active workflow
+
+Sprint 20 completed the Hutool gap capability closure across Chinese-market differentiators and high-frequency utility helpers. Sprint 21 is a governance synchronization lane: keep roadmap evidence aligned with the generated API catalog, make drift machine-detectable, and then continue into the highest user-facing depth gaps: large-facade example depth (`vhttp`, `vnet`, `vnum`, `vresty`, `vzip`) and remaining benchmark narrative improvements.
+
+Recommended roadmap loop:
+
+1. Inventory current deep-business package APIs, examples, quickstart docs, benchmark coverage, and generated catalog entries.
+2. Define the selected contract explicitly, including security defaults, sentinel error behavior, defensive copying, benchmark scope, and trusted escape hatches.
+3. Add focused internal and facade tests for the selected contract before implementation changes.
+4. Add deterministic `ExampleXxx` coverage for reader-facing behavior and benchmark baselines only for stable hot paths.
+5. Update quickstart docs, `docs/api/exports.txt`, `docs/api/tools.json`, and `docs/api/tools.md` when public facade APIs or examples change.
+6. Validate with focused package tests first, then the governance gates listed below.
+
+## Scenario guidance
+
+| Scenario | Use now | Planned lane |
+| --- | --- | --- |
+| Transform slices/maps with type-safe helpers | `vslice`, `vmap` | Error-aware transforms and window/zip helpers are available; remaining lane is advanced grouping/partitioning and benchmark comparison narrative |
+| Copy, decode, or merge struct/map data | `vbean`, `vmap` | copy/decode/merge semantic split with deep-copy and metadata options |
+| Validate common strings and identity formats | `vform`, `vident` | credit code validation is available; broader struct-tag validation remains delegated to `go-playground/validator` |
+| Build safe HTTP clients or open untrusted URLs | `vhttp`, `vresty`, `vurl` | more examples and benchmarked helper paths |
+| Build CLI or terminal utilities | `vcli` plus the standard library | deeper `venv`, `vdump`, and `vtest` lanes remain possible |
+| Call AI model providers | `vai` for provider-injected contracts; provider SDKs for production transport | deeper streaming and tool-call adapter examples remain planned |
+| Transfer files over FTP or SSH/SFTP | `vftp` and `vssh` for provider-injected contracts; dedicated clients for real network transfers | planned deeper connection/provider examples |
+| Convert Chinese text to pinyin or tokenize text | `vhan` and `vtok` for provider-injected NLP contracts; dedicated NLP libraries for real dictionaries and segmentation | planned deeper provider examples |
+| Render templates beyond `html/template` | `vtpl` for standard templates | planned multi-template adapter lane |
+
+## Engineering constraints
+
+- Planned lanes are not public APIs until packages are implemented, tested, documented, and added to the API snapshot.
+- New public facade packages must follow the existing `internal/<domain>` plus `v<domain>` architecture.
+- New public APIs must include godoc comments, deterministic tests, examples where reader-facing, API snapshot updates, and generated tool catalog updates.
+- Security-sensitive lanes such as AI, FTP, SSH/SFTP, HTTP, crypto, JWT, archive, file, URL, config, random, ID, and DB helpers must use explicit errors and provider injection for tests.
+- Ecosystem adapters should isolate optional dependencies behind narrow interfaces so unrelated users do not pay dependency or attack-surface costs.
+- Benchmark documentation must describe baselines and commands, not claim universal performance wins.
+
+## Validation gates for roadmap-driven work
+
+Run focused tests first, then the standard governance gates for the touched area:
+
+```bash
+go test ./internal/<domain> ./v<domain>
+UPDATE_API=1 make api-check
+make docs-gen
+make docs-check
+make tools-check
+make agent-check
+make agent-security-check
+```
+
+Use `make bench-smoke` for benchmark-suite health and package-specific `go test -bench=. -benchmem -run=^$ ./<packages>` for benchmark baselines.

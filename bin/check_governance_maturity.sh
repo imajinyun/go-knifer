@@ -46,6 +46,31 @@ def require_string_list(value: object, path: str) -> list[str]:
 	return items
 
 
+def extract_markdown_table(path: Path, heading: str) -> dict[str, int]:
+	try:
+		text = path.read_text(encoding="utf-8")
+	except FileNotFoundError:
+		add_error(f"{path.relative_to(root).as_posix()} must exist")
+		return {}
+	match = re.search(rf"^## {re.escape(heading)}\n(?P<body>.*?)(?=^## |\Z)", text, flags=re.MULTILINE | re.DOTALL)
+	if not match:
+		add_error(f"{path.relative_to(root).as_posix()} must contain ## {heading}")
+		return {}
+	values: dict[str, int] = {}
+	for line in match.group("body").splitlines():
+		if not line.startswith("|"):
+			continue
+		columns = [column.strip() for column in line.strip().strip("|").split("|")]
+		if len(columns) != 2 or columns[0] in {"Metric", "---"} or set(columns[0]) <= {"-", ":"}:
+			continue
+		number = columns[1].replace(",", "")
+		if not re.fullmatch(r"\d+", number):
+			add_error(f"{path.relative_to(root).as_posix()} {heading} metric {columns[0]!r} must be an integer, got {columns[1]!r}")
+			continue
+		values[columns[0]] = int(number)
+	return values
+
+
 def file_exists(reference: str) -> bool:
 	path = reference.split(":", 1)[0]
 	return (root / path).exists()
@@ -142,6 +167,41 @@ def validate_benchmark_regression() -> None:
 	for target in ("bench-baseline", "bench-compare", "bench-regression-check", "benchstat"):
 		if not re.search(rf"^{re.escape(target)}:(?:\s|$)", makefile, flags=re.MULTILINE):
 			add_error(f"Makefile must define benchmark target {target}")
+
+
+def validate_roadmap_catalog_baseline() -> None:
+	summary = require_mapping(tools.get("summary"), "docs/api/tools.json.summary")
+	status_counts = require_mapping(summary.get("status_counts"), "docs/api/tools.json.summary.status_counts")
+	synopsis_sources = require_mapping(summary.get("synopsis_sources"), "docs/api/tools.json.summary.synopsis_sources")
+	expected = {
+		"Public facade packages": summary.get("package_count"),
+		"Public functions": summary.get("function_count"),
+		"Functions with executable examples": summary.get("functions_with_examples"),
+		"Context-aware functions": summary.get("context_aware_functions"),
+		"Functions returning errors": summary.get("returns_error_functions"),
+		"Recommended public functions": status_counts.get("recommended"),
+		"Compatibility public functions": status_counts.get("compatibility"),
+		"Empty function synopses": synopsis_sources.get("empty"),
+		"Facade-sourced function synopses": synopsis_sources.get("facade"),
+		"Internal-sourced function synopses": synopsis_sources.get("internal"),
+	}
+	actual = extract_markdown_table(root / "docs/superpowers/plans/49-roadmap.md", "Baseline")
+	for metric, expected_value in expected.items():
+		if not isinstance(expected_value, int) or isinstance(expected_value, bool):
+			add_error(f"docs/api/tools.json.summary source for {metric} must be an integer")
+			continue
+		actual_value = actual.get(metric)
+		if actual_value is None:
+			add_error(f"docs/superpowers/plans/49-roadmap.md Baseline missing metric {metric}")
+			continue
+		if actual_value != expected_value:
+			add_error(
+				"docs/superpowers/plans/49-roadmap.md Baseline "
+				f"{metric}={actual_value} must match docs/api/tools.json.summary value {expected_value}"
+			)
+	extra_metrics = sorted(set(actual) - set(expected))
+	if extra_metrics:
+		add_error("docs/superpowers/plans/49-roadmap.md Baseline includes unmanaged metric(s): " + ", ".join(extra_metrics))
 
 
 def validate_local_governance_gates() -> None:
@@ -455,6 +515,7 @@ def validate_threat_model() -> None:
 validate_benchmark_regression()
 if not bench_only:
 	validate_local_governance_gates()
+	validate_roadmap_catalog_baseline()
 	validate_api_convergence()
 	validate_lifecycle()
 	validate_capability_domains()
