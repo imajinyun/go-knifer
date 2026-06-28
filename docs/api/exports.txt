@@ -626,16 +626,24 @@ github.com/imajinyun/knifer-go/vcrypto
   func GenAESKeyWithOptions(size int, opts ...RandomOption) ([]byte, error)
   func GenRSAKey(bits int) (*crypto/rsa.PrivateKey, error)
   func GenRSAKeyWithOptions(bits int, opts ...RSAOption) (*crypto/rsa.PrivateKey, error)
+  func GenSM2Key() (*SM2PrivateKey, error)
+  func GenSM2KeyWithOptions(opts ...SM2Option) (*SM2PrivateKey, error)
+  func GenSM4Key() ([]byte, error)
+  func GenSM4KeyWithOptions(opts ...RandomOption) ([]byte, error)
   func HMACBytes(fn func() hash.Hash, key []byte, data []byte) []byte
   func HMACEqual(a []byte, b []byte) bool
   func HMACHex(fn func() hash.Hash, key []byte, data []byte) string
   func HMACSHA256Hex(key []byte, data []byte) string
   func HMACSHA384Hex(key []byte, data []byte) string
   func HMACSHA512Hex(key []byte, data []byte) string
+  func HMACSM3Bytes(key []byte, data []byte) []byte
+  func HMACSM3Hex(key []byte, data []byte) string
   func PBKDF2(password []byte, salt []byte, iterations int, keyLen int, fn func() hash.Hash) ([]byte, error)
   func PBKDF2SHA256(password []byte, salt []byte, iterations int, keyLen int) ([]byte, error)
   func ParseRSAPrivateKeyPEM(data []byte) (*crypto/rsa.PrivateKey, error)
   func ParseRSAPublicKeyPEM(data []byte) (*crypto/rsa.PublicKey, error)
+  func ParseSM2PrivateKeyPEM(data []byte) (*SM2PrivateKey, error)
+  func ParseSM2PublicKeyPEM(data []byte) (*SM2PublicKey, error)
   func ParseX509CertificatePEM(data []byte) (*crypto/x509.Certificate, error)
   func PrivateKeyToPEM(priv *crypto/rsa.PrivateKey) []byte
   func PrivateKeyToPKCS8PEM(priv *crypto/rsa.PrivateKey) ([]byte, error)
@@ -662,6 +670,27 @@ github.com/imajinyun/knifer-go/vcrypto
   func SHA512(data []byte) []byte
   func SHA512Hex(s string) string
   func SHA512HexBytes(data []byte) string
+  func SM2Decrypt(cipherText []byte, priv *SM2PrivateKey) ([]byte, error)
+  func SM2Encrypt(plain []byte, pub *SM2PublicKey) ([]byte, error)
+  func SM2EncryptWithOptions(plain []byte, pub *SM2PublicKey, opts ...SM2Option) ([]byte, error)
+  func SM2PrivateKeyToPEM(priv *SM2PrivateKey) ([]byte, error)
+  func SM2PublicKeyToPEM(pub *SM2PublicKey) ([]byte, error)
+  func SM2Sign(data []byte, priv *SM2PrivateKey) ([]byte, error)
+  func SM2SignWithOptions(data []byte, priv *SM2PrivateKey, opts ...SM2Option) ([]byte, error)
+  func SM2Verify(data []byte, sig []byte, pub *SM2PublicKey) error
+  func SM2VerifyWithOptions(data []byte, sig []byte, pub *SM2PublicKey, opts ...SM2Option) error
+  func SM3(data []byte) []byte
+  func SM3Equal(a []byte, b []byte) bool
+  func SM3Hex(data []byte) string
+  func SM3New() hash.Hash
+  func SM4DecryptCBC(cipherText []byte, key []byte, iv []byte) ([]byte, error)
+  func SM4DecryptECB(cipherText []byte, key []byte) ([]byte, error)
+  func SM4DecryptGCM(cipherText []byte, key []byte, nonce []byte, additionalData []byte) ([]byte, error)
+  func SM4EncryptCBC(plain []byte, key []byte, iv []byte) ([]byte, error)
+  func SM4EncryptECB(plain []byte, key []byte) ([]byte, error)
+  func SM4EncryptGCM(plain []byte, key []byte, nonce []byte, additionalData []byte) ([]byte, error)
+  func SM4SealGCM(plain []byte, key []byte, additionalData []byte) (nonce []byte, cipherText []byte, err error)
+  func SM4SealGCMWithOptions(plain []byte, key []byte, additionalData []byte, opts ...SM4Option) (nonce []byte, cipherText []byte, err error)
   func SignParams(params map[string]any, digestHex func([]byte) string, separator string, keyValueSeparator string, ignoreNil bool, otherParams ...string) string
   func SignParamsSHA256(params map[string]any, otherParams ...string) string
   func SignSHA256WithRSA(data []byte, priv *crypto/rsa.PrivateKey) ([]byte, error)
@@ -669,6 +698,8 @@ github.com/imajinyun/knifer-go/vcrypto
   func ValidateAESGCMNonce(nonce []byte) error
   func ValidateAESIV(iv []byte) error
   func ValidateAESKey(key []byte) error
+  func ValidateSM4IV(iv []byte) error
+  func ValidateSM4Key(key []byte) error
   func VerifySHA256WithRSA(data []byte, sig []byte, pub *crypto/rsa.PublicKey) error
   func VerifyWithRSAOptions(data []byte, sig []byte, pub *crypto/rsa.PublicKey, opts ...RSADigestOption) error
   func WithGCMBlockFactory(factory func([]byte) (crypto/cipher.Block, error)) AESGCMOption
@@ -682,13 +713,21 @@ github.com/imajinyun/knifer-go/vcrypto
   func WithRSAPSSOptions(opts *crypto/rsa.PSSOptions) RSAOption
   func WithRSARandomReader(reader io.Reader) RSAOption
   func WithRandomReader(reader io.Reader) RandomOption
+  func WithSM2RandomReader(reader io.Reader) SM2Option
+  func WithSM2UID(uid []byte) SM2Option
+  func WithSM4RandomOptions(opts ...RandomOption) SM4Option
   type AESGCMOption = github.com/imajinyun/knifer-go/internal/crypto.AESGCMOption
   type RSADigestOption = github.com/imajinyun/knifer-go/internal/crypto.RSADigestOption
   type RSAOption = github.com/imajinyun/knifer-go/internal/crypto.RSAOption
   type RandomOption = github.com/imajinyun/knifer-go/internal/crypto.RandomOption
+  type SM2Option = github.com/imajinyun/knifer-go/internal/crypto.SM2Option
+  type SM2PrivateKey = github.com/imajinyun/knifer-go/internal/crypto.SM2PrivateKey
+  type SM2PublicKey = github.com/imajinyun/knifer-go/internal/crypto.SM2PublicKey
+  type SM4Option = github.com/imajinyun/knifer-go/internal/crypto.SM4Option
   var ErrInvalidCipherText error
   var ErrInvalidIV error
   var ErrInvalidKey error
+  var ErrInvalidSM2Signature error
 
 github.com/imajinyun/knifer-go/vcsv
   func ForEach(r io.Reader, handle func([]string) error, opts ...ReadOption) error

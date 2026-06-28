@@ -699,6 +699,87 @@ func ExampleWithRandomReader() {
 	// Output: true [7 8 9]
 }
 
+func ExampleSM3Hex() {
+	fmt.Println(vcrypto.SM3Hex([]byte("abc")))
+	// Output: 66c7f0f462eeedd9d1f2d46bdc10e4e24167c4875cf2f7a2297da02b8f4ba8e0
+}
+
+func ExampleHMACSM3Hex() {
+	fmt.Println(len(vcrypto.HMACSM3Hex([]byte("key"), []byte("data"))))
+	// Output: 64
+}
+
+func ExampleSM4EncryptGCM() {
+	key := []byte("1234567890abcdef")
+	nonce := []byte("123456789012")
+	cipherText, err := vcrypto.SM4EncryptGCM([]byte("secret"), key, nonce, []byte("aad"))
+	plain, decryptErr := vcrypto.SM4DecryptGCM(cipherText, key, nonce, []byte("aad"))
+	fmt.Println(err == nil, decryptErr == nil, string(plain))
+	// Output: true true secret
+}
+
+func ExampleSM4SealGCMWithOptions() {
+	key := []byte("1234567890abcdef")
+	nonce, cipherText, err := vcrypto.SM4SealGCMWithOptions(
+		[]byte("secret"),
+		key,
+		nil,
+		vcrypto.WithSM4RandomOptions(vcrypto.WithRandomReader(bytes.NewReader(bytes.Repeat([]byte{0x42}, 12)))),
+	)
+	plain, decryptErr := vcrypto.SM4DecryptGCM(cipherText, key, nonce, nil)
+	fmt.Println(err == nil, decryptErr == nil, fmt.Sprintf("%x", nonce), string(plain))
+	// Output: true true 424242424242424242424242 secret
+}
+
+func ExampleSM4EncryptCBC() {
+	key := []byte("1234567890abcdef")
+	iv := []byte("abcdef1234567890")
+	cipherText, err := vcrypto.SM4EncryptCBC([]byte("secret"), key, iv)
+	plain, decryptErr := vcrypto.SM4DecryptCBC(cipherText, key, iv)
+	fmt.Println(err == nil, decryptErr == nil, string(plain))
+	// Output: true true secret
+}
+
+func ExampleSM4EncryptECB() {
+	key := []byte("1234567890abcdef")
+	cipherText, err := vcrypto.SM4EncryptECB([]byte("secret"), key)
+	plain, decryptErr := vcrypto.SM4DecryptECB(cipherText, key)
+	fmt.Println(err == nil, decryptErr == nil, string(plain))
+	// Output: true true secret
+}
+
+func ExampleSM2Sign() {
+	priv, _ := vcrypto.GenSM2Key()
+	sig, err := vcrypto.SM2Sign([]byte("message"), priv)
+	verifyErr := vcrypto.SM2Verify([]byte("message"), sig, &priv.PublicKey)
+	fmt.Println(err == nil, verifyErr == nil)
+	// Output: true true
+}
+
+func ExampleSM2Encrypt() {
+	priv, _ := vcrypto.GenSM2Key()
+	cipherText, err := vcrypto.SM2Encrypt([]byte("secret"), &priv.PublicKey)
+	plain, decryptErr := vcrypto.SM2Decrypt(cipherText, priv)
+	fmt.Println(err == nil, decryptErr == nil, string(plain))
+	// Output: true true secret
+}
+
+func ExampleSM2PrivateKeyToPEM() {
+	priv, _ := vcrypto.GenSM2Key()
+	pemBytes, err := vcrypto.SM2PrivateKeyToPEM(priv)
+	parsed, parseErr := vcrypto.ParseSM2PrivateKeyPEM(pemBytes)
+	fmt.Println(err == nil, parseErr == nil, parsed != nil)
+	// Output: true true true
+}
+
+func ExampleSM2PublicKeyToPEM() {
+	priv, _ := vcrypto.GenSM2Key()
+	pemBytes, err := vcrypto.SM2PublicKeyToPEM(&priv.PublicKey)
+	parsed, parseErr := vcrypto.ParseSM2PublicKeyPEM(pemBytes)
+	fmt.Println(err == nil, parseErr == nil, parsed != nil)
+	// Output: true true true
+}
+
 var exampleRSAPrivateKey = mustExampleRSAKey()
 
 func exampleAESKey() []byte {

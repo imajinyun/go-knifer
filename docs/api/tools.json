@@ -3,20 +3,20 @@
   "module": "github.com/imajinyun/knifer-go",
   "summary": {
     "package_count": 55,
-    "function_count": 2687,
-    "functions_with_examples": 1412,
+    "function_count": 2721,
+    "functions_with_examples": 1422,
     "context_aware_functions": 36,
-    "returns_error_functions": 638,
-    "variadic_functions": 787,
+    "returns_error_functions": 663,
+    "variadic_functions": 794,
     "status_counts": {
       "compatibility": 22,
       "deprecated": 0,
       "experimental": 0,
-      "recommended": 2665
+      "recommended": 2699
     },
     "synopsis_sources": {
       "empty": 0,
-      "facade": 2034,
+      "facade": 2068,
       "internal": 653
     }
   },
@@ -7043,18 +7043,18 @@
       "name": "vcrypto",
       "synopsis": "Package vcrypto provides public APIs for cryptographic utilities.",
       "summary": {
-        "function_count": 71,
-        "functions_with_examples": 71,
-        "example_coverage_percent": 100,
+        "function_count": 105,
+        "functions_with_examples": 81,
+        "example_coverage_percent": 77.1,
         "status_counts": {
           "compatibility": 0,
           "deprecated": 0,
           "experimental": 0,
-          "recommended": 71
+          "recommended": 105
         },
         "synopsis_sources": {
           "empty": 0,
-          "facade": 71,
+          "facade": 105,
           "internal": 0
         }
       },
@@ -7572,6 +7572,74 @@
           ]
         },
         {
+          "name": "GenSM2Key",
+          "signature": "func GenSM2Key() (*SM2PrivateKey, error)",
+          "synopsis": "GenSM2Key generates an SM2 private key.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "results": [
+            "*SM2PrivateKey",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "GenSM2KeyWithOptions",
+          "signature": "func GenSM2KeyWithOptions(opts ...SM2Option) (*SM2PrivateKey, error)",
+          "synopsis": "GenSM2KeyWithOptions generates an SM2 private key with options.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "opts",
+              "type": "...SM2Option"
+            }
+          ],
+          "results": [
+            "*SM2PrivateKey",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": true
+        },
+        {
+          "name": "GenSM4Key",
+          "signature": "func GenSM4Key() ([]byte, error)",
+          "synopsis": "GenSM4Key returns a random 16-byte SM4 key.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "results": [
+            "[]byte",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "GenSM4KeyWithOptions",
+          "signature": "func GenSM4KeyWithOptions(opts ...RandomOption) ([]byte, error)",
+          "synopsis": "GenSM4KeyWithOptions returns a random SM4 key using custom random options.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "opts",
+              "type": "...RandomOption"
+            }
+          ],
+          "results": [
+            "[]byte",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": true
+        },
+        {
           "name": "HMACBytes",
           "signature": "func HMACBytes(fn func() hash.Hash, key []byte, data []byte) []byte",
           "synopsis": "HMACBytes returns HMAC digest bytes using the given hash function.",
@@ -7736,6 +7804,55 @@
           ]
         },
         {
+          "name": "HMACSM3Bytes",
+          "signature": "func HMACSM3Bytes(key []byte, data []byte) []byte",
+          "synopsis": "HMACSM3Bytes returns HMAC-SM3 digest bytes.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "key",
+              "type": "[]byte"
+            },
+            {
+              "name": "data",
+              "type": "[]byte"
+            }
+          ],
+          "results": [
+            "[]byte"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "HMACSM3Hex",
+          "signature": "func HMACSM3Hex(key []byte, data []byte) string",
+          "synopsis": "HMACSM3Hex returns HMAC-SM3 in lower-case hex form.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "key",
+              "type": "[]byte"
+            },
+            {
+              "name": "data",
+              "type": "[]byte"
+            }
+          ],
+          "results": [
+            "string"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false,
+          "examples": [
+            "ExampleHMACSM3Hex"
+          ]
+        },
+        {
           "name": "PBKDF2",
           "signature": "func PBKDF2(password []byte, salt []byte, iterations int, keyLen int, fn func() hash.Hash) ([]byte, error)",
           "synopsis": "PBKDF2 derives a key from password and salt using PBKDF2.",
@@ -7854,6 +7971,46 @@
           "examples": [
             "ExampleParseRSAPublicKeyPEM"
           ]
+        },
+        {
+          "name": "ParseSM2PrivateKeyPEM",
+          "signature": "func ParseSM2PrivateKeyPEM(data []byte) (*SM2PrivateKey, error)",
+          "synopsis": "ParseSM2PrivateKeyPEM parses a PKCS#8 or SEC1 SM2 private key PEM.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "data",
+              "type": "[]byte"
+            }
+          ],
+          "results": [
+            "*SM2PrivateKey",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "ParseSM2PublicKeyPEM",
+          "signature": "func ParseSM2PublicKeyPEM(data []byte) (*SM2PublicKey, error)",
+          "synopsis": "ParseSM2PublicKeyPEM parses a PKIX SM2 public key PEM.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "data",
+              "type": "[]byte"
+            }
+          ],
+          "results": [
+            "*SM2PublicKey",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false
         },
         {
           "name": "ParseX509CertificatePEM",
@@ -8532,6 +8689,563 @@
           ]
         },
         {
+          "name": "SM2Decrypt",
+          "signature": "func SM2Decrypt(cipherText []byte, priv *SM2PrivateKey) ([]byte, error)",
+          "synopsis": "SM2Decrypt decrypts SM2 ciphertext.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "cipherText",
+              "type": "[]byte"
+            },
+            {
+              "name": "priv",
+              "type": "*SM2PrivateKey"
+            }
+          ],
+          "results": [
+            "[]byte",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "SM2Encrypt",
+          "signature": "func SM2Encrypt(plain []byte, pub *SM2PublicKey) ([]byte, error)",
+          "synopsis": "SM2Encrypt encrypts plain data using SM2 public key encryption.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "plain",
+              "type": "[]byte"
+            },
+            {
+              "name": "pub",
+              "type": "*SM2PublicKey"
+            }
+          ],
+          "results": [
+            "[]byte",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false,
+          "examples": [
+            "ExampleSM2Encrypt"
+          ]
+        },
+        {
+          "name": "SM2EncryptWithOptions",
+          "signature": "func SM2EncryptWithOptions(plain []byte, pub *SM2PublicKey, opts ...SM2Option) ([]byte, error)",
+          "synopsis": "SM2EncryptWithOptions encrypts plain data using SM2 public key encryption with options.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "plain",
+              "type": "[]byte"
+            },
+            {
+              "name": "pub",
+              "type": "*SM2PublicKey"
+            },
+            {
+              "name": "opts",
+              "type": "...SM2Option"
+            }
+          ],
+          "results": [
+            "[]byte",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": true
+        },
+        {
+          "name": "SM2PrivateKeyToPEM",
+          "signature": "func SM2PrivateKeyToPEM(priv *SM2PrivateKey) ([]byte, error)",
+          "synopsis": "SM2PrivateKeyToPEM encodes an SM2 private key as PKCS#8 PEM.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "priv",
+              "type": "*SM2PrivateKey"
+            }
+          ],
+          "results": [
+            "[]byte",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false,
+          "examples": [
+            "ExampleSM2PrivateKeyToPEM"
+          ]
+        },
+        {
+          "name": "SM2PublicKeyToPEM",
+          "signature": "func SM2PublicKeyToPEM(pub *SM2PublicKey) ([]byte, error)",
+          "synopsis": "SM2PublicKeyToPEM encodes an SM2 public key as PKIX PEM.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "pub",
+              "type": "*SM2PublicKey"
+            }
+          ],
+          "results": [
+            "[]byte",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false,
+          "examples": [
+            "ExampleSM2PublicKeyToPEM"
+          ]
+        },
+        {
+          "name": "SM2Sign",
+          "signature": "func SM2Sign(data []byte, priv *SM2PrivateKey) ([]byte, error)",
+          "synopsis": "SM2Sign signs data using SM2 with the default user ID.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "data",
+              "type": "[]byte"
+            },
+            {
+              "name": "priv",
+              "type": "*SM2PrivateKey"
+            }
+          ],
+          "results": [
+            "[]byte",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false,
+          "examples": [
+            "ExampleSM2Sign"
+          ]
+        },
+        {
+          "name": "SM2SignWithOptions",
+          "signature": "func SM2SignWithOptions(data []byte, priv *SM2PrivateKey, opts ...SM2Option) ([]byte, error)",
+          "synopsis": "SM2SignWithOptions signs data using SM2 with options.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "data",
+              "type": "[]byte"
+            },
+            {
+              "name": "priv",
+              "type": "*SM2PrivateKey"
+            },
+            {
+              "name": "opts",
+              "type": "...SM2Option"
+            }
+          ],
+          "results": [
+            "[]byte",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": true
+        },
+        {
+          "name": "SM2Verify",
+          "signature": "func SM2Verify(data []byte, sig []byte, pub *SM2PublicKey) error",
+          "synopsis": "SM2Verify verifies an SM2 signature using the default user ID.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "data",
+              "type": "[]byte"
+            },
+            {
+              "name": "sig",
+              "type": "[]byte"
+            },
+            {
+              "name": "pub",
+              "type": "*SM2PublicKey"
+            }
+          ],
+          "results": [
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "SM2VerifyWithOptions",
+          "signature": "func SM2VerifyWithOptions(data []byte, sig []byte, pub *SM2PublicKey, opts ...SM2Option) error",
+          "synopsis": "SM2VerifyWithOptions verifies an SM2 signature with options.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "data",
+              "type": "[]byte"
+            },
+            {
+              "name": "sig",
+              "type": "[]byte"
+            },
+            {
+              "name": "pub",
+              "type": "*SM2PublicKey"
+            },
+            {
+              "name": "opts",
+              "type": "...SM2Option"
+            }
+          ],
+          "results": [
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": true
+        },
+        {
+          "name": "SM3",
+          "signature": "func SM3(data []byte) []byte",
+          "synopsis": "SM3 returns the SM3 digest bytes of data.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "data",
+              "type": "[]byte"
+            }
+          ],
+          "results": [
+            "[]byte"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "SM3Equal",
+          "signature": "func SM3Equal(a []byte, b []byte) bool",
+          "synopsis": "SM3Equal compares two SM3 digest values in constant time.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "a",
+              "type": "[]byte"
+            },
+            {
+              "name": "b",
+              "type": "[]byte"
+            }
+          ],
+          "results": [
+            "bool"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "SM3Hex",
+          "signature": "func SM3Hex(data []byte) string",
+          "synopsis": "SM3Hex returns the SM3 digest of data in lower-case hex form.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "data",
+              "type": "[]byte"
+            }
+          ],
+          "results": [
+            "string"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false,
+          "examples": [
+            "ExampleSM3Hex"
+          ]
+        },
+        {
+          "name": "SM3New",
+          "signature": "func SM3New() hash.Hash",
+          "synopsis": "SM3New returns a new SM3 hash.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "results": [
+            "hash.Hash"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "SM4DecryptCBC",
+          "signature": "func SM4DecryptCBC(cipherText []byte, key []byte, iv []byte) ([]byte, error)",
+          "synopsis": "SM4DecryptCBC decrypts SM4-CBC data with PKCS#7 padding.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "cipherText",
+              "type": "[]byte"
+            },
+            {
+              "name": "key",
+              "type": "[]byte"
+            },
+            {
+              "name": "iv",
+              "type": "[]byte"
+            }
+          ],
+          "results": [
+            "[]byte",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "SM4DecryptECB",
+          "signature": "func SM4DecryptECB(cipherText []byte, key []byte) ([]byte, error)",
+          "synopsis": "SM4DecryptECB decrypts SM4-ECB data with PKCS#7 padding.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "cipherText",
+              "type": "[]byte"
+            },
+            {
+              "name": "key",
+              "type": "[]byte"
+            }
+          ],
+          "results": [
+            "[]byte",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "SM4DecryptGCM",
+          "signature": "func SM4DecryptGCM(cipherText []byte, key []byte, nonce []byte, additionalData []byte) ([]byte, error)",
+          "synopsis": "SM4DecryptGCM decrypts SM4-GCM data.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "cipherText",
+              "type": "[]byte"
+            },
+            {
+              "name": "key",
+              "type": "[]byte"
+            },
+            {
+              "name": "nonce",
+              "type": "[]byte"
+            },
+            {
+              "name": "additionalData",
+              "type": "[]byte"
+            }
+          ],
+          "results": [
+            "[]byte",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "SM4EncryptCBC",
+          "signature": "func SM4EncryptCBC(plain []byte, key []byte, iv []byte) ([]byte, error)",
+          "synopsis": "SM4EncryptCBC encrypts plain data using SM4-CBC with PKCS#7 padding.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "plain",
+              "type": "[]byte"
+            },
+            {
+              "name": "key",
+              "type": "[]byte"
+            },
+            {
+              "name": "iv",
+              "type": "[]byte"
+            }
+          ],
+          "results": [
+            "[]byte",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false,
+          "examples": [
+            "ExampleSM4EncryptCBC"
+          ]
+        },
+        {
+          "name": "SM4EncryptECB",
+          "signature": "func SM4EncryptECB(plain []byte, key []byte) ([]byte, error)",
+          "synopsis": "SM4EncryptECB encrypts plain data using SM4-ECB with PKCS#7 padding.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "plain",
+              "type": "[]byte"
+            },
+            {
+              "name": "key",
+              "type": "[]byte"
+            }
+          ],
+          "results": [
+            "[]byte",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false,
+          "examples": [
+            "ExampleSM4EncryptECB"
+          ]
+        },
+        {
+          "name": "SM4EncryptGCM",
+          "signature": "func SM4EncryptGCM(plain []byte, key []byte, nonce []byte, additionalData []byte) ([]byte, error)",
+          "synopsis": "SM4EncryptGCM encrypts plain data using SM4-GCM.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "plain",
+              "type": "[]byte"
+            },
+            {
+              "name": "key",
+              "type": "[]byte"
+            },
+            {
+              "name": "nonce",
+              "type": "[]byte"
+            },
+            {
+              "name": "additionalData",
+              "type": "[]byte"
+            }
+          ],
+          "results": [
+            "[]byte",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false,
+          "examples": [
+            "ExampleSM4EncryptGCM"
+          ]
+        },
+        {
+          "name": "SM4SealGCM",
+          "signature": "func SM4SealGCM(plain []byte, key []byte, additionalData []byte) (nonce []byte, cipherText []byte, err error)",
+          "synopsis": "SM4SealGCM encrypts plain data using SM4-GCM and a freshly generated nonce.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "plain",
+              "type": "[]byte"
+            },
+            {
+              "name": "key",
+              "type": "[]byte"
+            },
+            {
+              "name": "additionalData",
+              "type": "[]byte"
+            }
+          ],
+          "results": [
+            "[]byte",
+            "[]byte",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "SM4SealGCMWithOptions",
+          "signature": "func SM4SealGCMWithOptions(plain []byte, key []byte, additionalData []byte, opts ...SM4Option) (nonce []byte, cipherText []byte, err error)",
+          "synopsis": "SM4SealGCMWithOptions encrypts plain data using SM4-GCM and a freshly generated nonce.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "plain",
+              "type": "[]byte"
+            },
+            {
+              "name": "key",
+              "type": "[]byte"
+            },
+            {
+              "name": "additionalData",
+              "type": "[]byte"
+            },
+            {
+              "name": "opts",
+              "type": "...SM4Option"
+            }
+          ],
+          "results": [
+            "[]byte",
+            "[]byte",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": true,
+          "examples": [
+            "ExampleSM4SealGCMWithOptions"
+          ]
+        },
+        {
           "name": "SignParams",
           "signature": "func SignParams(params map[string]any, digestHex func([]byte) string, separator string, keyValueSeparator string, ignoreNil bool, otherParams ...string) string",
           "synopsis": "SignParams joins params by sorted key and returns the digest hex using digestHex.",
@@ -8722,6 +9436,44 @@
           "examples": [
             "ExampleValidateAESKey"
           ]
+        },
+        {
+          "name": "ValidateSM4IV",
+          "signature": "func ValidateSM4IV(iv []byte) error",
+          "synopsis": "ValidateSM4IV reports whether iv has the required block size for SM4 CBC helpers.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "iv",
+              "type": "[]byte"
+            }
+          ],
+          "results": [
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "ValidateSM4Key",
+          "signature": "func ValidateSM4Key(key []byte) error",
+          "synopsis": "ValidateSM4Key reports whether key is a valid SM4 key length.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "key",
+              "type": "[]byte"
+            }
+          ],
+          "results": [
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false
         },
         {
           "name": "VerifySHA256WithRSA",
@@ -9032,6 +9784,63 @@
           "examples": [
             "ExampleWithRandomReader"
           ]
+        },
+        {
+          "name": "WithSM2RandomReader",
+          "signature": "func WithSM2RandomReader(reader io.Reader) SM2Option",
+          "synopsis": "WithSM2RandomReader sets the entropy source used by SM2 encryption, signing, and key generation.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "reader",
+              "type": "io.Reader"
+            }
+          ],
+          "results": [
+            "SM2Option"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "WithSM2UID",
+          "signature": "func WithSM2UID(uid []byte) SM2Option",
+          "synopsis": "WithSM2UID sets the SM2 user ID used by SM2Sign and SM2Verify.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "uid",
+              "type": "[]byte"
+            }
+          ],
+          "results": [
+            "SM2Option"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "WithSM4RandomOptions",
+          "signature": "func WithSM4RandomOptions(opts ...RandomOption) SM4Option",
+          "synopsis": "WithSM4RandomOptions sets the entropy source options used when SM4SealGCM generates a nonce.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "opts",
+              "type": "...RandomOption"
+            }
+          ],
+          "results": [
+            "SM4Option"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": true
         }
       ]
     },

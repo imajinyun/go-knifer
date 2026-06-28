@@ -11,16 +11,16 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Schema | 1.7 |
 | Module | `github.com/imajinyun/knifer-go` |
 | Packages | 55 |
-| Functions | 2687 |
-| Functions with examples | 1412 |
+| Functions | 2721 |
+| Functions with examples | 1422 |
 | Context-aware functions | 36 |
-| Functions returning error | 638 |
-| Variadic functions | 787 |
-| API status: recommended | 2665 |
+| Functions returning error | 663 |
+| Variadic functions | 794 |
+| API status: recommended | 2699 |
 | API status: compatibility | 22 |
 | API status: experimental | 0 |
 | API status: deprecated | 0 |
-| Synopsis source: facade | 2034 |
+| Synopsis source: facade | 2068 |
 | Synopsis source: internal | 653 |
 | Synopsis source: empty | 0 |
 
@@ -607,7 +607,7 @@ Import path: `github.com/imajinyun/knifer-go/vcrypto`
 
 Package vcrypto provides public APIs for cryptographic utilities.
 
-Quality: 71 functions · 71 with examples · 100.0% example coverage · statuses: recommended=71, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=71, internal=0, empty=0
+Quality: 105 functions · 81 with examples · 77.1% example coverage · statuses: recommended=105, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=105, internal=0, empty=0
 
 Recommended entrypoints:
 
@@ -644,16 +644,24 @@ Golden path API set:
 | `GenAESKeyWithOptions` | `func GenAESKeyWithOptions(size int, opts ...RandomOption) ([]byte, error)` | recommended | GenAESKeyWithOptions returns a random AES key using custom random options. | facade | `ExampleGenAESKeyWithOptions` |
 | `GenRSAKey` | `func GenRSAKey(bits int) (*rsa.PrivateKey, error)` | recommended | GenRSAKey generates an RSA private key. | facade | `ExampleGenRSAKey` |
 | `GenRSAKeyWithOptions` | `func GenRSAKeyWithOptions(bits int, opts ...RSAOption) (*rsa.PrivateKey, error)` | recommended | GenRSAKeyWithOptions generates an RSA private key with options. | facade | `ExampleGenRSAKeyWithOptions` |
+| `GenSM2Key` | `func GenSM2Key() (*SM2PrivateKey, error)` | recommended | GenSM2Key generates an SM2 private key. | facade | — |
+| `GenSM2KeyWithOptions` | `func GenSM2KeyWithOptions(opts ...SM2Option) (*SM2PrivateKey, error)` | recommended | GenSM2KeyWithOptions generates an SM2 private key with options. | facade | — |
+| `GenSM4Key` | `func GenSM4Key() ([]byte, error)` | recommended | GenSM4Key returns a random 16-byte SM4 key. | facade | — |
+| `GenSM4KeyWithOptions` | `func GenSM4KeyWithOptions(opts ...RandomOption) ([]byte, error)` | recommended | GenSM4KeyWithOptions returns a random SM4 key using custom random options. | facade | — |
 | `HMACBytes` | `func HMACBytes(fn func() hash.Hash, key []byte, data []byte) []byte` | recommended | HMACBytes returns HMAC digest bytes using the given hash function. | facade | `ExampleHMACBytes` |
 | `HMACEqual` | `func HMACEqual(a []byte, b []byte) bool` | recommended | HMACEqual compares two MAC values in constant time. | facade | `ExampleHMACEqual` |
 | `HMACHex` | `func HMACHex(fn func() hash.Hash, key []byte, data []byte) string` | recommended | HMACHex returns HMAC digest in lower-case hex form using the given hash function. | facade | `ExampleHMACHex` |
 | `HMACSHA256Hex` | `func HMACSHA256Hex(key []byte, data []byte) string` | recommended | HMACSHA256Hex returns HMAC-SHA256 in lower-case hex form. | facade | `ExampleHMACSHA256Hex` |
 | `HMACSHA384Hex` | `func HMACSHA384Hex(key []byte, data []byte) string` | recommended | HMACSHA384Hex returns HMAC-SHA384 in lower-case hex form. | facade | `ExampleHMACSHA384Hex` |
 | `HMACSHA512Hex` | `func HMACSHA512Hex(key []byte, data []byte) string` | recommended | HMACSHA512Hex returns HMAC-SHA512 in lower-case hex form. | facade | `ExampleHMACSHA512Hex` |
+| `HMACSM3Bytes` | `func HMACSM3Bytes(key []byte, data []byte) []byte` | recommended | HMACSM3Bytes returns HMAC-SM3 digest bytes. | facade | — |
+| `HMACSM3Hex` | `func HMACSM3Hex(key []byte, data []byte) string` | recommended | HMACSM3Hex returns HMAC-SM3 in lower-case hex form. | facade | `ExampleHMACSM3Hex` |
 | `PBKDF2` | `func PBKDF2(password []byte, salt []byte, iterations int, keyLen int, fn func() hash.Hash) ([]byte, error)` | recommended | PBKDF2 derives a key from password and salt using PBKDF2. | facade | `ExamplePBKDF2` |
 | `PBKDF2SHA256` | `func PBKDF2SHA256(password []byte, salt []byte, iterations int, keyLen int) ([]byte, error)` | recommended | PBKDF2SHA256 derives a key using PBKDF2-HMAC-SHA256. | facade | `ExamplePBKDF2SHA256` |
 | `ParseRSAPrivateKeyPEM` | `func ParseRSAPrivateKeyPEM(data []byte) (*rsa.PrivateKey, error)` | recommended | ParseRSAPrivateKeyPEM parses a PKCS#1 or PKCS#8 RSA private key PEM. | facade | `ExampleParseRSAPrivateKeyPEM` |
 | `ParseRSAPublicKeyPEM` | `func ParseRSAPublicKeyPEM(data []byte) (*rsa.PublicKey, error)` | recommended | ParseRSAPublicKeyPEM parses a PKIX or PKCS#1 RSA public key PEM. | facade | `ExampleParseRSAPublicKeyPEM` |
+| `ParseSM2PrivateKeyPEM` | `func ParseSM2PrivateKeyPEM(data []byte) (*SM2PrivateKey, error)` | recommended | ParseSM2PrivateKeyPEM parses a PKCS#8 or SEC1 SM2 private key PEM. | facade | — |
+| `ParseSM2PublicKeyPEM` | `func ParseSM2PublicKeyPEM(data []byte) (*SM2PublicKey, error)` | recommended | ParseSM2PublicKeyPEM parses a PKIX SM2 public key PEM. | facade | — |
 | `ParseX509CertificatePEM` | `func ParseX509CertificatePEM(data []byte) (*x509.Certificate, error)` | recommended | ParseX509CertificatePEM parses an X.509 certificate from PEM data. | facade | `ExampleParseX509CertificatePEM` |
 | `PrivateKeyToPEM` | `func PrivateKeyToPEM(priv *rsa.PrivateKey) []byte` | recommended | PrivateKeyToPEM encodes an RSA private key as PKCS#1 PEM. | facade | `ExamplePrivateKeyToPEM` |
 | `PrivateKeyToPKCS8PEM` | `func PrivateKeyToPKCS8PEM(priv *rsa.PrivateKey) ([]byte, error)` | recommended | PrivateKeyToPKCS8PEM encodes an RSA private key as PKCS#8 PEM. | facade | `ExamplePrivateKeyToPKCS8PEM` |
@@ -680,6 +688,27 @@ Golden path API set:
 | `SHA512` | `func SHA512(data []byte) []byte` | recommended | SHA512 returns the SHA512 digest bytes of data. | facade | `ExampleSHA512` |
 | `SHA512Hex` | `func SHA512Hex(s string) string` | recommended | SHA512Hex returns the SHA512 digest of s in lower-case hex form. | facade | `ExampleSHA512Hex` |
 | `SHA512HexBytes` | `func SHA512HexBytes(data []byte) string` | recommended | SHA512HexBytes returns the SHA512 digest of data in lower-case hex form. | facade | `ExampleSHA512HexBytes` |
+| `SM2Decrypt` | `func SM2Decrypt(cipherText []byte, priv *SM2PrivateKey) ([]byte, error)` | recommended | SM2Decrypt decrypts SM2 ciphertext. | facade | — |
+| `SM2Encrypt` | `func SM2Encrypt(plain []byte, pub *SM2PublicKey) ([]byte, error)` | recommended | SM2Encrypt encrypts plain data using SM2 public key encryption. | facade | `ExampleSM2Encrypt` |
+| `SM2EncryptWithOptions` | `func SM2EncryptWithOptions(plain []byte, pub *SM2PublicKey, opts ...SM2Option) ([]byte, error)` | recommended | SM2EncryptWithOptions encrypts plain data using SM2 public key encryption with options. | facade | — |
+| `SM2PrivateKeyToPEM` | `func SM2PrivateKeyToPEM(priv *SM2PrivateKey) ([]byte, error)` | recommended | SM2PrivateKeyToPEM encodes an SM2 private key as PKCS#8 PEM. | facade | `ExampleSM2PrivateKeyToPEM` |
+| `SM2PublicKeyToPEM` | `func SM2PublicKeyToPEM(pub *SM2PublicKey) ([]byte, error)` | recommended | SM2PublicKeyToPEM encodes an SM2 public key as PKIX PEM. | facade | `ExampleSM2PublicKeyToPEM` |
+| `SM2Sign` | `func SM2Sign(data []byte, priv *SM2PrivateKey) ([]byte, error)` | recommended | SM2Sign signs data using SM2 with the default user ID. | facade | `ExampleSM2Sign` |
+| `SM2SignWithOptions` | `func SM2SignWithOptions(data []byte, priv *SM2PrivateKey, opts ...SM2Option) ([]byte, error)` | recommended | SM2SignWithOptions signs data using SM2 with options. | facade | — |
+| `SM2Verify` | `func SM2Verify(data []byte, sig []byte, pub *SM2PublicKey) error` | recommended | SM2Verify verifies an SM2 signature using the default user ID. | facade | — |
+| `SM2VerifyWithOptions` | `func SM2VerifyWithOptions(data []byte, sig []byte, pub *SM2PublicKey, opts ...SM2Option) error` | recommended | SM2VerifyWithOptions verifies an SM2 signature with options. | facade | — |
+| `SM3` | `func SM3(data []byte) []byte` | recommended | SM3 returns the SM3 digest bytes of data. | facade | — |
+| `SM3Equal` | `func SM3Equal(a []byte, b []byte) bool` | recommended | SM3Equal compares two SM3 digest values in constant time. | facade | — |
+| `SM3Hex` | `func SM3Hex(data []byte) string` | recommended | SM3Hex returns the SM3 digest of data in lower-case hex form. | facade | `ExampleSM3Hex` |
+| `SM3New` | `func SM3New() hash.Hash` | recommended | SM3New returns a new SM3 hash. | facade | — |
+| `SM4DecryptCBC` | `func SM4DecryptCBC(cipherText []byte, key []byte, iv []byte) ([]byte, error)` | recommended | SM4DecryptCBC decrypts SM4-CBC data with PKCS#7 padding. | facade | — |
+| `SM4DecryptECB` | `func SM4DecryptECB(cipherText []byte, key []byte) ([]byte, error)` | recommended | SM4DecryptECB decrypts SM4-ECB data with PKCS#7 padding. | facade | — |
+| `SM4DecryptGCM` | `func SM4DecryptGCM(cipherText []byte, key []byte, nonce []byte, additionalData []byte) ([]byte, error)` | recommended | SM4DecryptGCM decrypts SM4-GCM data. | facade | — |
+| `SM4EncryptCBC` | `func SM4EncryptCBC(plain []byte, key []byte, iv []byte) ([]byte, error)` | recommended | SM4EncryptCBC encrypts plain data using SM4-CBC with PKCS#7 padding. | facade | `ExampleSM4EncryptCBC` |
+| `SM4EncryptECB` | `func SM4EncryptECB(plain []byte, key []byte) ([]byte, error)` | recommended | SM4EncryptECB encrypts plain data using SM4-ECB with PKCS#7 padding. | facade | `ExampleSM4EncryptECB` |
+| `SM4EncryptGCM` | `func SM4EncryptGCM(plain []byte, key []byte, nonce []byte, additionalData []byte) ([]byte, error)` | recommended | SM4EncryptGCM encrypts plain data using SM4-GCM. | facade | `ExampleSM4EncryptGCM` |
+| `SM4SealGCM` | `func SM4SealGCM(plain []byte, key []byte, additionalData []byte) (nonce []byte, cipherText []byte, err error)` | recommended | SM4SealGCM encrypts plain data using SM4-GCM and a freshly generated nonce. | facade | — |
+| `SM4SealGCMWithOptions` | `func SM4SealGCMWithOptions(plain []byte, key []byte, additionalData []byte, opts ...SM4Option) (nonce []byte, cipherText []byte, err error)` | recommended | SM4SealGCMWithOptions encrypts plain data using SM4-GCM and a freshly generated nonce. | facade | `ExampleSM4SealGCMWithOptions` |
 | `SignParams` | `func SignParams(params map[string]any, digestHex func([]byte) string, separator string, keyValueSeparator string, ignoreNil bool, otherParams ...string) string` | recommended | SignParams joins params by sorted key and returns the digest hex using digestHex. | facade | `ExampleSignParams` |
 | `SignParamsSHA256` | `func SignParamsSHA256(params map[string]any, otherParams ...string) string` | recommended | SignParamsSHA256 signs sorted params with SHA256. | facade | `ExampleSignParamsSHA256` |
 | `SignSHA256WithRSA` | `func SignSHA256WithRSA(data []byte, priv *rsa.PrivateKey) ([]byte, error)` | recommended | SignSHA256WithRSA signs data using SHA256withRSA. | facade | `ExampleSignSHA256WithRSA` |
@@ -687,6 +716,8 @@ Golden path API set:
 | `ValidateAESGCMNonce` | `func ValidateAESGCMNonce(nonce []byte) error` | recommended | ValidateAESGCMNonce reports whether nonce has the default nonce size used by AES-GCM helpers. | facade | `ExampleValidateAESGCMNonce` |
 | `ValidateAESIV` | `func ValidateAESIV(iv []byte) error` | recommended | ValidateAESIV reports whether iv has the required block size for AES CBC/CFB/OFB/CTR helpers. | facade | `ExampleValidateAESIV` |
 | `ValidateAESKey` | `func ValidateAESKey(key []byte) error` | recommended | ValidateAESKey reports whether key is a valid AES key length (16, 24, or 32 bytes). | facade | `ExampleValidateAESKey` |
+| `ValidateSM4IV` | `func ValidateSM4IV(iv []byte) error` | recommended | ValidateSM4IV reports whether iv has the required block size for SM4 CBC helpers. | facade | — |
+| `ValidateSM4Key` | `func ValidateSM4Key(key []byte) error` | recommended | ValidateSM4Key reports whether key is a valid SM4 key length. | facade | — |
 | `VerifySHA256WithRSA` | `func VerifySHA256WithRSA(data []byte, sig []byte, pub *rsa.PublicKey) error` | recommended | VerifySHA256WithRSA verifies SHA256withRSA signature. | facade | `ExampleVerifySHA256WithRSA` |
 | `VerifyWithRSAOptions` | `func VerifyWithRSAOptions(data []byte, sig []byte, pub *rsa.PublicKey, opts ...RSADigestOption) error` | recommended | VerifyWithRSAOptions hashes data and verifies an RSA signature with configurable options. | facade | `ExampleVerifyWithRSAOptions` |
 | `WithGCMBlockFactory` | `func WithGCMBlockFactory(factory func([]byte) (cipher.Block, error)) AESGCMOption` | recommended | WithGCMBlockFactory sets the cipher block factory used by AES-GCM helpers. | facade | `ExampleWithGCMBlockFactory` |
@@ -700,6 +731,9 @@ Golden path API set:
 | `WithRSAPSSOptions` | `func WithRSAPSSOptions(opts *rsa.PSSOptions) RSAOption` | recommended | WithRSAPSSOptions sets the PSS options used by RSA-PSS helpers. | facade | `ExampleWithRSAPSSOptions` |
 | `WithRSARandomReader` | `func WithRSARandomReader(reader io.Reader) RSAOption` | recommended | WithRSARandomReader sets the entropy source used by RSA helpers. | facade | `ExampleWithRSARandomReader` |
 | `WithRandomReader` | `func WithRandomReader(reader io.Reader) RandomOption` | recommended | WithRandomReader sets the entropy source used by random byte helpers. | facade | `ExampleWithRandomReader` |
+| `WithSM2RandomReader` | `func WithSM2RandomReader(reader io.Reader) SM2Option` | recommended | WithSM2RandomReader sets the entropy source used by SM2 encryption, signing, and key generation. | facade | — |
+| `WithSM2UID` | `func WithSM2UID(uid []byte) SM2Option` | recommended | WithSM2UID sets the SM2 user ID used by SM2Sign and SM2Verify. | facade | — |
+| `WithSM4RandomOptions` | `func WithSM4RandomOptions(opts ...RandomOption) SM4Option` | recommended | WithSM4RandomOptions sets the entropy source options used when SM4SealGCM generates a nonce. | facade | — |
 
 ### vcsv
 

@@ -21,6 +21,9 @@ func TestErrorContract(t *testing.T) {
 	if code, ok := knifer.CodeOf(vcrypto.ErrInvalidCipherText); !ok || code != knifer.ErrCodeInvalidInput {
 		t.Fatalf("CodeOf(ErrInvalidCipherText) = %q, %v", code, ok)
 	}
+	if code, ok := knifer.CodeOf(vcrypto.ErrInvalidSM2Signature); !ok || code != knifer.ErrCodeInvalidInput {
+		t.Fatalf("CodeOf(ErrInvalidSM2Signature) = %q, %v", code, ok)
+	}
 	if err := vcrypto.ValidateAESKey([]byte("1234567890123456")); err != nil {
 		t.Fatalf("ValidateAESKey(valid) = %v", err)
 	}
@@ -29,5 +32,17 @@ func TestErrorContract(t *testing.T) {
 	}
 	if err := vcrypto.ValidateAESGCMNonce([]byte("123456789012")); err != nil {
 		t.Fatalf("ValidateAESGCMNonce(valid) = %v", err)
+	}
+	if err := vcrypto.ValidateSM4Key([]byte("1234567890abcdef")); err != nil {
+		t.Fatalf("ValidateSM4Key(valid) = %v", err)
+	}
+	if err := vcrypto.ValidateSM4IV([]byte("1234567890abcdef")); err != nil {
+		t.Fatalf("ValidateSM4IV(valid) = %v", err)
+	}
+	if err := vcrypto.ValidateSM4Key([]byte("bad")); !errors.Is(err, vcrypto.ErrInvalidKey) || !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("ValidateSM4Key(invalid) = %v, want invalid key/input", err)
+	}
+	if err := vcrypto.ValidateSM4IV([]byte("bad")); !errors.Is(err, vcrypto.ErrInvalidIV) || !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("ValidateSM4IV(invalid) = %v, want invalid iv/input", err)
 	}
 }

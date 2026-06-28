@@ -1,6 +1,6 @@
 # vcrypto Quickstart
 
-`vcrypto` provides common cryptographic helpers, including digests, HMAC, AES-GCM, random bytes, PBKDF2, RSA encryption/decryption/signing, and PEM conversion.
+`vcrypto` provides common cryptographic helpers, including digests, HMAC, AES-GCM, random bytes, PBKDF2, RSA encryption/decryption/signing, SM2/SM3/SM4 national-crypto helpers, and PEM conversion.
 
 ## Which helper should I use?
 
@@ -9,6 +9,7 @@
 | Hash non-secret data | SHA-256/SHA-512 helpers | Use for checksums and fingerprints. Do not use plain hashes as authentication codes. |
 | Authenticate a message | HMAC helpers | Use when both sides share a secret key and the message must be tamper-evident. |
 | Encrypt bytes symmetrically | AES-GCM helpers | Use authenticated encryption with a fresh nonce per key/message pair. |
+| Use Chinese national cryptography | SM2/SM3/SM4 helpers | Use for interoperability with GB/T SM workflows; prefer SM4-GCM when both sides can support authenticated encryption. |
 | Derive keys from passwords | `PBKDF2` | Use a unique salt and policy-controlled iterations; prefer dedicated password hashing where available for password storage. |
 | Generate random keys, salts, nonces, or tokens | `GenAESKey`, random byte helpers, or `vrand.SecureBytes` | Do not use pseudo-random helpers for secrets. |
 | Sign or verify with RSA | RSA signing/verification helpers | Use when interoperability requires RSA keys and signatures. |
@@ -18,6 +19,9 @@
 
 - Do not use MD5 or SHA-1 for new security-sensitive designs.
 - Do not reuse AES-GCM nonces with the same key.
+- Do not reuse SM4-GCM nonces with the same key.
+- Avoid SM4-ECB for new designs; it is provided only for interoperability with legacy systems.
+- Keep SM2 signing UID policy explicit when interoperating with external systems.
 - Do not generate keys, tokens, nonces, or salts with `math/rand` or deterministic test sources.
 - Do not log secret bytes, private keys, raw tokens, or derived credentials.
 - Do not ignore crypto errors; treat them as security-relevant failures.
@@ -46,7 +50,7 @@ Measure crypto helper overhead locally with the focused benchmark suite:
 go test -bench=. -benchmem -run=^$ ./internal/crypto ./vcrypto ./internal/rand ./vrand
 ```
 
-The suite covers SHA-256 digest, HMAC-SHA256 signing, AES-GCM encrypt/decrypt, and secure random byte generation. Treat benchmark output as a local baseline, not a universal performance claim.
+The suite covers SHA-256 digest, HMAC-SHA256 signing, AES-GCM encrypt/decrypt, SM3/SM4/SM2 regression paths, and secure random byte generation. Treat benchmark output as a local baseline, not a universal performance claim.
 
 ## FAQ
 
@@ -61,6 +65,10 @@ Avoid legacy digest algorithms such as MD5 or SHA-1 for new security-sensitive d
 ### Are hashes the same as encryption?
 
 No. Hashes are one-way fingerprints, HMAC authenticates messages with a shared secret, and encryption protects confidentiality. Choose the primitive that matches the threat model.
+
+### Should I choose AES or SM4?
+
+Use AES-GCM for general Go-to-Go or cross-platform encryption unless national-crypto interoperability is required. Use SM4 helpers when counterparties, compliance profiles, or existing payload formats require SM algorithms.
 
 ### Are secrets ever logged?
 
@@ -119,6 +127,49 @@ func main() {
 ```
 
 Authentication failures from `AESOpenGCM` / `AESDecryptGCM` match `vcrypto.ErrInvalidCipherText`, so callers can distinguish tampering or wrong AAD from nonce-length validation errors.
+
+## SM2, SM3, and SM4 helpers
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/imajinyun/knifer-go/vcrypto"
+)
+
+func main() {
+	digest := vcrypto.SM3Hex([]byte("abc"))
+
+	key, err := vcrypto.GenSM4Key()
+	if err != nil {
+		panic(err)
+	}
+	nonce, cipherText, err := vcrypto.SM4SealGCM([]byte("secret data"), key, []byte("aad"))
+	if err != nil {
+		panic(err)
+	}
+	plain, err := vcrypto.SM4DecryptGCM(cipherText, key, nonce, []byte("aad"))
+	if err != nil {
+		panic(err)
+	}
+
+	priv, err := vcrypto.GenSM2Key()
+	if err != nil {
+		panic(err)
+	}
+	sig, err := vcrypto.SM2Sign([]byte("message"), priv)
+	if err != nil {
+		panic(err)
+	}
+	verifyErr := vcrypto.SM2Verify([]byte("message"), sig, &priv.PublicKey)
+
+	fmt.Println(len(digest), string(plain), verifyErr == nil)
+}
+```
+
+SM4-GCM authentication failures match `vcrypto.ErrInvalidCipherText`. SM2 verification failures match `vcrypto.ErrInvalidSM2Signature`. SM2 private keys are encoded as PKCS#8 PEM by `SM2PrivateKeyToPEM`; public keys use PKIX PEM.
 
 ## Derive keys with PBKDF2
 

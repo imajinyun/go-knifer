@@ -23,6 +23,7 @@ func TestSentinelErrors(t *testing.T) {
 		{"ErrInvalidKey", ErrInvalidKey, knifer.ErrCodeInvalidInput, "invalid key"},
 		{"ErrInvalidIV", ErrInvalidIV, knifer.ErrCodeInvalidInput, "invalid iv"},
 		{"ErrInvalidCipherText", ErrInvalidCipherText, knifer.ErrCodeInvalidInput, "invalid cipher text"},
+		{"ErrInvalidSM2Signature", ErrInvalidSM2Signature, knifer.ErrCodeInvalidInput, "invalid sm2 signature"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -33,6 +34,26 @@ func TestSentinelErrors(t *testing.T) {
 				t.Fatalf("errors.Is(%v, %s) = false", tt.err, tt.code)
 			}
 		})
+	}
+}
+
+func TestValidateSM4Key(t *testing.T) {
+	if err := ValidateSM4Key(make([]byte, 16)); err != nil {
+		t.Fatalf("ValidateSM4Key(16) = %v", err)
+	}
+	for _, size := range []int{0, 15, 17} {
+		if err := ValidateSM4Key(make([]byte, size)); !errors.Is(err, ErrInvalidKey) || !errors.Is(err, knifer.ErrCodeInvalidInput) {
+			t.Fatalf("ValidateSM4Key(%d) = %v, want invalid key/input", size, err)
+		}
+	}
+}
+
+func TestValidateSM4IV(t *testing.T) {
+	if err := ValidateSM4IV(make([]byte, 16)); err != nil {
+		t.Fatalf("ValidateSM4IV(16) = %v", err)
+	}
+	if err := ValidateSM4IV(make([]byte, 12)); !errors.Is(err, ErrInvalidIV) || !errors.Is(err, knifer.ErrCodeInvalidInput) {
+		t.Fatalf("ValidateSM4IV(12) = %v, want invalid iv/input", err)
 	}
 }
 
