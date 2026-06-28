@@ -451,6 +451,93 @@ def validate_safe_crypto_cookbook_governance() -> None:
 			add_error(f"{roadmap_path} Sprint 24 row missing package(s): " + ", ".join(missing_from_sprint))
 
 
+def validate_daily_json_file_faq_governance() -> None:
+	governance = require_mapping(ai_context.get("daily_json_file_faq_governance"), "daily_json_file_faq_governance")
+	roadmap_path = governance.get("roadmap_path")
+	if not isinstance(roadmap_path, str) or not roadmap_path.strip():
+		add_error("daily_json_file_faq_governance.roadmap_path must be non-empty")
+		roadmap_path = "docs/superpowers/plans/49-roadmap.md"
+	faq_path = governance.get("faq_path")
+	if not isinstance(faq_path, str) or not faq_path.strip():
+		add_error("daily_json_file_faq_governance.faq_path must be non-empty")
+		faq_path = "docs/doc/daily-json-file-faq.md"
+	sprint = governance.get("sprint")
+	if sprint != 25:
+		add_error("daily_json_file_faq_governance.sprint must be 25")
+	status = governance.get("status")
+	if status not in {"active", "completed"}:
+		add_error("daily_json_file_faq_governance.status must be active or completed")
+	packages = require_string_list(governance.get("packages"), "daily_json_file_faq_governance.packages")
+	expected_packages = ["vjson", "vfile"]
+	if packages != expected_packages:
+		add_error("daily_json_file_faq_governance.packages must be ordered as: " + ", ".join(expected_packages))
+	required_questions = require_string_list(
+		governance.get("required_questions"),
+		"daily_json_file_faq_governance.required_questions",
+	)
+	if len(required_questions) < 5:
+		add_error("daily_json_file_faq_governance.required_questions must include at least five FAQ questions")
+	required_checks = require_string_list(governance.get("required_checks"), "daily_json_file_faq_governance.required_checks")
+	for check in ("docs-check", "ai-context-check", "governance-maturity-check"):
+		if check not in required_checks:
+			add_error(f"daily_json_file_faq_governance.required_checks must include {check}")
+	for package_name in packages:
+		if package_name not in public_facades:
+			add_error(f"daily_json_file_faq_governance.packages references non-public facade {package_name}")
+	faq_file = root / faq_path
+	try:
+		faq_text = faq_file.read_text(encoding="utf-8")
+	except FileNotFoundError:
+		add_error(f"{faq_path} must exist")
+		faq_text = ""
+	if faq_text:
+		if not faq_text.startswith("# Daily JSON/File FAQ\n"):
+			add_error(f"{faq_path} must start with '# Daily JSON/File FAQ'")
+		for package_name in packages:
+			if f"`{package_name}`" not in faq_text and f"/{package_name}" not in faq_text:
+				add_error(f"{faq_path} must mention {package_name}")
+		for question in required_questions:
+			if f"### {question}" not in faq_text:
+				add_error(f"{faq_path} missing required FAQ question {question!r}")
+		for phrase in (
+			"Decision Matrix",
+			"encoding/json",
+			"os",
+			"io",
+			"bounded reads",
+			"explicit errors",
+			"provider-backed",
+			"untrusted JSON input",
+			"untrusted file paths",
+		):
+			if phrase not in faq_text:
+				add_error(f"{faq_path} must include {phrase!r}")
+		for check in required_checks:
+			if f"make {check}" not in faq_text:
+				add_error(f"{faq_path} validation section must mention make {check}")
+	roadmap_rows = extract_markdown_rows(root / roadmap_path, "90-Day Star Domain Scorecard")
+	daily_rows = [row for row in roadmap_rows if row.get("Domain") == "Daily JSON/file (`vjson`, `vfile`)"]
+	if len(daily_rows) != 1:
+		add_error(f"{roadmap_path} scorecard must contain exactly one Daily JSON/file row")
+	else:
+		faq_status = daily_rows[0].get("FAQ status", "")
+		if faq_path not in faq_status or "Present" not in faq_status:
+			add_error(f"{roadmap_path} Daily JSON/file FAQ status must be Present and reference {faq_path}")
+	sprint_rows = extract_markdown_rows(root / roadmap_path, "Sprint order")
+	sprint_25_rows = [row for row in sprint_rows if row.get("Sprint") == "25"]
+	if len(sprint_25_rows) != 1:
+		add_error(f"{roadmap_path} Sprint order must contain exactly one Sprint 25 row")
+	else:
+		sprint_25 = sprint_25_rows[0]
+		expected_status = "Completed" if status == "completed" else "Active"
+		if sprint_25.get("Status") != expected_status:
+			add_error(f"{roadmap_path} Sprint 25 status must be {expected_status}")
+		sprint_text = " ".join(sprint_25.values())
+		missing_from_sprint = [package for package in packages if f"`{package}`" not in sprint_text]
+		if missing_from_sprint:
+			add_error(f"{roadmap_path} Sprint 25 row missing package(s): " + ", ".join(missing_from_sprint))
+
+
 def validate_example_depth_governance() -> None:
 	governance = require_mapping(ai_context.get("example_depth_governance"), "example_depth_governance")
 	sprint = governance.get("sprint")
@@ -849,6 +936,7 @@ if not bench_only:
 	validate_roadmap_star_domain_scorecard()
 	validate_safe_http_cookbook_governance()
 	validate_safe_crypto_cookbook_governance()
+	validate_daily_json_file_faq_governance()
 	validate_example_depth_governance()
 	validate_api_convergence()
 	validate_lifecycle()

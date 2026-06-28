@@ -902,6 +902,21 @@
     ],
     "required_checks": ["docs-check", "ai-context-check", "governance-maturity-check", "agent-security-check"]
   },
+  "daily_json_file_faq_governance": {
+    "roadmap_path": "docs/superpowers/plans/49-roadmap.md",
+    "faq_path": "docs/doc/daily-json-file-faq.md",
+    "sprint": 25,
+    "status": "active",
+    "packages": ["vjson", "vfile"],
+    "required_questions": [
+      "When should I use vjson instead of encoding/json?",
+      "When should I use vfile instead of os, io, or fs?",
+      "How should I handle untrusted JSON input?",
+      "How should I handle untrusted file paths?",
+      "When should I choose bounded reads or explicit errors?"
+    ],
+    "required_checks": ["docs-check", "ai-context-check", "governance-maturity-check"]
+  },
   "error_model": {
     "taxonomy": [
       { "category": "invalid input", "code": "GK_INVALID_INPUT", "use_when": "Caller-provided arguments, payloads, or configuration values are malformed." },

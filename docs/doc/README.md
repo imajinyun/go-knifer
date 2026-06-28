@@ -44,7 +44,7 @@ These domains are the quickest way to evaluate whether `knifer-go` fits a projec
 | --- | --- | --- |
 | Safe HTTP and downloads | [`vhttp`](22-vhttp.md), [`vresty`](41-vresty.md), [`vurl`](51-vurl.md), [`Safe HTTP cookbook`](safe-http-cookbook.md) | Helper selection, safe URL policy checklist, cookbook recipes, benchmark commands, and stdlib/Resty boundary guidance. |
 | Safe crypto workflows | [`vcrypto`](11-vcrypto.md), [`vrand`](38-vrand.md), [`vjwt`](28-vjwt.md), [`Safe Crypto cookbook`](safe-crypto-cookbook.md) | Recommended cryptographic entry points, secret-handling FAQ, cookbook recipes, benchmark commands, and direct-stdlib boundary guidance. |
-| Daily JSON and file workflows | [`vjson`](27-vjson.md), [`vfile`](17-vfile.md) | Cookbook examples for object/path/formatting/file I/O, filesystem safety guidance, and explicit error handling. |
+| Daily JSON and file workflows | [`vjson`](27-vjson.md), [`vfile`](17-vfile.md), [`Daily JSON/File FAQ`](daily-json-file-faq.md) | Cookbook examples for object/path/formatting/file I/O, filesystem safety guidance, cross-package FAQ, and explicit error handling. |
 
 Comparison entry points:
 
@@ -441,7 +441,7 @@ Use these recipes as the shortest path from an application task to a reviewed pa
 | Filter, map, deduplicate, or page a slice | `vslice` | Use `Filter`, `Map`, `Uniq`, `Chunk`, or `Page`; choose `MapErr` / `FilterErr` when a callback can fail. Use package benchmarks only as local baselines before making performance claims. | `go test ./vslice` and `make bench-facade BENCH=Benchmark` |
 | Pick, omit, merge, or sort map data | `vmap` | Use `Pick`, `Omit`, `Merge`, `SortedKeys`, `MapValues`, or `Filter`; use package benchmarks only as local baselines before making performance claims about map helpers. | `go test ./vmap` and `make bench-facade BENCH=Benchmark` |
 | Parse user-provided scalar values | `vconv` | Use `ToIntE`, `ToFloat64E`, or `ToBoolE` when invalid input must be visible; use default-returning variants only when fallback behavior is intended. | `go test ./vconv` |
-| Read or mutate structured JSON | `vjson` | Use object/path helpers for small in-memory JSON documents; use `encoding/json.Decoder` directly for streams or token-level control. | `go test ./vjson` |
+| Read or mutate structured JSON | `vjson` | Start from the [`Daily JSON/File FAQ`](daily-json-file-faq.md). Use object/path helpers for small in-memory JSON documents; use `encoding/json.Decoder` directly for streams or token-level control. | `go test ./vjson` |
 | Fetch a URL controlled by users or config | `vurl`, then `vhttp` or `vresty` | Start from the [`Safe HTTP cookbook`](safe-http-cookbook.md). Validate/probe with `OpenSafe` or `ContentLengthSafe`, then use `GetStringSafeE`, `DownloadBytesSafeE`, or safe Resty equivalents when a request is needed. | `go test ./vurl ./vhttp ./vresty` and `make agent-security-check` |
 | Load configuration from local files or remote URLs | `vconf` | Use `Load` for local trusted files, `LoadRemoteSafe` for untrusted HTTP(S), and `LoadWithOptions` / `LoadRemoteSafeWithOptions` when limits or providers must be reviewable. | `go test ./vconf` |
 | Map structs and maps without JSON serialization | `vbean` | Use `ToStruct`, `ToMap`, `CopyProperties`, or `DecodeResult`; keep weak conversion and strict-unused behavior explicit through `WithWeaklyTyped` and `WithStrictUnused`. | `go test ./vbean` |

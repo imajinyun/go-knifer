@@ -25,7 +25,7 @@ This baseline is derived from `docs/api/tools.json.summary`. `make governance-ma
 | --- | ---: | ---: | ---: | --- | --- | ---: | --- | --- | --- | --- |
 | Safe HTTP (`vhttp`, `vresty`, `vurl`) | 364 | 349 | 95.9% | `internal/httpx/http` 85.0%, `internal/httpx/resty` 80.4%, `internal/url` 87.7%, shared helpers 86.8% | `vhttp` 100.0%, `vresty` 100.0%, `vurl` 100.0% | 10 | Present in `docs/doc/README.md`, `docs/doc/22-vhttp.md`, and `docs/doc/41-vresty.md` | Present in `docs/doc/22-vhttp.md` and `docs/doc/41-vresty.md` | Present in `docs/doc/22-vhttp.md` and `docs/doc/41-vresty.md` | Present in `docs/doc/safe-http-cookbook.md` |
 | Safe crypto (`vcrypto`, `vrand`, `vjwt`) | 211 | 187 | 88.6% | `internal/crypto` 94.1%, `internal/rand` 94.2%, `internal/jwt` 85.5% | `vcrypto` 100.0%, `vrand` 100.0%, `vjwt` 100.0% | 7 | Present in `docs/doc/11-vcrypto.md` and `docs/doc/38-vrand.md` | Present in `docs/doc/11-vcrypto.md` and `docs/doc/38-vrand.md` | Present in `docs/doc/safe-crypto-cookbook.md` | Present in `docs/doc/safe-crypto-cookbook.md` |
-| Daily JSON/file (`vjson`, `vfile`) | 133 | 133 | 100.0% | `internal/json` 88.9%, `internal/file` 88.6% | `vjson` 100.0%, `vfile` 100.0% | 4 | Present in `docs/doc/27-vjson.md` for JSON and `docs/doc/17-vfile.md` for file workflows | Missing | Present in `docs/doc/27-vjson.md` for JSON stdlib boundary; filesystem safety guidance present in `docs/doc/17-vfile.md` | Present in `docs/doc/27-vjson.md` and `docs/doc/17-vfile.md` |
+| Daily JSON/file (`vjson`, `vfile`) | 133 | 133 | 100.0% | `internal/json` 88.9%, `internal/file` 88.6% | `vjson` 100.0%, `vfile` 100.0% | 4 | Present in `docs/doc/27-vjson.md` for JSON and `docs/doc/17-vfile.md` for file workflows | Present in `docs/doc/daily-json-file-faq.md` | Present in `docs/doc/27-vjson.md` for JSON stdlib boundary; filesystem safety guidance present in `docs/doc/17-vfile.md` | Present in `docs/doc/27-vjson.md` and `docs/doc/17-vfile.md` |
 
 ## Strategic themes
 
@@ -89,6 +89,7 @@ The Hutool gap-closure lane is implemented and the active work has moved from fe
 | 22 | Completed | Large Facade Example Depth Governance | Enforced non-regression baselines for `vhttp`, `vnet`, `vnum`, `vresty`, and `vzip`; implementation passes raised `vnum` to 53, `vzip` to 68, `vnet` to 97, `vhttp` to 146, and `vresty` to 120 covered APIs. |
 | 23 | Completed | Safe HTTP Cookbook Governance | Added cookbook-grade scenario guidance for `vhttp`, `vresty`, and `vurl`, then guarded the lane with generated catalog and governance evidence. |
 | 24 | Completed | Safe Crypto Cookbook Governance | Added cookbook-grade scenario and comparison guidance for `vcrypto`, `vrand`, and `vjwt`, then guarded the lane with governance evidence. |
+| 25 | Active | Daily JSON/File FAQ Governance | Add cross-package FAQ guidance for `vjson` and `vfile`, then guard the lane with governance evidence. |
 
 ## Active workflow
 
@@ -97,6 +98,8 @@ Sprint 22 completed large-facade example-depth governance: `example_depth_govern
 Sprint 23 completed Safe HTTP cookbook depth: `safe_http_cookbook_governance` records the governed cookbook path, required scenarios, required checks, and scorecard status for `vhttp`, `vresty`, and `vurl`.
 
 Sprint 24 completed Safe Crypto cookbook depth: `safe_crypto_cookbook_governance` records the governed cookbook path, required scenarios, required checks, and scorecard status for `vcrypto`, `vrand`, and `vjwt`.
+
+Sprint 25 is now the active governance lane for Daily JSON/file FAQ depth. It should turn the Daily JSON/file scorecard's missing FAQ status into machine-checked boundary guidance for `vjson` and `vfile`.
 
 Recommended roadmap loop:
 
