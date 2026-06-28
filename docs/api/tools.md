@@ -12,7 +12,7 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Module | `github.com/imajinyun/knifer-go` |
 | Packages | 55 |
 | Functions | 2687 |
-| Functions with examples | 1395 |
+| Functions with examples | 1406 |
 | Context-aware functions | 36 |
 | Functions returning error | 638 |
 | Variadic functions | 787 |
@@ -1307,7 +1307,7 @@ Import path: `github.com/imajinyun/knifer-go/vhash`
 
 Package vhash provides public APIs for hash utilities.
 
-Quality: 20 functions · 9 with examples · 45.0% example coverage · statuses: recommended=20, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=20, internal=0, empty=0
+Quality: 20 functions · 20 with examples · 100.0% example coverage · statuses: recommended=20, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=20, internal=0, empty=0
 
 Recommended entrypoints:
 
@@ -1329,22 +1329,22 @@ Golden path API set:
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `AdditiveHash` | `func AdditiveHash(s string, prime int) int` | recommended | AdditiveHash calculates an additive hash modulo prime. | facade | `ExampleAdditiveHash` |
-| `ApHash` | `func ApHash(s string) int32` | recommended | ApHash calculates a hash using the AP algorithm. | facade | — |
+| `ApHash` | `func ApHash(s string) int32` | recommended | ApHash calculates a hash using the AP algorithm. | facade | `ExampleApHash` |
 | `BkdrHash` | `func BkdrHash(s string) int32` | recommended | BkdrHash calculates a hash using the BKDR algorithm. | facade | `ExampleBkdrHash` |
 | `DjbHash` | `func DjbHash(s string) int32` | recommended | DjbHash calculates a hash using the DJB algorithm. | facade | `ExampleDjbHash` |
-| `ElfHash` | `func ElfHash(s string) int32` | recommended | ElfHash calculates a hash using the ELF algorithm. | facade | — |
-| `FnvHash` | `func FnvHash(s string) uint32` | recommended | FnvHash calculates a 32-bit FNV-1 hash using the standard library hash/fnv. | facade | — |
-| `FnvHashString` | `func FnvHashString(s string) int32` | recommended | FnvHashString calculates the improved 32-bit FNV-1 hash for strings. | facade | — |
-| `Hash32` | `func Hash32(s string, newHash func() hash.Hash32) uint32` | recommended | Hash32 calculates a 32-bit hash using newHash. | facade | — |
+| `ElfHash` | `func ElfHash(s string) int32` | recommended | ElfHash calculates a hash using the ELF algorithm. | facade | `ExampleElfHash` |
+| `FnvHash` | `func FnvHash(s string) uint32` | recommended | FnvHash calculates a 32-bit FNV-1 hash using the standard library hash/fnv. | facade | `ExampleFnvHash` |
+| `FnvHashString` | `func FnvHashString(s string) int32` | recommended | FnvHashString calculates the improved 32-bit FNV-1 hash for strings. | facade | `ExampleFnvHashString` |
+| `Hash32` | `func Hash32(s string, newHash func() hash.Hash32) uint32` | recommended | Hash32 calculates a 32-bit hash using newHash. | facade | `ExampleHash32` |
 | `HfHash` | `func HfHash(s string) int64` | recommended | HfHash calculates a hash using the HF algorithm. | facade | `ExampleHfHash` |
-| `HfIpHash` | `func HfIpHash(s string) int64` | recommended | HfIpHash calculates a hash using the HFIP algorithm. | facade | — |
+| `HfIpHash` | `func HfIpHash(s string) int64` | recommended | HfIpHash calculates a hash using the HFIP algorithm. | facade | `ExampleHfIpHash` |
 | `JavaDefaultHash` | `func JavaDefaultHash(s string) int32` | recommended | JavaDefaultHash calculates a hash equivalent to Java String.hashCode. | facade | `ExampleJavaDefaultHash` |
-| `JsHash` | `func JsHash(s string) int32` | recommended | JsHash calculates a hash using the JS algorithm. | facade | — |
+| `JsHash` | `func JsHash(s string) int32` | recommended | JsHash calculates a hash using the JS algorithm. | facade | `ExampleJsHash` |
 | `NewConsistentHash` | `func NewConsistentHash(opts ...ConsistentHashOption) *ConsistentHash` | recommended | NewConsistentHash creates an empty consistent hash ring. | facade | `ExampleNewConsistentHash` |
-| `PjwHash` | `func PjwHash(s string) int32` | recommended | PjwHash calculates a hash using the PJW algorithm. | facade | — |
-| `RsHash` | `func RsHash(s string) int32` | recommended | RsHash calculates a hash using the RS algorithm. | facade | — |
-| `SdbmHash` | `func SdbmHash(s string) int32` | recommended | SdbmHash calculates a hash using the SDBM algorithm. | facade | — |
-| `TianlHash` | `func TianlHash(s string) int64` | recommended | TianlHash calculates a hash using the TianL algorithm. | facade | — |
+| `PjwHash` | `func PjwHash(s string) int32` | recommended | PjwHash calculates a hash using the PJW algorithm. | facade | `ExamplePjwHash` |
+| `RsHash` | `func RsHash(s string) int32` | recommended | RsHash calculates a hash using the RS algorithm. | facade | `ExampleRsHash` |
+| `SdbmHash` | `func SdbmHash(s string) int32` | recommended | SdbmHash calculates a hash using the SDBM algorithm. | facade | `ExampleSdbmHash` |
+| `TianlHash` | `func TianlHash(s string) int64` | recommended | TianlHash calculates a hash using the TianL algorithm. | facade | `ExampleTianlHash` |
 | `WithHashFunc` | `func WithHashFunc(hashFunc func([]byte) uint64) ConsistentHashOption` | recommended | WithHashFunc sets the hash function used by the ring. | facade | `ExampleWithHashFunc` |
 | `WithReplicaCount` | `func WithReplicaCount(n int) ConsistentHashOption` | recommended | WithReplicaCount sets the number of virtual nodes per real node. | facade | `ExampleWithReplicaCount` |
 | `WithVirtualNodes` | `func WithVirtualNodes(n int) ConsistentHashOption` | recommended | WithVirtualNodes sets the number of virtual nodes per real node. | facade | `ExampleWithVirtualNodes` |

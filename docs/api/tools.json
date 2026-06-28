@@ -4,7 +4,7 @@
   "summary": {
     "package_count": 55,
     "function_count": 2687,
-    "functions_with_examples": 1395,
+    "functions_with_examples": 1406,
     "context_aware_functions": 36,
     "returns_error_functions": 638,
     "variadic_functions": 787,
@@ -16746,8 +16746,8 @@
       "synopsis": "Package vhash provides public APIs for hash utilities.",
       "summary": {
         "function_count": 20,
-        "functions_with_examples": 9,
-        "example_coverage_percent": 45,
+        "functions_with_examples": 20,
+        "example_coverage_percent": 100,
         "status_counts": {
           "compatibility": 0,
           "deprecated": 0,
@@ -16843,7 +16843,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleApHash"
+          ]
         },
         {
           "name": "BkdrHash",
@@ -16906,7 +16909,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleElfHash"
+          ]
         },
         {
           "name": "FnvHash",
@@ -16925,7 +16931,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleFnvHash"
+          ]
         },
         {
           "name": "FnvHashString",
@@ -16944,7 +16953,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleFnvHashString"
+          ]
         },
         {
           "name": "Hash32",
@@ -16967,7 +16979,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleHash32"
+          ]
         },
         {
           "name": "HfHash",
@@ -17008,7 +17023,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleHfIpHash"
+          ]
         },
         {
           "name": "JavaDefaultHash",
@@ -17049,7 +17067,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleJsHash"
+          ]
         },
         {
           "name": "NewConsistentHash",
@@ -17090,7 +17111,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExamplePjwHash"
+          ]
         },
         {
           "name": "RsHash",
@@ -17109,7 +17133,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleRsHash"
+          ]
         },
         {
           "name": "SdbmHash",
@@ -17128,7 +17155,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleSdbmHash"
+          ]
         },
         {
           "name": "TianlHash",
@@ -17147,7 +17177,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleTianlHash"
+          ]
         },
         {
           "name": "WithHashFunc",
