@@ -183,3 +183,163 @@ func ExampleBinaryToLong() {
 	// 256
 	// <nil>
 }
+
+func ExampleMul() {
+	fmt.Println(vnum.Mul(2, 3.5, 4))
+	// Output: 28
+}
+
+func ExampleSubStr() {
+	fmt.Println(vnum.SubStr("10.5", "0.25").FloatString(2))
+	// Output: 10.25
+}
+
+func ExampleMulStr() {
+	fmt.Println(vnum.MulStr("1.5", "2").FloatString(1))
+	// Output: 3.0
+}
+
+func ExampleDivWithMode() {
+	fmt.Println(vnum.DivWithMode(10, 4, 0, vnum.RoundHalfUp))
+	// Output: 3
+}
+
+func ExamplePow() {
+	fmt.Println(vnum.Pow(1.25, 2))
+	// Output: 1.5625
+}
+
+func ExamplePowWithMode() {
+	fmt.Println(vnum.PowWithMode(2, -3, 2, vnum.RoundHalfUp))
+	// Output: 0.13
+}
+
+func ExampleAbsInteger() {
+	fmt.Println(vnum.AbsInteger(-42))
+	// Output: 42
+}
+
+func ExampleAbsFloat64() {
+	fmt.Println(vnum.AbsFloat64(-3.5))
+	// Output: 3.5
+}
+
+func ExampleMinInteger() {
+	fmt.Println(vnum.MinInteger(7, 3))
+	// Output: 3
+}
+
+func ExampleMinIntegers() {
+	fmt.Println(vnum.MinIntegers(7, 3, 9))
+	// Output: 3
+}
+
+func ExampleMaxInteger() {
+	fmt.Println(vnum.MaxInteger(7, 3))
+	// Output: 7
+}
+
+func ExampleMaxIntegers() {
+	fmt.Println(vnum.MaxIntegers(7, 3, 9))
+	// Output: 9
+}
+
+func ExampleIsGreater() {
+	fmt.Println(vnum.IsGreater(5, 3))
+	// Output: true
+}
+
+func ExampleIsGreaterOrEqual() {
+	fmt.Println(vnum.IsGreaterOrEqual(5, 5))
+	// Output: true
+}
+
+func ExampleIsLess() {
+	fmt.Println(vnum.IsLess(3, 5))
+	// Output: true
+}
+
+func ExampleIsLessOrEqual() {
+	fmt.Println(vnum.IsLessOrEqual(5, 5))
+	// Output: true
+}
+
+func ExampleIsIn() {
+	fmt.Println(vnum.IsIn(5, 1, 10))
+	// Output: true
+}
+
+func ExampleEquals() {
+	fmt.Println(vnum.Equals(0.1+0.2, 0.3))
+	// Output: true
+}
+
+func ExampleEqualsExact() {
+	sum := 0.1
+	sum += 0.2
+	fmt.Println(vnum.EqualsExact(sum, 0.3))
+	// Output: false
+}
+
+func ExampleEqualsInt64() {
+	fmt.Println(vnum.EqualsInt64(42, 42))
+	// Output: true
+}
+
+func ExampleEqualsBigDecimal() {
+	left := big.NewRat(10, 4)
+	right := big.NewRat(5, 2)
+	fmt.Println(vnum.EqualsBigDecimal(left, right))
+	// Output: true
+}
+
+func ExampleEqualsChar() {
+	fmt.Println(vnum.EqualsChar('G', 'g', true))
+	fmt.Println(vnum.EqualsChar('G', 'g', false))
+	// Output:
+	// true
+	// false
+}
+
+func ExampleMin() {
+	fmt.Println(vnum.Min(7, 3, 9))
+	// Output: 3
+}
+
+func ExampleSum() {
+	fmt.Println(vnum.Sum(1, 2, 3))
+	// Output: 6
+}
+
+func ExampleAvg() {
+	fmt.Println(vnum.Avg(2, 4, 6))
+	// Output: 4
+}
+
+func ExampleIsBeside() {
+	fmt.Println(vnum.IsBeside(9, 10))
+	// Output: true
+}
+
+func ExampleToBigDecimal() {
+	fmt.Println(vnum.ToBigDecimal("2.50").FloatString(2))
+	// Output: 2.50
+}
+
+func ExampleToBigInteger() {
+	fmt.Println(vnum.ToBigInteger("12345678901234567890"))
+	// Output: 12345678901234567890
+}
+
+func ExampleCount() {
+	fmt.Println(vnum.Count(10, 3))
+	// Output: 4
+}
+
+func ExampleZero2One() {
+	fmt.Println(vnum.Zero2One(0))
+	fmt.Println(vnum.Zero2One(5))
+	// Output:
+	// 1
+	// 5
+}

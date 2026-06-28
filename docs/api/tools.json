@@ -4,7 +4,7 @@
   "summary": {
     "package_count": 55,
     "function_count": 2724,
-    "functions_with_examples": 1425,
+    "functions_with_examples": 1455,
     "context_aware_functions": 36,
     "returns_error_functions": 666,
     "variadic_functions": 794,
@@ -38864,8 +38864,8 @@
       "synopsis": "Package vnum provides public APIs for numeric utilities.",
       "summary": {
         "function_count": 146,
-        "functions_with_examples": 23,
-        "example_coverage_percent": 15.8,
+        "functions_with_examples": 53,
+        "example_coverage_percent": 36.3,
         "status_counts": {
           "compatibility": 0,
           "deprecated": 0,
@@ -38890,7 +38890,7 @@
           "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
         },
         {
-          "name": "Add",
+          "name": "AbsFloat64",
           "use_when": "Use first for concise trusted-input workflows in vnum.",
           "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnum."
         },
@@ -38900,7 +38900,7 @@
           "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnum."
         },
         {
-          "name": "AbsFloat64",
+          "name": "AbsInteger",
           "use_when": "Use first for concise trusted-input workflows in vnum.",
           "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnum."
         }
@@ -38917,7 +38917,7 @@
           "rationale": "Prefer when providers, limits, parsers, or policies must be reviewable at the call site."
         },
         {
-          "name": "Add",
+          "name": "AbsFloat64",
           "profile": "day-one",
           "rationale": "Start here for concise, trusted-input use cases in this package."
         }
@@ -38959,7 +38959,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleAbsFloat64"
+          ]
         },
         {
           "name": "AbsInteger",
@@ -38978,7 +38981,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleAbsInteger"
+          ]
         },
         {
           "name": "AbsIntegerE",
@@ -39098,7 +39104,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleAvg"
+          ]
         },
         {
           "name": "AvgNumber",
@@ -39336,7 +39345,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleCount"
+          ]
         },
         {
           "name": "DecimalFormat",
@@ -39492,7 +39504,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleDivWithMode"
+          ]
         },
         {
           "name": "Divisor",
@@ -39538,7 +39553,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleEquals"
+          ]
         },
         {
           "name": "EqualsBigDecimal",
@@ -39561,7 +39579,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleEqualsBigDecimal"
+          ]
         },
         {
           "name": "EqualsChar",
@@ -39588,7 +39609,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleEqualsChar"
+          ]
         },
         {
           "name": "EqualsExact",
@@ -39611,7 +39635,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleEqualsExact"
+          ]
         },
         {
           "name": "EqualsFloat32Exact",
@@ -39657,7 +39684,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleEqualsInt64"
+          ]
         },
         {
           "name": "Factorial",
@@ -40092,7 +40122,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsBeside"
+          ]
         },
         {
           "name": "IsDigits",
@@ -40195,7 +40228,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsGreater"
+          ]
         },
         {
           "name": "IsGreaterOrEqual",
@@ -40218,7 +40254,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsGreaterOrEqual"
+          ]
         },
         {
           "name": "IsIn",
@@ -40245,7 +40284,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsIn"
+          ]
         },
         {
           "name": "IsInteger",
@@ -40310,7 +40352,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsLess"
+          ]
         },
         {
           "name": "IsLessOrEqual",
@@ -40333,7 +40378,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsLessOrEqual"
+          ]
         },
         {
           "name": "IsLong",
@@ -40621,7 +40669,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleMaxInteger"
+          ]
         },
         {
           "name": "MaxIntegers",
@@ -40640,7 +40691,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleMaxIntegers"
+          ]
         },
         {
           "name": "Min",
@@ -40659,7 +40713,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleMin"
+          ]
         },
         {
           "name": "MinFloat64",
@@ -40724,7 +40781,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleMinInteger"
+          ]
         },
         {
           "name": "MinIntegers",
@@ -40743,7 +40803,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleMinIntegers"
+          ]
         },
         {
           "name": "Mul",
@@ -40762,7 +40825,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleMul"
+          ]
         },
         {
           "name": "MulStr",
@@ -40781,7 +40847,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleMulStr"
+          ]
         },
         {
           "name": "Multiple",
@@ -41388,7 +41457,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExamplePow"
+          ]
         },
         {
           "name": "PowWithMode",
@@ -41419,7 +41491,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExamplePowWithMode"
+          ]
         },
         {
           "name": "ProcessMultiple",
@@ -41711,7 +41786,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleSubStr"
+          ]
         },
         {
           "name": "Sum",
@@ -41730,7 +41808,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleSum"
+          ]
         },
         {
           "name": "SumNumber",
@@ -41771,7 +41852,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleToBigDecimal"
+          ]
         },
         {
           "name": "ToBigDecimalWithOptions",
@@ -41813,7 +41897,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleToBigInteger"
+          ]
         },
         {
           "name": "ToBytes",
@@ -42233,7 +42320,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleZero2One"
+          ]
         }
       ]
     },

@@ -12,7 +12,7 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Module | `github.com/imajinyun/knifer-go` |
 | Packages | 55 |
 | Functions | 2724 |
-| Functions with examples | 1425 |
+| Functions with examples | 1455 |
 | Context-aware functions | 36 |
 | Functions returning error | 666 |
 | Variadic functions | 794 |
@@ -2605,7 +2605,7 @@ Import path: `github.com/imajinyun/knifer-go/vnum`
 
 Package vnum provides public APIs for numeric utilities.
 
-Quality: 146 functions · 23 with examples · 15.8% example coverage · statuses: recommended=146, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=15, internal=131, empty=0
+Quality: 146 functions · 53 with examples · 36.3% example coverage · statuses: recommended=146, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=15, internal=131, empty=0
 
 Recommended entrypoints:
 
@@ -2613,7 +2613,7 @@ Recommended entrypoints:
 | --- | --- | --- |
 | `AbsIntegerE` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `DecimalFormatMoneyWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
-| `Add` | day-one | Start here for concise, trusted-input use cases in this package. |
+| `AbsFloat64` | day-one | Start here for concise, trusted-input use cases in this package. |
 
 Golden path API set:
 
@@ -2621,20 +2621,20 @@ Golden path API set:
 | --- | --- | --- |
 | `AbsIntegerE` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
 | `DecimalFormatMoneyWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
-| `Add` | Use first for concise trusted-input workflows in vnum. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnum. |
-| `AbsFloat32` | Use first for concise trusted-input workflows in vnum. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnum. |
 | `AbsFloat64` | Use first for concise trusted-input workflows in vnum. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnum. |
+| `AbsFloat32` | Use first for concise trusted-input workflows in vnum. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnum. |
+| `AbsInteger` | Use first for concise trusted-input workflows in vnum. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vnum. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
 | `AbsFloat32` | `func AbsFloat32(x float32) float32` | recommended | AbsFloat32 returns the absolute value of x without widening to float64. | facade | — |
-| `AbsFloat64` | `func AbsFloat64(x float64) float64` | recommended | AbsFloat64 returns the absolute value of x. | facade | — |
-| `AbsInteger` | `func AbsInteger[T integer](v T) T` | recommended | AbsInteger returns the absolute value of v, or zero on signed-min overflow. | facade | — |
+| `AbsFloat64` | `func AbsFloat64(x float64) float64` | recommended | AbsFloat64 returns the absolute value of x. | facade | `ExampleAbsFloat64` |
+| `AbsInteger` | `func AbsInteger[T integer](v T) T` | recommended | AbsInteger returns the absolute value of v, or zero on signed-min overflow. | facade | `ExampleAbsInteger` |
 | `AbsIntegerE` | `func AbsIntegerE[T integer](v T) (T, error)` | recommended | AbsIntegerE returns the absolute value of v, reporting signed-min overflow. | facade | `ExampleAbsIntegerE` |
 | `Add` | `func Add(values ...float64) float64` | recommended | Add returns the sum of all values using decimal strings as the intermediate form. | internal | `ExampleAdd` |
 | `AddStr` | `func AddStr(values ...string) *big.Rat` | recommended | AddStr returns the exact decimal sum of all numeric strings. | internal | `ExampleAddStr` |
 | `AppendRange` | `func AppendRange(start int, stop int, step int, values []int) []int` | recommended | AppendRange appends an inclusive range to values and returns the result. | internal | `ExampleAppendRange` |
-| `Avg` | `func Avg[T Number](nums ...T) float64` | recommended | Avg returns the arithmetic mean as float64, or 0 for empty input. | internal | — |
+| `Avg` | `func Avg[T Number](nums ...T) float64` | recommended | Avg returns the arithmetic mean as float64, or 0 for empty input. | internal | `ExampleAvg` |
 | `AvgNumber` | `func AvgNumber[T number](values ...T) float64` | recommended | AvgNumber returns the arithmetic mean of all values, or 0 for empty input. | facade | `ExampleAvgNumber` |
 | `BinaryToInt` | `func BinaryToInt(binaryStr string) (int, error)` | recommended | BinaryToInt parses a binary string into int. | internal | `ExampleBinaryToInt` |
 | `BinaryToIntWithOptions` | `func BinaryToIntWithOptions(binaryStr string, opts ...ParseOption) (int, error)` | recommended | BinaryToIntWithOptions parses a binary string into int using per-call parser options. | internal | — |
@@ -2644,20 +2644,20 @@ Golden path API set:
 | `CalculateWithOptions` | `func CalculateWithOptions(expression string, opts ...ParseOption) (float64, error)` | recommended | CalculateWithOptions evaluates a simple arithmetic expression using per-call parser options. | internal | — |
 | `CeilDiv` | `func CeilDiv(v1 int, v2 int) int` | recommended | CeilDiv returns ceil(v1 / v2). | internal | `ExampleCeilDiv` |
 | `Compare` | `func Compare[T Ordered](x T, y T) int` | recommended | Compare returns -1, 0, or 1 according to x and y ordering. | internal | `ExampleCompare` |
-| `Count` | `func Count(total int, part int) int` | recommended | Count returns how many parts of size part are needed for total. | internal | — |
+| `Count` | `func Count(total int, part int) int` | recommended | Count returns how many parts of size part are needed for total. | internal | `ExampleCount` |
 | `DecimalFormat` | `func DecimalFormat(format string, v float64) string` | recommended | DecimalFormat formats v with common decimal patterns such as "0", "0.00", ",##0.00" and percent patterns. | internal | — |
 | `DecimalFormatMoney` | `func DecimalFormatMoney(v float64) string` | recommended | DecimalFormatMoney formats money with comma grouping and two decimal places. | internal | `ExampleDecimalFormatMoney` |
 | `DecimalFormatMoneyWithOptions` | `func DecimalFormatMoneyWithOptions(v float64, opts ...FormatOption) string` | recommended | DecimalFormatMoneyWithOptions formats money with comma grouping and two decimal places using custom providers. | internal | — |
 | `DecimalFormatWithOptions` | `func DecimalFormatWithOptions(format string, v float64, opts ...FormatOption) string` | recommended | DecimalFormatWithOptions formats v with common decimal patterns using custom providers. | internal | — |
 | `Div` | `func Div(a float64, b float64, scale ...int) float64` | recommended | Div divides a by b, optionally rounding the result to scale decimal places. | facade | `ExampleDiv` |
-| `DivWithMode` | `func DivWithMode(a float64, b float64, scale int, mode RoundingMode) float64` | recommended | DivWithMode divides a by b and rounds using the requested mode. | internal | — |
+| `DivWithMode` | `func DivWithMode(a float64, b float64, scale int, mode RoundingMode) float64` | recommended | DivWithMode divides a by b and rounds using the requested mode. | internal | `ExampleDivWithMode` |
 | `Divisor` | `func Divisor(m int, n int) int` | recommended | Divisor returns the greatest common divisor. | internal | — |
-| `Equals` | `func Equals(a float64, b float64) bool` | recommended | Equals compares two floats using a fixed 1e-9 tolerance. | internal | — |
-| `EqualsBigDecimal` | `func EqualsBigDecimal(a *big.Rat, b *big.Rat) bool` | recommended | EqualsBigDecimal compares decimal values by numeric value. | internal | — |
-| `EqualsChar` | `func EqualsChar(c1 rune, c2 rune, ignoreCase bool) bool` | recommended | EqualsChar compares two runes with optional case-insensitive mode. | internal | — |
-| `EqualsExact` | `func EqualsExact(a float64, b float64) bool` | recommended | EqualsExact compares two floats by IEEE-754 bits. | internal | — |
+| `Equals` | `func Equals(a float64, b float64) bool` | recommended | Equals compares two floats using a fixed 1e-9 tolerance. | internal | `ExampleEquals` |
+| `EqualsBigDecimal` | `func EqualsBigDecimal(a *big.Rat, b *big.Rat) bool` | recommended | EqualsBigDecimal compares decimal values by numeric value. | internal | `ExampleEqualsBigDecimal` |
+| `EqualsChar` | `func EqualsChar(c1 rune, c2 rune, ignoreCase bool) bool` | recommended | EqualsChar compares two runes with optional case-insensitive mode. | internal | `ExampleEqualsChar` |
+| `EqualsExact` | `func EqualsExact(a float64, b float64) bool` | recommended | EqualsExact compares two floats by IEEE-754 bits. | internal | `ExampleEqualsExact` |
 | `EqualsFloat32Exact` | `func EqualsFloat32Exact(a float32, b float32) bool` | recommended | EqualsFloat32Exact compares two float32 values by IEEE-754 bits. | internal | — |
-| `EqualsInt64` | `func EqualsInt64(a int64, b int64) bool` | recommended | EqualsInt64 compares int64 values. | internal | — |
+| `EqualsInt64` | `func EqualsInt64(a int64, b int64) bool` | recommended | EqualsInt64 compares int64 values. | internal | `ExampleEqualsInt64` |
 | `Factorial` | `func Factorial(n uint64) (uint64, error)` | recommended | Factorial returns n! for 0 <= n <= 20. | internal | — |
 | `FactorialBig` | `func FactorialBig(n *big.Int) *big.Int` | recommended | FactorialBig returns n! as a big integer. | internal | — |
 | `FactorialBigRange` | `func FactorialBigRange(start *big.Int, end *big.Int) *big.Int` | recommended | FactorialBigRange returns start * (start-1) * ... | internal | — |
@@ -2674,18 +2674,18 @@ Golden path API set:
 | `GenRandomNumberWithSeedWithOptions` | `func GenRandomNumberWithSeedWithOptions(begin int, end int, size int, seed []int, opts ...RandomNumberOption) []int` | recommended | GenRandomNumberWithSeedWithOptions picks size unique values from seed with per-call options. | internal | — |
 | `GetBinaryStr` | `func GetBinaryStr(number any) string` | recommended | GetBinaryStr returns the binary representation of common numeric values. | internal | — |
 | `GetBinaryStrWithOptions` | `func GetBinaryStrWithOptions(number any, opts ...FormatOption) string` | recommended | GetBinaryStrWithOptions returns the binary representation using custom providers. | internal | — |
-| `IsBeside` | `func IsBeside[T ~int \| ~int64](number1 T, number2 T) bool` | recommended | IsBeside reports whether two integers differ by 1. | internal | — |
+| `IsBeside` | `func IsBeside[T ~int \| ~int64](number1 T, number2 T) bool` | recommended | IsBeside reports whether two integers differ by 1. | internal | `ExampleIsBeside` |
 | `IsDigits` | `func IsDigits(s string) bool` | recommended | IsDigits reports whether s contains only unsigned ASCII digits. | internal | — |
 | `IsDouble` | `func IsDouble(s string) bool` | recommended | IsDouble reports whether s is a valid floating-point value containing a decimal point. | internal | — |
 | `IsDoubleWithOptions` | `func IsDoubleWithOptions(s string, opts ...ParseOption) bool` | recommended | IsDoubleWithOptions reports whether s is a valid floating-point value using per-call parser options. | internal | — |
 | `IsEven` | `func IsEven(num int) bool` | recommended | IsEven reports whether num is even. | internal | — |
-| `IsGreater` | `func IsGreater[T Ordered](a T, b T) bool` | recommended | IsGreater reports whether a > b. | internal | — |
-| `IsGreaterOrEqual` | `func IsGreaterOrEqual[T Ordered](a T, b T) bool` | recommended | IsGreaterOrEqual reports whether a >= b. | internal | — |
-| `IsIn` | `func IsIn[T Ordered](value T, minInclude T, maxInclude T) bool` | recommended | IsIn reports whether value is within [minInclude, maxInclude]. | internal | — |
+| `IsGreater` | `func IsGreater[T Ordered](a T, b T) bool` | recommended | IsGreater reports whether a > b. | internal | `ExampleIsGreater` |
+| `IsGreaterOrEqual` | `func IsGreaterOrEqual[T Ordered](a T, b T) bool` | recommended | IsGreaterOrEqual reports whether a >= b. | internal | `ExampleIsGreaterOrEqual` |
+| `IsIn` | `func IsIn[T Ordered](value T, minInclude T, maxInclude T) bool` | recommended | IsIn reports whether value is within [minInclude, maxInclude]. | internal | `ExampleIsIn` |
 | `IsInteger` | `func IsInteger(s string) bool` | recommended | IsInteger reports whether s is a valid base-10 int. | internal | — |
 | `IsIntegerWithOptions` | `func IsIntegerWithOptions(s string, opts ...ParseOption) bool` | recommended | IsIntegerWithOptions reports whether s is a valid base-10 int using per-call parser options. | internal | — |
-| `IsLess` | `func IsLess[T Ordered](a T, b T) bool` | recommended | IsLess reports whether a < b. | internal | — |
-| `IsLessOrEqual` | `func IsLessOrEqual[T Ordered](a T, b T) bool` | recommended | IsLessOrEqual reports whether a <= b. | internal | — |
+| `IsLess` | `func IsLess[T Ordered](a T, b T) bool` | recommended | IsLess reports whether a < b. | internal | `ExampleIsLess` |
+| `IsLessOrEqual` | `func IsLessOrEqual[T Ordered](a T, b T) bool` | recommended | IsLessOrEqual reports whether a <= b. | internal | `ExampleIsLessOrEqual` |
 | `IsLong` | `func IsLong(s string) bool` | recommended | IsLong reports whether s is a valid base-10 int64. | internal | — |
 | `IsLongWithOptions` | `func IsLongWithOptions(s string, opts ...ParseOption) bool` | recommended | IsLongWithOptions reports whether s is a valid base-10 int64 using per-call parser options. | internal | — |
 | `IsNumber` | `func IsNumber(s string) bool` | recommended | IsNumber reports whether s is a valid number, including hex and scientific notation. | internal | — |
@@ -2699,15 +2699,15 @@ Golden path API set:
 | `Max` | `func Max[T Ordered](nums ...T) T` | recommended | Max returns the maximum value, or the zero value when no values are provided. | internal | `ExampleMax` |
 | `MaxFloat64` | `func MaxFloat64(a float64, b float64) float64` | recommended | MaxFloat64 returns the larger of a or b. | facade | — |
 | `MaxFloat64s` | `func MaxFloat64s(values ...float64) float64` | recommended | MaxFloat64s returns the largest float64 value, or 0 for empty input. | facade | — |
-| `MaxInteger` | `func MaxInteger[T integer](a T, b T) T` | recommended | MaxInteger returns the larger of a or b. | facade | — |
-| `MaxIntegers` | `func MaxIntegers[T integer](values ...T) T` | recommended | MaxIntegers returns the largest integer value, or zero for empty input. | facade | — |
-| `Min` | `func Min[T Ordered](nums ...T) T` | recommended | Min returns the minimum value, or the zero value when no values are provided. | internal | — |
+| `MaxInteger` | `func MaxInteger[T integer](a T, b T) T` | recommended | MaxInteger returns the larger of a or b. | facade | `ExampleMaxInteger` |
+| `MaxIntegers` | `func MaxIntegers[T integer](values ...T) T` | recommended | MaxIntegers returns the largest integer value, or zero for empty input. | facade | `ExampleMaxIntegers` |
+| `Min` | `func Min[T Ordered](nums ...T) T` | recommended | Min returns the minimum value, or the zero value when no values are provided. | internal | `ExampleMin` |
 | `MinFloat64` | `func MinFloat64(a float64, b float64) float64` | recommended | MinFloat64 returns the smaller of a or b. | facade | — |
 | `MinFloat64s` | `func MinFloat64s(values ...float64) float64` | recommended | MinFloat64s returns the smallest float64 value, or 0 for empty input. | facade | — |
-| `MinInteger` | `func MinInteger[T integer](a T, b T) T` | recommended | MinInteger returns the smaller of a or b. | facade | — |
-| `MinIntegers` | `func MinIntegers[T integer](values ...T) T` | recommended | MinIntegers returns the smallest integer value, or zero for empty input. | facade | — |
-| `Mul` | `func Mul(values ...float64) float64` | recommended | Mul returns the product of all values. | internal | — |
-| `MulStr` | `func MulStr(values ...string) *big.Rat` | recommended | MulStr returns the exact decimal product of all numeric strings. | internal | — |
+| `MinInteger` | `func MinInteger[T integer](a T, b T) T` | recommended | MinInteger returns the smaller of a or b. | facade | `ExampleMinInteger` |
+| `MinIntegers` | `func MinIntegers[T integer](values ...T) T` | recommended | MinIntegers returns the smallest integer value, or zero for empty input. | facade | `ExampleMinIntegers` |
+| `Mul` | `func Mul(values ...float64) float64` | recommended | Mul returns the product of all values. | internal | `ExampleMul` |
+| `MulStr` | `func MulStr(values ...string) *big.Rat` | recommended | MulStr returns the exact decimal product of all numeric strings. | internal | `ExampleMulStr` |
 | `Multiple` | `func Multiple(m int, n int) int` | recommended | Multiple returns the least common multiple. | internal | — |
 | `NewBigInteger` | `func NewBigInteger(str string) (*big.Int, bool)` | recommended | NewBigInteger creates a BigInteger from decimal, hex (0x/#), or octal strings. | internal | — |
 | `Null2Zero` | `func Null2Zero(decimal *big.Rat) *big.Rat` | recommended | Null2Zero returns 0 when decimal is nil. | internal | — |
@@ -2734,8 +2734,8 @@ Golden path API set:
 | `ParseNumberWithOptions` | `func ParseNumberWithOptions(numberStr string, opts ...ParseOption) (float64, error)` | recommended | ParseNumberWithOptions parses a numeric string as float64 using per-call parser options. | internal | — |
 | `PartValue` | `func PartValue(total int, partCount int) int` | recommended | PartValue splits total into partCount parts and rounds up when there is a remainder. | internal | — |
 | `PartValueWithMode` | `func PartValueWithMode(total int, partCount int, plusOneWhenHasRem bool) int` | recommended | PartValueWithMode splits total into partCount parts. | internal | — |
-| `Pow` | `func Pow(number float64, n int) float64` | recommended | Pow raises number to n. | internal | — |
-| `PowWithMode` | `func PowWithMode(number float64, n int, scale int, mode RoundingMode) float64` | recommended | PowWithMode raises number to n and applies scale/mode for negative exponents. | internal | — |
+| `Pow` | `func Pow(number float64, n int) float64` | recommended | Pow raises number to n. | internal | `ExamplePow` |
+| `PowWithMode` | `func PowWithMode(number float64, n int, scale int, mode RoundingMode) float64` | recommended | PowWithMode raises number to n and applies scale/mode for negative exponents. | internal | `ExamplePowWithMode` |
 | `ProcessMultiple` | `func ProcessMultiple(selectNum int, minNum int) int` | recommended | ProcessMultiple returns the combination count C(selectNum, minNum). | internal | — |
 | `Range` | `func Range(start int, end int, step int) []int` | recommended | Range returns a half-open integer sequence [start, end) using step. | internal | — |
 | `RangeClosed` | `func RangeClosed(start int, stop int, step int) []int` | recommended | RangeClosed returns an inclusive integer sequence. | internal | `ExampleRangeClosed` |
@@ -2747,12 +2747,12 @@ Golden path API set:
 | `RoundStrWithOptions` | `func RoundStrWithOptions(v float64, scale int, opts ...FormatOption) string` | recommended | RoundStrWithOptions returns Round formatted with fixed scale digits using custom providers. | internal | — |
 | `Sqrt` | `func Sqrt(x uint64) uint64` | recommended | Sqrt returns the integer square root of x. | internal | — |
 | `Sub` | `func Sub(values ...float64) float64` | recommended | Sub subtracts all following values from the first value. | internal | `ExampleSub` |
-| `SubStr` | `func SubStr(values ...string) *big.Rat` | recommended | SubStr subtracts all following numeric strings from the first value. | internal | — |
-| `Sum` | `func Sum[T Number](nums ...T) T` | recommended | Sum returns the sum of all values. | internal | — |
+| `SubStr` | `func SubStr(values ...string) *big.Rat` | recommended | SubStr subtracts all following numeric strings from the first value. | internal | `ExampleSubStr` |
+| `Sum` | `func Sum[T Number](nums ...T) T` | recommended | Sum returns the sum of all values. | internal | `ExampleSum` |
 | `SumNumber` | `func SumNumber[T number](values ...T) float64` | recommended | SumNumber returns the sum of all integer or floating-point values as float64. | facade | `ExampleSumNumber` |
-| `ToBigDecimal` | `func ToBigDecimal(numberStr string) *big.Rat` | recommended | ToBigDecimal parses a decimal string into a rational number. | internal | — |
+| `ToBigDecimal` | `func ToBigDecimal(numberStr string) *big.Rat` | recommended | ToBigDecimal parses a decimal string into a rational number. | internal | `ExampleToBigDecimal` |
 | `ToBigDecimalWithOptions` | `func ToBigDecimalWithOptions(numberStr string, opts ...ParseOption) *big.Rat` | recommended | ToBigDecimalWithOptions parses a decimal string using per-call parser options for fallback parsing. | internal | — |
-| `ToBigInteger` | `func ToBigInteger(number string) *big.Int` | recommended | ToBigInteger parses an integer string. | internal | — |
+| `ToBigInteger` | `func ToBigInteger(number string) *big.Int` | recommended | ToBigInteger parses an integer string. | internal | `ExampleToBigInteger` |
 | `ToBytes` | `func ToBytes(value int32) []byte` | recommended | ToBytes converts int32 to big-endian bytes. | internal | — |
 | `ToDouble` | `func ToDouble(value any) float64` | recommended | ToDouble converts numeric values to float64 while preserving float32 textual precision. | internal | — |
 | `ToDoubleWithOptions` | `func ToDoubleWithOptions(value any, opts ...DoubleOption) float64` | recommended | ToDoubleWithOptions converts numeric values to float64 while preserving float32 textual precision using custom providers. | internal | — |
@@ -2772,7 +2772,7 @@ Golden path API set:
 | `WithParseFloatFunc` | `func WithParseFloatFunc(parser func(string, int) (float64, error)) ParseOption` | recommended | WithParseFloatFunc sets the floating-point parser used by parsing helpers. | internal | — |
 | `WithParseIntFunc` | `func WithParseIntFunc(parser func(string, int, int) (int64, error)) ParseOption` | recommended | WithParseIntFunc sets the signed integer parser used by parsing helpers. | internal | — |
 | `WithRandomReader` | `func WithRandomReader(reader io.Reader) RandomNumberOption` | recommended | WithRandomReader sets the random source used by Gen*WithOptions helpers. | internal | — |
-| `Zero2One` | `func Zero2One(value int) int` | recommended | Zero2One returns 1 when value is 0, otherwise value. | internal | — |
+| `Zero2One` | `func Zero2One(value int) int` | recommended | Zero2One returns 1 when value is 0, otherwise value. | internal | `ExampleZero2One` |
 
 ### vobj
 
