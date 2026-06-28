@@ -12,7 +12,7 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Module | `github.com/imajinyun/knifer-go` |
 | Packages | 55 |
 | Functions | 2687 |
-| Functions with examples | 1354 |
+| Functions with examples | 1373 |
 | Context-aware functions | 36 |
 | Functions returning error | 638 |
 | Variadic functions | 787 |
@@ -337,7 +337,7 @@ Import path: `github.com/imajinyun/knifer-go/vcodec`
 
 Package vcodec provides public APIs for encoding and decoding utilities.
 
-Quality: 29 functions · 10 with examples · 34.5% example coverage · statuses: recommended=29, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=15, internal=14, empty=0
+Quality: 29 functions · 29 with examples · 100.0% example coverage · statuses: recommended=29, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=15, internal=14, empty=0
 
 Recommended entrypoints:
 
@@ -358,35 +358,35 @@ Golden path API set:
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
-| `Base32Decode` | `func Base32Decode(s string) ([]byte, error)` | recommended | Base32Decode decodes a standard Base32 string. | facade | — |
-| `Base32DecodeWithEncoding` | `func Base32DecodeWithEncoding(s string, encoding Base32Encoding) ([]byte, error)` | recommended | Base32DecodeWithEncoding decodes a Base32 string with the requested alphabet. | facade | — |
+| `Base32Decode` | `func Base32Decode(s string) ([]byte, error)` | recommended | Base32Decode decodes a standard Base32 string. | facade | `ExampleBase32Decode` |
+| `Base32DecodeWithEncoding` | `func Base32DecodeWithEncoding(s string, encoding Base32Encoding) ([]byte, error)` | recommended | Base32DecodeWithEncoding decodes a Base32 string with the requested alphabet. | facade | `ExampleBase32DecodeWithEncoding` |
 | `Base32Encode` | `func Base32Encode(data []byte) string` | recommended | Base32Encode encodes bytes with standard Base32 encoding. | facade | `ExampleBase32Encode` |
-| `Base32EncodeWithEncoding` | `func Base32EncodeWithEncoding(data []byte, encoding Base32Encoding) string` | recommended | Base32EncodeWithEncoding encodes bytes with the requested Base32 alphabet. | facade | — |
-| `Base58Decode` | `func Base58Decode(s string) ([]byte, error)` | recommended | Base58Decode decodes a Bitcoin Base58 string. | facade | — |
-| `Base58DecodeWithAlphabet` | `func Base58DecodeWithAlphabet(s string, alphabet Base58Alphabet) ([]byte, error)` | recommended | Base58DecodeWithAlphabet decodes a Base58 string with a supported alphabet. | facade | — |
+| `Base32EncodeWithEncoding` | `func Base32EncodeWithEncoding(data []byte, encoding Base32Encoding) string` | recommended | Base32EncodeWithEncoding encodes bytes with the requested Base32 alphabet. | facade | `ExampleBase32EncodeWithEncoding` |
+| `Base58Decode` | `func Base58Decode(s string) ([]byte, error)` | recommended | Base58Decode decodes a Bitcoin Base58 string. | facade | `ExampleBase58Decode` |
+| `Base58DecodeWithAlphabet` | `func Base58DecodeWithAlphabet(s string, alphabet Base58Alphabet) ([]byte, error)` | recommended | Base58DecodeWithAlphabet decodes a Base58 string with a supported alphabet. | facade | `ExampleBase58DecodeWithAlphabet` |
 | `Base58Encode` | `func Base58Encode(data []byte) string` | recommended | Base58Encode encodes bytes with the Bitcoin Base58 alphabet. | facade | `ExampleBase58Encode` |
-| `Base58EncodeWithAlphabet` | `func Base58EncodeWithAlphabet(data []byte, alphabet Base58Alphabet) string` | recommended | Base58EncodeWithAlphabet encodes bytes with a supported Base58 alphabet. | facade | — |
-| `Base62Decode` | `func Base62Decode(s string) ([]byte, error)` | recommended | Base62Decode decodes a Base62 string. | facade | — |
+| `Base58EncodeWithAlphabet` | `func Base58EncodeWithAlphabet(data []byte, alphabet Base58Alphabet) string` | recommended | Base58EncodeWithAlphabet encodes bytes with a supported Base58 alphabet. | facade | `ExampleBase58EncodeWithAlphabet` |
+| `Base62Decode` | `func Base62Decode(s string) ([]byte, error)` | recommended | Base62Decode decodes a Base62 string. | facade | `ExampleBase62Decode` |
 | `Base62Encode` | `func Base62Encode(data []byte) string` | recommended | Base62Encode encodes bytes with a URL-friendly Base62 alphabet. | facade | `ExampleBase62Encode` |
 | `Base64Decode` | `func Base64Decode(s string) ([]byte, error)` | recommended | Base64Decode decodes a standard Base64 string. | internal | `ExampleBase64Decode` |
-| `Base64DecodeStr` | `func Base64DecodeStr(s string) (string, error)` | recommended | Base64DecodeStr decodes a standard Base64 string and returns text. | internal | — |
-| `Base64DecodeWithEncoding` | `func Base64DecodeWithEncoding(s string, enc *base64.Encoding) ([]byte, error)` | recommended | Base64DecodeWithEncoding decodes a Base64 string with enc. | internal | — |
+| `Base64DecodeStr` | `func Base64DecodeStr(s string) (string, error)` | recommended | Base64DecodeStr decodes a standard Base64 string and returns text. | internal | `ExampleBase64DecodeStr` |
+| `Base64DecodeWithEncoding` | `func Base64DecodeWithEncoding(s string, enc *base64.Encoding) ([]byte, error)` | recommended | Base64DecodeWithEncoding decodes a Base64 string with enc. | internal | `ExampleBase64DecodeWithEncoding` |
 | `Base64Encode` | `func Base64Encode(data []byte) string` | recommended | Base64Encode encodes bytes with standard Base64 encoding. | internal | `ExampleBase64Encode` |
-| `Base64EncodeStr` | `func Base64EncodeStr(s string) string` | recommended | Base64EncodeStr encodes a string with standard Base64 encoding. | internal | — |
-| `Base64EncodeWithEncoding` | `func Base64EncodeWithEncoding(data []byte, enc *base64.Encoding) string` | recommended | Base64EncodeWithEncoding encodes bytes with enc. | internal | — |
-| `Base64RawURLDecode` | `func Base64RawURLDecode(s string) ([]byte, error)` | recommended | Base64RawURLDecode decodes a raw URL-safe Base64 string without padding. | internal | — |
+| `Base64EncodeStr` | `func Base64EncodeStr(s string) string` | recommended | Base64EncodeStr encodes a string with standard Base64 encoding. | internal | `ExampleBase64EncodeStr` |
+| `Base64EncodeWithEncoding` | `func Base64EncodeWithEncoding(data []byte, enc *base64.Encoding) string` | recommended | Base64EncodeWithEncoding encodes bytes with enc. | internal | `ExampleBase64EncodeWithEncoding` |
+| `Base64RawURLDecode` | `func Base64RawURLDecode(s string) ([]byte, error)` | recommended | Base64RawURLDecode decodes a raw URL-safe Base64 string without padding. | internal | `ExampleBase64RawURLDecode` |
 | `Base64RawURLEncode` | `func Base64RawURLEncode(data []byte) string` | recommended | Base64RawURLEncode encodes bytes with raw URL-safe Base64 encoding without padding. | internal | `ExampleBase64RawURLEncode` |
-| `Base64URLDecode` | `func Base64URLDecode(s string) ([]byte, error)` | recommended | Base64URLDecode decodes a URL-safe Base64 string. | internal | — |
-| `Base64URLEncode` | `func Base64URLEncode(data []byte) string` | recommended | Base64URLEncode encodes bytes with URL-safe Base64 encoding. | internal | — |
-| `HexDecode` | `func HexDecode(s string) ([]byte, error)` | recommended | HexDecode decodes a hexadecimal string. | internal | — |
+| `Base64URLDecode` | `func Base64URLDecode(s string) ([]byte, error)` | recommended | Base64URLDecode decodes a URL-safe Base64 string. | internal | `ExampleBase64URLDecode` |
+| `Base64URLEncode` | `func Base64URLEncode(data []byte) string` | recommended | Base64URLEncode encodes bytes with URL-safe Base64 encoding. | internal | `ExampleBase64URLEncode` |
+| `HexDecode` | `func HexDecode(s string) ([]byte, error)` | recommended | HexDecode decodes a hexadecimal string. | internal | `ExampleHexDecode` |
 | `HexDecodeStr` | `func HexDecodeStr(s string) (string, error)` | recommended | HexDecodeStr decodes a hexadecimal string and returns text. | internal | `ExampleHexDecodeStr` |
 | `HexEncode` | `func HexEncode(data []byte) string` | recommended | HexEncode encodes bytes as a lowercase hexadecimal string. | internal | `ExampleHexEncode` |
-| `HexEncodeStr` | `func HexEncodeStr(s string) string` | recommended | HexEncodeStr encodes a string as lowercase hexadecimal text. | internal | — |
-| `MorseDecode` | `func MorseDecode(s string) (string, error)` | recommended | MorseDecode decodes Morse code using spaces between letters and "/" between words. | facade | — |
+| `HexEncodeStr` | `func HexEncodeStr(s string) string` | recommended | HexEncodeStr encodes a string as lowercase hexadecimal text. | internal | `ExampleHexEncodeStr` |
+| `MorseDecode` | `func MorseDecode(s string) (string, error)` | recommended | MorseDecode decodes Morse code using spaces between letters and "/" between words. | facade | `ExampleMorseDecode` |
 | `MorseEncode` | `func MorseEncode(s string) (string, error)` | recommended | MorseEncode encodes supported ASCII letters, digits, and punctuation as Morse code. | facade | `ExampleMorseEncode` |
 | `ROT13` | `func ROT13(s string) string` | recommended | ROT13 applies the ROT13 substitution to ASCII letters. | facade | `ExampleROT13` |
-| `ROT47` | `func ROT47(s string) string` | recommended | ROT47 applies the ROT47 substitution to printable ASCII characters. | facade | — |
-| `ROTN` | `func ROTN(s string, n int) string` | recommended | ROTN applies a Caesar shift to ASCII letters. | facade | — |
+| `ROT47` | `func ROT47(s string) string` | recommended | ROT47 applies the ROT47 substitution to printable ASCII characters. | facade | `ExampleROT47` |
+| `ROTN` | `func ROTN(s string, n int) string` | recommended | ROTN applies a Caesar shift to ASCII letters. | facade | `ExampleROTN` |
 
 ### vconf
 

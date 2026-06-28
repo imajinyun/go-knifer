@@ -100,6 +100,7 @@ func main() {
 package main
 
 import (
+	"encoding/base64"
 	"fmt"
 
 	"github.com/imajinyun/knifer-go/vcodec"
@@ -113,6 +114,13 @@ func main() {
 	}
 
 	fmt.Println(encoded, string(decoded))
+
+	raw := vcodec.Base64EncodeWithEncoding([]byte("go?"), base64.RawURLEncoding)
+	rawDecoded, err := vcodec.Base64DecodeWithEncoding(raw, base64.RawURLEncoding)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(raw, string(rawDecoded))
 }
 ```
 
@@ -166,6 +174,7 @@ func main() {
 package main
 
 import (
+	"encoding/base32"
 	"fmt"
 
 	"github.com/imajinyun/knifer-go/vcodec"
@@ -179,6 +188,13 @@ func main() {
 	}
 
 	fmt.Println(encoded, string(decoded))
+
+	hexAlphabet := base32.HexEncoding.EncodeToString([]byte("go"))
+	hexDecoded, err := vcodec.Base32DecodeWithEncoding(hexAlphabet, vcodec.Base32HexEncoding)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(hexAlphabet, string(hexDecoded))
 }
 ```
 
@@ -201,6 +217,13 @@ func main() {
 	}
 
 	fmt.Println(encoded, string(decoded))
+
+	flickr := vcodec.Base58EncodeWithAlphabet([]byte("hello"), vcodec.Base58FlickrAlphabet)
+	flickrDecoded, err := vcodec.Base58DecodeWithAlphabet(flickr, vcodec.Base58FlickrAlphabet)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(flickr, string(flickrDecoded))
 }
 ```
 
@@ -267,5 +290,7 @@ func main() {
 
 	fmt.Println(encoded)
 	fmt.Println(vcodec.ROT13(encoded))
+	fmt.Println(vcodec.ROT47(vcodec.ROT47("Hello!")))
+	fmt.Println(vcodec.ROTN("abcXYZ", 2))
 }
 ```

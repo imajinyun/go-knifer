@@ -4,7 +4,7 @@
   "summary": {
     "package_count": 55,
     "function_count": 2687,
-    "functions_with_examples": 1354,
+    "functions_with_examples": 1373,
     "context_aware_functions": 36,
     "returns_error_functions": 638,
     "variadic_functions": 787,
@@ -3339,8 +3339,8 @@
       "synopsis": "Package vcodec provides public APIs for encoding and decoding utilities.",
       "summary": {
         "function_count": 29,
-        "functions_with_examples": 10,
-        "example_coverage_percent": 34.5,
+        "functions_with_examples": 29,
+        "example_coverage_percent": 100,
         "status_counts": {
           "compatibility": 0,
           "deprecated": 0,
@@ -3411,7 +3411,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleBase32Decode"
+          ]
         },
         {
           "name": "Base32DecodeWithEncoding",
@@ -3435,7 +3438,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleBase32DecodeWithEncoding"
+          ]
         },
         {
           "name": "Base32Encode",
@@ -3480,7 +3486,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleBase32EncodeWithEncoding"
+          ]
         },
         {
           "name": "Base58Decode",
@@ -3500,7 +3509,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleBase58Decode"
+          ]
         },
         {
           "name": "Base58DecodeWithAlphabet",
@@ -3524,7 +3536,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleBase58DecodeWithAlphabet"
+          ]
         },
         {
           "name": "Base58Encode",
@@ -3569,7 +3584,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleBase58EncodeWithAlphabet"
+          ]
         },
         {
           "name": "Base62Decode",
@@ -3589,7 +3607,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleBase62Decode"
+          ]
         },
         {
           "name": "Base62Encode",
@@ -3654,7 +3675,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleBase64DecodeStr"
+          ]
         },
         {
           "name": "Base64DecodeWithEncoding",
@@ -3678,7 +3702,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleBase64DecodeWithEncoding"
+          ]
         },
         {
           "name": "Base64Encode",
@@ -3719,7 +3746,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleBase64EncodeStr"
+          ]
         },
         {
           "name": "Base64EncodeWithEncoding",
@@ -3742,7 +3772,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleBase64EncodeWithEncoding"
+          ]
         },
         {
           "name": "Base64RawURLDecode",
@@ -3762,7 +3795,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleBase64RawURLDecode"
+          ]
         },
         {
           "name": "Base64RawURLEncode",
@@ -3804,7 +3840,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleBase64URLDecode"
+          ]
         },
         {
           "name": "Base64URLEncode",
@@ -3823,7 +3862,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleBase64URLEncode"
+          ]
         },
         {
           "name": "HexDecode",
@@ -3843,7 +3885,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleHexDecode"
+          ]
         },
         {
           "name": "HexDecodeStr",
@@ -3907,7 +3952,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleHexEncodeStr"
+          ]
         },
         {
           "name": "MorseDecode",
@@ -3927,7 +3975,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleMorseDecode"
+          ]
         },
         {
           "name": "MorseEncode",
@@ -3991,7 +4042,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleROT47"
+          ]
         },
         {
           "name": "ROTN",
@@ -4014,7 +4068,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleROTN"
+          ]
         }
       ]
     },
