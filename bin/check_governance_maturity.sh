@@ -71,6 +71,31 @@ def extract_markdown_table(path: Path, heading: str) -> dict[str, int]:
 	return values
 
 
+def extract_markdown_rows(path: Path, heading: str) -> list[dict[str, str]]:
+	try:
+		text = path.read_text(encoding="utf-8")
+	except FileNotFoundError:
+		add_error(f"{path.relative_to(root).as_posix()} must exist")
+		return []
+	match = re.search(rf"^## {re.escape(heading)}\n(?P<body>.*?)(?=^## |\Z)", text, flags=re.MULTILINE | re.DOTALL)
+	if not match:
+		add_error(f"{path.relative_to(root).as_posix()} must contain ## {heading}")
+		return []
+	table_lines = [line for line in match.group("body").splitlines() if line.startswith("|")]
+	if len(table_lines) < 2:
+		add_error(f"{path.relative_to(root).as_posix()} {heading} must contain a markdown table")
+		return []
+	headers = [column.strip() for column in table_lines[0].strip().strip("|").split("|")]
+	rows: list[dict[str, str]] = []
+	for line in table_lines[2:]:
+		columns = [column.strip() for column in line.strip().strip("|").split("|")]
+		if len(columns) != len(headers):
+			add_error(f"{path.relative_to(root).as_posix()} {heading} row has {len(columns)} columns, want {len(headers)}")
+			continue
+		rows.append(dict(zip(headers, columns)))
+	return rows
+
+
 def file_exists(reference: str) -> bool:
 	path = reference.split(":", 1)[0]
 	return (root / path).exists()
@@ -202,6 +227,69 @@ def validate_roadmap_catalog_baseline() -> None:
 	extra_metrics = sorted(set(actual) - set(expected))
 	if extra_metrics:
 		add_error("docs/superpowers/plans/49-roadmap.md Baseline includes unmanaged metric(s): " + ", ".join(extra_metrics))
+
+
+def package_summary_int(package_name: str, field: str) -> int | None:
+	pkg = tool_packages.get(package_name)
+	if not pkg:
+		add_error(f"docs/api/tools.json missing package {package_name}")
+		return None
+	summary = require_mapping(pkg.get("summary"), f"docs/api/tools.json.packages.{package_name}.summary")
+	value = summary.get(field)
+	if not isinstance(value, int) or isinstance(value, bool):
+		add_error(f"docs/api/tools.json.packages.{package_name}.summary.{field} must be an integer")
+		return None
+	return value
+
+
+def parse_int_cell(value: str, path: str) -> int | None:
+	number = value.replace(",", "")
+	if not re.fullmatch(r"\d+", number):
+		add_error(f"{path} must be an integer, got {value!r}")
+		return None
+	return int(number)
+
+
+def validate_roadmap_star_domain_scorecard() -> None:
+	roadmap = root / "docs/superpowers/plans/49-roadmap.md"
+	domains = {
+		"Safe HTTP (`vhttp`, `vresty`, `vurl`)": ("vhttp", "vresty", "vurl"),
+		"Safe crypto (`vcrypto`, `vrand`, `vjwt`)": ("vcrypto", "vrand", "vjwt"),
+		"Daily JSON/file (`vjson`, `vfile`)": ("vjson", "vfile"),
+	}
+	rows = {
+		row.get("Domain", ""): row
+		for row in extract_markdown_rows(roadmap, "90-Day Star Domain Scorecard")
+	}
+	missing = sorted(set(domains) - set(rows))
+	if missing:
+		add_error("docs/superpowers/plans/49-roadmap.md scorecard missing domain row(s): " + ", ".join(missing))
+	extra = sorted(set(rows) - set(domains))
+	if extra:
+		add_error("docs/superpowers/plans/49-roadmap.md scorecard includes unmanaged domain row(s): " + ", ".join(extra))
+	for domain, packages in domains.items():
+		row = rows.get(domain)
+		if not row:
+			continue
+		function_count = 0
+		example_count = 0
+		for package_name in packages:
+			package_functions = package_summary_int(package_name, "function_count")
+			package_examples = package_summary_int(package_name, "functions_with_examples")
+			if package_functions is not None:
+				function_count += package_functions
+			if package_examples is not None:
+				example_count += package_examples
+		actual_functions = parse_int_cell(row.get("Public functions", ""), f"{domain} Public functions")
+		actual_examples = parse_int_cell(row.get("Examples", ""), f"{domain} Examples")
+		if actual_functions is not None and actual_functions != function_count:
+			add_error(f"{domain} Public functions={actual_functions} must match tools catalog value {function_count}")
+		if actual_examples is not None and actual_examples != example_count:
+			add_error(f"{domain} Examples={actual_examples} must match tools catalog value {example_count}")
+		expected_ratio = "0.0%" if function_count == 0 else f"{example_count / function_count * 100:.1f}%"
+		actual_ratio = row.get("Example ratio", "")
+		if actual_ratio != expected_ratio:
+			add_error(f"{domain} Example ratio={actual_ratio!r} must match tools catalog value {expected_ratio!r}")
 
 
 def validate_local_governance_gates() -> None:
@@ -516,6 +604,7 @@ validate_benchmark_regression()
 if not bench_only:
 	validate_local_governance_gates()
 	validate_roadmap_catalog_baseline()
+	validate_roadmap_star_domain_scorecard()
 	validate_api_convergence()
 	validate_lifecycle()
 	validate_capability_domains()
