@@ -826,6 +826,43 @@
     },
     "tracked_packages": ["./internal/slice", "./internal/maps", "./internal/str", "./internal/num", "./internal/bean", "./internal/json", "./vbean", "./vjson", "./vmap", "./vslice", "./vstr"]
   },
+  "example_depth_governance": {
+    "roadmap_path": "docs/superpowers/plans/49-roadmap.md",
+    "roadmap_lane": "Examples",
+    "target_facades": ["vhttp", "vnet", "vnum", "vresty", "vzip"],
+    "non_regression": true,
+    "first_implementation_facade": "vnum",
+    "target_after_first_pass": {
+      "vnum": 52
+    },
+    "baseline": {
+      "vhttp": {
+        "function_count": 161,
+        "functions_with_examples": 52,
+        "example_coverage_percent": 32.3
+      },
+      "vnet": {
+        "function_count": 166,
+        "functions_with_examples": 47,
+        "example_coverage_percent": 28.3
+      },
+      "vnum": {
+        "function_count": 146,
+        "functions_with_examples": 23,
+        "example_coverage_percent": 15.8
+      },
+      "vresty": {
+        "function_count": 120,
+        "functions_with_examples": 74,
+        "example_coverage_percent": 61.7
+      },
+      "vzip": {
+        "function_count": 92,
+        "functions_with_examples": 22,
+        "example_coverage_percent": 23.9
+      }
+    }
+  },
   "error_model": {
     "taxonomy": [
       { "category": "invalid input", "code": "GK_INVALID_INPUT", "use_when": "Caller-provided arguments, payloads, or configuration values are malformed." },

@@ -292,6 +292,71 @@ def validate_roadmap_star_domain_scorecard() -> None:
 			add_error(f"{domain} Example ratio={actual_ratio!r} must match tools catalog value {expected_ratio!r}")
 
 
+def validate_example_depth_governance() -> None:
+	governance = require_mapping(ai_context.get("example_depth_governance"), "example_depth_governance")
+	roadmap_path = governance.get("roadmap_path")
+	if not isinstance(roadmap_path, str) or not roadmap_path.strip():
+		add_error("example_depth_governance.roadmap_path must be non-empty")
+		roadmap_path = "docs/superpowers/plans/49-roadmap.md"
+	roadmap_lane = governance.get("roadmap_lane")
+	if roadmap_lane != "Examples":
+		add_error("example_depth_governance.roadmap_lane must be Examples")
+	target_facades = require_string_list(governance.get("target_facades"), "example_depth_governance.target_facades")
+	expected_targets = ["vhttp", "vnet", "vnum", "vresty", "vzip"]
+	if target_facades != expected_targets:
+		add_error("example_depth_governance.target_facades must be ordered as: " + ", ".join(expected_targets))
+	if governance.get("non_regression") is not True:
+		add_error("example_depth_governance.non_regression must be true")
+	if governance.get("first_implementation_facade") != "vnum":
+		add_error("example_depth_governance.first_implementation_facade must be vnum")
+	target_after_first_pass = require_mapping(governance.get("target_after_first_pass"), "example_depth_governance.target_after_first_pass")
+	if target_after_first_pass.get("vnum") != 52:
+		add_error("example_depth_governance.target_after_first_pass.vnum must be 52")
+	baseline = require_mapping(governance.get("baseline"), "example_depth_governance.baseline")
+	missing_baseline = sorted(set(target_facades) - set(baseline))
+	if missing_baseline:
+		add_error("example_depth_governance.baseline missing facade(s): " + ", ".join(missing_baseline))
+	extra_baseline = sorted(set(baseline) - set(target_facades))
+	if extra_baseline:
+		add_error("example_depth_governance.baseline includes unmanaged facade(s): " + ", ".join(extra_baseline))
+	for facade in target_facades:
+		entry = require_mapping(baseline.get(facade), f"example_depth_governance.baseline.{facade}")
+		function_baseline = entry.get("function_count")
+		example_baseline = entry.get("functions_with_examples")
+		ratio_baseline = entry.get("example_coverage_percent")
+		pkg = tool_packages.get(facade)
+		if not pkg:
+			add_error(f"docs/api/tools.json missing package {facade}")
+			continue
+		summary = require_mapping(pkg.get("summary"), f"docs/api/tools.json.packages.{facade}.summary")
+		function_count = summary.get("function_count")
+		example_count = summary.get("functions_with_examples")
+		if not isinstance(function_count, int) or isinstance(function_count, bool):
+			add_error(f"docs/api/tools.json.packages.{facade}.summary.function_count must be an integer")
+			continue
+		if not isinstance(example_count, int) or isinstance(example_count, bool):
+			add_error(f"docs/api/tools.json.packages.{facade}.summary.functions_with_examples must be an integer")
+			continue
+		if function_baseline != function_count:
+			add_error(f"example_depth_governance.baseline.{facade}.function_count={function_baseline} must match tools catalog value {function_count}")
+		if not isinstance(example_baseline, int) or isinstance(example_baseline, bool):
+			add_error(f"example_depth_governance.baseline.{facade}.functions_with_examples must be an integer")
+		elif example_count < example_baseline:
+			add_error(f"{facade} examples regressed from baseline {example_baseline} to {example_count}")
+		expected_ratio = round(example_baseline / function_count * 100, 1) if isinstance(example_baseline, int) and function_count else 0.0
+		if ratio_baseline != expected_ratio:
+			add_error(f"example_depth_governance.baseline.{facade}.example_coverage_percent={ratio_baseline} must be {expected_ratio}")
+	roadmap_rows = extract_markdown_rows(root / roadmap_path, "Capability matrix")
+	example_rows = [row for row in roadmap_rows if row.get("Area") == roadmap_lane]
+	if len(example_rows) != 1:
+		add_error(f"{roadmap_path} Capability matrix must contain exactly one {roadmap_lane} lane")
+		return
+	lane_text = " ".join(example_rows[0].values())
+	missing_from_lane = [facade for facade in target_facades if f"`{facade}`" not in lane_text]
+	if missing_from_lane:
+		add_error(f"{roadmap_path} Examples lane missing facade(s): " + ", ".join(missing_from_lane))
+
+
 def validate_local_governance_gates() -> None:
 	for target in ("quick-check", "full-check", "ci-workflow-check", "release-check"):
 		if not make_target_depends_on(target, "bench-regression-check"):
@@ -605,6 +670,7 @@ if not bench_only:
 	validate_local_governance_gates()
 	validate_roadmap_catalog_baseline()
 	validate_roadmap_star_domain_scorecard()
+	validate_example_depth_governance()
 	validate_api_convergence()
 	validate_lifecycle()
 	validate_capability_domains()

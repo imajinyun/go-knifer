@@ -18,6 +18,7 @@
     "package_lifecycle",
     "capability_domains",
     "benchmark_regression",
+    "example_depth_governance",
     "error_model",
     "dynamic_semantic_contracts",
     "v1_readiness",
@@ -186,6 +187,28 @@
         "benchstat_required": { "type": "boolean" },
         "thresholds": { "$ref": "#/$defs/benchmark_thresholds" },
         "tracked_packages": { "$ref": "#/$defs/string_array" }
+      },
+      "additionalProperties": false
+    },
+    "example_depth_governance": {
+      "type": "object",
+      "required": ["roadmap_path", "roadmap_lane", "target_facades", "non_regression", "first_implementation_facade", "target_after_first_pass", "baseline"],
+      "properties": {
+        "roadmap_path": { "type": "string", "minLength": 1 },
+        "roadmap_lane": { "type": "string", "minLength": 1 },
+        "target_facades": { "$ref": "#/$defs/string_array" },
+        "non_regression": { "type": "boolean" },
+        "first_implementation_facade": { "type": "string", "minLength": 1 },
+        "target_after_first_pass": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "type": "number", "exclusiveMinimum": 0 }
+        },
+        "baseline": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "$ref": "#/$defs/example_depth_baseline" }
+        }
       },
       "additionalProperties": false
     },
@@ -464,6 +487,16 @@
         "bytes_per_op_regression_percent": { "type": "number", "exclusiveMinimum": 0 },
         "allocs_per_op_regression_percent": { "type": "number", "exclusiveMinimum": 0 },
         "minimum_count": { "type": "number", "exclusiveMinimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "example_depth_baseline": {
+      "type": "object",
+      "required": ["function_count", "functions_with_examples", "example_coverage_percent"],
+      "properties": {
+        "function_count": { "type": "number", "exclusiveMinimum": 0 },
+        "functions_with_examples": { "type": "number" },
+        "example_coverage_percent": { "type": "number" }
       },
       "additionalProperties": false
     },

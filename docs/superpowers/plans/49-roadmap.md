@@ -85,11 +85,12 @@ The Hutool gap-closure lane is implemented and the active work has moved from fe
 | 18 | Completed | Multi-Template Adapter Lane | Deepened `vtpl` with engine-neutral adapters, explicit HTML/text engine selection, context-first rendering, and contract tests before any optional third-party adapters. |
 | 19 | Completed | Conversion Contract Clarity | Added explicit-error scalar conversions to `vconv`, documented weak-input semantics, added overflow-safe E integer narrowing, covered named scalar types, and kept zero/default helpers backward-compatible. |
 | 20 | Completed | Hutool Gap Capability Closure | Completed national crypto, lunar calendar, credit code, coordinate conversion, codec expansion, weighted random, file type detection, BOM/charset, image operations, and consistent hash coverage across facades, docs, examples, and tests. |
-| 21 | Active | Roadmap Governance Drift Control | Keep roadmap state synchronized with generated API catalog evidence and enforce baseline drift through governance gates. |
+| 21 | Completed | Roadmap Governance Drift Control | Kept roadmap state synchronized with generated API catalog evidence and enforced baseline plus star-domain metric drift through governance gates. |
+| 22 | Active | Large Facade Example Depth Governance | Track `vhttp`, `vnet`, `vnum`, `vresty`, and `vzip` example baselines as non-regression metadata before expanding `vnum` examples toward 52+ covered APIs. |
 
 ## Active workflow
 
-Sprint 20 completed the Hutool gap capability closure across Chinese-market differentiators and high-frequency utility helpers. Sprint 21 is a governance synchronization lane: keep roadmap evidence aligned with the generated API catalog, make drift machine-detectable, and then continue into the highest user-facing depth gaps: large-facade example depth (`vhttp`, `vnet`, `vnum`, `vresty`, `vzip`) and remaining benchmark narrative improvements.
+Sprint 21 completed roadmap catalog drift control by validating the Baseline and Star Domain scorecard against the generated API catalog. Sprint 22 is now the active governance synchronization lane for large-facade example depth: `example_depth_governance` records non-regression baselines for `vhttp`, `vnet`, `vnum`, `vresty`, and `vzip`, keeps the roadmap Examples lane aligned with those targets, and prepares the next implementation pass to raise `vnum` examples from 23 toward 52+ before refreshing the generated catalog.
 
 Recommended roadmap loop:
 
