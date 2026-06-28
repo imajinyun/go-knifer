@@ -11,16 +11,16 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Schema | 1.7 |
 | Module | `github.com/imajinyun/knifer-go` |
 | Packages | 55 |
-| Functions | 2721 |
-| Functions with examples | 1422 |
+| Functions | 2724 |
+| Functions with examples | 1425 |
 | Context-aware functions | 36 |
-| Functions returning error | 663 |
+| Functions returning error | 666 |
 | Variadic functions | 794 |
-| API status: recommended | 2699 |
+| API status: recommended | 2702 |
 | API status: compatibility | 22 |
 | API status: experimental | 0 |
 | API status: deprecated | 0 |
-| Synopsis source: facade | 2068 |
+| Synopsis source: facade | 2071 |
 | Synopsis source: internal | 653 |
 | Synopsis source: empty | 0 |
 
@@ -1741,13 +1741,13 @@ Import path: `github.com/imajinyun/knifer-go/vimg`
 
 Package vimg provides public APIs for image utilities.
 
-Quality: 101 functions · 101 with examples · 100.0% example coverage · statuses: recommended=101, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=101, internal=0, empty=0
+Quality: 104 functions · 104 with examples · 100.0% example coverage · statuses: recommended=104, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=104, internal=0, empty=0
 
 Recommended entrypoints:
 
 | Function | Profile | Rationale |
 | --- | --- | --- |
-| `BarcodeASCII` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
+| `AddTextWatermark` | error | Prefer when callers must distinguish invalid input or provider failure from default values. |
 | `GenMathGeneratorWithOptions` | options | Prefer when providers, limits, parsers, or policies must be reviewable at the call site. |
 | `CanDecodeBarcodeFormat` | day-one | Start here for concise, trusted-input use cases in this package. |
 
@@ -1755,14 +1755,16 @@ Golden path API set:
 
 | Function | Use when | Avoid when |
 | --- | --- | --- |
-| `BarcodeASCII` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
+| `AddTextWatermark` | Use first when callers must observe invalid input or provider failure. | Avoid for trivial in-memory code where the standard library is clearer. |
 | `GenMathGeneratorWithOptions` | Use first when policies, providers, parsers, limits, or clocks must be explicit. | Avoid for trivial in-memory code where the standard library is clearer. |
 | `CanDecodeBarcodeFormat` | Use first for concise trusted-input workflows in vimg. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vimg. |
-| `BarcodeASCIIWithChars` | Use first for concise trusted-input workflows in vimg. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vimg. |
-| `BarcodeBase64Data` | Use first for concise trusted-input workflows in vimg. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vimg. |
+| `AddWatermark` | Use first for concise trusted-input workflows in vimg. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vimg. |
+| `BarcodeASCII` | Use first for concise trusted-input workflows in vimg. | Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vimg. |
 
 | Function | Signature | Status | Synopsis | Source | Examples |
 | --- | --- | --- | --- | --- | --- |
+| `AddTextWatermark` | `func AddTextWatermark(img image.Image, text string, x int, y int, c color.Color, scale int, opacity float64) (image.Image, error)` | recommended | AddTextWatermark draws ASCII text onto img with the built-in bitmap font. | facade | `ExampleAddTextWatermark` |
+| `AddWatermark` | `func AddWatermark(img image.Image, watermark image.Image, x int, y int, opacity float64) (image.Image, error)` | recommended | AddWatermark draws watermark onto img at x,y using opacity in [0,1]. | facade | `ExampleAddWatermark` |
 | `BarcodeASCII` | `func BarcodeASCII(content string, format BarcodeFormat, opts ...BarcodeOption) (string, error)` | recommended | BarcodeASCII returns an ASCII rendering for content encoded with format. | facade | `ExampleBarcodeASCII` |
 | `BarcodeASCIIWithChars` | `func BarcodeASCIIWithChars(content string, format BarcodeFormat, setString string, unsetString string, opts ...BarcodeOption) (string, error)` | recommended | BarcodeASCIIWithChars returns a text rendering using custom set and unset strings. | facade | `ExampleBarcodeASCIIWithChars` |
 | `BarcodeBase64Data` | `func BarcodeBase64Data(content string, format BarcodeFormat, opts ...BarcodeOption) (string, error)` | recommended | BarcodeBase64Data returns a PNG data URI for content encoded with format. | facade | `ExampleBarcodeBase64Data` |
@@ -1810,6 +1812,7 @@ Golden path API set:
 | `QRCodePNG` | `func QRCodePNG(content string, opts ...QRCodeOption) ([]byte, error)` | recommended | QRCodePNG returns PNG bytes for a QR code. | facade | `ExampleQRCodePNG` |
 | `QRCodeSVG` | `func QRCodeSVG(content string, opts ...QRCodeOption) (string, error)` | recommended | QRCodeSVG returns an SVG rendering for a QR code. | facade | `ExampleQRCodeSVG` |
 | `Resize` | `func Resize(img image.Image, width int, height int) (image.Image, error)` | recommended | Resize returns img scaled to width x height using nearest-neighbor sampling. | facade | `ExampleResize` |
+| `Rotate` | `func Rotate(img image.Image, angle float64, background color.Color) (image.Image, error)` | recommended | Rotate rotates img clockwise by angle degrees using nearest-neighbor sampling. | facade | `ExampleRotate` |
 | `Rotate180` | `func Rotate180(img image.Image) (image.Image, error)` | recommended | Rotate180 rotates img 180 degrees. | facade | `ExampleRotate180` |
 | `Rotate270` | `func Rotate270(img image.Image) (image.Image, error)` | recommended | Rotate270 rotates img 270 degrees clockwise. | facade | `ExampleRotate270` |
 | `Rotate90` | `func Rotate90(img image.Image) (image.Image, error)` | recommended | Rotate90 rotates img 90 degrees clockwise. | facade | `ExampleRotate90` |

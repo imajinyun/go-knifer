@@ -1613,6 +1613,8 @@ github.com/imajinyun/knifer-go/vimg
   const QRErrorCorrectionMedium github.com/imajinyun/knifer-go/internal/imgx.QRErrorCorrectionLevel = 2
   const QRErrorCorrectionQuartile github.com/imajinyun/knifer-go/internal/imgx.QRErrorCorrectionLevel = 3
   const QRErrorCorrectionUnknown github.com/imajinyun/knifer-go/internal/imgx.QRErrorCorrectionLevel = 0
+  func AddTextWatermark(img image.Image, text string, x int, y int, c image/color.Color, scale int, opacity float64) (image.Image, error)
+  func AddWatermark(img image.Image, watermark image.Image, x int, y int, opacity float64) (image.Image, error)
   func BarcodeASCII(content string, format BarcodeFormat, opts ...BarcodeOption) (string, error)
   func BarcodeASCIIWithChars(content string, format BarcodeFormat, setString string, unsetString string, opts ...BarcodeOption) (string, error)
   func BarcodeBase64Data(content string, format BarcodeFormat, opts ...BarcodeOption) (string, error)
@@ -1660,6 +1662,7 @@ github.com/imajinyun/knifer-go/vimg
   func QRCodePNG(content string, opts ...QRCodeOption) ([]byte, error)
   func QRCodeSVG(content string, opts ...QRCodeOption) (string, error)
   func Resize(img image.Image, width int, height int) (image.Image, error)
+  func Rotate(img image.Image, angle float64, background image/color.Color) (image.Image, error)
   func Rotate180(img image.Image) (image.Image, error)
   func Rotate270(img image.Image) (image.Image, error)
   func Rotate90(img image.Image) (image.Image, error)

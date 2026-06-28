@@ -522,19 +522,19 @@
       "schema": "1.7",
       "recommended_profile_schema": "recommended_entrypoints profiles: day-one, safe, error, options, compatibility; golden_path lists 1-7 APIs with use_when and avoid_when guidance",
       "package_count": 55,
-      "function_count": 2721,
-      "functions_with_examples": 1422,
+      "function_count": 2724,
+      "functions_with_examples": 1425,
       "context_aware_functions": 36,
-      "returns_error_functions": 663,
+      "returns_error_functions": 666,
       "status_counts": {
         "compatibility": 22,
         "deprecated": 0,
         "experimental": 0,
-        "recommended": 2699
+        "recommended": 2702
       },
       "synopsis_sources": {
         "empty": 0,
-        "facade": 2068,
+        "facade": 2071,
         "internal": 653
       },
       "regenerate_command": "tools_update",
@@ -677,7 +677,7 @@
       "vhttp": { "primary": ["DeleteSafe", "Download", "CleanHTMLWithOptions", "AddGlobalHeader", "BuildBasicAuth"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
       "vid": { "primary": ["ConfigureDefaultSnowflake", "GetSnowflakeNextID", "FastSimpleUUID", "ConfigureDefaultFallbackRandomSourceProvider", "CreateSnowflake"], "advanced": [], "compatibility": ["FastSimpleUUID", "FastSimpleUUIDWithOptions", "FastUUID", "FastUUIDWithOptions", "UUID"], "avoid": [], "decision": "Prefer primary APIs; use compatibility only during migration." },
       "vident": { "primary": ["ParseCreditCode", "AgeWithOptions", "AgeAt", "Age", "BirthDate"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
-      "vimg": { "primary": ["BarcodeASCII", "GenMathGeneratorWithOptions", "CanDecodeBarcodeFormat", "BarcodeASCIIWithChars", "BarcodeBase64Data"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
+      "vimg": { "primary": ["AddTextWatermark", "GenMathGeneratorWithOptions", "CanDecodeBarcodeFormat", "AddWatermark", "BarcodeASCII"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
       "vjob": { "primary": ["NewMapE", "NewBatch", "NewBatchSingle", "NewMap", "NewMapKeys"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
       "vjson": { "primary": ["Parse", "FormatWithOptions", "CreateConfig", "Format", "GetByPath"], "advanced": [], "compatibility": [], "avoid": [], "decision": "Start with primary golden-path APIs." },
       "vjwt": { "primary": ["CreateJWTToken", "ES256WithOptions", "AlgorithmName", "MustHMACSigner", "CreateJWTTokenWithSigner"], "advanced": [], "compatibility": ["MustHMACSigner"], "avoid": [], "decision": "Prefer primary APIs; use compatibility only during migration." },

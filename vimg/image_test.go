@@ -108,8 +108,23 @@ func TestImageOpsFacade(t *testing.T) {
 	if _, err := Rotate270(src); err != nil {
 		t.Fatalf("Rotate270: %v", err)
 	}
+	rotated, err := Rotate(src, 45, color.Transparent)
+	if err != nil {
+		t.Fatalf("Rotate: %v", err)
+	}
+	if rotated.Bounds().Dx() != 4 || rotated.Bounds().Dy() != 4 {
+		t.Fatalf("Rotate bounds = %v, want 4x4", rotated.Bounds())
+	}
 	if _, err := Grayscale(src); err != nil {
 		t.Fatalf("Grayscale: %v", err)
+	}
+	watermark := image.NewRGBA(image.Rect(0, 0, 1, 1))
+	watermark.Set(0, 0, color.RGBA{R: 255, A: 255})
+	if _, err := AddWatermark(src, watermark, 1, 1, 0.5); err != nil {
+		t.Fatalf("AddWatermark: %v", err)
+	}
+	if _, err := AddTextWatermark(src, "A", 0, 0, color.Black, 1, 0.8); err != nil {
+		t.Fatalf("AddTextWatermark: %v", err)
 	}
 
 	out := &bytes.Buffer{}

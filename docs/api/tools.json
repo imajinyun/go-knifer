@@ -3,20 +3,20 @@
   "module": "github.com/imajinyun/knifer-go",
   "summary": {
     "package_count": 55,
-    "function_count": 2721,
-    "functions_with_examples": 1422,
+    "function_count": 2724,
+    "functions_with_examples": 1425,
     "context_aware_functions": 36,
-    "returns_error_functions": 663,
+    "returns_error_functions": 666,
     "variadic_functions": 794,
     "status_counts": {
       "compatibility": 22,
       "deprecated": 0,
       "experimental": 0,
-      "recommended": 2699
+      "recommended": 2702
     },
     "synopsis_sources": {
       "empty": 0,
-      "facade": 2068,
+      "facade": 2071,
       "internal": 653
     }
   },
@@ -23948,24 +23948,24 @@
       "name": "vimg",
       "synopsis": "Package vimg provides public APIs for image utilities.",
       "summary": {
-        "function_count": 101,
-        "functions_with_examples": 101,
+        "function_count": 104,
+        "functions_with_examples": 104,
         "example_coverage_percent": 100,
         "status_counts": {
           "compatibility": 0,
           "deprecated": 0,
           "experimental": 0,
-          "recommended": 101
+          "recommended": 104
         },
         "synopsis_sources": {
           "empty": 0,
-          "facade": 101,
+          "facade": 104,
           "internal": 0
         }
       },
       "golden_path": [
         {
-          "name": "BarcodeASCII",
+          "name": "AddTextWatermark",
           "use_when": "Use first when callers must observe invalid input or provider failure.",
           "avoid_when": "Avoid for trivial in-memory code where the standard library is clearer."
         },
@@ -23980,19 +23980,19 @@
           "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vimg."
         },
         {
-          "name": "BarcodeASCIIWithChars",
+          "name": "AddWatermark",
           "use_when": "Use first for concise trusted-input workflows in vimg.",
           "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vimg."
         },
         {
-          "name": "BarcodeBase64Data",
+          "name": "BarcodeASCII",
           "use_when": "Use first for concise trusted-input workflows in vimg.",
           "avoid_when": "Avoid when inputs cross trust boundaries or need explicit errors; choose Safe/E/WithOptions APIs in vimg."
         }
       ],
       "recommended_entrypoints": [
         {
-          "name": "BarcodeASCII",
+          "name": "AddTextWatermark",
           "profile": "error",
           "rationale": "Prefer when callers must distinguish invalid input or provider failure from default values."
         },
@@ -24008,6 +24008,92 @@
         }
       ],
       "functions": [
+        {
+          "name": "AddTextWatermark",
+          "signature": "func AddTextWatermark(img image.Image, text string, x int, y int, c color.Color, scale int, opacity float64) (image.Image, error)",
+          "synopsis": "AddTextWatermark draws ASCII text onto img with the built-in bitmap font.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "img",
+              "type": "image.Image"
+            },
+            {
+              "name": "text",
+              "type": "string"
+            },
+            {
+              "name": "x",
+              "type": "int"
+            },
+            {
+              "name": "y",
+              "type": "int"
+            },
+            {
+              "name": "c",
+              "type": "color.Color"
+            },
+            {
+              "name": "scale",
+              "type": "int"
+            },
+            {
+              "name": "opacity",
+              "type": "float64"
+            }
+          ],
+          "results": [
+            "image.Image",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false,
+          "examples": [
+            "ExampleAddTextWatermark"
+          ]
+        },
+        {
+          "name": "AddWatermark",
+          "signature": "func AddWatermark(img image.Image, watermark image.Image, x int, y int, opacity float64) (image.Image, error)",
+          "synopsis": "AddWatermark draws watermark onto img at x,y using opacity in [0,1].",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "img",
+              "type": "image.Image"
+            },
+            {
+              "name": "watermark",
+              "type": "image.Image"
+            },
+            {
+              "name": "x",
+              "type": "int"
+            },
+            {
+              "name": "y",
+              "type": "int"
+            },
+            {
+              "name": "opacity",
+              "type": "float64"
+            }
+          ],
+          "results": [
+            "image.Image",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false,
+          "examples": [
+            "ExampleAddWatermark"
+          ]
+        },
         {
           "name": "BarcodeASCII",
           "signature": "func BarcodeASCII(content string, format BarcodeFormat, opts ...BarcodeOption) (string, error)",
@@ -25341,6 +25427,37 @@
           "variadic": false,
           "examples": [
             "ExampleResize"
+          ]
+        },
+        {
+          "name": "Rotate",
+          "signature": "func Rotate(img image.Image, angle float64, background color.Color) (image.Image, error)",
+          "synopsis": "Rotate rotates img clockwise by angle degrees using nearest-neighbor sampling.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "img",
+              "type": "image.Image"
+            },
+            {
+              "name": "angle",
+              "type": "float64"
+            },
+            {
+              "name": "background",
+              "type": "color.Color"
+            }
+          ],
+          "results": [
+            "image.Image",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false,
+          "examples": [
+            "ExampleRotate"
           ]
         },
         {

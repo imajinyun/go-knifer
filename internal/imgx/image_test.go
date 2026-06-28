@@ -8,6 +8,7 @@ import (
 	"image/jpeg"
 	"image/png"
 	"io"
+	"math"
 	"testing"
 
 	knifer "github.com/imajinyun/knifer-go"
@@ -294,6 +295,7 @@ func TestImageRotateResizeGrayscaleAndJPEG(t *testing.T) {
 	blue := color.RGBA{B: 255, A: 255}
 	src.Set(0, 0, red)
 	src.Set(1, 0, blue)
+	src.Set(1, 1, color.RGBA{A: 255})
 
 	rot90, err := Rotate90(src)
 	if err != nil {
@@ -347,6 +349,54 @@ func TestImageRotateResizeGrayscaleAndJPEG(t *testing.T) {
 	}
 }
 
+func TestImageRotateArbitraryAndWatermark(t *testing.T) {
+	src := image.NewRGBA(image.Rect(0, 0, 2, 2))
+	red := color.RGBA{R: 255, A: 255}
+	blue := color.RGBA{B: 255, A: 255}
+	src.Set(0, 0, red)
+	src.Set(1, 0, blue)
+	src.Set(1, 1, color.RGBA{A: 255})
+
+	rotated, err := Rotate(src, 45, color.RGBA{A: 0})
+	if err != nil {
+		t.Fatalf("Rotate error = %v", err)
+	}
+	if rotated.Bounds().Dx() != 3 || rotated.Bounds().Dy() != 3 {
+		t.Fatalf("Rotate bounds = %v, want 3x3", rotated.Bounds())
+	}
+
+	rot90, err := Rotate(src, 90, color.Transparent)
+	if err != nil {
+		t.Fatalf("Rotate 90 error = %v", err)
+	}
+	want90, err := Rotate90(src)
+	if err != nil {
+		t.Fatalf("Rotate90 error = %v", err)
+	}
+	assertSameColor(t, rot90.At(0, 0), colorAt(want90, 0, 0))
+	assertSameColor(t, rot90.At(0, 1), colorAt(want90, 0, 1))
+
+	watermark := image.NewRGBA(image.Rect(0, 0, 1, 1))
+	watermark.Set(0, 0, color.RGBA{R: 255, A: 255})
+	marked, err := AddWatermark(src, watermark, 1, 1, 0.5)
+	if err != nil {
+		t.Fatalf("AddWatermark error = %v", err)
+	}
+	r, g, b, a := marked.At(1, 1).RGBA()
+	if uint8(r>>8) != 128 || uint8(g>>8) != 0 || uint8(b>>8) != 0 || uint8(a>>8) != 255 {
+		t.Fatalf("watermark pixel = rgba(%d,%d,%d,%d), want approx 128,0,0,255", uint8(r>>8), uint8(g>>8), uint8(b>>8), uint8(a>>8))
+	}
+
+	textMarked, err := AddTextWatermark(src, "A", 0, 0, color.RGBA{G: 255, A: 255}, 1, 1)
+	if err != nil {
+		t.Fatalf("AddTextWatermark error = %v", err)
+	}
+	r, g, b, _ = textMarked.At(1, 0).RGBA()
+	if uint8(r>>8) != 0 || uint8(g>>8) != 255 || uint8(b>>8) != 0 {
+		t.Fatalf("text watermark pixel = rgba(%d,%d,%d), want green", uint8(r>>8), uint8(g>>8), uint8(b>>8))
+	}
+}
+
 func TestImageOperationInvalidInput(t *testing.T) {
 	img := image.NewRGBA(image.Rect(0, 0, 2, 2))
 	tests := []struct {
@@ -360,10 +410,19 @@ func TestImageOperationInvalidInput(t *testing.T) {
 		{name: "crop outside", err: imageErr(Crop(img, 1, 1, 2, 2))},
 		{name: "flip nil", err: imageErr(FlipHorizontal(nil))},
 		{name: "rotate nil", err: imageErr(Rotate90(nil))},
+		{name: "rotate arbitrary nil", err: imageErr(Rotate(nil, 45, color.Transparent))},
+		{name: "rotate arbitrary invalid angle", err: imageErr(Rotate(img, math.NaN(), color.Transparent))},
 		{name: "gray nil", err: imageErr(Grayscale(nil))},
 		{name: "compress nil writer", err: CompressJPEG(nil, img, 80)},
 		{name: "compress nil image", err: CompressJPEG(&bytes.Buffer{}, nil, 80)},
 		{name: "compress bad quality", err: CompressJPEG(&bytes.Buffer{}, img, 0)},
+		{name: "watermark nil image", err: imageErr(AddWatermark(nil, img, 0, 0, 1))},
+		{name: "watermark nil mark", err: imageErr(AddWatermark(img, nil, 0, 0, 1))},
+		{name: "watermark bad opacity", err: imageErr(AddWatermark(img, img, 0, 0, 1.1))},
+		{name: "text watermark nil image", err: imageErr(AddTextWatermark(nil, "A", 0, 0, color.Black, 1, 1))},
+		{name: "text watermark empty text", err: imageErr(AddTextWatermark(img, "", 0, 0, color.Black, 1, 1))},
+		{name: "text watermark bad scale", err: imageErr(AddTextWatermark(img, "A", 0, 0, color.Black, 0, 1))},
+		{name: "text watermark bad opacity", err: imageErr(AddTextWatermark(img, "A", 0, 0, color.Black, 1, -0.1))},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -384,6 +443,11 @@ func assertSameColor(t *testing.T, got color.Color, want color.RGBA) {
 	if uint8(r>>8) != want.R || uint8(g>>8) != want.G || uint8(b>>8) != want.B || uint8(a>>8) != want.A {
 		t.Fatalf("color = rgba(%d,%d,%d,%d), want %+v", uint8(r>>8), uint8(g>>8), uint8(b>>8), uint8(a>>8), want)
 	}
+}
+
+func colorAt(img image.Image, x, y int) color.RGBA {
+	r, g, b, a := img.At(x, y).RGBA()
+	return color.RGBA{R: uint8(r >> 8), G: uint8(g >> 8), B: uint8(b >> 8), A: uint8(a >> 8)}
 }
 
 func imageErr(_ image.Image, err error) error {

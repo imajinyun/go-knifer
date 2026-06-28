@@ -11,7 +11,8 @@ Captcha image bytes are returned as defensive copies, so callers can inspect or 
 | Read dimensions and format | `Info` | Decodes image configuration without transforming pixels. |
 | Convert image format | `ConvertFormat` | Use when the original dimensions should be preserved and only encoding changes. |
 | Generate thumbnails | `Thumbnail` | Resizes to a maximum edge and writes in the requested format. |
-| Transform pixels in memory | `Resize`, `Crop`, `CropCenter`, `FlipHorizontal`, `FlipVertical`, `Rotate90`, `Rotate180`, `Rotate270`, `Grayscale` | Use for small in-memory operations before choosing the final encoder. |
+| Transform pixels in memory | `Resize`, `Crop`, `CropCenter`, `FlipHorizontal`, `FlipVertical`, `Rotate90`, `Rotate180`, `Rotate270`, `Rotate`, `Grayscale` | Use for small in-memory operations before choosing the final encoder. |
+| Add watermarks | `AddWatermark`, `AddTextWatermark` | Use for simple in-memory image or ASCII text watermarks before choosing the final encoder. |
 | Encode JPEG with explicit quality | `CompressJPEG` | Use when callers already have an `image.Image` and need direct JPEG quality control. |
 | Generate QR codes | `QRCodePNG`, `QRCodeSVG`, `QRCodeBytes`, `QRCodeImage` | QR helpers wrap barcode helpers with `BarcodeFormatQRCode`. |
 | Generate non-QR barcodes | `BarcodePNG`, `BarcodeSVG`, `BarcodeASCII`, `BarcodeBytes` | Check `CanEncodeBarcodeFormat` before exposing user-selected formats. |
@@ -25,6 +26,8 @@ Captcha image bytes are returned as defensive copies, so callers can inspect or 
 
 - Bound uploaded image size before passing readers to decoders; image decoding can allocate based on dimensions and format.
 - Pixel operations return new images and can allocate width x height buffers; validate dimensions before applying them to user-controlled images.
+- Arbitrary rotation expands the canvas to fit the rotated source; validate output dimensions when angles are user controlled.
+- Watermark helpers blend pixels into a new image and clip content outside bounds; choose opacity explicitly and avoid treating watermarks as tamper-proof controls.
 - Validate barcode formats with `CanEncodeBarcodeFormat` and `CanDecodeBarcodeFormat` before accepting user configuration.
 - Keep QR logo size conservative and use `QRErrorCorrectionHigh` when embedding logos, then verify with real scanners.
 - Use `WithDecodeFormats` to limit barcode decoding to expected symbologies instead of accepting every supported reader.
@@ -128,7 +131,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	flipped, err := vimg.FlipVertical(rotated)
+	tilted, err := vimg.Rotate(rotated, 15, color.Transparent)
+	if err != nil {
+		panic(err)
+	}
+	flipped, err := vimg.FlipVertical(tilted)
 	if err != nil {
 		panic(err)
 	}
@@ -144,6 +151,39 @@ func main() {
 	fmt.Println(gray.Bounds().Dx(), gray.Bounds().Dy(), jpegOut.Len() > 0)
 }
 ```
+
+## Add image and text watermarks
+
+```go
+package main
+
+import (
+	"fmt"
+	"image"
+	"image/color"
+
+	"github.com/imajinyun/knifer-go/vimg"
+)
+
+func main() {
+	img := image.NewRGBA(image.Rect(0, 0, 80, 40))
+	logo := image.NewRGBA(image.Rect(0, 0, 12, 12))
+	logo.Set(0, 0, color.RGBA{R: 255, A: 255})
+
+	marked, err := vimg.AddWatermark(img, logo, 60, 24, 0.6)
+	if err != nil {
+		panic(err)
+	}
+	marked, err = vimg.AddTextWatermark(marked, "DEMO", 4, 4, color.Black, 2, 0.8)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(marked.Bounds().Dx(), marked.Bounds().Dy())
+}
+```
+
+Text watermarks use the package's built-in ASCII bitmap font. For non-ASCII text, brand typography, multiline layout, or font embedding, render the text with a dedicated font library first and pass that rendered image to `AddWatermark`.
 
 ## Generate QR codes and barcodes
 

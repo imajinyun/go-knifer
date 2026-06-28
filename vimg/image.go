@@ -8,6 +8,7 @@ package vimg
 
 import (
 	"image"
+	"image/color"
 	"io"
 
 	"github.com/imajinyun/knifer-go/internal/imgx"
@@ -73,6 +74,11 @@ func Rotate270(img image.Image) (image.Image, error) {
 	return imgx.Rotate270(img)
 }
 
+// Rotate rotates img clockwise by angle degrees using nearest-neighbor sampling.
+func Rotate(img image.Image, angle float64, background color.Color) (image.Image, error) {
+	return imgx.Rotate(img, angle, background)
+}
+
 // Grayscale returns a grayscale copy of img while preserving alpha.
 func Grayscale(img image.Image) (image.Image, error) {
 	return imgx.Grayscale(img)
@@ -81,4 +87,14 @@ func Grayscale(img image.Image) (image.Image, error) {
 // CompressJPEG encodes img as JPEG with quality in [1,100].
 func CompressJPEG(w io.Writer, img image.Image, quality int) error {
 	return imgx.CompressJPEG(w, img, quality)
+}
+
+// AddWatermark draws watermark onto img at x,y using opacity in [0,1].
+func AddWatermark(img, watermark image.Image, x, y int, opacity float64) (image.Image, error) {
+	return imgx.AddWatermark(img, watermark, x, y, opacity)
+}
+
+// AddTextWatermark draws ASCII text onto img with the built-in bitmap font.
+func AddTextWatermark(img image.Image, text string, x, y int, c color.Color, scale int, opacity float64) (image.Image, error) {
+	return imgx.AddTextWatermark(img, text, x, y, c, scale, opacity)
 }

@@ -199,6 +199,13 @@ func ExampleRotate270() {
 	// Output: 2 3 <nil>
 }
 
+func ExampleRotate() {
+	img := image.NewRGBA(image.Rect(0, 0, 2, 2))
+	rotated, err := vimg.Rotate(img, 45, color.Transparent)
+	fmt.Println(rotated.Bounds().Dx(), rotated.Bounds().Dy(), err)
+	// Output: 3 3 <nil>
+}
+
 func ExampleGrayscale() {
 	img := image.NewRGBA(image.Rect(0, 0, 1, 1))
 	img.Set(0, 0, color.RGBA{R: 200, G: 100, B: 50, A: 255})
@@ -214,6 +221,22 @@ func ExampleCompressJPEG() {
 	err := vimg.CompressJPEG(&out, img, 80)
 	fmt.Println(out.Len() > 0, err)
 	// Output: true <nil>
+}
+
+func ExampleAddWatermark() {
+	img := image.NewRGBA(image.Rect(0, 0, 3, 3))
+	watermark := image.NewRGBA(image.Rect(0, 0, 1, 1))
+	watermark.Set(0, 0, color.RGBA{R: 255, A: 255})
+	marked, err := vimg.AddWatermark(img, watermark, 1, 1, 0.5)
+	fmt.Println(marked.Bounds().Dx(), marked.Bounds().Dy(), err)
+	// Output: 3 3 <nil>
+}
+
+func ExampleAddTextWatermark() {
+	img := image.NewRGBA(image.Rect(0, 0, 24, 10))
+	marked, err := vimg.AddTextWatermark(img, "OK", 0, 0, color.Black, 1, 0.8)
+	fmt.Println(marked.Bounds().Dx(), marked.Bounds().Dy(), err)
+	// Output: 24 10 <nil>
 }
 
 func ExampleNewCircleCaptcha() {

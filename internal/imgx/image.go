@@ -16,6 +16,7 @@ import (
 	"image/jpeg"
 	"image/png"
 	"io"
+	"math"
 	"strings"
 
 	knifer "github.com/imajinyun/knifer-go"
@@ -251,6 +252,74 @@ func Rotate270(img image.Image) (image.Image, error) {
 	return dst, nil
 }
 
+// Rotate rotates img clockwise by angle degrees using nearest-neighbor sampling.
+func Rotate(img image.Image, angle float64, background color.Color) (image.Image, error) {
+	if img == nil {
+		return nil, &knifer.Error{Code: knifer.ErrCodeInvalidInput, Message: "image: nil image"}
+	}
+	if math.IsNaN(angle) || math.IsInf(angle, 0) {
+		return nil, &knifer.Error{Code: knifer.ErrCodeInvalidInput, Message: "image: rotate angle must be finite"}
+	}
+	if background == nil {
+		background = color.Transparent
+	}
+
+	bounds := img.Bounds()
+	width := bounds.Dx()
+	height := bounds.Dy()
+	if width == 0 || height == 0 {
+		return nil, &knifer.Error{Code: knifer.ErrCodeInvalidInput, Message: "image: empty source image"}
+	}
+
+	normalized := math.Mod(angle, 360)
+	if normalized < 0 {
+		normalized += 360
+	}
+	switch {
+	case nearlyAngle(normalized, 0), nearlyAngle(normalized, 360):
+		return cloneImage(img), nil
+	case nearlyAngle(normalized, 90):
+		return Rotate90(img)
+	case nearlyAngle(normalized, 180):
+		return Rotate180(img)
+	case nearlyAngle(normalized, 270):
+		return Rotate270(img)
+	}
+
+	rad := normalized * math.Pi / 180
+	sin, cos := math.Sin(rad), math.Cos(rad)
+	outW := int(math.Ceil(math.Abs(float64(width)*cos) + math.Abs(float64(height)*sin)))
+	outH := int(math.Ceil(math.Abs(float64(width)*sin) + math.Abs(float64(height)*cos)))
+	if outW < 1 {
+		outW = 1
+	}
+	if outH < 1 {
+		outH = 1
+	}
+
+	dst := image.NewRGBA(image.Rect(0, 0, outW, outH))
+	draw.Draw(dst, dst.Bounds(), &image.Uniform{background}, image.Point{}, draw.Src)
+
+	srcCX := float64(width-1) / 2
+	srcCY := float64(height-1) / 2
+	dstCX := float64(outW-1) / 2
+	dstCY := float64(outH-1) / 2
+	for y := 0; y < outH; y++ {
+		for x := 0; x < outW; x++ {
+			dx := float64(x) - dstCX
+			dy := float64(y) - dstCY
+			srcX := cos*dx + sin*dy + srcCX
+			srcY := -sin*dx + cos*dy + srcCY
+			sx := int(math.Round(srcX))
+			sy := int(math.Round(srcY))
+			if sx >= 0 && sx < width && sy >= 0 && sy < height {
+				dst.Set(x, y, img.At(bounds.Min.X+sx, bounds.Min.Y+sy))
+			}
+		}
+	}
+	return dst, nil
+}
+
 // Grayscale returns a grayscale copy of img while preserving alpha.
 func Grayscale(img image.Image) (image.Image, error) {
 	if img == nil {
@@ -283,6 +352,61 @@ func CompressJPEG(w io.Writer, img image.Image, quality int) error {
 		return &knifer.Error{Code: knifer.ErrCodeInternal, Message: "image: jpeg encode failed", Cause: err}
 	}
 	return nil
+}
+
+// AddWatermark draws watermark onto img at x,y using opacity in [0,1].
+func AddWatermark(img, watermark image.Image, x, y int, opacity float64) (image.Image, error) {
+	if img == nil {
+		return nil, &knifer.Error{Code: knifer.ErrCodeInvalidInput, Message: "image: nil image"}
+	}
+	if watermark == nil {
+		return nil, &knifer.Error{Code: knifer.ErrCodeInvalidInput, Message: "image: nil watermark"}
+	}
+	if opacity < 0 || opacity > 1 || math.IsNaN(opacity) {
+		return nil, &knifer.Error{Code: knifer.ErrCodeInvalidInput, Message: "image: watermark opacity must be between 0 and 1"}
+	}
+	dst := cloneImage(img)
+	wb := watermark.Bounds()
+	for wy := 0; wy < wb.Dy(); wy++ {
+		dy := y + wy
+		if dy < 0 || dy >= dst.Bounds().Dy() {
+			continue
+		}
+		for wx := 0; wx < wb.Dx(); wx++ {
+			dx := x + wx
+			if dx < 0 || dx >= dst.Bounds().Dx() {
+				continue
+			}
+			dst.Set(dx, dy, blendColor(dst.At(dx, dy), watermark.At(wb.Min.X+wx, wb.Min.Y+wy), opacity))
+		}
+	}
+	return dst, nil
+}
+
+// AddTextWatermark draws ASCII text onto img with the built-in bitmap font.
+func AddTextWatermark(img image.Image, text string, x, y int, c color.Color, scale int, opacity float64) (image.Image, error) {
+	if img == nil {
+		return nil, &knifer.Error{Code: knifer.ErrCodeInvalidInput, Message: "image: nil image"}
+	}
+	if text == "" {
+		return nil, &knifer.Error{Code: knifer.ErrCodeInvalidInput, Message: "image: empty watermark text"}
+	}
+	if c == nil {
+		c = color.Black
+	}
+	if scale <= 0 {
+		return nil, &knifer.Error{Code: knifer.ErrCodeInvalidInput, Message: "image: text watermark scale must be positive"}
+	}
+	if opacity < 0 || opacity > 1 || math.IsNaN(opacity) {
+		return nil, &knifer.Error{Code: knifer.ErrCodeInvalidInput, Message: "image: text watermark opacity must be between 0 and 1"}
+	}
+
+	dst := cloneImage(img)
+	charW := fontWidth*scale + scale
+	for i := 0; i < len(text); i++ {
+		drawWatermarkChar(dst, text[i], x+i*charW, y, scale, c, opacity)
+	}
+	return dst, nil
 }
 
 // decodeAny decodes r using the registered image formats, translating the
@@ -433,4 +557,48 @@ func component8From64(v uint64) uint8 {
 		return 255
 	}
 	return uint8(v)
+}
+
+func cloneImage(img image.Image) *image.RGBA {
+	bounds := img.Bounds()
+	dst := image.NewRGBA(image.Rect(0, 0, bounds.Dx(), bounds.Dy()))
+	draw.Draw(dst, dst.Bounds(), img, bounds.Min, draw.Src)
+	return dst
+}
+
+func blendColor(base, overlay color.Color, opacity float64) color.Color {
+	br, bg, bb, ba := base.RGBA()
+	or, og, ob, oa := overlay.RGBA()
+	alpha := opacity * float64(oa) / 65535
+	inv := 1 - alpha
+	return color.RGBA{
+		R: uint8((float64(br>>8)*inv + float64(or>>8)*alpha) + 0.5),
+		G: uint8((float64(bg>>8)*inv + float64(og>>8)*alpha) + 0.5),
+		B: uint8((float64(bb>>8)*inv + float64(ob>>8)*alpha) + 0.5),
+		A: uint8((float64(ba>>8)*inv + 255*alpha) + 0.5),
+	}
+}
+
+func nearlyAngle(a, b float64) bool {
+	return math.Abs(a-b) < 1e-9
+}
+
+func drawWatermarkChar(img *image.RGBA, ch byte, x, y int, scale int, c color.Color, opacity float64) {
+	glyph := getGlyph(ch)
+	for row := 0; row < fontHeight; row++ {
+		for col := 0; col < fontWidth; col++ {
+			if glyph[row]&(1<<(fontWidth-1-col)) == 0 {
+				continue
+			}
+			for sy := 0; sy < scale; sy++ {
+				for sx := 0; sx < scale; sx++ {
+					px := x + col*scale + sx
+					py := y + row*scale + sy
+					if px >= 0 && py >= 0 && px < img.Bounds().Dx() && py < img.Bounds().Dy() {
+						img.Set(px, py, blendColor(img.At(px, py), c, opacity))
+					}
+				}
+			}
+		}
+	}
 }
