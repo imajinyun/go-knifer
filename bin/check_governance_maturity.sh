@@ -292,6 +292,80 @@ def validate_roadmap_star_domain_scorecard() -> None:
 			add_error(f"{domain} Example ratio={actual_ratio!r} must match tools catalog value {expected_ratio!r}")
 
 
+def validate_safe_http_cookbook_governance() -> None:
+	governance = require_mapping(ai_context.get("safe_http_cookbook_governance"), "safe_http_cookbook_governance")
+	roadmap_path = governance.get("roadmap_path")
+	if not isinstance(roadmap_path, str) or not roadmap_path.strip():
+		add_error("safe_http_cookbook_governance.roadmap_path must be non-empty")
+		roadmap_path = "docs/superpowers/plans/49-roadmap.md"
+	cookbook_path = governance.get("cookbook_path")
+	if not isinstance(cookbook_path, str) or not cookbook_path.strip():
+		add_error("safe_http_cookbook_governance.cookbook_path must be non-empty")
+		cookbook_path = "docs/doc/safe-http-cookbook.md"
+	sprint = governance.get("sprint")
+	if sprint != 23:
+		add_error("safe_http_cookbook_governance.sprint must be 23")
+	status = governance.get("status")
+	if status not in {"active", "completed"}:
+		add_error("safe_http_cookbook_governance.status must be active or completed")
+	packages = require_string_list(governance.get("packages"), "safe_http_cookbook_governance.packages")
+	expected_packages = ["vhttp", "vresty", "vurl"]
+	if packages != expected_packages:
+		add_error("safe_http_cookbook_governance.packages must be ordered as: " + ", ".join(expected_packages))
+	required_scenarios = require_string_list(governance.get("required_scenarios"), "safe_http_cookbook_governance.required_scenarios")
+	if len(required_scenarios) < 4:
+		add_error("safe_http_cookbook_governance.required_scenarios must include at least four cookbook scenarios")
+	required_checks = require_string_list(governance.get("required_checks"), "safe_http_cookbook_governance.required_checks")
+	for check in ("docs-check", "ai-context-check", "governance-maturity-check", "agent-security-check"):
+		if check not in required_checks:
+			add_error(f"safe_http_cookbook_governance.required_checks must include {check}")
+	for package_name in packages:
+		if package_name not in public_facades:
+			add_error(f"safe_http_cookbook_governance.packages references non-public facade {package_name}")
+	cookbook_file = root / cookbook_path
+	try:
+		cookbook_text = cookbook_file.read_text(encoding="utf-8")
+	except FileNotFoundError:
+		add_error(f"{cookbook_path} must exist")
+		cookbook_text = ""
+	if cookbook_text:
+		if not cookbook_text.startswith("# Safe HTTP Cookbook\n"):
+			add_error(f"{cookbook_path} must start with '# Safe HTTP Cookbook'")
+		for package_name in packages:
+			if f"`{package_name}`" not in cookbook_text and f"/{package_name}" not in cookbook_text:
+				add_error(f"{cookbook_path} must mention {package_name}")
+		for scenario in required_scenarios:
+			if scenario not in cookbook_text:
+				add_error(f"{cookbook_path} missing required scenario {scenario!r}")
+		for phrase in ("Trust Boundary Checklist", "WithAllowedHosts", "WithLookupIP", "WithMaxResponseBytes", "DownloadFileSafe"):
+			if phrase not in cookbook_text:
+				add_error(f"{cookbook_path} must include {phrase!r}")
+		for check in required_checks:
+			if f"make {check}" not in cookbook_text:
+				add_error(f"{cookbook_path} validation section must mention make {check}")
+	roadmap_rows = extract_markdown_rows(root / roadmap_path, "90-Day Star Domain Scorecard")
+	safe_http_rows = [row for row in roadmap_rows if row.get("Domain") == "Safe HTTP (`vhttp`, `vresty`, `vurl`)"]
+	if len(safe_http_rows) != 1:
+		add_error(f"{roadmap_path} scorecard must contain exactly one Safe HTTP row")
+	else:
+		cookbook_status = safe_http_rows[0].get("Cookbook status", "")
+		if cookbook_path not in cookbook_status or "Present" not in cookbook_status:
+			add_error(f"{roadmap_path} Safe HTTP Cookbook status must be Present and reference {cookbook_path}")
+	sprint_rows = extract_markdown_rows(root / roadmap_path, "Sprint order")
+	sprint_23_rows = [row for row in sprint_rows if row.get("Sprint") == "23"]
+	if len(sprint_23_rows) != 1:
+		add_error(f"{roadmap_path} Sprint order must contain exactly one Sprint 23 row")
+	else:
+		sprint_23 = sprint_23_rows[0]
+		expected_status = "Completed" if status == "completed" else "Active"
+		if sprint_23.get("Status") != expected_status:
+			add_error(f"{roadmap_path} Sprint 23 status must be {expected_status}")
+		sprint_text = " ".join(sprint_23.values())
+		missing_from_sprint = [package for package in packages if f"`{package}`" not in sprint_text]
+		if missing_from_sprint:
+			add_error(f"{roadmap_path} Sprint 23 row missing package(s): " + ", ".join(missing_from_sprint))
+
+
 def validate_example_depth_governance() -> None:
 	governance = require_mapping(ai_context.get("example_depth_governance"), "example_depth_governance")
 	sprint = governance.get("sprint")
@@ -688,6 +762,7 @@ if not bench_only:
 	validate_local_governance_gates()
 	validate_roadmap_catalog_baseline()
 	validate_roadmap_star_domain_scorecard()
+	validate_safe_http_cookbook_governance()
 	validate_example_depth_governance()
 	validate_api_convergence()
 	validate_lifecycle()

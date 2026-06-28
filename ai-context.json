@@ -874,6 +874,20 @@
       }
     }
   },
+  "safe_http_cookbook_governance": {
+    "roadmap_path": "docs/superpowers/plans/49-roadmap.md",
+    "cookbook_path": "docs/doc/safe-http-cookbook.md",
+    "sprint": 23,
+    "status": "active",
+    "packages": ["vhttp", "vresty", "vurl"],
+    "required_scenarios": [
+      "Validate and Probe Before Requesting",
+      "Fetch With Standard-Library Style Helpers",
+      "Fetch Through Resty-Style Clients",
+      "Download To Files"
+    ],
+    "required_checks": ["docs-check", "ai-context-check", "governance-maturity-check", "agent-security-check"]
+  },
   "error_model": {
     "taxonomy": [
       { "category": "invalid input", "code": "GK_INVALID_INPUT", "use_when": "Caller-provided arguments, payloads, or configuration values are malformed." },

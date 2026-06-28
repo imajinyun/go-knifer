@@ -19,6 +19,7 @@
     "capability_domains",
     "benchmark_regression",
     "example_depth_governance",
+    "safe_http_cookbook_governance",
     "error_model",
     "dynamic_semantic_contracts",
     "v1_readiness",
@@ -211,6 +212,20 @@
           "minProperties": 1,
           "additionalProperties": { "$ref": "#/$defs/example_depth_baseline" }
         }
+      },
+      "additionalProperties": false
+    },
+    "safe_http_cookbook_governance": {
+      "type": "object",
+      "required": ["roadmap_path", "cookbook_path", "sprint", "status", "packages", "required_scenarios", "required_checks"],
+      "properties": {
+        "roadmap_path": { "type": "string", "minLength": 1 },
+        "cookbook_path": { "type": "string", "minLength": 1 },
+        "sprint": { "type": "number", "exclusiveMinimum": 0 },
+        "status": { "type": "string", "enum": ["active", "completed"] },
+        "packages": { "$ref": "#/$defs/string_array" },
+        "required_scenarios": { "$ref": "#/$defs/string_array" },
+        "required_checks": { "$ref": "#/$defs/string_array" }
       },
       "additionalProperties": false
     },
