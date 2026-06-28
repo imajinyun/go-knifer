@@ -17,6 +17,8 @@ AI agents working in this repository must follow the same project boundary and v
 - Public API changes must update `docs/api/exports.txt` with `UPDATE_API=1 make api-check`.
 - Facade, doc comment, or Example changes must update `docs/api/tools.json` and `docs/api/tools.md` with `make tools-gen` or `make docs-gen`.
 - Generated documentation artifacts are guarded by `make docs-check` and `make tools-check`.
+- `aiflow.yaml` is the committed aiflow project config and must live at the repository root.
+- `.aiflow/` is ignored local runtime output only: generated evidence, traces, reports, scratch files, and temporary state must stay there and must not be committed.
 
 ## Required Go skills
 
@@ -46,6 +48,7 @@ For Go changes, load `golang-how-to` first, then use the relevant Go skills it s
 - `make tools-gen`: regenerates the machine-readable facade tool catalog.
 - `make docs-gen`: regenerates generated documentation artifacts.
 - `make ai-context-check`: validates AI metadata and command side-effect declarations.
+- `make aiflow-layout-check`: verifies root `aiflow.yaml` and ignored `.aiflow/` runtime state.
 - `make agent-check`: default AI/Agent-safe validation gate.
 - `make agent-full-check COVERAGE_FILE=/tmp/knifer-go-coverage.out`: full AI/Agent validation gate when a broad change requires coverage, lint, and vulnerability checks.
 

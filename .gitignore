@@ -32,6 +32,9 @@ go.work.sum
 .idea/
 .vscode/
 
+# Local aiflow runtime evidence and temporary state.
+.aiflow/
+
 # OS metadata
 .DS_Store
 

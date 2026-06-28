@@ -72,6 +72,15 @@
       "risk_level": "low",
       "notes": "Detects base, staged, unstaged, untracked, and deleted changed file categories and maps them to change_type_policies."
     },
+    "aiflow_layout_check": {
+      "cmd": "make aiflow-layout-check",
+      "safe_for_agent_auto_run": true,
+      "writes_workspace": false,
+      "writes_git_config": false,
+      "network_required": false,
+      "risk_level": "low",
+      "notes": "Verifies committed aiflow.yaml lives at the repository root and .aiflow/ remains ignored local runtime evidence/state."
+    },
     "agent_evidence": {
       "cmd": "make agent-evidence",
       "safe_for_agent_auto_run": true,
@@ -439,7 +448,7 @@
       "notes": "Documentation-only changes should still pass metadata, API snapshot, tools catalog, and whitespace checks."
     },
     "ci_governance": {
-      "required_commands": ["change_policy_check", "agent_check", "ai_context_check", "governance_maturity_check", "bench_regression_check", "ci_workflow_check", "docs_check", "agent_evidence", "agent_evidence_check"],
+      "required_commands": ["change_policy_check", "agent_check", "aiflow_layout_check", "ai_context_check", "governance_maturity_check", "bench_regression_check", "ci_workflow_check", "docs_check", "agent_evidence", "agent_evidence_check"],
       "coverage_required": false,
       "security_review_required": false,
       "notes": "CI and governance changes must keep Makefile targets and AI metadata synchronized."
@@ -523,7 +532,7 @@
       "recommended_profile_schema": "recommended_entrypoints profiles: day-one, safe, error, options, compatibility; golden_path lists 1-7 APIs with use_when and avoid_when guidance",
       "package_count": 55,
       "function_count": 2724,
-      "functions_with_examples": 1501,
+      "functions_with_examples": 1551,
       "context_aware_functions": 36,
       "returns_error_functions": 666,
       "status_counts": {
@@ -843,8 +852,8 @@
       },
       "vnet": {
         "function_count": 166,
-        "functions_with_examples": 47,
-        "example_coverage_percent": 28.3
+        "functions_with_examples": 97,
+        "example_coverage_percent": 58.4
       },
       "vnum": {
         "function_count": 146,

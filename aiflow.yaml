@@ -1,0 +1,95 @@
+# aiflow project onboarding config.
+#
+# Keep this file at the repository root. Runtime evidence, traces, reports,
+# scratch files, and local state belong under .aiflow/ and are intentionally
+# ignored by Git.
+name: knifer-go
+root: .
+language: go
+store_path: .aiflow/store.json
+
+workspace:
+  scratch_dir: .aiflow/tmp
+  include_globs:
+    - "*.go"
+    - "go.mod"
+    - "go.sum"
+    - "aiflow.yaml"
+    - "AGENTS.md"
+    - "CLAUDE.md"
+    - "README.md"
+    - "SECURITY.md"
+    - "ai-context.json"
+    - ".github/*"
+    - ".github/workflows/*"
+    - "bin/*"
+    - "docs/*"
+    - "docs/api/*"
+    - "docs/doc/*"
+    - "docs/superpowers/plans/*"
+    - "internal/*"
+    - "v*/*"
+  exclude_globs:
+    - ".git"
+    - ".git/*"
+    - ".aiflow"
+    - ".aiflow/*"
+    - ".harness"
+    - ".harness/*"
+
+commands:
+  allowlist:
+    - gofmt
+    - go test
+    - go vet
+    - go run ./bin/toolsgen
+    - go tool govulncheck
+    - golangci-lint run
+    - git diff
+    - git status
+    - bash bin/check_aiflow_layout.sh
+    - bash bin/check_ai_context.sh
+    - bash bin/check_api_compat.sh
+    - bash bin/check_arch.sh
+    - bash bin/check_change_policy.sh
+    - bash bin/check_docs_quickstart.sh
+    - bash bin/check_governance_maturity.sh
+    - bash bin/check_security_sensitive_diff.sh
+    - make ai-context-check
+    - make aiflow-layout-check
+    - make docs-check
+    - make governance-maturity-check
+    - make quick-check
+    - make tools-gen
+  format:
+    - gofmt -w
+  test:
+    - go test ./...
+  vet:
+    - go vet ./...
+  release:
+    - make quick-check
+
+acceptance:
+  criteria:
+    - focused package tests pass for touched Go packages
+    - generated API tooling artifacts are current when examples or facades change
+    - aiflow.yaml remains at the repository root
+    - .aiflow/ contains only ignored local evidence and temporary state
+  required_commands:
+    - make aiflow-layout-check
+    - make quick-check
+  require_fix_diff: false
+
+permissions:
+  require_plan_approval: false
+  allow_commit: false
+  allow_push: false
+  max_fix_attempts: 0
+  require_command_approval: false
+
+security:
+  redact_secrets: true
+  max_patch_bytes: 262144
+  network:
+    mode: audit

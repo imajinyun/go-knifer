@@ -4,7 +4,7 @@
   "summary": {
     "package_count": 55,
     "function_count": 2724,
-    "functions_with_examples": 1501,
+    "functions_with_examples": 1551,
     "context_aware_functions": 36,
     "returns_error_functions": 666,
     "variadic_functions": 794,
@@ -35117,8 +35117,8 @@
       "synopsis": "Package vnet provides public APIs for network, IP, URL-encoding, TLS, and multipart utilities.",
       "summary": {
         "function_count": 166,
-        "functions_with_examples": 47,
-        "example_coverage_percent": 28.3,
+        "functions_with_examples": 97,
+        "example_coverage_percent": 58.4,
         "status_counts": {
           "compatibility": 0,
           "deprecated": 0,
@@ -35197,7 +35197,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleAddRootCABytes"
+          ]
         },
         {
           "name": "AddRootCAFileWithOptions",
@@ -35224,7 +35227,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleAddRootCAFileWithOptions"
+          ]
         },
         {
           "name": "AddRootCAReader",
@@ -35247,7 +35253,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleAddRootCAReader"
+          ]
         },
         {
           "name": "AddRootCAReaderWithOptions",
@@ -35274,7 +35283,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleAddRootCAReaderWithOptions"
+          ]
         },
         {
           "name": "BeginIP",
@@ -35356,7 +35368,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleBeginIPLongWithOptions"
+          ]
         },
         {
           "name": "BeginIPWithOptions",
@@ -35384,7 +35399,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleBeginIPWithOptions"
+          ]
         },
         {
           "name": "BigIntToIPv6",
@@ -35431,7 +35449,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleBuildInetSocketAddress"
+          ]
         },
         {
           "name": "BuildInetSocketAddressWithOptions",
@@ -35518,7 +35539,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleConnectWithOptions"
+          ]
         },
         {
           "name": "CountByIPRange",
@@ -35573,7 +35597,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleCountByIPRangeWithOptions"
+          ]
         },
         {
           "name": "CountByMaskBit",
@@ -35755,7 +35782,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleEndIPLongWithOptions"
+          ]
         },
         {
           "name": "EndIPWithOptions",
@@ -35783,7 +35813,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleEndIPWithOptions"
+          ]
         },
         {
           "name": "FormatIPBlock",
@@ -35838,7 +35871,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleFormatIPBlockWithOptions"
+          ]
         },
         {
           "name": "GetDNSInfo",
@@ -35928,7 +35964,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleGetHardwareAddressWithOptions"
+          ]
         },
         {
           "name": "GetIPByHost",
@@ -36003,7 +36042,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleGetLocalHardwareAddressWithOptions"
+          ]
         },
         {
           "name": "GetLocalHostName",
@@ -36080,7 +36122,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleGetLocalMACAddressWithOptions"
+          ]
         },
         {
           "name": "GetLocalhost",
@@ -36125,7 +36170,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleGetLocalhostStrWithOptions"
+          ]
         },
         {
           "name": "GetLocalhostWithOptions",
@@ -36144,7 +36192,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleGetLocalhostWithOptions"
+          ]
         },
         {
           "name": "GetMACAddress",
@@ -36194,7 +36245,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleGetMACAddressWithOptions"
+          ]
         },
         {
           "name": "GetMultistageReverseProxyIP",
@@ -36260,7 +36314,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleGetNetworkInterfaceWithOptions"
+          ]
         },
         {
           "name": "GetNetworkInterfaces",
@@ -36316,7 +36373,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleGetRemoteAddress"
+          ]
         },
         {
           "name": "GetUsableLocalPort",
@@ -36374,7 +36434,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleGetUsableLocalPortFromWithOptions"
+          ]
         },
         {
           "name": "GetUsableLocalPortInRange",
@@ -36426,7 +36489,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleGetUsableLocalPortInRangeWithOptions"
+          ]
         },
         {
           "name": "GetUsableLocalPortWithOptions",
@@ -36446,7 +36512,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleGetUsableLocalPortWithOptions"
+          ]
         },
         {
           "name": "GetUsableLocalPorts",
@@ -36506,7 +36575,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleGetUsableLocalPortsWithOptions"
+          ]
         },
         {
           "name": "HideIPPart",
@@ -36649,7 +36721,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleIPv4ToLongDefaultWithOptions"
+          ]
         },
         {
           "name": "IPv4ToLongWithOptions",
@@ -36673,7 +36748,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleIPv4ToLongWithOptions"
+          ]
         },
         {
           "name": "IPv6ToBigInt",
@@ -36720,7 +36798,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleIPv6ToBigIntWithOptions"
+          ]
         },
         {
           "name": "IsConnected",
@@ -36739,7 +36820,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleIsConnected"
+          ]
         },
         {
           "name": "IsIP",
@@ -36784,7 +36868,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleIsIPWithOptions"
+          ]
         },
         {
           "name": "IsIPv4",
@@ -36829,7 +36916,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleIsIPv4WithOptions"
+          ]
         },
         {
           "name": "IsIPv6",
@@ -36874,7 +36964,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleIsIPv6WithOptions"
+          ]
         },
         {
           "name": "IsInRange",
@@ -36975,7 +37068,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleIsInnerIPWithOptions"
+          ]
         },
         {
           "name": "IsMaskBitValid",
@@ -37042,7 +37138,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleIsMaskValidWithOptions"
+          ]
         },
         {
           "name": "IsOpen",
@@ -37088,7 +37187,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleIsOpenWithOptions"
+          ]
         },
         {
           "name": "IsUnknown",
@@ -37152,7 +37254,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleIsUsableLocalPortWithOptions"
+          ]
         },
         {
           "name": "IsValidPort",
@@ -37237,7 +37342,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleListIPCIDRWithOptions"
+          ]
         },
         {
           "name": "ListIPRange",
@@ -37292,7 +37400,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleListIPRangeWithOptions"
+          ]
         },
         {
           "name": "ListIPs",
@@ -37347,7 +37458,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleListIPsWithOptions"
+          ]
         },
         {
           "name": "LocalAddressList",
@@ -37416,7 +37530,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleLocalAddressListByInterfaceWithOptions"
+          ]
         },
         {
           "name": "LocalAddressListWithOptions",
@@ -37439,7 +37556,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleLocalAddressListWithOptions"
+          ]
         },
         {
           "name": "LocalIPs",
@@ -37506,7 +37626,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleLocalIPv4sWithOptions"
+          ]
         },
         {
           "name": "LocalIPv6s",
@@ -37538,7 +37661,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleLocalIPv6sWithOptions"
+          ]
         },
         {
           "name": "LongToIPv4",
@@ -37607,7 +37733,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleMaskBitByMaskWithOptions"
+          ]
         },
         {
           "name": "MaskByIPRange",
@@ -37662,7 +37791,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleMaskByIPRangeWithOptions"
+          ]
         },
         {
           "name": "MaskByMaskBit",
@@ -37803,7 +37935,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleNetCatWithOptions"
+          ]
         },
         {
           "name": "NewCertPool",
@@ -37861,7 +37996,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleNewLocalPortGeneratorWithOptions"
+          ]
         },
         {
           "name": "NewTLSConfigBuilder",
@@ -37874,7 +38012,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewTLSConfigBuilder"
+          ]
         },
         {
           "name": "NewUploadSetting",
@@ -37985,7 +38126,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExamplePingWithOptions"
+          ]
         },
         {
           "name": "SaveUploadedFile",
@@ -38012,7 +38156,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleSaveUploadedFile"
+          ]
         },
         {
           "name": "TLSVersion",
@@ -38075,7 +38222,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleUploadFileContentType"
+          ]
         },
         {
           "name": "UploadFileName",
