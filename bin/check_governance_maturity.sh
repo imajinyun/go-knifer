@@ -609,6 +609,117 @@ def validate_star_domain_no_missing_governance() -> None:
 				add_error(f"{roadmap_path} Sprint 26 row must mention {required_phrase!r}")
 
 
+def validate_vdb_deepening_governance() -> None:
+	governance = require_mapping(ai_context.get("vdb_deepening_governance"), "vdb_deepening_governance")
+	roadmap_path = governance.get("roadmap_path")
+	if not isinstance(roadmap_path, str) or not roadmap_path.strip():
+		add_error("vdb_deepening_governance.roadmap_path must be non-empty")
+		roadmap_path = "docs/superpowers/plans/49-roadmap.md"
+	doc_path = governance.get("doc_path")
+	if not isinstance(doc_path, str) or not doc_path.strip():
+		add_error("vdb_deepening_governance.doc_path must be non-empty")
+		doc_path = "docs/doc/vdb-deepening-backlog.md"
+	quickstart_path = governance.get("quickstart_path")
+	if not isinstance(quickstart_path, str) or not quickstart_path.strip():
+		add_error("vdb_deepening_governance.quickstart_path must be non-empty")
+		quickstart_path = "docs/doc/14-vdb.md"
+	sprint = governance.get("sprint")
+	if sprint != 27:
+		add_error("vdb_deepening_governance.sprint must be 27")
+	status = governance.get("status")
+	if status not in {"active", "completed"}:
+		add_error("vdb_deepening_governance.status must be active or completed")
+	packages = require_string_list(governance.get("packages"), "vdb_deepening_governance.packages")
+	if packages != ["vdb"]:
+		add_error("vdb_deepening_governance.packages must be ordered as: vdb")
+	internal_packages = require_string_list(governance.get("internal_packages"), "vdb_deepening_governance.internal_packages")
+	if internal_packages != ["internal/db"]:
+		add_error("vdb_deepening_governance.internal_packages must be ordered as: internal/db")
+	for package_name in packages:
+		if package_name not in public_facades:
+			add_error(f"vdb_deepening_governance.packages references non-public facade {package_name}")
+	required_lanes = require_string_list(governance.get("required_lanes"), "vdb_deepening_governance.required_lanes")
+	expected_lanes = [
+		"Context-first execution",
+		"Dialect depth",
+		"Batch operations",
+		"Upsert semantics",
+		"Scan helpers",
+		"Transaction behavior",
+		"Identifier safety",
+		"Benchmark scope",
+	]
+	if required_lanes != expected_lanes:
+		add_error("vdb_deepening_governance.required_lanes must be ordered as: " + ", ".join(expected_lanes))
+	required_tests = require_string_list(governance.get("required_tests"), "vdb_deepening_governance.required_tests")
+	expected_tests = [
+		"internal/db/session_exec_test.go",
+		"internal/db/builder_write_test.go",
+		"internal/db/db_sql_helpers_test.go",
+		"vdb/session_exec_test.go",
+		"vdb/error_contract_test.go",
+	]
+	if required_tests != expected_tests:
+		add_error("vdb_deepening_governance.required_tests must be ordered as: " + ", ".join(expected_tests))
+	for test_path in required_tests:
+		if not (root / test_path).exists():
+			add_error(f"vdb_deepening_governance.required_tests references missing file {test_path}")
+	required_checks = require_string_list(governance.get("required_checks"), "vdb_deepening_governance.required_checks")
+	for check in ("docs-check", "ai-context-check", "governance-maturity-check", "agent-security-check"):
+		if check not in required_checks:
+			add_error(f"vdb_deepening_governance.required_checks must include {check}")
+
+	doc_file = root / doc_path
+	try:
+		doc_text = doc_file.read_text(encoding="utf-8")
+	except FileNotFoundError:
+		add_error(f"{doc_path} must exist")
+		doc_text = ""
+	if doc_text:
+		if not doc_text.startswith("# vdb Deepening Backlog\n"):
+			add_error(f"{doc_path} must start with '# vdb Deepening Backlog'")
+		for phrase in ("database/sql", "parameterized", "Non-Goals", "Required Evidence", "Validation"):
+			if phrase not in doc_text:
+				add_error(f"{doc_path} must include {phrase!r}")
+		for lane in required_lanes:
+			if lane not in doc_text:
+				add_error(f"{doc_path} missing required lane {lane!r}")
+		for test_path in required_tests:
+			if f"`{test_path}`" not in doc_text:
+				add_error(f"{doc_path} must mention required test {test_path}")
+		for check in required_checks:
+			if f"make {check}" not in doc_text:
+				add_error(f"{doc_path} validation section must mention make {check}")
+		for non_goal in ("Do not turn `vdb` into an ORM", "Do not add driver dependencies", "Do not own migrations"):
+			if non_goal not in doc_text:
+				add_error(f"{doc_path} must include non-goal {non_goal!r}")
+	quickstart_file = root / quickstart_path
+	try:
+		quickstart_text = quickstart_file.read_text(encoding="utf-8")
+	except FileNotFoundError:
+		add_error(f"{quickstart_path} must exist")
+		quickstart_text = ""
+	if quickstart_text:
+		readme_text = (root / "docs/doc/README.md").read_text(encoding="utf-8")
+		doc_link = Path(doc_path).name
+		if doc_path not in readme_text and doc_link not in readme_text:
+			add_error(f"docs/doc/README.md must link {doc_path}")
+
+	sprint_rows = extract_markdown_rows(root / roadmap_path, "Sprint order")
+	sprint_27_rows = [row for row in sprint_rows if row.get("Sprint") == "27"]
+	if len(sprint_27_rows) != 1:
+		add_error(f"{roadmap_path} Sprint order must contain exactly one Sprint 27 row")
+	else:
+		sprint_27 = sprint_27_rows[0]
+		expected_status = "Completed" if status == "completed" else "Active"
+		if sprint_27.get("Status") != expected_status:
+			add_error(f"{roadmap_path} Sprint 27 status must be {expected_status}")
+		sprint_text = " ".join(sprint_27.values())
+		for required_phrase in ("`vdb`", "deepening backlog", "context-first", "dialect"):
+			if required_phrase not in sprint_text:
+				add_error(f"{roadmap_path} Sprint 27 row must mention {required_phrase!r}")
+
+
 def validate_example_depth_governance() -> None:
 	governance = require_mapping(ai_context.get("example_depth_governance"), "example_depth_governance")
 	sprint = governance.get("sprint")
@@ -1009,6 +1120,7 @@ if not bench_only:
 	validate_safe_crypto_cookbook_governance()
 	validate_daily_json_file_faq_governance()
 	validate_star_domain_no_missing_governance()
+	validate_vdb_deepening_governance()
 	validate_example_depth_governance()
 	validate_api_convergence()
 	validate_lifecycle()

@@ -920,7 +920,7 @@
   "star_domain_no_missing_governance": {
     "roadmap_path": "docs/superpowers/plans/49-roadmap.md",
     "sprint": 26,
-    "status": "active",
+    "status": "completed",
     "domains": [
       "Safe HTTP (`vhttp`, `vresty`, `vurl`)",
       "Safe crypto (`vcrypto`, `vrand`, `vjwt`)",
@@ -933,6 +933,33 @@
       "Cookbook status"
     ],
     "required_checks": ["docs-check", "ai-context-check", "governance-maturity-check"]
+  },
+  "vdb_deepening_governance": {
+    "roadmap_path": "docs/superpowers/plans/49-roadmap.md",
+    "doc_path": "docs/doc/vdb-deepening-backlog.md",
+    "quickstart_path": "docs/doc/14-vdb.md",
+    "sprint": 27,
+    "status": "active",
+    "packages": ["vdb"],
+    "internal_packages": ["internal/db"],
+    "required_lanes": [
+      "Context-first execution",
+      "Dialect depth",
+      "Batch operations",
+      "Upsert semantics",
+      "Scan helpers",
+      "Transaction behavior",
+      "Identifier safety",
+      "Benchmark scope"
+    ],
+    "required_tests": [
+      "internal/db/session_exec_test.go",
+      "internal/db/builder_write_test.go",
+      "internal/db/db_sql_helpers_test.go",
+      "vdb/session_exec_test.go",
+      "vdb/error_contract_test.go"
+    ],
+    "required_checks": ["docs-check", "ai-context-check", "governance-maturity-check", "agent-security-check"]
   },
   "error_model": {
     "taxonomy": [
