@@ -14,6 +14,7 @@ import (
 type fakeBehavior struct {
 	execResult  driver.Result
 	execErr     error
+	execErrFunc func() error
 	queryErr    error
 	beginErr    error
 	commitErr   error
@@ -22,6 +23,11 @@ type fakeBehavior struct {
 }
 
 func (b *fakeBehavior) exec(string, []driver.NamedValue) (driver.Result, error) {
+	if b.execErrFunc != nil {
+		if err := b.execErrFunc(); err != nil {
+			return nil, err
+		}
+	}
 	if b.execErr != nil {
 		return nil, b.execErr
 	}

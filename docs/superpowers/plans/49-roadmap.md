@@ -10,7 +10,7 @@ This baseline is derived from `docs/api/tools.json.summary`. `make governance-ma
 | --- | ---: |
 | Public facade packages | 55 |
 | Public functions | 2724 |
-| Functions with executable examples | 1691 |
+| Functions with executable examples | 1702 |
 | Context-aware functions | 36 |
 | Functions returning errors | 666 |
 | Recommended public functions | 2702 |
@@ -91,7 +91,9 @@ The Hutool gap-closure lane is implemented and the active work has moved from fe
 | 24 | Completed | Safe Crypto Cookbook Governance | Added cookbook-grade scenario and comparison guidance for `vcrypto`, `vrand`, and `vjwt`, then guarded the lane with governance evidence. |
 | 25 | Completed | Daily JSON/File FAQ Governance | Added cross-package FAQ guidance for `vjson` and `vfile`, then guarded the lane with governance evidence. |
 | 26 | Completed | Star-Domain No-Missing Governance | Enforced that star-domain Recommended API docs, FAQ, comparison page, and cookbook status columns no longer contain `Missing` once the lanes have governance evidence. |
-| 27 | Active | vdb Deepening Backlog Governance | Add a `vdb` deepening backlog for context-first execution, dialect depth, batch/upsert behavior, scan helpers, transaction contracts, identifier safety, and benchmark scope. |
+| 27 | Completed | vdb Deepening Backlog Governance | Added a `vdb` deepening backlog for context-first execution, dialect depth, batch/upsert behavior, scan helpers, transaction contracts, identifier safety, and benchmark scope. |
+| 28 | Completed | vdb Execution Evidence Ratchet | Enforced `vdb` execution evidence for ExecBatch partial failure, Upsert dialect behavior, Tx rollback/commit errors, scan edge cases, and identifier safety. |
+| 29 | Completed | vdb Example Depth Ratchet | Raised `vdb` example depth from 10 toward 20+ with reader-facing examples for execution, `ScanRows`, `ScanOne`, pagination, dialect, `WrapperForDialect`, and raw SQL boundaries. |
 
 ## Active workflow
 
@@ -105,7 +107,11 @@ Sprint 25 completed Daily JSON/file FAQ depth: `daily_json_file_faq_governance` 
 
 Sprint 26 completed star-domain no-missing status: `star_domain_no_missing_governance` keeps Recommended API docs, FAQ, comparison page, and cookbook status cells from regressing to `Missing` after the star-domain lanes have governance evidence.
 
-Sprint 27 is now the active governance lane for `vdb` depth. It should keep the database lane focused on a machine-checked deepening backlog before adding more SQL helper APIs.
+Sprint 27 completed `vdb` deepening backlog governance: `vdb_deepening_governance` keeps the database lane focused on context-first execution, dialect depth, batch/upsert behavior, scan helpers, transaction contracts, identifier safety, and benchmark scope before adding more SQL helper APIs.
+
+Sprint 28 completed `vdb` execution evidence governance: `vdb_execution_evidence_governance` locks the key behavior contracts to named tests instead of file presence alone.
+
+Sprint 29 completed `vdb` example-depth governance: `vdb_example_depth_governance` ratchets reader-facing examples and keeps the generated tool catalog aligned with the new coverage.
 
 Recommended roadmap loop:
 

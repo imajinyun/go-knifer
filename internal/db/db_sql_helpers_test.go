@@ -2,8 +2,10 @@ package db
 
 import (
 	"database/sql"
+	"database/sql/driver"
 	"errors"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -43,6 +45,46 @@ func TestScanAndMetaHelpersReportInvalidInputAndUnsupported(t *testing.T) {
 
 	_, _, _, err = listColumnsSQL(DialectOracle, "users")
 	assertDBCode(t, err, knifer.ErrCodeUnsupported)
+}
+
+func TestScanRowsNormalizesBytesAndReportsIteratorErrors(t *testing.T) {
+	rowsDB := newFakeDB(&fakeBehavior{queryFunc: func(string) (driver.Rows, error) {
+		return mkRows(
+			[]string{"id", "name", "created_at"},
+			[]driver.Value{int64(1), []byte("alice"), time.Unix(123, 0).UTC()},
+		), nil
+	}})
+	defer func() { _ = rowsDB.Close() }()
+	rows, err := rowsDB.sqlDB.Query("SELECT id, name, created_at FROM users")
+	if err != nil {
+		t.Fatalf("Query: %v", err)
+	}
+	entities, err := ScanRows(rows)
+	if err != nil {
+		t.Fatalf("ScanRows: %v", err)
+	}
+	if len(entities) != 1 || entities[0].Values["name"] != "alice" {
+		t.Fatalf("ScanRows entities = %#v", entities)
+	}
+	if _, ok := entities[0].Values["created_at"].(time.Time); !ok {
+		t.Fatalf("created_at type = %T, want time.Time", entities[0].Values["created_at"])
+	}
+
+	iterDB := newFakeDB(&fakeBehavior{queryFunc: func(string) (driver.Rows, error) {
+		return &fakeRows{cols: []string{"id"}, nextErr: errors.New("iterator boom")}, nil
+	}})
+	defer func() { _ = iterDB.Close() }()
+	iterRows, err := iterDB.sqlDB.Query("SELECT id FROM users")
+	if err != nil {
+		t.Fatalf("Query iterator rows: %v", err)
+	}
+	errEntities, err := ScanRows(iterRows)
+	if err == nil || len(errEntities) != 0 {
+		t.Fatalf("ScanRows iterator error entities=%#v err=%v", errEntities, err)
+	}
+	if !errors.Is(err, knifer.ErrCodeInternal) || !strings.Contains(err.Error(), "iterate rows") {
+		t.Fatalf("ScanRows iterator err = %v, want internal iterate error", err)
+	}
 }
 
 func TestDBErrorsAndOptions(t *testing.T) {

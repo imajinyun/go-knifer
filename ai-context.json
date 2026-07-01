@@ -532,7 +532,7 @@
       "recommended_profile_schema": "recommended_entrypoints profiles: day-one, safe, error, options, compatibility; golden_path lists 1-7 APIs with use_when and avoid_when guidance",
       "package_count": 55,
       "function_count": 2724,
-      "functions_with_examples": 1691,
+      "functions_with_examples": 1702,
       "context_aware_functions": 36,
       "returns_error_functions": 666,
       "status_counts": {
@@ -939,7 +939,7 @@
     "doc_path": "docs/doc/vdb-deepening-backlog.md",
     "quickstart_path": "docs/doc/14-vdb.md",
     "sprint": 27,
-    "status": "active",
+    "status": "completed",
     "packages": ["vdb"],
     "internal_packages": ["internal/db"],
     "required_lanes": [
@@ -960,6 +960,49 @@
       "vdb/error_contract_test.go"
     ],
     "required_checks": ["docs-check", "ai-context-check", "governance-maturity-check", "agent-security-check"]
+  },
+  "vdb_execution_evidence_governance": {
+    "roadmap_path": "docs/superpowers/plans/49-roadmap.md",
+    "sprint": 28,
+    "status": "completed",
+    "packages": ["vdb"],
+    "internal_packages": ["internal/db"],
+    "required_contracts": [
+      "ExecBatch partial failure",
+      "Upsert dialect behavior",
+      "Tx rollback and commit errors",
+      "Scan edge cases",
+      "Identifier safety"
+    ],
+    "required_test_functions": [
+      "internal/db/db_exec_test.go:TestDBExecBatchPartialFailureReturnsCompletedResults",
+      "internal/db/builder_write_test.go:TestUpsertSQLDialectVariants",
+      "internal/db/db_exec_test.go:TestDBTxRollbackErrorJoinsCause",
+      "internal/db/db_sql_helpers_test.go:TestScanRowsNormalizesBytesAndReportsIteratorErrors",
+      "internal/db/builder_select_test.go:TestSQLBuilderRejectsUnsafeIdentifiers"
+    ],
+    "required_checks": ["go test ./internal/db ./vdb", "docs-check", "ai-context-check", "governance-maturity-check", "agent-security-check"]
+  },
+  "vdb_example_depth_governance": {
+    "roadmap_path": "docs/superpowers/plans/49-roadmap.md",
+    "sprint": 29,
+    "status": "completed",
+    "package": "vdb",
+    "baseline_examples": 10,
+    "target_examples": 20,
+    "required_examples": [
+      "ExampleDB_ExecBatch",
+      "ExampleDB_Upsert",
+      "ExampleDB_Tx",
+      "ExampleScanRows",
+      "ExampleScanOne",
+      "ExampleNewPageResult",
+      "ExampleNormalizeDialect",
+      "ExampleWrapperForDialect",
+      "ExampleRaw",
+      "ExampleNewWrapper"
+    ],
+    "required_checks": ["tools-gen", "docs-check", "ai-context-check", "governance-maturity-check"]
   },
   "error_model": {
     "taxonomy": [

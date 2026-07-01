@@ -12,7 +12,7 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Module | `github.com/imajinyun/knifer-go` |
 | Packages | 55 |
 | Functions | 2724 |
-| Functions with examples | 1691 |
+| Functions with examples | 1702 |
 | Context-aware functions | 36 |
 | Functions returning error | 666 |
 | Variadic functions | 794 |
@@ -861,7 +861,7 @@ Import path: `github.com/imajinyun/knifer-go/vdb`
 
 Package vdb exposes database/sql helper APIs for SQL execution, query building, entities, conditions, pagination, transactions, named parameters, and lightweight metadata lookup.
 
-Quality: 51 functions · 10 with examples · 19.6% example coverage · statuses: recommended=51, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=15, internal=36, empty=0
+Quality: 51 functions · 21 with examples · 41.2% example coverage · statuses: recommended=51, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=15, internal=36, empty=0
 
 Recommended entrypoints:
 
@@ -886,16 +886,16 @@ Golden path API set:
 | --- | --- | --- | --- | --- | --- |
 | `AndGroup` | `func AndGroup(conds ...Condition) Condition` | recommended | AndGroup groups conditions with AND. | internal | — |
 | `Asc` | `func Asc(field string) Order` | recommended | Asc returns ascending order. | internal | — |
-| `AssignEntity` | `func AssignEntity(entity Entity, dst any) error` | recommended | AssignEntity copies entity values into dst struct or map. | internal | — |
+| `AssignEntity` | `func AssignEntity(entity Entity, dst any) error` | recommended | AssignEntity copies entity values into dst struct or map. | internal | `ExampleAssignEntity` |
 | `Between` | `func Between(field string, begin any, end any) Condition` | recommended | Between creates a BETWEEN condition. | internal | — |
 | `BuildConditions` | `func BuildConditions(conds ...Condition) (string, []any, error)` | recommended | BuildConditions builds a WHERE fragment without the WHERE keyword. | internal | `ExampleBuildConditions` |
 | `BuildLikeValue` | `func BuildLikeValue(value any, mode string) string` | recommended | BuildLikeValue returns a LIKE value according to mode: contains, prefix, suffix, or exact. | internal | `ExampleBuildLikeValue` |
-| `ConditionsFromEntity` | `func ConditionsFromEntity(e Entity) []Condition` | recommended | ConditionsFromEntity creates equality conditions from entity values. | internal | — |
+| `ConditionsFromEntity` | `func ConditionsFromEntity(e Entity) []Condition` | recommended | ConditionsFromEntity creates equality conditions from entity values. | internal | `ExampleConditionsFromEntity` |
 | `Delete` | `func Delete(table string) *SQLBuilder` | recommended | Delete builds a DELETE statement for table. | internal | `ExampleDelete` |
 | `Desc` | `func Desc(field string) Order` | recommended | Desc returns descending order. | internal | — |
-| `EntityFromMap` | `func EntityFromMap(table string, values map[string]any) Entity` | recommended | EntityFromMap creates an Entity from values. | internal | — |
+| `EntityFromMap` | `func EntityFromMap(table string, values map[string]any) Entity` | recommended | EntityFromMap creates an Entity from values. | internal | `ExampleEntityFromMap` |
 | `Eq` | `func Eq(field string, value any) Condition` | recommended | Eq creates an equality condition. | internal | — |
-| `Exec` | `func Exec(ctx context.Context, db *DB, query string, args ...any) (sql.Result, error)` | recommended | Exec executes SQL against db. | facade | — |
+| `Exec` | `func Exec(ctx context.Context, db *DB, query string, args ...any) (sql.Result, error)` | recommended | Exec executes SQL against db. | facade | `ExampleExec` |
 | `Gt` | `func Gt(field string, value any) Condition` | recommended | Gt creates a greater-than condition. | internal | — |
 | `Gte` | `func Gte(field string, value any) Condition` | recommended | Gte creates a greater-than-or-equal condition. | internal | — |
 | `In` | `func In(field string, values ...any) Condition` | recommended | In creates an IN condition. | internal | — |
@@ -912,18 +912,18 @@ Golden path API set:
 | `NewEntity` | `func NewEntity(table string) Entity` | recommended | NewEntity creates an Entity for table. | internal | `ExampleNewEntity` |
 | `NewOptions` | `func NewOptions() Options` | recommended | NewOptions returns default database helper options. | facade | — |
 | `NewPage` | `func NewPage(number int, size int, orders ...Order) Page` | recommended | NewPage creates a page request. | internal | `ExampleNewPage` |
-| `NewPageResult` | `func NewPageResult[T any](page Page, total int64, items []T) PageResult[T]` | recommended | NewPageResult creates a paged result. | internal | — |
+| `NewPageResult` | `func NewPageResult[T any](page Page, total int64, items []T) PageResult[T]` | recommended | NewPageResult creates a paged result. | internal | `ExampleNewPageResult` |
 | `NewQuery` | `func NewQuery(tables ...string) Query` | recommended | NewQuery creates a query for tables. | internal | — |
-| `NewWrapper` | `func NewWrapper(prefix string, suffix string) Wrapper` | recommended | NewWrapper returns an identifier wrapper. | facade | — |
-| `NormalizeDialect` | `func NormalizeDialect(name string) Dialect` | recommended | NormalizeDialect maps common driver names to a SQL dialect. | facade | — |
+| `NewWrapper` | `func NewWrapper(prefix string, suffix string) Wrapper` | recommended | NewWrapper returns an identifier wrapper. | facade | `ExampleNewWrapper` |
+| `NormalizeDialect` | `func NormalizeDialect(name string) Dialect` | recommended | NormalizeDialect maps common driver names to a SQL dialect. | facade | `ExampleNormalizeDialect` |
 | `Open` | `func Open(driverName string, dataSourceName string, opts ...Option) (*DB, error)` | recommended | Open opens a database using database/sql and applies pool/dialect options. | facade | — |
 | `OrGroup` | `func OrGroup(conds ...Condition) Condition` | recommended | OrGroup groups conditions with OR. | internal | `ExampleOrGroup` |
 | `OrWith` | `func OrWith(c Condition) Condition` | recommended | OrWith marks c as linked by OR. | internal | — |
 | `ParseNamed` | `func ParseNamed(query string, args map[string]any, dialect Dialect) (NamedSQL, error)` | recommended | ParseNamed replaces :name parameters with dialect placeholders. | internal | `ExampleParseNamed` |
-| `Raw` | `func Raw(sql string, args ...any) *SQLBuilder` | recommended | Raw creates a builder from a trusted raw SQL fragment. | internal | — |
+| `Raw` | `func Raw(sql string, args ...any) *SQLBuilder` | recommended | Raw creates a builder from a trusted raw SQL fragment. | internal | `ExampleRaw` |
 | `RemoveOuterOrderBy` | `func RemoveOuterOrderBy(sql string) string` | recommended | RemoveOuterOrderBy removes the last top-level ORDER BY clause from a SELECT statement. | internal | — |
-| `ScanOne` | `func ScanOne(rows *sql.Rows) (Entity, bool, error)` | recommended | ScanOne scans the first row into Entity. | internal | — |
-| `ScanRows` | `func ScanRows(rows *sql.Rows) ([]Entity, error)` | recommended | ScanRows scans all rows into Entity values. | internal | — |
+| `ScanOne` | `func ScanOne(rows *sql.Rows) (Entity, bool, error)` | recommended | ScanOne scans the first row into Entity. | internal | `ExampleScanOne` |
+| `ScanRows` | `func ScanRows(rows *sql.Rows) ([]Entity, error)` | recommended | ScanRows scans all rows into Entity values. | internal | `ExampleScanRows` |
 | `Select` | `func Select(fields ...string) *SQLBuilder` | recommended | Select starts a SELECT builder. | internal | `ExampleSelect` |
 | `Update` | `func Update(e Entity) *SQLBuilder` | recommended | Update builds an UPDATE statement for entity. | internal | `ExampleUpdate` |
 | `Use` | `func Use(sqlDB *sql.DB, opts ...Option) *DB` | recommended | Use wraps an existing *sql.DB and applies pool/dialect options. | facade | — |
@@ -934,7 +934,7 @@ Golden path API set:
 | `WithMaxOpenConns` | `func WithMaxOpenConns(n int) Option` | recommended | WithMaxOpenConns sets database/sql max open connections when opening or wrapping a DB. | facade | — |
 | `WithSQLOpenFunc` | `func WithSQLOpenFunc(open SQLOpenFunc) Option` | recommended | WithSQLOpenFunc sets the function used to open database/sql DBs. | facade | — |
 | `WithWrapper` | `func WithWrapper(w Wrapper) Option` | recommended | WithWrapper sets identifier wrapper behavior and overrides the dialect default wrapper. | facade | — |
-| `WrapperForDialect` | `func WrapperForDialect(d Dialect) Wrapper` | recommended | WrapperForDialect returns the conventional identifier wrapper for dialect. | facade | — |
+| `WrapperForDialect` | `func WrapperForDialect(d Dialect) Wrapper` | recommended | WrapperForDialect returns the conventional identifier wrapper for dialect. | facade | `ExampleWrapperForDialect` |
 
 ### vdfa
 

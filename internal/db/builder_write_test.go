@@ -55,6 +55,64 @@ func TestUpsertSQL(t *testing.T) {
 	}
 }
 
+func TestUpsertSQLDialectVariants(t *testing.T) {
+	entity := NewEntity("users").Set("id", 1).Set("name", "alice")
+	tests := []struct {
+		name     string
+		entity   Entity
+		dialect  Dialect
+		wrapper  Wrapper
+		conflict []string
+		update   []string
+		wantSQL  string
+		wantArgs []any
+	}{
+		{
+			name:     "mysql update",
+			dialect:  DialectMySQL,
+			wrapper:  WrapperForDialect(DialectMySQL),
+			conflict: []string{"id"},
+			wantSQL:  "INSERT INTO `users` (`id`, `name`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `name` = VALUES(`name`)",
+			wantArgs: []any{1, "alice"},
+		},
+		{
+			name:     "postgres update",
+			dialect:  DialectPostgres,
+			wrapper:  WrapperForDialect(DialectPostgres),
+			conflict: []string{"id"},
+			wantSQL:  `INSERT INTO "users" ("id", "name") VALUES ($1, $2) ON CONFLICT ("id") DO UPDATE SET "name" = excluded."name"`,
+			wantArgs: []any{1, "alice"},
+		},
+		{
+			name:     "sqlite do nothing",
+			entity:   NewEntity("users").Set("id", 1),
+			dialect:  DialectSQLite,
+			wrapper:  WrapperForDialect(DialectSQLite),
+			conflict: []string{"id"},
+			wantSQL:  "INSERT INTO `users` (`id`) VALUES (?) ON CONFLICT (`id`) DO NOTHING",
+			wantArgs: []any{1},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input := tt.entity
+			if input.Table == "" {
+				input = entity
+			}
+			sqlText, args, err := buildUpsertSQL(tt.dialect, tt.wrapper, input, tt.conflict, tt.update...)
+			if err != nil {
+				t.Fatalf("buildUpsertSQL() error = %v", err)
+			}
+			if sqlText != tt.wantSQL {
+				t.Fatalf("sql = %q, want %q", sqlText, tt.wantSQL)
+			}
+			if !reflect.DeepEqual(args, tt.wantArgs) {
+				t.Fatalf("args = %#v", args)
+			}
+		})
+	}
+}
+
 func TestUpsertSQLReportsUnsupportedAndInvalidInput(t *testing.T) {
 	entity := NewEntity("users").Set("id", 1).Set("name", "alice")
 	_, _, err := buildUpsertSQL(DialectOracle, WrapperForDialect(DialectOracle), entity, []string{"id"})

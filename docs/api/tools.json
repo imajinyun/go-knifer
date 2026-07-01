@@ -4,7 +4,7 @@
   "summary": {
     "package_count": 55,
     "function_count": 2724,
-    "functions_with_examples": 1691,
+    "functions_with_examples": 1702,
     "context_aware_functions": 36,
     "returns_error_functions": 666,
     "variadic_functions": 794,
@@ -11490,8 +11490,8 @@
       "synopsis": "Package vdb exposes database/sql helper APIs for SQL execution, query building, entities, conditions, pagination, transactions, named parameters, and lightweight metadata lookup.",
       "summary": {
         "function_count": 51,
-        "functions_with_examples": 10,
-        "example_coverage_percent": 19.6,
+        "functions_with_examples": 21,
+        "example_coverage_percent": 41.2,
         "status_counts": {
           "compatibility": 0,
           "deprecated": 0,
@@ -11613,7 +11613,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleAssignEntity"
+          ]
         },
         {
           "name": "Between",
@@ -11709,7 +11712,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleConditionsFromEntity"
+          ]
         },
         {
           "name": "Delete",
@@ -11773,7 +11779,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleEntityFromMap"
+          ]
         },
         {
           "name": "Eq",
@@ -11828,7 +11837,10 @@
           ],
           "returns_error": true,
           "context_aware": true,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleExec"
+          ]
         },
         {
           "name": "Gt",
@@ -12198,7 +12210,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewPageResult"
+          ]
         },
         {
           "name": "NewQuery",
@@ -12240,7 +12255,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNewWrapper"
+          ]
         },
         {
           "name": "NormalizeDialect",
@@ -12259,7 +12277,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleNormalizeDialect"
+          ]
         },
         {
           "name": "Open",
@@ -12382,7 +12403,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": true
+          "variadic": true,
+          "examples": [
+            "ExampleRaw"
+          ]
         },
         {
           "name": "RemoveOuterOrderBy",
@@ -12422,7 +12446,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleScanOne"
+          ]
         },
         {
           "name": "ScanRows",
@@ -12442,7 +12469,10 @@
           ],
           "returns_error": true,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleScanRows"
+          ]
         },
         {
           "name": "Select",
@@ -12661,7 +12691,10 @@
           ],
           "returns_error": false,
           "context_aware": false,
-          "variadic": false
+          "variadic": false,
+          "examples": [
+            "ExampleWrapperForDialect"
+          ]
         }
       ]
     },

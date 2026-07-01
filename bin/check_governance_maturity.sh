@@ -120,6 +120,35 @@ def references_function(reference: str) -> bool:
 	return bool(separator and re.match(r"^[A-Za-z_]\w*$", symbol))
 
 
+def test_function_exists(reference: str) -> bool:
+	path, separator, symbol = reference.partition(":")
+	if not separator or not re.match(r"^[A-Za-z_]\w*$", symbol):
+		return False
+	file_path = root / path
+	if not file_path.exists():
+		return False
+	try:
+		text = file_path.read_text(encoding="utf-8")
+	except UnicodeDecodeError:
+		return False
+	return re.search(rf"^func\s+{re.escape(symbol)}\s*\(\s*t\s+\*testing\.T\s*\)", text, flags=re.MULTILINE) is not None
+
+
+def example_function_exists(package_name: str, example_name: str) -> bool:
+	package_dir = root / package_name
+	if not package_dir.is_dir():
+		return False
+	pattern = re.compile(rf"^func\s+{re.escape(example_name)}\s*\(\s*\)", flags=re.MULTILINE)
+	for path in package_dir.glob("*_test.go"):
+		try:
+			text = path.read_text(encoding="utf-8")
+		except UnicodeDecodeError:
+			continue
+		if pattern.search(text):
+			return True
+	return False
+
+
 with open("ai-context.json", "r", encoding="utf-8") as f:
 	ai_context = json.load(f)
 
@@ -240,6 +269,14 @@ def package_summary_int(package_name: str, field: str) -> int | None:
 		add_error(f"docs/api/tools.json.packages.{package_name}.summary.{field} must be an integer")
 		return None
 	return value
+
+
+def package_summary(package_name: str) -> dict:
+	pkg = tool_packages.get(package_name)
+	if not pkg:
+		add_error(f"docs/api/tools.json missing package {package_name}")
+		return {}
+	return require_mapping(pkg.get("summary"), f"docs/api/tools.json.packages.{package_name}.summary")
 
 
 def parse_int_cell(value: str, path: str) -> int | None:
@@ -720,6 +757,135 @@ def validate_vdb_deepening_governance() -> None:
 				add_error(f"{roadmap_path} Sprint 27 row must mention {required_phrase!r}")
 
 
+def validate_vdb_execution_evidence_governance() -> None:
+	governance = require_mapping(ai_context.get("vdb_execution_evidence_governance"), "vdb_execution_evidence_governance")
+	roadmap_path = governance.get("roadmap_path")
+	if not isinstance(roadmap_path, str) or not roadmap_path.strip():
+		add_error("vdb_execution_evidence_governance.roadmap_path must be non-empty")
+		roadmap_path = "docs/superpowers/plans/49-roadmap.md"
+	sprint = governance.get("sprint")
+	if sprint != 28:
+		add_error("vdb_execution_evidence_governance.sprint must be 28")
+	status = governance.get("status")
+	if status not in {"active", "completed"}:
+		add_error("vdb_execution_evidence_governance.status must be active or completed")
+	packages = require_string_list(governance.get("packages"), "vdb_execution_evidence_governance.packages")
+	if packages != ["vdb"]:
+		add_error("vdb_execution_evidence_governance.packages must be ordered as: vdb")
+	internal_packages = require_string_list(governance.get("internal_packages"), "vdb_execution_evidence_governance.internal_packages")
+	if internal_packages != ["internal/db"]:
+		add_error("vdb_execution_evidence_governance.internal_packages must be ordered as: internal/db")
+	required_contracts = require_string_list(governance.get("required_contracts"), "vdb_execution_evidence_governance.required_contracts")
+	expected_contracts = [
+		"ExecBatch partial failure",
+		"Upsert dialect behavior",
+		"Tx rollback and commit errors",
+		"Scan edge cases",
+		"Identifier safety",
+	]
+	if required_contracts != expected_contracts:
+		add_error("vdb_execution_evidence_governance.required_contracts must be ordered as: " + ", ".join(expected_contracts))
+	required_test_functions = require_string_list(
+		governance.get("required_test_functions"),
+		"vdb_execution_evidence_governance.required_test_functions",
+	)
+	expected_test_functions = [
+		"internal/db/db_exec_test.go:TestDBExecBatchPartialFailureReturnsCompletedResults",
+		"internal/db/builder_write_test.go:TestUpsertSQLDialectVariants",
+		"internal/db/db_exec_test.go:TestDBTxRollbackErrorJoinsCause",
+		"internal/db/db_sql_helpers_test.go:TestScanRowsNormalizesBytesAndReportsIteratorErrors",
+		"internal/db/builder_select_test.go:TestSQLBuilderRejectsUnsafeIdentifiers",
+	]
+	if required_test_functions != expected_test_functions:
+		add_error("vdb_execution_evidence_governance.required_test_functions must be ordered as: " + ", ".join(expected_test_functions))
+	for reference in required_test_functions:
+		if not test_function_exists(reference):
+			add_error(f"vdb_execution_evidence_governance.required_test_functions references missing test {reference}")
+	required_checks = require_string_list(governance.get("required_checks"), "vdb_execution_evidence_governance.required_checks")
+	for check in ("go test ./internal/db ./vdb", "docs-check", "ai-context-check", "governance-maturity-check", "agent-security-check"):
+		if check not in required_checks:
+			add_error(f"vdb_execution_evidence_governance.required_checks must include {check}")
+
+	sprint_rows = extract_markdown_rows(root / roadmap_path, "Sprint order")
+	sprint_28_rows = [row for row in sprint_rows if row.get("Sprint") == "28"]
+	if len(sprint_28_rows) != 1:
+		add_error(f"{roadmap_path} Sprint order must contain exactly one Sprint 28 row")
+	else:
+		sprint_28 = sprint_28_rows[0]
+		expected_status = "Completed" if status == "completed" else "Active"
+		if sprint_28.get("Status") != expected_status:
+			add_error(f"{roadmap_path} Sprint 28 status must be {expected_status}")
+		sprint_text = " ".join(sprint_28.values())
+		for required_phrase in ("`vdb`", "ExecBatch", "Upsert", "Tx", "scan", "identifier safety"):
+			if required_phrase not in sprint_text:
+				add_error(f"{roadmap_path} Sprint 28 row must mention {required_phrase!r}")
+
+
+def validate_vdb_example_depth_governance() -> None:
+	governance = require_mapping(ai_context.get("vdb_example_depth_governance"), "vdb_example_depth_governance")
+	roadmap_path = governance.get("roadmap_path")
+	if not isinstance(roadmap_path, str) or not roadmap_path.strip():
+		add_error("vdb_example_depth_governance.roadmap_path must be non-empty")
+		roadmap_path = "docs/superpowers/plans/49-roadmap.md"
+	sprint = governance.get("sprint")
+	if sprint != 29:
+		add_error("vdb_example_depth_governance.sprint must be 29")
+	status = governance.get("status")
+	if status not in {"active", "completed"}:
+		add_error("vdb_example_depth_governance.status must be active or completed")
+	package_name = governance.get("package")
+	if package_name != "vdb":
+		add_error("vdb_example_depth_governance.package must be vdb")
+	baseline_examples = governance.get("baseline_examples")
+	if baseline_examples != 10:
+		add_error("vdb_example_depth_governance.baseline_examples must be 10")
+	target_examples = governance.get("target_examples")
+	if not isinstance(target_examples, int) or isinstance(target_examples, bool) or target_examples < 20:
+		add_error("vdb_example_depth_governance.target_examples must be at least 20")
+	required_examples = require_string_list(governance.get("required_examples"), "vdb_example_depth_governance.required_examples")
+	expected_examples = [
+		"ExampleDB_ExecBatch",
+		"ExampleDB_Upsert",
+		"ExampleDB_Tx",
+		"ExampleScanRows",
+		"ExampleScanOne",
+		"ExampleNewPageResult",
+		"ExampleNormalizeDialect",
+		"ExampleWrapperForDialect",
+		"ExampleRaw",
+		"ExampleNewWrapper",
+	]
+	if required_examples != expected_examples:
+		add_error("vdb_example_depth_governance.required_examples must be ordered as: " + ", ".join(expected_examples))
+	for example_name in required_examples:
+		if not example_function_exists("vdb", example_name):
+			add_error(f"vdb_example_depth_governance.required_examples references missing example {example_name}")
+	summary = package_summary("vdb")
+	example_count = summary.get("functions_with_examples")
+	if not isinstance(example_count, int) or isinstance(example_count, bool):
+		add_error("docs/api/tools.json.packages.vdb.summary.functions_with_examples must be an integer")
+	elif isinstance(target_examples, int) and example_count < target_examples:
+		add_error(f"vdb examples must be at least {target_examples}, got {example_count}")
+	required_checks = require_string_list(governance.get("required_checks"), "vdb_example_depth_governance.required_checks")
+	for check in ("tools-gen", "docs-check", "ai-context-check", "governance-maturity-check"):
+		if check not in required_checks:
+			add_error(f"vdb_example_depth_governance.required_checks must include {check}")
+
+	sprint_rows = extract_markdown_rows(root / roadmap_path, "Sprint order")
+	sprint_29_rows = [row for row in sprint_rows if row.get("Sprint") == "29"]
+	if len(sprint_29_rows) != 1:
+		add_error(f"{roadmap_path} Sprint order must contain exactly one Sprint 29 row")
+	else:
+		sprint_29 = sprint_29_rows[0]
+		expected_status = "Completed" if status == "completed" else "Active"
+		if sprint_29.get("Status") != expected_status:
+			add_error(f"{roadmap_path} Sprint 29 status must be {expected_status}")
+		sprint_text = " ".join(sprint_29.values())
+		for required_phrase in ("`vdb`", "example", "20+", "ScanRows", "WrapperForDialect"):
+			if required_phrase not in sprint_text:
+				add_error(f"{roadmap_path} Sprint 29 row must mention {required_phrase!r}")
+
+
 def validate_example_depth_governance() -> None:
 	governance = require_mapping(ai_context.get("example_depth_governance"), "example_depth_governance")
 	sprint = governance.get("sprint")
@@ -1121,6 +1287,8 @@ if not bench_only:
 	validate_daily_json_file_faq_governance()
 	validate_star_domain_no_missing_governance()
 	validate_vdb_deepening_governance()
+	validate_vdb_execution_evidence_governance()
+	validate_vdb_example_depth_governance()
 	validate_example_depth_governance()
 	validate_api_convergence()
 	validate_lifecycle()

@@ -24,6 +24,8 @@
     "daily_json_file_faq_governance",
     "star_domain_no_missing_governance",
     "vdb_deepening_governance",
+    "vdb_execution_evidence_governance",
+    "vdb_example_depth_governance",
     "error_model",
     "dynamic_semantic_contracts",
     "v1_readiness",
@@ -287,6 +289,36 @@
         "internal_packages": { "$ref": "#/$defs/string_array" },
         "required_lanes": { "$ref": "#/$defs/string_array" },
         "required_tests": { "$ref": "#/$defs/string_array" },
+        "required_checks": { "$ref": "#/$defs/string_array" }
+      },
+      "additionalProperties": false
+    },
+    "vdb_execution_evidence_governance": {
+      "type": "object",
+      "required": ["roadmap_path", "sprint", "status", "packages", "internal_packages", "required_contracts", "required_test_functions", "required_checks"],
+      "properties": {
+        "roadmap_path": { "type": "string", "minLength": 1 },
+        "sprint": { "type": "number", "exclusiveMinimum": 0 },
+        "status": { "type": "string", "enum": ["active", "completed"] },
+        "packages": { "$ref": "#/$defs/string_array" },
+        "internal_packages": { "$ref": "#/$defs/string_array" },
+        "required_contracts": { "$ref": "#/$defs/string_array" },
+        "required_test_functions": { "$ref": "#/$defs/string_array" },
+        "required_checks": { "$ref": "#/$defs/string_array" }
+      },
+      "additionalProperties": false
+    },
+    "vdb_example_depth_governance": {
+      "type": "object",
+      "required": ["roadmap_path", "sprint", "status", "package", "baseline_examples", "target_examples", "required_examples", "required_checks"],
+      "properties": {
+        "roadmap_path": { "type": "string", "minLength": 1 },
+        "sprint": { "type": "number", "exclusiveMinimum": 0 },
+        "status": { "type": "string", "enum": ["active", "completed"] },
+        "package": { "type": "string", "minLength": 1 },
+        "baseline_examples": { "type": "number", "minimum": 0 },
+        "target_examples": { "type": "number", "minimum": 0 },
+        "required_examples": { "$ref": "#/$defs/string_array" },
         "required_checks": { "$ref": "#/$defs/string_array" }
       },
       "additionalProperties": false

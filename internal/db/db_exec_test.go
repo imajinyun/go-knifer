@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -122,6 +123,34 @@ func TestDBExecBatch(t *testing.T) {
 	}
 }
 
+func TestDBExecBatchPartialFailureReturnsCompletedResults(t *testing.T) {
+	ctx := context.Background()
+	calls := 0
+	want := errors.New("batch boom")
+	db := newFakeDB(&fakeBehavior{
+		execResult: fakeResult{affected: 1},
+		execErrFunc: func() error {
+			calls++
+			if calls == 3 {
+				return want
+			}
+			return nil
+		},
+	})
+	defer func() { _ = db.Close() }()
+
+	results, err := db.ExecBatch(ctx, "INSERT INTO users(name) VALUES (?)", []any{"a"}, []any{"b"}, []any{"c"}, []any{"d"})
+	if !errors.Is(err, want) || !errors.Is(err, knifer.ErrCodeInternal) {
+		t.Fatalf("ExecBatch err = %v, want wrapped batch boom and internal code", err)
+	}
+	if len(results) != 2 {
+		t.Fatalf("ExecBatch completed results = %d, want 2", len(results))
+	}
+	if calls != 3 {
+		t.Fatalf("ExecBatch calls = %d, want stop after failing batch", calls)
+	}
+}
+
 func TestDBInsertUpdateDelete(t *testing.T) {
 	ctx := context.Background()
 	db := newFakeDB(&fakeBehavior{execResult: fakeResult{lastID: 99}})
@@ -225,6 +254,22 @@ func TestDBTxCommitAndRollback(t *testing.T) {
 	wantErr := errors.New("fn boom")
 	if err := db.Tx(ctx, nil, func(*Session) error { return wantErr }); !errors.Is(err, wantErr) {
 		t.Fatalf("Tx rollback err = %v", err)
+	}
+}
+
+func TestDBTxRollbackErrorJoinsCause(t *testing.T) {
+	ctx := context.Background()
+	wantErr := errors.New("fn boom")
+	rollbackErr := errors.New("rollback boom")
+	db := newFakeDB(&fakeBehavior{rollbackErr: rollbackErr})
+	defer func() { _ = db.Close() }()
+
+	err := db.Tx(ctx, nil, func(*Session) error { return wantErr })
+	if !errors.Is(err, wantErr) {
+		t.Fatalf("Tx error = %v, want function error", err)
+	}
+	if !strings.Contains(err.Error(), "rollback boom") {
+		t.Fatalf("Tx error = %v, want rollback context", err)
 	}
 }
 
