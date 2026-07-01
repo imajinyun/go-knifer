@@ -96,6 +96,7 @@ The Hutool gap-closure lane is implemented and the active work has moved from fe
 | 29 | Completed | vdb Example Depth Ratchet | Raised `vdb` example depth from 10 toward 20+ with reader-facing examples for execution, `ScanRows`, `ScanOne`, pagination, dialect, `WrapperForDialect`, and raw SQL boundaries. |
 | 30 | Completed | Safe Crypto Advanced Backlog Governance | Defined machine-checked boundaries for TOTP/HOTP, password hashing, JWK/JWKS, secret handling, interoperability, and benchmark scope before adding more crypto APIs. |
 | 31 | Completed | Safe Crypto OTP Governance | Added RFC-compatible HOTP/TOTP helpers with Base32 secrets, otpauth URLs, injected clock/window policy, RFC vectors, examples, and governance evidence. |
+| 32 | Completed | Safe Crypto Password Hashing Governance | Fixed machine-checked password hashing boundaries for Argon2id-style encoded hashes, malformed-hash errors, mismatch verification, bounded test costs, and non-goals before implementation. |
 
 ## Active workflow
 
@@ -118,6 +119,8 @@ Sprint 29 completed `vdb` example-depth governance: `vdb_example_depth_governanc
 Sprint 30 completed advanced safe crypto backlog governance: `safe_crypto_advanced_backlog_governance` keeps TOTP/HOTP, password hashing, JWK/JWKS, secret handling, interoperability, and benchmark scope explicit before any new public crypto APIs are added.
 
 Sprint 31 completed safe crypto OTP governance: `safe_crypto_otp_governance` records HOTP/TOTP facade APIs, RFC vectors, deterministic clock/window tests, Base32 secret helpers, otpauth URL examples, and generated catalog coverage.
+
+Sprint 32 completed safe crypto password hashing governance: `safe_crypto_password_hashing_governance` records the encoded-hash envelope, parameter bounds, salt source policy, mismatch behavior, malformed-hash errors, cost-bound fixtures, and non-goals before Argon2id implementation.
 
 Recommended roadmap loop:
 

@@ -1059,6 +1059,35 @@
     "required_examples": ["ExampleHOTP", "ExampleTOTP", "ExampleTOTPVerifyNow", "ExampleOTPAuthURL"],
     "required_checks": ["go test ./internal/crypto ./vcrypto", "tools-gen", "docs-check", "ai-context-check", "governance-maturity-check", "agent-security-check"]
   },
+  "safe_crypto_password_hashing_governance": {
+    "roadmap_path": "docs/superpowers/plans/49-roadmap.md",
+    "backlog_path": "docs/doc/safe-crypto-advanced-backlog.md",
+    "quickstart_path": "docs/doc/11-vcrypto.md",
+    "password_strength_path": "docs/doc/36-vpass.md",
+    "sprint": 32,
+    "status": "completed",
+    "packages": ["vcrypto", "vpass", "vrand"],
+    "algorithm_policy": [
+      "Argon2id-style encoded hash envelope",
+      "versioned parameters",
+      "explicit salt source",
+      "bounded test cost"
+    ],
+    "required_contracts": [
+      "encoded hash round trip",
+      "mismatch returns false",
+      "malformed hash returns explicit error",
+      "invalid parameters are rejected",
+      "raw passwords are not logged or stored"
+    ],
+    "non_goals": [
+      "No password storage service",
+      "No account lifecycle or reset flow",
+      "No breached-password corpus check",
+      "No MFA or recovery policy"
+    ],
+    "required_checks": ["docs-check", "ai-context-check", "governance-maturity-check", "agent-security-check"]
+  },
   "error_model": {
     "taxonomy": [
       { "category": "invalid input", "code": "GK_INVALID_INPUT", "use_when": "Caller-provided arguments, payloads, or configuration values are malformed." },

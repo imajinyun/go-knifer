@@ -1088,6 +1088,113 @@ def validate_safe_crypto_otp_governance() -> None:
 				add_error(f"{roadmap_path} Sprint 31 row must mention {required_phrase!r}")
 
 
+def validate_safe_crypto_password_hashing_governance() -> None:
+	governance = require_mapping(
+		ai_context.get("safe_crypto_password_hashing_governance"),
+		"safe_crypto_password_hashing_governance",
+	)
+	roadmap_path = governance.get("roadmap_path")
+	if not isinstance(roadmap_path, str) or not roadmap_path.strip():
+		add_error("safe_crypto_password_hashing_governance.roadmap_path must be non-empty")
+		roadmap_path = "docs/superpowers/plans/49-roadmap.md"
+	backlog_path = governance.get("backlog_path")
+	if not isinstance(backlog_path, str) or not backlog_path.strip():
+		add_error("safe_crypto_password_hashing_governance.backlog_path must be non-empty")
+		backlog_path = "docs/doc/safe-crypto-advanced-backlog.md"
+	quickstart_path = governance.get("quickstart_path")
+	if not isinstance(quickstart_path, str) or not quickstart_path.strip():
+		add_error("safe_crypto_password_hashing_governance.quickstart_path must be non-empty")
+		quickstart_path = "docs/doc/11-vcrypto.md"
+	password_strength_path = governance.get("password_strength_path")
+	if not isinstance(password_strength_path, str) or not password_strength_path.strip():
+		add_error("safe_crypto_password_hashing_governance.password_strength_path must be non-empty")
+		password_strength_path = "docs/doc/36-vpass.md"
+	sprint = governance.get("sprint")
+	if sprint != 32:
+		add_error("safe_crypto_password_hashing_governance.sprint must be 32")
+	status = governance.get("status")
+	if status not in {"active", "completed"}:
+		add_error("safe_crypto_password_hashing_governance.status must be active or completed")
+	packages = require_string_list(governance.get("packages"), "safe_crypto_password_hashing_governance.packages")
+	expected_packages = ["vcrypto", "vpass", "vrand"]
+	if packages != expected_packages:
+		add_error("safe_crypto_password_hashing_governance.packages must be ordered as: " + ", ".join(expected_packages))
+	for package_name in packages:
+		if package_name not in public_facades:
+			add_error(f"safe_crypto_password_hashing_governance.packages references non-public facade {package_name}")
+	algorithm_policy = require_string_list(governance.get("algorithm_policy"), "safe_crypto_password_hashing_governance.algorithm_policy")
+	expected_algorithm_policy = [
+		"Argon2id-style encoded hash envelope",
+		"versioned parameters",
+		"explicit salt source",
+		"bounded test cost",
+	]
+	if algorithm_policy != expected_algorithm_policy:
+		add_error("safe_crypto_password_hashing_governance.algorithm_policy must be ordered as: " + ", ".join(expected_algorithm_policy))
+	required_contracts = require_string_list(governance.get("required_contracts"), "safe_crypto_password_hashing_governance.required_contracts")
+	expected_contracts = [
+		"encoded hash round trip",
+		"mismatch returns false",
+		"malformed hash returns explicit error",
+		"invalid parameters are rejected",
+		"raw passwords are not logged or stored",
+	]
+	if required_contracts != expected_contracts:
+		add_error("safe_crypto_password_hashing_governance.required_contracts must be ordered as: " + ", ".join(expected_contracts))
+	non_goals = require_string_list(governance.get("non_goals"), "safe_crypto_password_hashing_governance.non_goals")
+	expected_non_goals = [
+		"No password storage service",
+		"No account lifecycle or reset flow",
+		"No breached-password corpus check",
+		"No MFA or recovery policy",
+	]
+	if non_goals != expected_non_goals:
+		add_error("safe_crypto_password_hashing_governance.non_goals must be ordered as: " + ", ".join(expected_non_goals))
+	required_checks = require_string_list(governance.get("required_checks"), "safe_crypto_password_hashing_governance.required_checks")
+	for check in ("docs-check", "ai-context-check", "governance-maturity-check", "agent-security-check"):
+		if check not in required_checks:
+			add_error(f"safe_crypto_password_hashing_governance.required_checks must include {check}")
+	for path in (backlog_path, quickstart_path, password_strength_path):
+		if not (root / path).exists():
+			add_error(f"{path} must exist")
+	backlog_text = (root / backlog_path).read_text(encoding="utf-8") if (root / backlog_path).exists() else ""
+	for phrase in (
+		"Password hashing | Governance completed",
+		"safe_crypto_password_hashing_governance",
+		"Argon2id-style",
+		"malformed-hash",
+		"mismatch",
+		"bounded test costs",
+	):
+		if backlog_text and phrase not in backlog_text:
+			add_error(f"{backlog_path} must include {phrase!r}")
+	for non_goal in non_goals:
+		if backlog_text and non_goal not in backlog_text:
+			add_error(f"{backlog_path} must include non-goal {non_goal!r}")
+	quickstart_text = (root / quickstart_path).read_text(encoding="utf-8") if (root / quickstart_path).exists() else ""
+	for phrase in ("password storage", "Argon2id", "PBKDF2"):
+		if quickstart_text and phrase not in quickstart_text:
+			add_error(f"{quickstart_path} must include {phrase!r}")
+	strength_text = (root / password_strength_path).read_text(encoding="utf-8") if (root / password_strength_path).exists() else ""
+	for phrase in ("password hashing", "storage", "breached-password", "MFA"):
+		if strength_text and phrase not in strength_text:
+			add_error(f"{password_strength_path} must include {phrase!r}")
+
+	sprint_rows = extract_markdown_rows(root / roadmap_path, "Sprint order")
+	sprint_32_rows = [row for row in sprint_rows if row.get("Sprint") == "32"]
+	if len(sprint_32_rows) != 1:
+		add_error(f"{roadmap_path} Sprint order must contain exactly one Sprint 32 row")
+	else:
+		sprint_32 = sprint_32_rows[0]
+		expected_status = "Completed" if status == "completed" else "Active"
+		if sprint_32.get("Status") != expected_status:
+			add_error(f"{roadmap_path} Sprint 32 status must be {expected_status}")
+		sprint_text = " ".join(sprint_32.values())
+		for required_phrase in ("password hashing", "Argon2id", "malformed-hash", "mismatch"):
+			if required_phrase not in sprint_text:
+				add_error(f"{roadmap_path} Sprint 32 row must mention {required_phrase!r}")
+
+
 def validate_example_depth_governance() -> None:
 	governance = require_mapping(ai_context.get("example_depth_governance"), "example_depth_governance")
 	sprint = governance.get("sprint")
@@ -1493,6 +1600,7 @@ if not bench_only:
 	validate_vdb_example_depth_governance()
 	validate_safe_crypto_advanced_backlog_governance()
 	validate_safe_crypto_otp_governance()
+	validate_safe_crypto_password_hashing_governance()
 	validate_example_depth_governance()
 	validate_api_convergence()
 	validate_lifecycle()
