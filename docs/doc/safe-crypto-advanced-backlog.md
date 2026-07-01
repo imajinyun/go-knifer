@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | TOTP and HOTP | RFC-compatible helpers are available with deterministic clock/counter injection, explicit issuer/account formatting, and constant-time verification. | Keep window policy, Base32 secret handling, and provisioning URL behavior covered by named tests and examples. |
 | Password hashing | Governance is fixed for Argon2id-style encoded password hashes, malformed-hash errors, mismatch verification, bounded test costs, and non-goals. | Implement helpers only after the encoded envelope, parameter bounds, salt source, and verification semantics are wired to named tests. |
-| JWK and JWKS | `vjwt` signs and validates tokens; key discovery and rotation stay external. | Add JWK/JWKS parsing or publishing only as key material helpers, not OAuth/OIDC discovery. |
+| JWK and JWKS | Governance is fixed for local JWK/JWKS key material helpers, `kid` selection, malformed-key errors, no network discovery, and no key rotation daemon. | Implement parsing or publishing only after RSA/EC/OKP support boundaries and unknown-`kid` behavior are wired to named tests. |
 | Secret handling | `vrand` and `vcrypto` expose secure random bytes and option-injected readers. | Keep salts, nonces, OTP secrets, private keys, and encoded password hashes out of examples that look production-ready with fixed secrets. |
 | Interoperability boundaries | SM and RSA helpers already expose interoperability-focused APIs. | Put legacy, optional, or externally mandated algorithms behind explicit names and docs that state why they exist. |
 | Benchmark scope | Existing crypto benchmarks cover stable digest, HMAC, and authenticated-encryption paths. | Benchmark deterministic hot paths only; do not benchmark password hashing with production-strength cost in quick gates. |
@@ -23,6 +23,12 @@
 - No key management service.
 - No custom cryptographic primitive.
 - No long-lived secret registry or process-global key rotation state.
+- No remote JWKS discovery, cache, refresh, or rotation daemon.
+- No OAuth or OIDC discovery.
+- No remote JWKS fetch.
+- No JWKS cache or refresh loop.
+- No key rotation daemon.
+- No token validation policy inside vcrypto.
 
 ## Required Evidence
 
@@ -37,6 +43,7 @@
 | --- | --- | --- |
 | TOTP and HOTP | Completed | `safe_crypto_otp_governance` records RFC vectors, clock/window tests, invalid-input tests, facade examples, generated catalog coverage, and Sprint 31 roadmap state. |
 | Password hashing | Completed | `safe_crypto_password_hashing_governance` records Argon2id-style parameter envelopes and non-goals; `safe_crypto_argon2id_governance` records the encoded hash implementation, mismatch behavior, malformed-hash errors, bounded-cost tests, facade examples, and Sprint 33 roadmap state. |
+| JWK and JWKS | Governance completed | `safe_crypto_jwk_jwks_governance` records local key material scope, RSA-first implementation boundary, optional EC/OKP deferral, unknown-`kid` behavior, malformed-key errors, no network discovery, and Sprint 34 roadmap state before implementation. |
 
 ## Validation
 

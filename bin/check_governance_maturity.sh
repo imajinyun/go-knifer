@@ -1290,6 +1290,109 @@ def validate_safe_crypto_argon2id_governance() -> None:
 				add_error(f"{roadmap_path} Sprint 33 row must mention {required_phrase!r}")
 
 
+def validate_safe_crypto_jwk_jwks_governance() -> None:
+	governance = require_mapping(ai_context.get("safe_crypto_jwk_jwks_governance"), "safe_crypto_jwk_jwks_governance")
+	roadmap_path = governance.get("roadmap_path")
+	if not isinstance(roadmap_path, str) or not roadmap_path.strip():
+		add_error("safe_crypto_jwk_jwks_governance.roadmap_path must be non-empty")
+		roadmap_path = "docs/superpowers/plans/49-roadmap.md"
+	backlog_path = governance.get("backlog_path")
+	if not isinstance(backlog_path, str) or not backlog_path.strip():
+		add_error("safe_crypto_jwk_jwks_governance.backlog_path must be non-empty")
+		backlog_path = "docs/doc/safe-crypto-advanced-backlog.md"
+	quickstart_path = governance.get("quickstart_path")
+	if not isinstance(quickstart_path, str) or not quickstart_path.strip():
+		add_error("safe_crypto_jwk_jwks_governance.quickstart_path must be non-empty")
+		quickstart_path = "docs/doc/11-vcrypto.md"
+	jwt_path = governance.get("jwt_path")
+	if not isinstance(jwt_path, str) or not jwt_path.strip():
+		add_error("safe_crypto_jwk_jwks_governance.jwt_path must be non-empty")
+		jwt_path = "docs/doc/28-vjwt.md"
+	sprint = governance.get("sprint")
+	if sprint != 34:
+		add_error("safe_crypto_jwk_jwks_governance.sprint must be 34")
+	status = governance.get("status")
+	if status not in {"active", "completed"}:
+		add_error("safe_crypto_jwk_jwks_governance.status must be active or completed")
+	packages = require_string_list(governance.get("packages"), "safe_crypto_jwk_jwks_governance.packages")
+	expected_packages = ["vcrypto", "vjwt"]
+	if packages != expected_packages:
+		add_error("safe_crypto_jwk_jwks_governance.packages must be ordered as: " + ", ".join(expected_packages))
+	for package_name in packages:
+		if package_name not in public_facades:
+			add_error(f"safe_crypto_jwk_jwks_governance.packages references non-public facade {package_name}")
+	scope = require_string_list(governance.get("scope"), "safe_crypto_jwk_jwks_governance.scope")
+	expected_scope = [
+		"local key material helpers only",
+		"RSA-first JWK/JWKS support",
+		"EC and OKP explicitly deferred unless implemented with fixtures",
+		"select public keys by kid",
+		"malformed key errors are explicit",
+		"no network discovery",
+	]
+	if scope != expected_scope:
+		add_error("safe_crypto_jwk_jwks_governance.scope must be ordered as: " + ", ".join(expected_scope))
+	required_contracts = require_string_list(governance.get("required_contracts"), "safe_crypto_jwk_jwks_governance.required_contracts")
+	expected_contracts = [
+		"RSA public JWK parse and export",
+		"JWKS select by kid",
+		"unknown kid returns explicit error",
+		"malformed key returns explicit error",
+		"no remote discovery or cache",
+	]
+	if required_contracts != expected_contracts:
+		add_error("safe_crypto_jwk_jwks_governance.required_contracts must be ordered as: " + ", ".join(expected_contracts))
+	non_goals = require_string_list(governance.get("non_goals"), "safe_crypto_jwk_jwks_governance.non_goals")
+	expected_non_goals = [
+		"No OAuth or OIDC discovery",
+		"No remote JWKS fetch",
+		"No JWKS cache or refresh loop",
+		"No key rotation daemon",
+		"No token validation policy inside vcrypto",
+	]
+	if non_goals != expected_non_goals:
+		add_error("safe_crypto_jwk_jwks_governance.non_goals must be ordered as: " + ", ".join(expected_non_goals))
+	required_checks = require_string_list(governance.get("required_checks"), "safe_crypto_jwk_jwks_governance.required_checks")
+	for check in ("docs-check", "ai-context-check", "governance-maturity-check", "agent-security-check"):
+		if check not in required_checks:
+			add_error(f"safe_crypto_jwk_jwks_governance.required_checks must include {check}")
+	for path in (backlog_path, quickstart_path, jwt_path):
+		if not (root / path).exists():
+			add_error(f"{path} must exist")
+	backlog_text = (root / backlog_path).read_text(encoding="utf-8") if (root / backlog_path).exists() else ""
+	for phrase in (
+		"JWK and JWKS | Governance completed",
+		"safe_crypto_jwk_jwks_governance",
+		"local key material",
+		"unknown-`kid` behavior",
+		"malformed-key errors",
+		"no network discovery",
+	):
+		if backlog_text and phrase not in backlog_text:
+			add_error(f"{backlog_path} must include {phrase!r}")
+	for non_goal in non_goals:
+		if backlog_text and non_goal not in backlog_text:
+			add_error(f"{backlog_path} must include non-goal {non_goal!r}")
+	jwt_text = (root / jwt_path).read_text(encoding="utf-8") if (root / jwt_path).exists() else ""
+	for phrase in ("JWKS rotation", "kid", "OAuth/OIDC"):
+		if jwt_text and phrase not in jwt_text:
+			add_error(f"{jwt_path} must include {phrase!r}")
+
+	sprint_rows = extract_markdown_rows(root / roadmap_path, "Sprint order")
+	sprint_34_rows = [row for row in sprint_rows if row.get("Sprint") == "34"]
+	if len(sprint_34_rows) != 1:
+		add_error(f"{roadmap_path} Sprint order must contain exactly one Sprint 34 row")
+	else:
+		sprint_34 = sprint_34_rows[0]
+		expected_status = "Completed" if status == "completed" else "Active"
+		if sprint_34.get("Status") != expected_status:
+			add_error(f"{roadmap_path} Sprint 34 status must be {expected_status}")
+		sprint_text = " ".join(sprint_34.values())
+		for required_phrase in ("JWK/JWKS", "local key material", "unknown-`kid`", "no network discovery"):
+			if required_phrase not in sprint_text:
+				add_error(f"{roadmap_path} Sprint 34 row must mention {required_phrase!r}")
+
+
 def validate_example_depth_governance() -> None:
 	governance = require_mapping(ai_context.get("example_depth_governance"), "example_depth_governance")
 	sprint = governance.get("sprint")
@@ -1697,6 +1800,7 @@ if not bench_only:
 	validate_safe_crypto_otp_governance()
 	validate_safe_crypto_password_hashing_governance()
 	validate_safe_crypto_argon2id_governance()
+	validate_safe_crypto_jwk_jwks_governance()
 	validate_example_depth_governance()
 	validate_api_convergence()
 	validate_lifecycle()

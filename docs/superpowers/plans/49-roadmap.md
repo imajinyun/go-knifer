@@ -98,6 +98,7 @@ The Hutool gap-closure lane is implemented and the active work has moved from fe
 | 31 | Completed | Safe Crypto OTP Governance | Added RFC-compatible HOTP/TOTP helpers with Base32 secrets, otpauth URLs, injected clock/window policy, RFC vectors, examples, and governance evidence. |
 | 32 | Completed | Safe Crypto Password Hashing Governance | Fixed machine-checked password hashing boundaries for Argon2id-style encoded hashes, malformed-hash errors, mismatch verification, bounded test costs, and non-goals before implementation. |
 | 33 | Completed | Safe Crypto Argon2id Password Hashing | Added Argon2id encoded password hashes with parameter envelopes, explicit salt source, mismatch verification, malformed-hash errors, bounded test costs, examples, and governance evidence. |
+| 34 | Completed | Safe Crypto JWK/JWKS Governance | Fixed machine-checked JWK/JWKS boundaries for local key material helpers, RSA-first support, optional EC/OKP deferral, unknown-`kid` behavior, malformed-key errors, and no network discovery. |
 
 ## Active workflow
 
@@ -124,6 +125,8 @@ Sprint 31 completed safe crypto OTP governance: `safe_crypto_otp_governance` rec
 Sprint 32 completed safe crypto password hashing governance: `safe_crypto_password_hashing_governance` records the encoded-hash envelope, parameter bounds, salt source policy, mismatch behavior, malformed-hash errors, cost-bound fixtures, and non-goals before Argon2id implementation.
 
 Sprint 33 completed safe crypto Argon2id password hashing: `safe_crypto_argon2id_governance` records the facade APIs, encoded hash round trips, mismatch behavior, malformed envelope errors, deterministic salt fixtures, generated catalog coverage, and security validation.
+
+Sprint 34 completed safe crypto JWK/JWKS governance: `safe_crypto_jwk_jwks_governance` records local key material scope, RSA-first JWK/JWKS implementation boundaries, optional EC/OKP deferral, unknown-`kid` behavior, malformed-key errors, and no remote discovery or rotation daemon.
 
 Recommended roadmap loop:
 
