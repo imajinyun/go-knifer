@@ -1004,6 +1004,30 @@
     ],
     "required_checks": ["tools-gen", "docs-check", "ai-context-check", "governance-maturity-check"]
   },
+  "safe_crypto_advanced_backlog_governance": {
+    "roadmap_path": "docs/superpowers/plans/49-roadmap.md",
+    "doc_path": "docs/doc/safe-crypto-advanced-backlog.md",
+    "quickstart_path": "docs/doc/11-vcrypto.md",
+    "cookbook_path": "docs/doc/safe-crypto-cookbook.md",
+    "sprint": 30,
+    "status": "active",
+    "packages": ["vcrypto", "vjwt", "vrand", "vpass"],
+    "required_lanes": [
+      "TOTP and HOTP",
+      "Password hashing",
+      "JWK and JWKS",
+      "Secret handling",
+      "Interoperability boundaries",
+      "Benchmark scope"
+    ],
+    "non_goals": [
+      "No OAuth or OIDC provider implementation",
+      "No password storage service",
+      "No key management service",
+      "No custom cryptographic primitive"
+    ],
+    "required_checks": ["docs-check", "ai-context-check", "governance-maturity-check", "agent-security-check"]
+  },
   "error_model": {
     "taxonomy": [
       { "category": "invalid input", "code": "GK_INVALID_INPUT", "use_when": "Caller-provided arguments, payloads, or configuration values are malformed." },

@@ -44,6 +44,7 @@ These domains are the quickest way to evaluate whether `knifer-go` fits a projec
 | --- | --- | --- |
 | Safe HTTP and downloads | [`vhttp`](22-vhttp.md), [`vresty`](41-vresty.md), [`vurl`](51-vurl.md), [`Safe HTTP cookbook`](safe-http-cookbook.md) | Helper selection, safe URL policy checklist, cookbook recipes, benchmark commands, and stdlib/Resty boundary guidance. |
 | Safe crypto workflows | [`vcrypto`](11-vcrypto.md), [`vrand`](38-vrand.md), [`vjwt`](28-vjwt.md), [`Safe Crypto cookbook`](safe-crypto-cookbook.md) | Recommended cryptographic entry points, secret-handling FAQ, cookbook recipes, benchmark commands, and direct-stdlib boundary guidance. |
+| Advanced crypto backlog | [`vcrypto`](11-vcrypto.md), [`vjwt`](28-vjwt.md), [`vrand`](38-vrand.md), [`vpass`](36-vpass.md), [`Safe Crypto Advanced Backlog`](safe-crypto-advanced-backlog.md) | TOTP/HOTP, password hashing, JWK/JWKS, secret-handling, interoperability, and benchmark boundaries before adding more crypto APIs. |
 | Daily JSON and file workflows | [`vjson`](27-vjson.md), [`vfile`](17-vfile.md), [`Daily JSON/File FAQ`](daily-json-file-faq.md) | Cookbook examples for object/path/formatting/file I/O, filesystem safety guidance, cross-package FAQ, and explicit error handling. |
 | Database/SQL workflows | [`vdb`](14-vdb.md), [`vdb Deepening Backlog`](vdb-deepening-backlog.md) | Context-first execution, dialect boundaries, batch/upsert behavior, scan helpers, transaction contracts, identifier safety, and benchmark scope. |
 

@@ -886,6 +886,112 @@ def validate_vdb_example_depth_governance() -> None:
 				add_error(f"{roadmap_path} Sprint 29 row must mention {required_phrase!r}")
 
 
+def validate_safe_crypto_advanced_backlog_governance() -> None:
+	governance = require_mapping(
+		ai_context.get("safe_crypto_advanced_backlog_governance"),
+		"safe_crypto_advanced_backlog_governance",
+	)
+	roadmap_path = governance.get("roadmap_path")
+	if not isinstance(roadmap_path, str) or not roadmap_path.strip():
+		add_error("safe_crypto_advanced_backlog_governance.roadmap_path must be non-empty")
+		roadmap_path = "docs/superpowers/plans/49-roadmap.md"
+	doc_path = governance.get("doc_path")
+	if not isinstance(doc_path, str) or not doc_path.strip():
+		add_error("safe_crypto_advanced_backlog_governance.doc_path must be non-empty")
+		doc_path = "docs/doc/safe-crypto-advanced-backlog.md"
+	quickstart_path = governance.get("quickstart_path")
+	if not isinstance(quickstart_path, str) or not quickstart_path.strip():
+		add_error("safe_crypto_advanced_backlog_governance.quickstart_path must be non-empty")
+		quickstart_path = "docs/doc/11-vcrypto.md"
+	cookbook_path = governance.get("cookbook_path")
+	if not isinstance(cookbook_path, str) or not cookbook_path.strip():
+		add_error("safe_crypto_advanced_backlog_governance.cookbook_path must be non-empty")
+		cookbook_path = "docs/doc/safe-crypto-cookbook.md"
+	sprint = governance.get("sprint")
+	if sprint != 30:
+		add_error("safe_crypto_advanced_backlog_governance.sprint must be 30")
+	status = governance.get("status")
+	if status not in {"active", "completed"}:
+		add_error("safe_crypto_advanced_backlog_governance.status must be active or completed")
+	packages = require_string_list(governance.get("packages"), "safe_crypto_advanced_backlog_governance.packages")
+	expected_packages = ["vcrypto", "vjwt", "vrand", "vpass"]
+	if packages != expected_packages:
+		add_error("safe_crypto_advanced_backlog_governance.packages must be ordered as: " + ", ".join(expected_packages))
+	for package_name in packages:
+		if package_name not in public_facades:
+			add_error(f"safe_crypto_advanced_backlog_governance.packages references non-public facade {package_name}")
+	required_lanes = require_string_list(governance.get("required_lanes"), "safe_crypto_advanced_backlog_governance.required_lanes")
+	expected_lanes = [
+		"TOTP and HOTP",
+		"Password hashing",
+		"JWK and JWKS",
+		"Secret handling",
+		"Interoperability boundaries",
+		"Benchmark scope",
+	]
+	if required_lanes != expected_lanes:
+		add_error("safe_crypto_advanced_backlog_governance.required_lanes must be ordered as: " + ", ".join(expected_lanes))
+	non_goals = require_string_list(governance.get("non_goals"), "safe_crypto_advanced_backlog_governance.non_goals")
+	expected_non_goals = [
+		"No OAuth or OIDC provider implementation",
+		"No password storage service",
+		"No key management service",
+		"No custom cryptographic primitive",
+	]
+	if non_goals != expected_non_goals:
+		add_error("safe_crypto_advanced_backlog_governance.non_goals must be ordered as: " + ", ".join(expected_non_goals))
+	required_checks = require_string_list(governance.get("required_checks"), "safe_crypto_advanced_backlog_governance.required_checks")
+	for check in ("docs-check", "ai-context-check", "governance-maturity-check", "agent-security-check"):
+		if check not in required_checks:
+			add_error(f"safe_crypto_advanced_backlog_governance.required_checks must include {check}")
+
+	doc_file = root / doc_path
+	try:
+		doc_text = doc_file.read_text(encoding="utf-8")
+	except FileNotFoundError:
+		add_error(f"{doc_path} must exist")
+		doc_text = ""
+	if doc_text:
+		if not doc_text.startswith("# Safe Crypto Advanced Backlog\n"):
+			add_error(f"{doc_path} must start with '# Safe Crypto Advanced Backlog'")
+		for phrase in ("Required Evidence", "Validation", "RFC-compatible", "Argon2id", "JWK/JWKS", "No custom cryptographic primitive"):
+			if phrase not in doc_text:
+				add_error(f"{doc_path} must include {phrase!r}")
+		for package_name in packages:
+			if f"`{package_name}`" not in doc_text:
+				add_error(f"{doc_path} must mention {package_name}")
+		for lane in required_lanes:
+			if lane not in doc_text:
+				add_error(f"{doc_path} missing required lane {lane!r}")
+		for non_goal in non_goals:
+			if non_goal not in doc_text:
+				add_error(f"{doc_path} missing non-goal {non_goal!r}")
+		for check in required_checks:
+			if f"make {check}" not in doc_text:
+				add_error(f"{doc_path} validation section must mention make {check}")
+	for path in (quickstart_path, cookbook_path):
+		if not (root / path).exists():
+			add_error(f"{path} must exist")
+	readme_text = (root / "docs/doc/README.md").read_text(encoding="utf-8")
+	doc_link = Path(doc_path).name
+	if doc_path not in readme_text and doc_link not in readme_text:
+		add_error(f"docs/doc/README.md must link {doc_path}")
+
+	sprint_rows = extract_markdown_rows(root / roadmap_path, "Sprint order")
+	sprint_30_rows = [row for row in sprint_rows if row.get("Sprint") == "30"]
+	if len(sprint_30_rows) != 1:
+		add_error(f"{roadmap_path} Sprint order must contain exactly one Sprint 30 row")
+	else:
+		sprint_30 = sprint_30_rows[0]
+		expected_status = "Completed" if status == "completed" else "Active"
+		if sprint_30.get("Status") != expected_status:
+			add_error(f"{roadmap_path} Sprint 30 status must be {expected_status}")
+		sprint_text = " ".join(sprint_30.values())
+		for required_phrase in ("TOTP/HOTP", "password hashing", "JWK/JWKS", "benchmark"):
+			if required_phrase not in sprint_text:
+				add_error(f"{roadmap_path} Sprint 30 row must mention {required_phrase!r}")
+
+
 def validate_example_depth_governance() -> None:
 	governance = require_mapping(ai_context.get("example_depth_governance"), "example_depth_governance")
 	sprint = governance.get("sprint")
@@ -1289,6 +1395,7 @@ if not bench_only:
 	validate_vdb_deepening_governance()
 	validate_vdb_execution_evidence_governance()
 	validate_vdb_example_depth_governance()
+	validate_safe_crypto_advanced_backlog_governance()
 	validate_example_depth_governance()
 	validate_api_convergence()
 	validate_lifecycle()

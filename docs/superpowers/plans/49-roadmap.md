@@ -94,6 +94,7 @@ The Hutool gap-closure lane is implemented and the active work has moved from fe
 | 27 | Completed | vdb Deepening Backlog Governance | Added a `vdb` deepening backlog for context-first execution, dialect depth, batch/upsert behavior, scan helpers, transaction contracts, identifier safety, and benchmark scope. |
 | 28 | Completed | vdb Execution Evidence Ratchet | Enforced `vdb` execution evidence for ExecBatch partial failure, Upsert dialect behavior, Tx rollback/commit errors, scan edge cases, and identifier safety. |
 | 29 | Completed | vdb Example Depth Ratchet | Raised `vdb` example depth from 10 toward 20+ with reader-facing examples for execution, `ScanRows`, `ScanOne`, pagination, dialect, `WrapperForDialect`, and raw SQL boundaries. |
+| 30 | Active | Safe Crypto Advanced Backlog Governance | Define machine-checked boundaries for TOTP/HOTP, password hashing, JWK/JWKS, secret handling, interoperability, and benchmark scope before adding more crypto APIs. |
 
 ## Active workflow
 
@@ -112,6 +113,8 @@ Sprint 27 completed `vdb` deepening backlog governance: `vdb_deepening_governanc
 Sprint 28 completed `vdb` execution evidence governance: `vdb_execution_evidence_governance` locks the key behavior contracts to named tests instead of file presence alone.
 
 Sprint 29 completed `vdb` example-depth governance: `vdb_example_depth_governance` ratchets reader-facing examples and keeps the generated tool catalog aligned with the new coverage.
+
+Sprint 30 is now the active governance lane for advanced safe crypto depth. It should keep TOTP/HOTP, password hashing, JWK/JWKS, secret handling, interoperability, and benchmark scope explicit before any new public crypto APIs are added.
 
 Recommended roadmap loop:
 
