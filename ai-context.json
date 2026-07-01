@@ -531,19 +531,19 @@
       "schema": "1.7",
       "recommended_profile_schema": "recommended_entrypoints profiles: day-one, safe, error, options, compatibility; golden_path lists 1-7 APIs with use_when and avoid_when guidance",
       "package_count": 55,
-      "function_count": 2748,
-      "functions_with_examples": 1709,
+      "function_count": 2757,
+      "functions_with_examples": 1712,
       "context_aware_functions": 36,
-      "returns_error_functions": 678,
+      "returns_error_functions": 687,
       "status_counts": {
         "compatibility": 22,
         "deprecated": 0,
         "experimental": 0,
-        "recommended": 2726
+        "recommended": 2735
       },
       "synopsis_sources": {
         "empty": 0,
-        "facade": 2095,
+        "facade": 2104,
         "internal": 653
       },
       "regenerate_command": "tools_update",
@@ -1148,6 +1148,36 @@
       "No token validation policy inside vcrypto"
     ],
     "required_checks": ["docs-check", "ai-context-check", "governance-maturity-check", "agent-security-check"]
+  },
+  "safe_crypto_jwk_jwks_implementation_governance": {
+    "roadmap_path": "docs/superpowers/plans/49-roadmap.md",
+    "quickstart_path": "docs/doc/11-vcrypto.md",
+    "backlog_path": "docs/doc/safe-crypto-advanced-backlog.md",
+    "sprint": 35,
+    "status": "completed",
+    "packages": ["vcrypto"],
+    "internal_packages": ["internal/crypto"],
+    "required_functions": [
+      "RSAPublicKeyToJWK",
+      "RSAPrivateKeyToJWK",
+      "JWKToRSAPublicKey",
+      "JWKToRSAPrivateKey",
+      "MarshalJWK",
+      "ParseJWK",
+      "MarshalJWKS",
+      "ParseJWKS",
+      "SelectJWKByKeyID"
+    ],
+    "required_test_functions": [
+      "internal/crypto/jwk_test.go:TestRSAJWKPublicRoundTrip",
+      "internal/crypto/jwk_test.go:TestRSAJWKPrivateRoundTrip",
+      "internal/crypto/jwk_test.go:TestJWKSSelectByKeyID",
+      "internal/crypto/jwk_test.go:TestJWKMalformedErrors",
+      "vcrypto/jwk_test.go:TestFacadeRSAJWKAndJWKS",
+      "vcrypto/jwk_test.go:TestFacadeJWKErrors"
+    ],
+    "required_examples": ["ExampleRSAPublicKeyToJWK", "ExampleJWKToRSAPublicKey", "ExampleSelectJWKByKeyID"],
+    "required_checks": ["go test ./internal/crypto ./vcrypto", "tools-gen", "docs-check", "ai-context-check", "governance-maturity-check", "agent-security-check"]
   },
   "error_model": {
     "taxonomy": [

@@ -32,6 +32,8 @@ var (
 	ErrInvalidOTP error = &sentinel{code: knifer.ErrCodeInvalidInput, msg: "invalid otp"}
 	// ErrInvalidPasswordHash indicates an invalid encoded password hash or password hashing parameter.
 	ErrInvalidPasswordHash error = &sentinel{code: knifer.ErrCodeInvalidInput, msg: "invalid password hash"}
+	// ErrInvalidJWK indicates invalid JWK or JWKS key material.
+	ErrInvalidJWK error = &sentinel{code: knifer.ErrCodeInvalidInput, msg: "invalid jwk"}
 )
 
 // ValidateAESKey reports whether key is a valid AES key length.

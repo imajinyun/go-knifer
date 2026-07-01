@@ -15,6 +15,7 @@
 | Generate random keys, salts, nonces, or tokens | `GenAESKey`, random byte helpers, or `vrand.SecureBytes` | Do not use pseudo-random helpers for secrets. |
 | Sign or verify with RSA | RSA signing/verification helpers | Use when interoperability requires RSA keys and signatures. |
 | Marshal keys | PEM conversion helpers | Treat private-key bytes as secrets and avoid logging them. |
+| Exchange RSA key material as JWK/JWKS | `RSAPublicKeyToJWK`, `JWKToRSAPublicKey`, `MarshalJWKS`, `SelectJWKByKeyID` | Use for local key material parse/export and `kid` selection; network discovery and token validation policy stay outside `vcrypto`. |
 | Generate or verify one-time passwords | `HOTP`, `TOTP`, `TOTPVerify`, `OTPAuthURL` | Use for RFC-compatible authenticator workflows with explicit clock, step, digits, and window policy. |
 
 ## Crypto safety checklist
@@ -226,6 +227,47 @@ func main() {
 ```
 
 Use option overrides such as `WithArgon2idMemory`, `WithArgon2idIterations`, and `WithPasswordHashRandomOptions` only when the deployment policy or deterministic tests require explicit parameters. A password mismatch returns `false, nil`; malformed encoded hashes return errors matching `vcrypto.ErrInvalidPasswordHash`.
+
+## Export and select RSA keys with JWK/JWKS
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/imajinyun/knifer-go/vcrypto"
+)
+
+func main() {
+	priv, err := vcrypto.GenRSAKey(2048)
+	if err != nil {
+		panic(err)
+	}
+
+	jwk, err := vcrypto.RSAPublicKeyToJWK(&priv.PublicKey, "kid-1")
+	if err != nil {
+		panic(err)
+	}
+
+	data, err := vcrypto.MarshalJWKS([]vcrypto.JWK{jwk})
+	if err != nil {
+		panic(err)
+	}
+
+	set, err := vcrypto.ParseJWKS(data)
+	if err != nil {
+		panic(err)
+	}
+	selected, err := vcrypto.SelectJWKByKeyID(set, "kid-1")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(selected.KeyID)
+}
+```
+
+`vcrypto` only handles local JWK/JWKS key material. It does not fetch remote JWKS URLs, refresh key sets, rotate keys, or decide whether a JWT should be trusted; those policies stay at the application or identity-provider boundary.
 
 ## Generate and verify one-time passwords
 

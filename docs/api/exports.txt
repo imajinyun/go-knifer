@@ -642,10 +642,16 @@ github.com/imajinyun/knifer-go/vcrypto
   func HOTP(secret []byte, counter uint64, opts ...OTPOption) (string, error)
   func HOTPVerify(code string, secret []byte, counter uint64, opts ...OTPOption) (bool, error)
   func HashPasswordArgon2id(password []byte, opts ...PasswordHashOption) (string, error)
+  func JWKToRSAPrivateKey(jwk JWK) (*crypto/rsa.PrivateKey, error)
+  func JWKToRSAPublicKey(jwk JWK) (*crypto/rsa.PublicKey, error)
+  func MarshalJWK(jwk JWK) ([]byte, error)
+  func MarshalJWKS(keys []JWK) ([]byte, error)
   func OTPAuthURL(issuer string, account string, secret []byte, opts ...OTPOption) (string, error)
   func OTPSecretBase32(secret []byte) string
   func PBKDF2(password []byte, salt []byte, iterations int, keyLen int, fn func() hash.Hash) ([]byte, error)
   func PBKDF2SHA256(password []byte, salt []byte, iterations int, keyLen int) ([]byte, error)
+  func ParseJWK(data []byte) (JWK, error)
+  func ParseJWKS(data []byte) (JWKS, error)
   func ParseOTPSecretBase32(secret string) ([]byte, error)
   func ParsePasswordHash(encoded string) (PasswordHashInfo, error)
   func ParseRSAPrivateKeyPEM(data []byte) (*crypto/rsa.PrivateKey, error)
@@ -662,6 +668,8 @@ github.com/imajinyun/knifer-go/vcrypto
   func RSADecryptOAEPWithOptions(cipherText []byte, priv *crypto/rsa.PrivateKey, label []byte, opts ...RSAOption) ([]byte, error)
   func RSAEncryptOAEP(plain []byte, pub *crypto/rsa.PublicKey, label []byte) ([]byte, error)
   func RSAEncryptOAEPWithOptions(plain []byte, pub *crypto/rsa.PublicKey, label []byte, opts ...RSAOption) ([]byte, error)
+  func RSAPrivateKeyToJWK(priv *crypto/rsa.PrivateKey, kid string) (JWK, error)
+  func RSAPublicKeyToJWK(pub *crypto/rsa.PublicKey, kid string) (JWK, error)
   func RSASignPSS(priv *crypto/rsa.PrivateKey, hash crypto.Hash, digest []byte) ([]byte, error)
   func RSASignPSSWithOptions(priv *crypto/rsa.PrivateKey, hash crypto.Hash, digest []byte, opts ...RSAOption) ([]byte, error)
   func RSAVerifyPSS(pub *crypto/rsa.PublicKey, hash crypto.Hash, digest []byte, sig []byte) error
@@ -699,6 +707,7 @@ github.com/imajinyun/knifer-go/vcrypto
   func SM4EncryptGCM(plain []byte, key []byte, nonce []byte, additionalData []byte) ([]byte, error)
   func SM4SealGCM(plain []byte, key []byte, additionalData []byte) (nonce []byte, cipherText []byte, err error)
   func SM4SealGCMWithOptions(plain []byte, key []byte, additionalData []byte, opts ...SM4Option) (nonce []byte, cipherText []byte, err error)
+  func SelectJWKByKeyID(set JWKS, kid string) (JWK, error)
   func SignParams(params map[string]any, digestHex func([]byte) string, separator string, keyValueSeparator string, ignoreNil bool, otherParams ...string) string
   func SignParamsSHA256(params map[string]any, otherParams ...string) string
   func SignSHA256WithRSA(data []byte, priv *crypto/rsa.PrivateKey) ([]byte, error)
@@ -741,6 +750,8 @@ github.com/imajinyun/knifer-go/vcrypto
   func WithTOTPStep(step time.Duration) OTPOption
   func WithTOTPWindow(window int) OTPOption
   type AESGCMOption = github.com/imajinyun/knifer-go/internal/crypto.AESGCMOption
+  type JWK = github.com/imajinyun/knifer-go/internal/crypto.JWK
+  type JWKS = github.com/imajinyun/knifer-go/internal/crypto.JWKS
   type OTPOption = github.com/imajinyun/knifer-go/internal/crypto.OTPOption
   type PasswordHashInfo = github.com/imajinyun/knifer-go/internal/crypto.PasswordHashInfo
   type PasswordHashOption = github.com/imajinyun/knifer-go/internal/crypto.PasswordHashOption
@@ -753,6 +764,7 @@ github.com/imajinyun/knifer-go/vcrypto
   type SM4Option = github.com/imajinyun/knifer-go/internal/crypto.SM4Option
   var ErrInvalidCipherText error
   var ErrInvalidIV error
+  var ErrInvalidJWK error
   var ErrInvalidKey error
   var ErrInvalidOTP error
   var ErrInvalidPasswordHash error

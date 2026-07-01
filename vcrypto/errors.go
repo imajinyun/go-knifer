@@ -20,6 +20,9 @@ var ErrInvalidOTP = cryptoimpl.ErrInvalidOTP
 // ErrInvalidPasswordHash indicates an invalid encoded password hash or password hashing parameter.
 var ErrInvalidPasswordHash = cryptoimpl.ErrInvalidPasswordHash
 
+// ErrInvalidJWK indicates invalid JWK or JWKS key material.
+var ErrInvalidJWK = cryptoimpl.ErrInvalidJWK
+
 // ValidateAESKey reports whether key is a valid AES key length (16, 24, or 32
 // bytes). On failure it returns a *knifer.Error classified as
 // knifer.ErrCodeInvalidInput while preserving ErrInvalidKey on the chain, so

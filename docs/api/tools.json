@@ -3,20 +3,20 @@
   "module": "github.com/imajinyun/knifer-go",
   "summary": {
     "package_count": 55,
-    "function_count": 2748,
-    "functions_with_examples": 1709,
+    "function_count": 2757,
+    "functions_with_examples": 1712,
     "context_aware_functions": 36,
-    "returns_error_functions": 678,
+    "returns_error_functions": 687,
     "variadic_functions": 804,
     "status_counts": {
       "compatibility": 22,
       "deprecated": 0,
       "experimental": 0,
-      "recommended": 2726
+      "recommended": 2735
     },
     "synopsis_sources": {
       "empty": 0,
-      "facade": 2095,
+      "facade": 2104,
       "internal": 653
     }
   },
@@ -7043,18 +7043,18 @@
       "name": "vcrypto",
       "synopsis": "Package vcrypto provides public APIs for cryptographic utilities.",
       "summary": {
-        "function_count": 129,
-        "functions_with_examples": 88,
-        "example_coverage_percent": 68.2,
+        "function_count": 138,
+        "functions_with_examples": 91,
+        "example_coverage_percent": 65.9,
         "status_counts": {
           "compatibility": 0,
           "deprecated": 0,
           "experimental": 0,
-          "recommended": 129
+          "recommended": 138
         },
         "synopsis_sources": {
           "empty": 0,
-          "facade": 129,
+          "facade": 138,
           "internal": 0
         }
       },
@@ -7967,6 +7967,89 @@
           ]
         },
         {
+          "name": "JWKToRSAPrivateKey",
+          "signature": "func JWKToRSAPrivateKey(jwk JWK) (*rsa.PrivateKey, error)",
+          "synopsis": "JWKToRSAPrivateKey parses an RSA private key from jwk.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "jwk",
+              "type": "JWK"
+            }
+          ],
+          "results": [
+            "*rsa.PrivateKey",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "JWKToRSAPublicKey",
+          "signature": "func JWKToRSAPublicKey(jwk JWK) (*rsa.PublicKey, error)",
+          "synopsis": "JWKToRSAPublicKey parses an RSA public key from jwk.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "jwk",
+              "type": "JWK"
+            }
+          ],
+          "results": [
+            "*rsa.PublicKey",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false,
+          "examples": [
+            "ExampleJWKToRSAPublicKey"
+          ]
+        },
+        {
+          "name": "MarshalJWK",
+          "signature": "func MarshalJWK(jwk JWK) ([]byte, error)",
+          "synopsis": "MarshalJWK marshals jwk to compact JSON.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "jwk",
+              "type": "JWK"
+            }
+          ],
+          "results": [
+            "[]byte",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "MarshalJWKS",
+          "signature": "func MarshalJWKS(keys []JWK) ([]byte, error)",
+          "synopsis": "MarshalJWKS marshals keys to a JWKS JSON document.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "keys",
+              "type": "[]JWK"
+            }
+          ],
+          "results": [
+            "[]byte",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
           "name": "OTPAuthURL",
           "signature": "func OTPAuthURL(issuer string, account string, secret []byte, opts ...OTPOption) (string, error)",
           "synopsis": "OTPAuthURL returns an otpauth:// URL for provisioning TOTP authenticators.",
@@ -8093,6 +8176,46 @@
           "examples": [
             "ExamplePBKDF2SHA256"
           ]
+        },
+        {
+          "name": "ParseJWK",
+          "signature": "func ParseJWK(data []byte) (JWK, error)",
+          "synopsis": "ParseJWK parses a JWK JSON document.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "data",
+              "type": "[]byte"
+            }
+          ],
+          "results": [
+            "JWK",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "ParseJWKS",
+          "signature": "func ParseJWKS(data []byte) (JWKS, error)",
+          "synopsis": "ParseJWKS parses a JWKS JSON document.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "data",
+              "type": "[]byte"
+            }
+          ],
+          "results": [
+            "JWKS",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false
         },
         {
           "name": "ParseOTPSecretBase32",
@@ -8489,6 +8612,57 @@
           "variadic": true,
           "examples": [
             "ExampleRSAEncryptOAEPWithOptions"
+          ]
+        },
+        {
+          "name": "RSAPrivateKeyToJWK",
+          "signature": "func RSAPrivateKeyToJWK(priv *rsa.PrivateKey, kid string) (JWK, error)",
+          "synopsis": "RSAPrivateKeyToJWK exports an RSA private key as a private JWK.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "priv",
+              "type": "*rsa.PrivateKey"
+            },
+            {
+              "name": "kid",
+              "type": "string"
+            }
+          ],
+          "results": [
+            "JWK",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "RSAPublicKeyToJWK",
+          "signature": "func RSAPublicKeyToJWK(pub *rsa.PublicKey, kid string) (JWK, error)",
+          "synopsis": "RSAPublicKeyToJWK exports an RSA public key as a JWK.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "pub",
+              "type": "*rsa.PublicKey"
+            },
+            {
+              "name": "kid",
+              "type": "string"
+            }
+          ],
+          "results": [
+            "JWK",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false,
+          "examples": [
+            "ExampleRSAPublicKeyToJWK"
           ]
         },
         {
@@ -9454,6 +9628,33 @@
           "variadic": true,
           "examples": [
             "ExampleSM4SealGCMWithOptions"
+          ]
+        },
+        {
+          "name": "SelectJWKByKeyID",
+          "signature": "func SelectJWKByKeyID(set JWKS, kid string) (JWK, error)",
+          "synopsis": "SelectJWKByKeyID returns the key with kid from set.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "set",
+              "type": "JWKS"
+            },
+            {
+              "name": "kid",
+              "type": "string"
+            }
+          ],
+          "results": [
+            "JWK",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false,
+          "examples": [
+            "ExampleSelectJWKByKeyID"
           ]
         },
         {

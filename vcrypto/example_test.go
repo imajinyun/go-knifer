@@ -863,6 +863,28 @@ func ExampleParsePasswordHash() {
 	// Output: true argon2id 8 1 1
 }
 
+func ExampleRSAPublicKeyToJWK() {
+	jwk, err := vcrypto.RSAPublicKeyToJWK(&exampleRSAPrivateKey.PublicKey, "kid-1")
+	fmt.Println(err == nil, jwk.KeyType, jwk.KeyID, jwk.Private == "")
+	// Output: true RSA kid-1 true
+}
+
+func ExampleJWKToRSAPublicKey() {
+	jwk, _ := vcrypto.RSAPublicKeyToJWK(&exampleRSAPrivateKey.PublicKey, "kid-1")
+	pub, err := vcrypto.JWKToRSAPublicKey(jwk)
+	fmt.Println(err == nil, pub.E == exampleRSAPrivateKey.E)
+	// Output: true true
+}
+
+func ExampleSelectJWKByKeyID() {
+	jwk, _ := vcrypto.RSAPublicKeyToJWK(&exampleRSAPrivateKey.PublicKey, "kid-1")
+	data, _ := vcrypto.MarshalJWKS([]vcrypto.JWK{jwk})
+	set, _ := vcrypto.ParseJWKS(data)
+	selected, err := vcrypto.SelectJWKByKeyID(set, "kid-1")
+	fmt.Println(err == nil, selected.KeyID)
+	// Output: true kid-1
+}
+
 var exampleRSAPrivateKey = mustExampleRSAKey()
 
 func exampleAESKey() []byte {

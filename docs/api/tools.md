@@ -11,16 +11,16 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Schema | 1.7 |
 | Module | `github.com/imajinyun/knifer-go` |
 | Packages | 55 |
-| Functions | 2748 |
-| Functions with examples | 1709 |
+| Functions | 2757 |
+| Functions with examples | 1712 |
 | Context-aware functions | 36 |
-| Functions returning error | 678 |
+| Functions returning error | 687 |
 | Variadic functions | 804 |
-| API status: recommended | 2726 |
+| API status: recommended | 2735 |
 | API status: compatibility | 22 |
 | API status: experimental | 0 |
 | API status: deprecated | 0 |
-| Synopsis source: facade | 2095 |
+| Synopsis source: facade | 2104 |
 | Synopsis source: internal | 653 |
 | Synopsis source: empty | 0 |
 
@@ -607,7 +607,7 @@ Import path: `github.com/imajinyun/knifer-go/vcrypto`
 
 Package vcrypto provides public APIs for cryptographic utilities.
 
-Quality: 129 functions · 88 with examples · 68.2% example coverage · statuses: recommended=129, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=129, internal=0, empty=0
+Quality: 138 functions · 91 with examples · 65.9% example coverage · statuses: recommended=138, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=138, internal=0, empty=0
 
 Recommended entrypoints:
 
@@ -660,10 +660,16 @@ Golden path API set:
 | `HOTP` | `func HOTP(secret []byte, counter uint64, opts ...OTPOption) (string, error)` | recommended | HOTP generates an HMAC-based one-time password for counter. | facade | `ExampleHOTP` |
 | `HOTPVerify` | `func HOTPVerify(code string, secret []byte, counter uint64, opts ...OTPOption) (bool, error)` | recommended | HOTPVerify verifies an HOTP code for counter using constant-time comparison. | facade | — |
 | `HashPasswordArgon2id` | `func HashPasswordArgon2id(password []byte, opts ...PasswordHashOption) (string, error)` | recommended | HashPasswordArgon2id hashes password using Argon2id and returns an encoded hash envelope. | facade | `ExampleHashPasswordArgon2id` |
+| `JWKToRSAPrivateKey` | `func JWKToRSAPrivateKey(jwk JWK) (*rsa.PrivateKey, error)` | recommended | JWKToRSAPrivateKey parses an RSA private key from jwk. | facade | — |
+| `JWKToRSAPublicKey` | `func JWKToRSAPublicKey(jwk JWK) (*rsa.PublicKey, error)` | recommended | JWKToRSAPublicKey parses an RSA public key from jwk. | facade | `ExampleJWKToRSAPublicKey` |
+| `MarshalJWK` | `func MarshalJWK(jwk JWK) ([]byte, error)` | recommended | MarshalJWK marshals jwk to compact JSON. | facade | — |
+| `MarshalJWKS` | `func MarshalJWKS(keys []JWK) ([]byte, error)` | recommended | MarshalJWKS marshals keys to a JWKS JSON document. | facade | — |
 | `OTPAuthURL` | `func OTPAuthURL(issuer string, account string, secret []byte, opts ...OTPOption) (string, error)` | recommended | OTPAuthURL returns an otpauth:// URL for provisioning TOTP authenticators. | facade | `ExampleOTPAuthURL` |
 | `OTPSecretBase32` | `func OTPSecretBase32(secret []byte) string` | recommended | OTPSecretBase32 encodes a binary OTP secret using unpadded Base32. | facade | — |
 | `PBKDF2` | `func PBKDF2(password []byte, salt []byte, iterations int, keyLen int, fn func() hash.Hash) ([]byte, error)` | recommended | PBKDF2 derives a key from password and salt using PBKDF2. | facade | `ExamplePBKDF2` |
 | `PBKDF2SHA256` | `func PBKDF2SHA256(password []byte, salt []byte, iterations int, keyLen int) ([]byte, error)` | recommended | PBKDF2SHA256 derives a key using PBKDF2-HMAC-SHA256. | facade | `ExamplePBKDF2SHA256` |
+| `ParseJWK` | `func ParseJWK(data []byte) (JWK, error)` | recommended | ParseJWK parses a JWK JSON document. | facade | — |
+| `ParseJWKS` | `func ParseJWKS(data []byte) (JWKS, error)` | recommended | ParseJWKS parses a JWKS JSON document. | facade | — |
 | `ParseOTPSecretBase32` | `func ParseOTPSecretBase32(secret string) ([]byte, error)` | recommended | ParseOTPSecretBase32 decodes an unpadded or padded Base32 OTP secret. | facade | — |
 | `ParsePasswordHash` | `func ParsePasswordHash(encoded string) (PasswordHashInfo, error)` | recommended | ParsePasswordHash parses a supported encoded password hash without verifying a password. | facade | `ExampleParsePasswordHash` |
 | `ParseRSAPrivateKeyPEM` | `func ParseRSAPrivateKeyPEM(data []byte) (*rsa.PrivateKey, error)` | recommended | ParseRSAPrivateKeyPEM parses a PKCS#1 or PKCS#8 RSA private key PEM. | facade | `ExampleParseRSAPrivateKeyPEM` |
@@ -680,6 +686,8 @@ Golden path API set:
 | `RSADecryptOAEPWithOptions` | `func RSADecryptOAEPWithOptions(cipherText []byte, priv *rsa.PrivateKey, label []byte, opts ...RSAOption) ([]byte, error)` | recommended | RSADecryptOAEPWithOptions decrypts data using RSA-OAEP with options. | facade | `ExampleRSADecryptOAEPWithOptions` |
 | `RSAEncryptOAEP` | `func RSAEncryptOAEP(plain []byte, pub *rsa.PublicKey, label []byte) ([]byte, error)` | recommended | RSAEncryptOAEP encrypts data using RSA-OAEP with SHA-256. | facade | `ExampleRSAEncryptOAEP` |
 | `RSAEncryptOAEPWithOptions` | `func RSAEncryptOAEPWithOptions(plain []byte, pub *rsa.PublicKey, label []byte, opts ...RSAOption) ([]byte, error)` | recommended | RSAEncryptOAEPWithOptions encrypts data using RSA-OAEP with options. | facade | `ExampleRSAEncryptOAEPWithOptions` |
+| `RSAPrivateKeyToJWK` | `func RSAPrivateKeyToJWK(priv *rsa.PrivateKey, kid string) (JWK, error)` | recommended | RSAPrivateKeyToJWK exports an RSA private key as a private JWK. | facade | — |
+| `RSAPublicKeyToJWK` | `func RSAPublicKeyToJWK(pub *rsa.PublicKey, kid string) (JWK, error)` | recommended | RSAPublicKeyToJWK exports an RSA public key as a JWK. | facade | `ExampleRSAPublicKeyToJWK` |
 | `RSASignPSS` | `func RSASignPSS(priv *rsa.PrivateKey, hash crypto.Hash, digest []byte) ([]byte, error)` | recommended | RSASignPSS signs digest using RSA-PSS. | facade | `ExampleRSASignPSS` |
 | `RSASignPSSWithOptions` | `func RSASignPSSWithOptions(priv *rsa.PrivateKey, hash crypto.Hash, digest []byte, opts ...RSAOption) ([]byte, error)` | recommended | RSASignPSSWithOptions signs digest using RSA-PSS with options. | facade | `ExampleRSASignPSSWithOptions` |
 | `RSAVerifyPSS` | `func RSAVerifyPSS(pub *rsa.PublicKey, hash crypto.Hash, digest []byte, sig []byte) error` | recommended | RSAVerifyPSS verifies an RSA-PSS signature. | facade | `ExampleRSAVerifyPSS` |
@@ -717,6 +725,7 @@ Golden path API set:
 | `SM4EncryptGCM` | `func SM4EncryptGCM(plain []byte, key []byte, nonce []byte, additionalData []byte) ([]byte, error)` | recommended | SM4EncryptGCM encrypts plain data using SM4-GCM. | facade | `ExampleSM4EncryptGCM` |
 | `SM4SealGCM` | `func SM4SealGCM(plain []byte, key []byte, additionalData []byte) (nonce []byte, cipherText []byte, err error)` | recommended | SM4SealGCM encrypts plain data using SM4-GCM and a freshly generated nonce. | facade | — |
 | `SM4SealGCMWithOptions` | `func SM4SealGCMWithOptions(plain []byte, key []byte, additionalData []byte, opts ...SM4Option) (nonce []byte, cipherText []byte, err error)` | recommended | SM4SealGCMWithOptions encrypts plain data using SM4-GCM and a freshly generated nonce. | facade | `ExampleSM4SealGCMWithOptions` |
+| `SelectJWKByKeyID` | `func SelectJWKByKeyID(set JWKS, kid string) (JWK, error)` | recommended | SelectJWKByKeyID returns the key with kid from set. | facade | `ExampleSelectJWKByKeyID` |
 | `SignParams` | `func SignParams(params map[string]any, digestHex func([]byte) string, separator string, keyValueSeparator string, ignoreNil bool, otherParams ...string) string` | recommended | SignParams joins params by sorted key and returns the digest hex using digestHex. | facade | `ExampleSignParams` |
 | `SignParamsSHA256` | `func SignParamsSHA256(params map[string]any, otherParams ...string) string` | recommended | SignParamsSHA256 signs sorted params with SHA256. | facade | `ExampleSignParamsSHA256` |
 | `SignSHA256WithRSA` | `func SignSHA256WithRSA(data []byte, priv *rsa.PrivateKey) ([]byte, error)` | recommended | SignSHA256WithRSA signs data using SHA256withRSA. | facade | `ExampleSignSHA256WithRSA` |

@@ -43,7 +43,7 @@
 | --- | --- | --- |
 | TOTP and HOTP | Completed | `safe_crypto_otp_governance` records RFC vectors, clock/window tests, invalid-input tests, facade examples, generated catalog coverage, and Sprint 31 roadmap state. |
 | Password hashing | Completed | `safe_crypto_password_hashing_governance` records Argon2id-style parameter envelopes and non-goals; `safe_crypto_argon2id_governance` records the encoded hash implementation, mismatch behavior, malformed-hash errors, bounded-cost tests, facade examples, and Sprint 33 roadmap state. |
-| JWK and JWKS | Governance completed | `safe_crypto_jwk_jwks_governance` records local key material scope, RSA-first implementation boundary, optional EC/OKP deferral, unknown-`kid` behavior, malformed-key errors, no network discovery, and Sprint 34 roadmap state before implementation. |
+| JWK and JWKS | Completed | `safe_crypto_jwk_jwks_governance` records local key material scope and non-goals; `safe_crypto_jwk_jwks_implementation_governance` records RSA public/private JWK round trips, JWKS `kid` selection, unknown-`kid` behavior, malformed-key errors, no network discovery, facade examples, and Sprint 35 roadmap state. |
 
 ## Validation
 
