@@ -531,19 +531,19 @@
       "schema": "1.7",
       "recommended_profile_schema": "recommended_entrypoints profiles: day-one, safe, error, options, compatibility; golden_path lists 1-7 APIs with use_when and avoid_when guidance",
       "package_count": 55,
-      "function_count": 2739,
-      "functions_with_examples": 1706,
+      "function_count": 2748,
+      "functions_with_examples": 1709,
       "context_aware_functions": 36,
-      "returns_error_functions": 675,
+      "returns_error_functions": 678,
       "status_counts": {
         "compatibility": 22,
         "deprecated": 0,
         "experimental": 0,
-        "recommended": 2717
+        "recommended": 2726
       },
       "synopsis_sources": {
         "empty": 0,
-        "facade": 2086,
+        "facade": 2095,
         "internal": 653
       },
       "regenerate_command": "tools_update",
@@ -1087,6 +1087,35 @@
       "No MFA or recovery policy"
     ],
     "required_checks": ["docs-check", "ai-context-check", "governance-maturity-check", "agent-security-check"]
+  },
+  "safe_crypto_argon2id_governance": {
+    "roadmap_path": "docs/superpowers/plans/49-roadmap.md",
+    "quickstart_path": "docs/doc/11-vcrypto.md",
+    "backlog_path": "docs/doc/safe-crypto-advanced-backlog.md",
+    "sprint": 33,
+    "status": "completed",
+    "packages": ["vcrypto"],
+    "internal_packages": ["internal/crypto"],
+    "required_functions": [
+      "HashPasswordArgon2id",
+      "VerifyPasswordArgon2id",
+      "ParsePasswordHash",
+      "WithArgon2idMemory",
+      "WithArgon2idIterations",
+      "WithArgon2idParallelism",
+      "WithArgon2idSaltLength",
+      "WithArgon2idKeyLength",
+      "WithPasswordHashRandomOptions"
+    ],
+    "required_test_functions": [
+      "internal/crypto/password_test.go:TestHashPasswordArgon2idRoundTrip",
+      "internal/crypto/password_test.go:TestParsePasswordHash",
+      "internal/crypto/password_test.go:TestPasswordHashErrors",
+      "vcrypto/password_test.go:TestFacadePasswordHashArgon2id",
+      "vcrypto/password_test.go:TestFacadePasswordHashErrors"
+    ],
+    "required_examples": ["ExampleHashPasswordArgon2id", "ExampleVerifyPasswordArgon2id", "ExampleParsePasswordHash"],
+    "required_checks": ["go test ./internal/crypto ./vcrypto", "tools-gen", "docs-check", "ai-context-check", "governance-maturity-check", "agent-security-check"]
   },
   "error_model": {
     "taxonomy": [

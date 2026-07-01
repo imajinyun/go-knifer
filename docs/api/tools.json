@@ -3,20 +3,20 @@
   "module": "github.com/imajinyun/knifer-go",
   "summary": {
     "package_count": 55,
-    "function_count": 2739,
-    "functions_with_examples": 1706,
+    "function_count": 2748,
+    "functions_with_examples": 1709,
     "context_aware_functions": 36,
-    "returns_error_functions": 675,
-    "variadic_functions": 802,
+    "returns_error_functions": 678,
+    "variadic_functions": 804,
     "status_counts": {
       "compatibility": 22,
       "deprecated": 0,
       "experimental": 0,
-      "recommended": 2717
+      "recommended": 2726
     },
     "synopsis_sources": {
       "empty": 0,
-      "facade": 2086,
+      "facade": 2095,
       "internal": 653
     }
   },
@@ -7043,18 +7043,18 @@
       "name": "vcrypto",
       "synopsis": "Package vcrypto provides public APIs for cryptographic utilities.",
       "summary": {
-        "function_count": 120,
-        "functions_with_examples": 85,
-        "example_coverage_percent": 70.8,
+        "function_count": 129,
+        "functions_with_examples": 88,
+        "example_coverage_percent": 68.2,
         "status_counts": {
           "compatibility": 0,
           "deprecated": 0,
           "experimental": 0,
-          "recommended": 120
+          "recommended": 129
         },
         "synopsis_sources": {
           "empty": 0,
-          "facade": 120,
+          "facade": 129,
           "internal": 0
         }
       },
@@ -7940,6 +7940,33 @@
           "variadic": true
         },
         {
+          "name": "HashPasswordArgon2id",
+          "signature": "func HashPasswordArgon2id(password []byte, opts ...PasswordHashOption) (string, error)",
+          "synopsis": "HashPasswordArgon2id hashes password using Argon2id and returns an encoded hash envelope.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "password",
+              "type": "[]byte"
+            },
+            {
+              "name": "opts",
+              "type": "...PasswordHashOption"
+            }
+          ],
+          "results": [
+            "string",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": true,
+          "examples": [
+            "ExampleHashPasswordArgon2id"
+          ]
+        },
+        {
           "name": "OTPAuthURL",
           "signature": "func OTPAuthURL(issuer string, account string, secret []byte, opts ...OTPOption) (string, error)",
           "synopsis": "OTPAuthURL returns an otpauth:// URL for provisioning TOTP authenticators.",
@@ -8086,6 +8113,29 @@
           "returns_error": true,
           "context_aware": false,
           "variadic": false
+        },
+        {
+          "name": "ParsePasswordHash",
+          "signature": "func ParsePasswordHash(encoded string) (PasswordHashInfo, error)",
+          "synopsis": "ParsePasswordHash parses a supported encoded password hash without verifying a password.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "encoded",
+              "type": "string"
+            }
+          ],
+          "results": [
+            "PasswordHashInfo",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false,
+          "examples": [
+            "ExampleParsePasswordHash"
+          ]
         },
         {
           "name": "ParseRSAPrivateKeyPEM",
@@ -9755,6 +9805,33 @@
           "variadic": false
         },
         {
+          "name": "VerifyPasswordArgon2id",
+          "signature": "func VerifyPasswordArgon2id(encoded string, password []byte) (bool, error)",
+          "synopsis": "VerifyPasswordArgon2id verifies password against an Argon2id encoded hash.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "encoded",
+              "type": "string"
+            },
+            {
+              "name": "password",
+              "type": "[]byte"
+            }
+          ],
+          "results": [
+            "bool",
+            "error"
+          ],
+          "returns_error": true,
+          "context_aware": false,
+          "variadic": false,
+          "examples": [
+            "ExampleVerifyPasswordArgon2id"
+          ]
+        },
+        {
           "name": "VerifySHA256WithRSA",
           "signature": "func VerifySHA256WithRSA(data []byte, sig []byte, pub *rsa.PublicKey) error",
           "synopsis": "VerifySHA256WithRSA verifies SHA256withRSA signature.",
@@ -9817,6 +9894,101 @@
           "examples": [
             "ExampleVerifyWithRSAOptions"
           ]
+        },
+        {
+          "name": "WithArgon2idIterations",
+          "signature": "func WithArgon2idIterations(iterations uint32) PasswordHashOption",
+          "synopsis": "WithArgon2idIterations sets the Argon2id iteration count.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "iterations",
+              "type": "uint32"
+            }
+          ],
+          "results": [
+            "PasswordHashOption"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "WithArgon2idKeyLength",
+          "signature": "func WithArgon2idKeyLength(length uint32) PasswordHashOption",
+          "synopsis": "WithArgon2idKeyLength sets the derived key length.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "length",
+              "type": "uint32"
+            }
+          ],
+          "results": [
+            "PasswordHashOption"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "WithArgon2idMemory",
+          "signature": "func WithArgon2idMemory(memory uint32) PasswordHashOption",
+          "synopsis": "WithArgon2idMemory sets the Argon2id memory cost in KiB.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "memory",
+              "type": "uint32"
+            }
+          ],
+          "results": [
+            "PasswordHashOption"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "WithArgon2idParallelism",
+          "signature": "func WithArgon2idParallelism(parallelism uint8) PasswordHashOption",
+          "synopsis": "WithArgon2idParallelism sets the Argon2id parallelism value.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "parallelism",
+              "type": "uint8"
+            }
+          ],
+          "results": [
+            "PasswordHashOption"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
+        },
+        {
+          "name": "WithArgon2idSaltLength",
+          "signature": "func WithArgon2idSaltLength(length uint32) PasswordHashOption",
+          "synopsis": "WithArgon2idSaltLength sets the generated salt length.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "length",
+              "type": "uint32"
+            }
+          ],
+          "results": [
+            "PasswordHashOption"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": false
         },
         {
           "name": "WithGCMBlockFactory",
@@ -9962,6 +10134,25 @@
           "returns_error": false,
           "context_aware": false,
           "variadic": false
+        },
+        {
+          "name": "WithPasswordHashRandomOptions",
+          "signature": "func WithPasswordHashRandomOptions(opts ...RandomOption) PasswordHashOption",
+          "synopsis": "WithPasswordHashRandomOptions sets entropy source options for generated salts.",
+          "synopsis_source": "facade",
+          "status": "recommended",
+          "params": [
+            {
+              "name": "opts",
+              "type": "...RandomOption"
+            }
+          ],
+          "results": [
+            "PasswordHashOption"
+          ],
+          "returns_error": false,
+          "context_aware": false,
+          "variadic": true
         },
         {
           "name": "WithRSADigestHash",

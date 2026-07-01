@@ -30,6 +30,8 @@ var (
 	ErrInvalidSM2Signature error = &sentinel{code: knifer.ErrCodeInvalidInput, msg: "invalid sm2 signature"}
 	// ErrInvalidOTP indicates an invalid HOTP/TOTP input.
 	ErrInvalidOTP error = &sentinel{code: knifer.ErrCodeInvalidInput, msg: "invalid otp"}
+	// ErrInvalidPasswordHash indicates an invalid encoded password hash or password hashing parameter.
+	ErrInvalidPasswordHash error = &sentinel{code: knifer.ErrCodeInvalidInput, msg: "invalid password hash"}
 )
 
 // ValidateAESKey reports whether key is a valid AES key length.

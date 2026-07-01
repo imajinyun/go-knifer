@@ -818,6 +818,51 @@ func ExampleOTPAuthURL() {
 	// true
 }
 
+func ExampleHashPasswordArgon2id() {
+	encoded, err := vcrypto.HashPasswordArgon2id(
+		[]byte("correct horse battery staple"),
+		vcrypto.WithArgon2idMemory(8),
+		vcrypto.WithArgon2idIterations(1),
+		vcrypto.WithArgon2idParallelism(1),
+		vcrypto.WithArgon2idSaltLength(8),
+		vcrypto.WithArgon2idKeyLength(16),
+		vcrypto.WithPasswordHashRandomOptions(vcrypto.WithRandomReader(bytes.NewReader([]byte("12345678")))),
+	)
+	ok, verifyErr := vcrypto.VerifyPasswordArgon2id(encoded, []byte("correct horse battery staple"))
+	fmt.Println(err == nil, verifyErr == nil, ok, strings.HasPrefix(encoded, "$argon2id$"))
+	// Output: true true true true
+}
+
+func ExampleVerifyPasswordArgon2id() {
+	encoded, _ := vcrypto.HashPasswordArgon2id(
+		[]byte("correct horse battery staple"),
+		vcrypto.WithArgon2idMemory(8),
+		vcrypto.WithArgon2idIterations(1),
+		vcrypto.WithArgon2idParallelism(1),
+		vcrypto.WithArgon2idSaltLength(8),
+		vcrypto.WithArgon2idKeyLength(16),
+		vcrypto.WithPasswordHashRandomOptions(vcrypto.WithRandomReader(bytes.NewReader([]byte("12345678")))),
+	)
+	ok, err := vcrypto.VerifyPasswordArgon2id(encoded, []byte("wrong password"))
+	fmt.Println(err == nil, ok)
+	// Output: true false
+}
+
+func ExampleParsePasswordHash() {
+	encoded, _ := vcrypto.HashPasswordArgon2id(
+		[]byte("correct horse battery staple"),
+		vcrypto.WithArgon2idMemory(8),
+		vcrypto.WithArgon2idIterations(1),
+		vcrypto.WithArgon2idParallelism(1),
+		vcrypto.WithArgon2idSaltLength(8),
+		vcrypto.WithArgon2idKeyLength(16),
+		vcrypto.WithPasswordHashRandomOptions(vcrypto.WithRandomReader(bytes.NewReader([]byte("12345678")))),
+	)
+	info, err := vcrypto.ParsePasswordHash(encoded)
+	fmt.Println(err == nil, info.Algorithm, info.Memory, info.Iterations, info.Parallelism)
+	// Output: true argon2id 8 1 1
+}
+
 var exampleRSAPrivateKey = mustExampleRSAKey()
 
 func exampleAESKey() []byte {

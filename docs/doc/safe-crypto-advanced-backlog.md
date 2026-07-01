@@ -36,7 +36,7 @@
 | Lane | Status | Evidence |
 | --- | --- | --- |
 | TOTP and HOTP | Completed | `safe_crypto_otp_governance` records RFC vectors, clock/window tests, invalid-input tests, facade examples, generated catalog coverage, and Sprint 31 roadmap state. |
-| Password hashing | Governance completed | `safe_crypto_password_hashing_governance` records Argon2id-style parameter envelopes, malformed-hash and mismatch behavior, bounded test costs, non-goals, and Sprint 32 roadmap state before implementation. |
+| Password hashing | Completed | `safe_crypto_password_hashing_governance` records Argon2id-style parameter envelopes and non-goals; `safe_crypto_argon2id_governance` records the encoded hash implementation, mismatch behavior, malformed-hash errors, bounded-cost tests, facade examples, and Sprint 33 roadmap state. |
 
 ## Validation
 

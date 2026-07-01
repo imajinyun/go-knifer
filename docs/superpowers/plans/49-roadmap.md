@@ -9,14 +9,14 @@ This baseline is derived from `docs/api/tools.json.summary`. `make governance-ma
 | Metric | Value |
 | --- | ---: |
 | Public facade packages | 55 |
-| Public functions | 2739 |
-| Functions with executable examples | 1706 |
+| Public functions | 2748 |
+| Functions with executable examples | 1709 |
 | Context-aware functions | 36 |
-| Functions returning errors | 675 |
-| Recommended public functions | 2717 |
+| Functions returning errors | 678 |
+| Recommended public functions | 2726 |
 | Compatibility public functions | 22 |
 | Empty function synopses | 0 |
-| Facade-sourced function synopses | 2086 |
+| Facade-sourced function synopses | 2095 |
 | Internal-sourced function synopses | 653 |
 
 ## 90-Day Star Domain Scorecard
@@ -24,7 +24,7 @@ This baseline is derived from `docs/api/tools.json.summary`. `make governance-ma
 | Domain | Public functions | Examples | Example ratio | Internal coverage | Facade coverage | Benchmark count | Recommended API docs status | FAQ status | Comparison page status | Cookbook status |
 | --- | ---: | ---: | ---: | --- | --- | ---: | --- | --- | --- | --- |
 | Safe HTTP (`vhttp`, `vresty`, `vurl`) | 364 | 349 | 95.9% | `internal/httpx/http` 85.0%, `internal/httpx/resty` 80.4%, `internal/url` 87.7%, shared helpers 86.8% | `vhttp` 100.0%, `vresty` 100.0%, `vurl` 100.0% | 10 | Present in `docs/doc/README.md`, `docs/doc/22-vhttp.md`, and `docs/doc/41-vresty.md` | Present in `docs/doc/22-vhttp.md` and `docs/doc/41-vresty.md` | Present in `docs/doc/22-vhttp.md` and `docs/doc/41-vresty.md` | Present in `docs/doc/safe-http-cookbook.md` |
-| Safe crypto (`vcrypto`, `vrand`, `vjwt`) | 226 | 191 | 84.5% | `internal/crypto` 94.1%, `internal/rand` 94.2%, `internal/jwt` 85.5% | `vcrypto` 100.0%, `vrand` 100.0%, `vjwt` 100.0% | 7 | Present in `docs/doc/11-vcrypto.md` and `docs/doc/38-vrand.md` | Present in `docs/doc/11-vcrypto.md` and `docs/doc/38-vrand.md` | Present in `docs/doc/safe-crypto-cookbook.md` | Present in `docs/doc/safe-crypto-cookbook.md` |
+| Safe crypto (`vcrypto`, `vrand`, `vjwt`) | 235 | 194 | 82.6% | `internal/crypto` 94.1%, `internal/rand` 94.2%, `internal/jwt` 85.5% | `vcrypto` 100.0%, `vrand` 100.0%, `vjwt` 100.0% | 7 | Present in `docs/doc/11-vcrypto.md` and `docs/doc/38-vrand.md` | Present in `docs/doc/11-vcrypto.md` and `docs/doc/38-vrand.md` | Present in `docs/doc/safe-crypto-cookbook.md` | Present in `docs/doc/safe-crypto-cookbook.md` |
 | Daily JSON/file (`vjson`, `vfile`) | 133 | 133 | 100.0% | `internal/json` 88.9%, `internal/file` 88.6% | `vjson` 100.0%, `vfile` 100.0% | 4 | Present in `docs/doc/27-vjson.md` for JSON and `docs/doc/17-vfile.md` for file workflows | Present in `docs/doc/daily-json-file-faq.md` | Present in `docs/doc/27-vjson.md` for JSON stdlib boundary; filesystem safety guidance present in `docs/doc/17-vfile.md` | Present in `docs/doc/27-vjson.md` and `docs/doc/17-vfile.md` |
 
 ## Strategic themes
@@ -97,6 +97,7 @@ The Hutool gap-closure lane is implemented and the active work has moved from fe
 | 30 | Completed | Safe Crypto Advanced Backlog Governance | Defined machine-checked boundaries for TOTP/HOTP, password hashing, JWK/JWKS, secret handling, interoperability, and benchmark scope before adding more crypto APIs. |
 | 31 | Completed | Safe Crypto OTP Governance | Added RFC-compatible HOTP/TOTP helpers with Base32 secrets, otpauth URLs, injected clock/window policy, RFC vectors, examples, and governance evidence. |
 | 32 | Completed | Safe Crypto Password Hashing Governance | Fixed machine-checked password hashing boundaries for Argon2id-style encoded hashes, malformed-hash errors, mismatch verification, bounded test costs, and non-goals before implementation. |
+| 33 | Completed | Safe Crypto Argon2id Password Hashing | Added Argon2id encoded password hashes with parameter envelopes, explicit salt source, mismatch verification, malformed-hash errors, bounded test costs, examples, and governance evidence. |
 
 ## Active workflow
 
@@ -121,6 +122,8 @@ Sprint 30 completed advanced safe crypto backlog governance: `safe_crypto_advanc
 Sprint 31 completed safe crypto OTP governance: `safe_crypto_otp_governance` records HOTP/TOTP facade APIs, RFC vectors, deterministic clock/window tests, Base32 secret helpers, otpauth URL examples, and generated catalog coverage.
 
 Sprint 32 completed safe crypto password hashing governance: `safe_crypto_password_hashing_governance` records the encoded-hash envelope, parameter bounds, salt source policy, mismatch behavior, malformed-hash errors, cost-bound fixtures, and non-goals before Argon2id implementation.
+
+Sprint 33 completed safe crypto Argon2id password hashing: `safe_crypto_argon2id_governance` records the facade APIs, encoded hash round trips, mismatch behavior, malformed envelope errors, deterministic salt fixtures, generated catalog coverage, and security validation.
 
 Recommended roadmap loop:
 

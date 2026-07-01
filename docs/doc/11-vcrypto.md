@@ -10,7 +10,8 @@
 | Authenticate a message | HMAC helpers | Use when both sides share a secret key and the message must be tamper-evident. |
 | Encrypt bytes symmetrically | AES-GCM helpers | Use authenticated encryption with a fresh nonce per key/message pair. |
 | Use Chinese national cryptography | SM2/SM3/SM4 helpers | Use for interoperability with GB/T SM workflows; prefer SM4-GCM when both sides can support authenticated encryption. |
-| Derive keys from passwords | `PBKDF2` | Use a unique salt and policy-controlled iterations; prefer dedicated password hashing where available for password storage. |
+| Derive keys from passwords | `PBKDF2` | Use only for key derivation workflows where both sides already agree on KDF parameters. |
+| Hash passwords for storage | `HashPasswordArgon2id`, `VerifyPasswordArgon2id`, `ParsePasswordHash` | Use encoded Argon2id hashes with explicit parameters and unique salts; this is not an account or password-storage service. |
 | Generate random keys, salts, nonces, or tokens | `GenAESKey`, random byte helpers, or `vrand.SecureBytes` | Do not use pseudo-random helpers for secrets. |
 | Sign or verify with RSA | RSA signing/verification helpers | Use when interoperability requires RSA keys and signatures. |
 | Marshal keys | PEM conversion helpers | Treat private-key bytes as secrets and avoid logging them. |
@@ -192,6 +193,39 @@ func main() {
 	fmt.Println(len(key))
 }
 ```
+
+## Hash and verify passwords with Argon2id
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/imajinyun/knifer-go/vcrypto"
+)
+
+func main() {
+	encoded, err := vcrypto.HashPasswordArgon2id([]byte("correct horse battery staple"))
+	if err != nil {
+		panic(err)
+	}
+
+	ok, err := vcrypto.VerifyPasswordArgon2id(encoded, []byte("correct horse battery staple"))
+	if err != nil {
+		panic(err)
+	}
+
+	info, err := vcrypto.ParsePasswordHash(encoded)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(ok, info.Algorithm)
+}
+```
+
+Use option overrides such as `WithArgon2idMemory`, `WithArgon2idIterations`, and `WithPasswordHashRandomOptions` only when the deployment policy or deterministic tests require explicit parameters. A password mismatch returns `false, nil`; malformed encoded hashes return errors matching `vcrypto.ErrInvalidPasswordHash`.
 
 ## Generate and verify one-time passwords
 

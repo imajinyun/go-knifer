@@ -11,16 +11,16 @@ This document is generated from `docs/api/tools.json` for human review and AI re
 | Schema | 1.7 |
 | Module | `github.com/imajinyun/knifer-go` |
 | Packages | 55 |
-| Functions | 2739 |
-| Functions with examples | 1706 |
+| Functions | 2748 |
+| Functions with examples | 1709 |
 | Context-aware functions | 36 |
-| Functions returning error | 675 |
-| Variadic functions | 802 |
-| API status: recommended | 2717 |
+| Functions returning error | 678 |
+| Variadic functions | 804 |
+| API status: recommended | 2726 |
 | API status: compatibility | 22 |
 | API status: experimental | 0 |
 | API status: deprecated | 0 |
-| Synopsis source: facade | 2086 |
+| Synopsis source: facade | 2095 |
 | Synopsis source: internal | 653 |
 | Synopsis source: empty | 0 |
 
@@ -607,7 +607,7 @@ Import path: `github.com/imajinyun/knifer-go/vcrypto`
 
 Package vcrypto provides public APIs for cryptographic utilities.
 
-Quality: 120 functions · 85 with examples · 70.8% example coverage · statuses: recommended=120, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=120, internal=0, empty=0
+Quality: 129 functions · 88 with examples · 68.2% example coverage · statuses: recommended=129, compatibility=0, experimental=0, deprecated=0 · synopsis sources: facade=129, internal=0, empty=0
 
 Recommended entrypoints:
 
@@ -659,11 +659,13 @@ Golden path API set:
 | `HMACSM3Hex` | `func HMACSM3Hex(key []byte, data []byte) string` | recommended | HMACSM3Hex returns HMAC-SM3 in lower-case hex form. | facade | `ExampleHMACSM3Hex` |
 | `HOTP` | `func HOTP(secret []byte, counter uint64, opts ...OTPOption) (string, error)` | recommended | HOTP generates an HMAC-based one-time password for counter. | facade | `ExampleHOTP` |
 | `HOTPVerify` | `func HOTPVerify(code string, secret []byte, counter uint64, opts ...OTPOption) (bool, error)` | recommended | HOTPVerify verifies an HOTP code for counter using constant-time comparison. | facade | — |
+| `HashPasswordArgon2id` | `func HashPasswordArgon2id(password []byte, opts ...PasswordHashOption) (string, error)` | recommended | HashPasswordArgon2id hashes password using Argon2id and returns an encoded hash envelope. | facade | `ExampleHashPasswordArgon2id` |
 | `OTPAuthURL` | `func OTPAuthURL(issuer string, account string, secret []byte, opts ...OTPOption) (string, error)` | recommended | OTPAuthURL returns an otpauth:// URL for provisioning TOTP authenticators. | facade | `ExampleOTPAuthURL` |
 | `OTPSecretBase32` | `func OTPSecretBase32(secret []byte) string` | recommended | OTPSecretBase32 encodes a binary OTP secret using unpadded Base32. | facade | — |
 | `PBKDF2` | `func PBKDF2(password []byte, salt []byte, iterations int, keyLen int, fn func() hash.Hash) ([]byte, error)` | recommended | PBKDF2 derives a key from password and salt using PBKDF2. | facade | `ExamplePBKDF2` |
 | `PBKDF2SHA256` | `func PBKDF2SHA256(password []byte, salt []byte, iterations int, keyLen int) ([]byte, error)` | recommended | PBKDF2SHA256 derives a key using PBKDF2-HMAC-SHA256. | facade | `ExamplePBKDF2SHA256` |
 | `ParseOTPSecretBase32` | `func ParseOTPSecretBase32(secret string) ([]byte, error)` | recommended | ParseOTPSecretBase32 decodes an unpadded or padded Base32 OTP secret. | facade | — |
+| `ParsePasswordHash` | `func ParsePasswordHash(encoded string) (PasswordHashInfo, error)` | recommended | ParsePasswordHash parses a supported encoded password hash without verifying a password. | facade | `ExampleParsePasswordHash` |
 | `ParseRSAPrivateKeyPEM` | `func ParseRSAPrivateKeyPEM(data []byte) (*rsa.PrivateKey, error)` | recommended | ParseRSAPrivateKeyPEM parses a PKCS#1 or PKCS#8 RSA private key PEM. | facade | `ExampleParseRSAPrivateKeyPEM` |
 | `ParseRSAPublicKeyPEM` | `func ParseRSAPublicKeyPEM(data []byte) (*rsa.PublicKey, error)` | recommended | ParseRSAPublicKeyPEM parses a PKIX or PKCS#1 RSA public key PEM. | facade | `ExampleParseRSAPublicKeyPEM` |
 | `ParseSM2PrivateKeyPEM` | `func ParseSM2PrivateKeyPEM(data []byte) (*SM2PrivateKey, error)` | recommended | ParseSM2PrivateKeyPEM parses a PKCS#8 or SEC1 SM2 private key PEM. | facade | — |
@@ -728,8 +730,14 @@ Golden path API set:
 | `ValidateAESKey` | `func ValidateAESKey(key []byte) error` | recommended | ValidateAESKey reports whether key is a valid AES key length (16, 24, or 32 bytes). | facade | `ExampleValidateAESKey` |
 | `ValidateSM4IV` | `func ValidateSM4IV(iv []byte) error` | recommended | ValidateSM4IV reports whether iv has the required block size for SM4 CBC helpers. | facade | — |
 | `ValidateSM4Key` | `func ValidateSM4Key(key []byte) error` | recommended | ValidateSM4Key reports whether key is a valid SM4 key length. | facade | — |
+| `VerifyPasswordArgon2id` | `func VerifyPasswordArgon2id(encoded string, password []byte) (bool, error)` | recommended | VerifyPasswordArgon2id verifies password against an Argon2id encoded hash. | facade | `ExampleVerifyPasswordArgon2id` |
 | `VerifySHA256WithRSA` | `func VerifySHA256WithRSA(data []byte, sig []byte, pub *rsa.PublicKey) error` | recommended | VerifySHA256WithRSA verifies SHA256withRSA signature. | facade | `ExampleVerifySHA256WithRSA` |
 | `VerifyWithRSAOptions` | `func VerifyWithRSAOptions(data []byte, sig []byte, pub *rsa.PublicKey, opts ...RSADigestOption) error` | recommended | VerifyWithRSAOptions hashes data and verifies an RSA signature with configurable options. | facade | `ExampleVerifyWithRSAOptions` |
+| `WithArgon2idIterations` | `func WithArgon2idIterations(iterations uint32) PasswordHashOption` | recommended | WithArgon2idIterations sets the Argon2id iteration count. | facade | — |
+| `WithArgon2idKeyLength` | `func WithArgon2idKeyLength(length uint32) PasswordHashOption` | recommended | WithArgon2idKeyLength sets the derived key length. | facade | — |
+| `WithArgon2idMemory` | `func WithArgon2idMemory(memory uint32) PasswordHashOption` | recommended | WithArgon2idMemory sets the Argon2id memory cost in KiB. | facade | — |
+| `WithArgon2idParallelism` | `func WithArgon2idParallelism(parallelism uint8) PasswordHashOption` | recommended | WithArgon2idParallelism sets the Argon2id parallelism value. | facade | — |
+| `WithArgon2idSaltLength` | `func WithArgon2idSaltLength(length uint32) PasswordHashOption` | recommended | WithArgon2idSaltLength sets the generated salt length. | facade | — |
 | `WithGCMBlockFactory` | `func WithGCMBlockFactory(factory func([]byte) (cipher.Block, error)) AESGCMOption` | recommended | WithGCMBlockFactory sets the cipher block factory used by AES-GCM helpers. | facade | `ExampleWithGCMBlockFactory` |
 | `WithGCMNonceSize` | `func WithGCMNonceSize(size int) AESGCMOption` | recommended | WithGCMNonceSize sets a custom nonce size for AES-GCM helpers. | facade | `ExampleWithGCMNonceSize` |
 | `WithGCMRandomOptions` | `func WithGCMRandomOptions(opts ...RandomOption) AESGCMOption` | recommended | WithGCMRandomOptions sets the entropy source options used when AESSealGCM generates a nonce. | facade | `ExampleWithGCMRandomOptions` |
@@ -737,6 +745,7 @@ Golden path API set:
 | `WithOTPClock` | `func WithOTPClock(clock func() time.Time) OTPOption` | recommended | WithOTPClock sets the clock used by TOTPNow and TOTPVerifyNow. | facade | — |
 | `WithOTPDigits` | `func WithOTPDigits(digits int) OTPOption` | recommended | WithOTPDigits sets the number of decimal digits in generated OTP codes. | facade | — |
 | `WithOTPHash` | `func WithOTPHash(fn func() hash.Hash) OTPOption` | recommended | WithOTPHash sets the HMAC hash used by HOTP/TOTP helpers. | facade | — |
+| `WithPasswordHashRandomOptions` | `func WithPasswordHashRandomOptions(opts ...RandomOption) PasswordHashOption` | recommended | WithPasswordHashRandomOptions sets entropy source options for generated salts. | facade | — |
 | `WithRSADigestHash` | `func WithRSADigestHash(hashID crypto.Hash, newHash func() hash.Hash) RSADigestOption` | recommended | WithRSADigestHash sets the hash used by RSA data-signing helpers. | facade | `ExampleWithRSADigestHash` |
 | `WithRSADigestPSS` | `func WithRSADigestPSS(opts *rsa.PSSOptions) RSADigestOption` | recommended | WithRSADigestPSS signs and verifies using RSA-PSS instead of PKCS#1 v1.5. | facade | `ExampleWithRSADigestPSS` |
 | `WithRSADigestRandomReader` | `func WithRSADigestRandomReader(reader io.Reader) RSADigestOption` | recommended | WithRSADigestRandomReader sets the entropy source used by RSA data-signing helpers. | facade | `ExampleWithRSADigestRandomReader` |

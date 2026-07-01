@@ -641,11 +641,13 @@ github.com/imajinyun/knifer-go/vcrypto
   func HMACSM3Hex(key []byte, data []byte) string
   func HOTP(secret []byte, counter uint64, opts ...OTPOption) (string, error)
   func HOTPVerify(code string, secret []byte, counter uint64, opts ...OTPOption) (bool, error)
+  func HashPasswordArgon2id(password []byte, opts ...PasswordHashOption) (string, error)
   func OTPAuthURL(issuer string, account string, secret []byte, opts ...OTPOption) (string, error)
   func OTPSecretBase32(secret []byte) string
   func PBKDF2(password []byte, salt []byte, iterations int, keyLen int, fn func() hash.Hash) ([]byte, error)
   func PBKDF2SHA256(password []byte, salt []byte, iterations int, keyLen int) ([]byte, error)
   func ParseOTPSecretBase32(secret string) ([]byte, error)
+  func ParsePasswordHash(encoded string) (PasswordHashInfo, error)
   func ParseRSAPrivateKeyPEM(data []byte) (*crypto/rsa.PrivateKey, error)
   func ParseRSAPublicKeyPEM(data []byte) (*crypto/rsa.PublicKey, error)
   func ParseSM2PrivateKeyPEM(data []byte) (*SM2PrivateKey, error)
@@ -710,8 +712,14 @@ github.com/imajinyun/knifer-go/vcrypto
   func ValidateAESKey(key []byte) error
   func ValidateSM4IV(iv []byte) error
   func ValidateSM4Key(key []byte) error
+  func VerifyPasswordArgon2id(encoded string, password []byte) (bool, error)
   func VerifySHA256WithRSA(data []byte, sig []byte, pub *crypto/rsa.PublicKey) error
   func VerifyWithRSAOptions(data []byte, sig []byte, pub *crypto/rsa.PublicKey, opts ...RSADigestOption) error
+  func WithArgon2idIterations(iterations uint32) PasswordHashOption
+  func WithArgon2idKeyLength(length uint32) PasswordHashOption
+  func WithArgon2idMemory(memory uint32) PasswordHashOption
+  func WithArgon2idParallelism(parallelism uint8) PasswordHashOption
+  func WithArgon2idSaltLength(length uint32) PasswordHashOption
   func WithGCMBlockFactory(factory func([]byte) (crypto/cipher.Block, error)) AESGCMOption
   func WithGCMNonceSize(size int) AESGCMOption
   func WithGCMRandomOptions(opts ...RandomOption) AESGCMOption
@@ -719,6 +727,7 @@ github.com/imajinyun/knifer-go/vcrypto
   func WithOTPClock(clock func() time.Time) OTPOption
   func WithOTPDigits(digits int) OTPOption
   func WithOTPHash(fn func() hash.Hash) OTPOption
+  func WithPasswordHashRandomOptions(opts ...RandomOption) PasswordHashOption
   func WithRSADigestHash(hashID crypto.Hash, newHash func() hash.Hash) RSADigestOption
   func WithRSADigestPSS(opts *crypto/rsa.PSSOptions) RSADigestOption
   func WithRSADigestRandomReader(reader io.Reader) RSADigestOption
@@ -733,6 +742,8 @@ github.com/imajinyun/knifer-go/vcrypto
   func WithTOTPWindow(window int) OTPOption
   type AESGCMOption = github.com/imajinyun/knifer-go/internal/crypto.AESGCMOption
   type OTPOption = github.com/imajinyun/knifer-go/internal/crypto.OTPOption
+  type PasswordHashInfo = github.com/imajinyun/knifer-go/internal/crypto.PasswordHashInfo
+  type PasswordHashOption = github.com/imajinyun/knifer-go/internal/crypto.PasswordHashOption
   type RSADigestOption = github.com/imajinyun/knifer-go/internal/crypto.RSADigestOption
   type RSAOption = github.com/imajinyun/knifer-go/internal/crypto.RSAOption
   type RandomOption = github.com/imajinyun/knifer-go/internal/crypto.RandomOption
@@ -744,6 +755,7 @@ github.com/imajinyun/knifer-go/vcrypto
   var ErrInvalidIV error
   var ErrInvalidKey error
   var ErrInvalidOTP error
+  var ErrInvalidPasswordHash error
   var ErrInvalidSM2Signature error
 
 github.com/imajinyun/knifer-go/vcsv
