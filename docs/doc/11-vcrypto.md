@@ -65,6 +65,11 @@ go test -bench=. -benchmem -run=^$ ./internal/crypto ./vcrypto ./internal/rand .
 
 The suite covers SHA-256 digest, HMAC-SHA256 signing, AES-GCM encrypt/decrypt, SM3/SM4/SM2 regression paths, and secure random byte generation. Treat benchmark output as a local baseline, not a universal performance claim.
 
+Quick benchmark gates should stay on deterministic, bounded hot paths such as
+digest, HMAC, AES-GCM, AES seal/open, and secure-random smoke checks. Do not add
+production-strength password hashing, remote key discovery, or key rotation work
+to quick benchmark gates; run those as explicit opt-in evidence when needed.
+
 ## FAQ
 
 ### Does knifer-go replace Go's `crypto/*` standard library packages?

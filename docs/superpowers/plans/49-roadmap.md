@@ -102,6 +102,7 @@ The Hutool gap-closure lane is implemented and the active work has moved from fe
 | 35 | Completed | Safe Crypto RSA JWK/JWKS Helpers | Added local RSA JWK/JWKS key material helpers with public/private round trips, `kid` selection, malformed-key errors, no network discovery, examples, and governance evidence. |
 | 36 | Completed | Safe Crypto Secret Handling Governance | Fixed machine-checked boundaries for demo secrets, deterministic fixtures, random-source injection, no production-looking fixed secrets, and secret-handling documentation. |
 | 37 | Completed | Safe Crypto Interoperability Governance | Fixed machine-checked boundaries for interoperability-only helpers, SM4-ECB legacy warnings, SM2 UID policy, RSA option choices, PEM/JWK exchange, and non-default algorithm guidance. |
+| 38 | Completed | Safe Crypto Benchmark Scope Governance | Fixed deterministic crypto benchmark scope for digest, HMAC, AES-GCM, AES seal/open, and secure-random smoke paths while excluding production-strength password hashing from quick gates. |
 
 ## Active workflow
 
@@ -136,6 +137,8 @@ Sprint 35 completed safe crypto RSA JWK/JWKS helpers: `safe_crypto_jwk_jwks_impl
 Sprint 36 completed safe crypto secret handling governance: `safe_crypto_secret_handling_governance` records demo-secret labeling, deterministic fixture boundaries, random-source injection requirements, no production-looking fixed secrets, and documentation coverage.
 
 Sprint 37 completed safe crypto interoperability governance: `safe_crypto_interoperability_governance` records interoperability-only helper boundaries, SM4-ECB legacy warnings, SM2 UID policy, RSA option choices, PEM/JWK key-material exchange, and non-default algorithm guidance.
+
+Sprint 38 completed safe crypto benchmark scope governance: `safe_crypto_benchmark_scope_governance` records deterministic quick benchmark allowlists, password-hashing exclusions, and bounded runtime-evidence rules for future crypto benchmark additions.
 
 Recommended roadmap loop:
 

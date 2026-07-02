@@ -11,7 +11,7 @@
 | JWK and JWKS | Governance is fixed for local JWK/JWKS key material helpers, `kid` selection, malformed-key errors, no network discovery, and no key rotation daemon. | Implement parsing or publishing only after RSA/EC/OKP support boundaries and unknown-`kid` behavior are wired to named tests. |
 | Secret handling | Governance is fixed for separating deterministic fixtures from production secret handling, documenting fake/demo secrets, and requiring random-source injection for tests. | Keep salts, nonces, OTP secrets, private keys, and encoded password hashes out of examples that look production-ready with fixed secrets. |
 | Interoperability boundaries | Governance is fixed for legacy or externally mandated algorithms, including SM4-ECB, RSA-OAEP/PSS option choices, SM2 UID policy, and PEM/JWK key-material exchange. | Keep interoperability-only helpers explicit, documented, and covered by tests before adding more algorithms or modes. |
-| Benchmark scope | Existing crypto benchmarks cover stable digest, HMAC, and authenticated-encryption paths. | Benchmark deterministic hot paths only; do not benchmark password hashing with production-strength cost in quick gates. |
+| Benchmark scope | Governance is fixed for deterministic digest, HMAC, AES-GCM, AES seal/open, and secure-random benchmarks in quick gates, while production-strength password hashing stays out of quick benchmark scope. | Add future crypto benchmarks only when the path is deterministic, bounded, and safe for CI/runtime evidence. |
 
 ## Non-Goals
 
@@ -46,6 +46,7 @@
 | JWK and JWKS | Completed | `safe_crypto_jwk_jwks_governance` records local key material scope and non-goals; `safe_crypto_jwk_jwks_implementation_governance` records RSA public/private JWK round trips, JWKS `kid` selection, unknown-`kid` behavior, malformed-key errors, no network discovery, facade examples, and Sprint 35 roadmap state. |
 | Secret handling | Governance completed | `safe_crypto_secret_handling_governance` records demo-secret labeling, deterministic fixture boundaries, random-source injection requirements, no production-looking fixed secrets, and Sprint 36 roadmap state. |
 | Interoperability boundaries | Governance completed | `safe_crypto_interoperability_governance` records explicit interoperability-only helpers, legacy-mode warnings, SM4-ECB non-default guidance, SM2 UID policy, RSA option boundaries, PEM/JWK key-material exchange, and Sprint 37 roadmap state. |
+| Benchmark scope | Governance completed | `safe_crypto_benchmark_scope_governance` records deterministic crypto benchmark allowlists, explicitly excludes production-strength password hashing from quick gates, and binds future benchmark additions to bounded CI/runtime evidence. |
 
 ## Validation
 

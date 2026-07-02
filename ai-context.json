@@ -1227,6 +1227,36 @@
     ],
     "required_checks": ["docs-check", "ai-context-check", "governance-maturity-check", "agent-security-check"]
   },
+  "safe_crypto_benchmark_scope_governance": {
+    "roadmap_path": "docs/superpowers/plans/49-roadmap.md",
+    "quickstart_path": "docs/doc/11-vcrypto.md",
+    "backlog_path": "docs/doc/safe-crypto-advanced-backlog.md",
+    "sprint": 38,
+    "status": "completed",
+    "packages": ["vcrypto", "vrand"],
+    "quick_benchmark_allowlist": [
+      "BenchmarkSHA256Digest",
+      "BenchmarkHMACSHA256Signing",
+      "BenchmarkAESGCMEncrypt",
+      "BenchmarkAESGCMDecrypt",
+      "BenchmarkAESSealGCM",
+      "BenchmarkHMACSHA256Hex",
+      "BenchmarkSecureBytes"
+    ],
+    "excluded_from_quick_gates": [
+      "production-strength password hashing",
+      "remote key discovery",
+      "key rotation loops",
+      "network-bound JWKS refresh"
+    ],
+    "required_boundaries": [
+      "benchmark paths must be deterministic",
+      "benchmark paths must be bounded for CI smoke",
+      "password hashing benchmarks require explicit opt-in evidence",
+      "benchmark output is evidence not a universal performance claim"
+    ],
+    "required_checks": ["docs-check", "ai-context-check", "governance-maturity-check", "bench-regression-check"]
+  },
   "error_model": {
     "taxonomy": [
       { "category": "invalid input", "code": "GK_INVALID_INPUT", "use_when": "Caller-provided arguments, payloads, or configuration values are malformed." },

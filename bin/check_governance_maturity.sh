@@ -1653,6 +1653,97 @@ def validate_safe_crypto_interoperability_governance() -> None:
 				add_error(f"{roadmap_path} Sprint 37 row must mention {required_phrase!r}")
 
 
+def validate_safe_crypto_benchmark_scope_governance() -> None:
+	governance = require_mapping(ai_context.get("safe_crypto_benchmark_scope_governance"), "safe_crypto_benchmark_scope_governance")
+	roadmap_path = governance.get("roadmap_path")
+	if not isinstance(roadmap_path, str) or not roadmap_path.strip():
+		add_error("safe_crypto_benchmark_scope_governance.roadmap_path must be non-empty")
+		roadmap_path = "docs/superpowers/plans/49-roadmap.md"
+	quickstart_path = governance.get("quickstart_path")
+	if not isinstance(quickstart_path, str) or not quickstart_path.strip():
+		add_error("safe_crypto_benchmark_scope_governance.quickstart_path must be non-empty")
+		quickstart_path = "docs/doc/11-vcrypto.md"
+	backlog_path = governance.get("backlog_path")
+	if not isinstance(backlog_path, str) or not backlog_path.strip():
+		add_error("safe_crypto_benchmark_scope_governance.backlog_path must be non-empty")
+		backlog_path = "docs/doc/safe-crypto-advanced-backlog.md"
+	sprint = governance.get("sprint")
+	if sprint != 38:
+		add_error("safe_crypto_benchmark_scope_governance.sprint must be 38")
+	status = governance.get("status")
+	if status not in {"active", "completed"}:
+		add_error("safe_crypto_benchmark_scope_governance.status must be active or completed")
+	packages = require_string_list(governance.get("packages"), "safe_crypto_benchmark_scope_governance.packages")
+	if packages != ["vcrypto", "vrand"]:
+		add_error("safe_crypto_benchmark_scope_governance.packages must be ordered as: vcrypto, vrand")
+	allowlist = require_string_list(governance.get("quick_benchmark_allowlist"), "safe_crypto_benchmark_scope_governance.quick_benchmark_allowlist")
+	expected_allowlist = [
+		"BenchmarkSHA256Digest",
+		"BenchmarkHMACSHA256Signing",
+		"BenchmarkAESGCMEncrypt",
+		"BenchmarkAESGCMDecrypt",
+		"BenchmarkAESSealGCM",
+		"BenchmarkHMACSHA256Hex",
+		"BenchmarkSecureBytes",
+	]
+	if allowlist != expected_allowlist:
+		add_error("safe_crypto_benchmark_scope_governance.quick_benchmark_allowlist must be ordered as: " + ", ".join(expected_allowlist))
+	for benchmark_name in allowlist:
+		found = any(
+			reference_exists(f"{path}:{benchmark_name}")
+			for path in ("vcrypto/crypto_benchmark_test.go", "vcrypto/aes_random_test.go", "vcrypto/digest_hmac_test.go", "vrand/rand_benchmark_test.go")
+		)
+		if not found:
+			add_error(f"safe_crypto_benchmark_scope_governance.quick_benchmark_allowlist references missing benchmark {benchmark_name}")
+	excluded = require_string_list(governance.get("excluded_from_quick_gates"), "safe_crypto_benchmark_scope_governance.excluded_from_quick_gates")
+	expected_excluded = [
+		"production-strength password hashing",
+		"remote key discovery",
+		"key rotation loops",
+		"network-bound JWKS refresh",
+	]
+	if excluded != expected_excluded:
+		add_error("safe_crypto_benchmark_scope_governance.excluded_from_quick_gates must be ordered as: " + ", ".join(expected_excluded))
+	boundaries = require_string_list(governance.get("required_boundaries"), "safe_crypto_benchmark_scope_governance.required_boundaries")
+	expected_boundaries = [
+		"benchmark paths must be deterministic",
+		"benchmark paths must be bounded for CI smoke",
+		"password hashing benchmarks require explicit opt-in evidence",
+		"benchmark output is evidence not a universal performance claim",
+	]
+	if boundaries != expected_boundaries:
+		add_error("safe_crypto_benchmark_scope_governance.required_boundaries must be ordered as: " + ", ".join(expected_boundaries))
+	required_checks = require_string_list(governance.get("required_checks"), "safe_crypto_benchmark_scope_governance.required_checks")
+	for check in ("docs-check", "ai-context-check", "governance-maturity-check", "bench-regression-check"):
+		if check not in required_checks:
+			add_error(f"safe_crypto_benchmark_scope_governance.required_checks must include {check}")
+	for path in (quickstart_path, backlog_path):
+		if not (root / path).exists():
+			add_error(f"{path} must exist")
+	quickstart_text = (root / quickstart_path).read_text(encoding="utf-8") if (root / quickstart_path).exists() else ""
+	backlog_text = (root / backlog_path).read_text(encoding="utf-8") if (root / backlog_path).exists() else ""
+	for phrase in ("deterministic, bounded hot paths", "production-strength password hashing", "explicit opt-in evidence"):
+		if quickstart_text and phrase not in quickstart_text:
+			add_error(f"{quickstart_path} must include {phrase!r}")
+	for phrase in ("Benchmark scope | Governance completed", "safe_crypto_benchmark_scope_governance", "deterministic crypto benchmark allowlists", "production-strength password hashing"):
+		if backlog_text and phrase not in backlog_text:
+			add_error(f"{backlog_path} must include {phrase!r}")
+
+	sprint_rows = extract_markdown_rows(root / roadmap_path, "Sprint order")
+	sprint_38_rows = [row for row in sprint_rows if row.get("Sprint") == "38"]
+	if len(sprint_38_rows) != 1:
+		add_error(f"{roadmap_path} Sprint order must contain exactly one Sprint 38 row")
+	else:
+		sprint_38 = sprint_38_rows[0]
+		expected_status = "Completed" if status == "completed" else "Active"
+		if sprint_38.get("Status") != expected_status:
+			add_error(f"{roadmap_path} Sprint 38 status must be {expected_status}")
+		sprint_text = " ".join(sprint_38.values())
+		for required_phrase in ("deterministic", "password hashing", "quick gates", "secure-random"):
+			if required_phrase not in sprint_text:
+				add_error(f"{roadmap_path} Sprint 38 row must mention {required_phrase!r}")
+
+
 def validate_example_depth_governance() -> None:
 	governance = require_mapping(ai_context.get("example_depth_governance"), "example_depth_governance")
 	sprint = governance.get("sprint")
@@ -2064,6 +2155,7 @@ if not bench_only:
 	validate_safe_crypto_jwk_jwks_implementation_governance()
 	validate_safe_crypto_secret_handling_governance()
 	validate_safe_crypto_interoperability_governance()
+	validate_safe_crypto_benchmark_scope_governance()
 	validate_example_depth_governance()
 	validate_api_convergence()
 	validate_lifecycle()
