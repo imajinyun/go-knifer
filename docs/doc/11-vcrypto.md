@@ -30,6 +30,7 @@
 - Do not ignore crypto errors; treat them as security-relevant failures.
 - Keep keys outside source code and rotate them according to application policy.
 - Separate hashing, message authentication, encryption, password derivation, and signing decisions; they solve different problems.
+- Treat fixed keys, fixed salts, fixed nonces, and fixed private keys in examples as demo-only fixtures. Production code should use `vrand.SecureBytes`, `vcrypto.RandomBytes`, or injected random readers at controlled test boundaries.
 
 ## When not to use vcrypto
 
@@ -44,6 +45,15 @@
 - Use `vrand` to generate secure bytes for keys, salts, nonces, and tokens before encoding them.
 - Use `vcodec` when encrypted, signed, or hashed bytes need Base64, hex, or URL-safe representation.
 - Use `vhash` only for non-cryptographic hash use cases where collision resistance is not required.
+
+## Demo fixture policy
+
+The quickstart and executable examples sometimes use fixed byte slices, fixed
+salts, fixed nonces, or generated test keys so that examples stay deterministic.
+Those values are demo fixtures, not production defaults. Production callers
+should generate secrets with `vrand.SecureBytes`, `vcrypto.RandomBytes`, or
+policy-controlled key-management systems. Tests may use deterministic readers,
+but only at the call site under review.
 
 ## Benchmarks and trade-offs
 

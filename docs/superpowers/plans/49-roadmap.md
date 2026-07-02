@@ -100,6 +100,7 @@ The Hutool gap-closure lane is implemented and the active work has moved from fe
 | 33 | Completed | Safe Crypto Argon2id Password Hashing | Added Argon2id encoded password hashes with parameter envelopes, explicit salt source, mismatch verification, malformed-hash errors, bounded test costs, examples, and governance evidence. |
 | 34 | Completed | Safe Crypto JWK/JWKS Governance | Fixed machine-checked JWK/JWKS boundaries for local key material helpers, RSA-first support, optional EC/OKP deferral, unknown-`kid` behavior, malformed-key errors, and no network discovery. |
 | 35 | Completed | Safe Crypto RSA JWK/JWKS Helpers | Added local RSA JWK/JWKS key material helpers with public/private round trips, `kid` selection, malformed-key errors, no network discovery, examples, and governance evidence. |
+| 36 | Completed | Safe Crypto Secret Handling Governance | Fixed machine-checked boundaries for demo secrets, deterministic fixtures, random-source injection, no production-looking fixed secrets, and secret-handling documentation. |
 
 ## Active workflow
 
@@ -130,6 +131,8 @@ Sprint 33 completed safe crypto Argon2id password hashing: `safe_crypto_argon2id
 Sprint 34 completed safe crypto JWK/JWKS governance: `safe_crypto_jwk_jwks_governance` records local key material scope, RSA-first JWK/JWKS implementation boundaries, optional EC/OKP deferral, unknown-`kid` behavior, malformed-key errors, and no remote discovery or rotation daemon.
 
 Sprint 35 completed safe crypto RSA JWK/JWKS helpers: `safe_crypto_jwk_jwks_implementation_governance` records RSA JWK/JWKS facade APIs, local key material round trips, `kid` selection, unknown-`kid` behavior, malformed-key errors, generated catalog coverage, and security validation.
+
+Sprint 36 completed safe crypto secret handling governance: `safe_crypto_secret_handling_governance` records demo-secret labeling, deterministic fixture boundaries, random-source injection requirements, no production-looking fixed secrets, and documentation coverage.
 
 Recommended roadmap loop:
 

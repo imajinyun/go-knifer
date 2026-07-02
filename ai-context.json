@@ -1179,6 +1179,29 @@
     "required_examples": ["ExampleRSAPublicKeyToJWK", "ExampleJWKToRSAPublicKey", "ExampleSelectJWKByKeyID"],
     "required_checks": ["go test ./internal/crypto ./vcrypto", "tools-gen", "docs-check", "ai-context-check", "governance-maturity-check", "agent-security-check"]
   },
+  "safe_crypto_secret_handling_governance": {
+    "roadmap_path": "docs/superpowers/plans/49-roadmap.md",
+    "quickstart_path": "docs/doc/11-vcrypto.md",
+    "backlog_path": "docs/doc/safe-crypto-advanced-backlog.md",
+    "sprint": 36,
+    "status": "completed",
+    "packages": ["vcrypto", "vrand", "vjwt", "vpass"],
+    "required_boundaries": [
+      "fixed secrets are demo-only fixtures",
+      "production secret material uses secure random or key management",
+      "deterministic readers are test-only injection points",
+      "raw secrets are not logged",
+      "private keys and encoded hashes are treated as secrets"
+    ],
+    "required_doc_phrases": [
+      "demo-only fixtures",
+      "vrand.SecureBytes",
+      "vcrypto.RandomBytes",
+      "deterministic readers",
+      "not production defaults"
+    ],
+    "required_checks": ["docs-check", "ai-context-check", "governance-maturity-check", "agent-security-check"]
+  },
   "error_model": {
     "taxonomy": [
       { "category": "invalid input", "code": "GK_INVALID_INPUT", "use_when": "Caller-provided arguments, payloads, or configuration values are malformed." },
